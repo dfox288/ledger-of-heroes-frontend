@@ -1,14 +1,13 @@
 <script setup lang="ts">
-const { apiBase } = useApi()
+const { apiFetch } = useApi()
 const route = useRoute()
 const slug = route.params.slug as string
 
-// Fetch race data using useAsyncData for SSR support
+// Fetch race data using useAsyncData for SSR support (via Nitro proxy)
 const { data: race, error, pending } = await useAsyncData(
   `race-${slug}`,
   async () => {
-    
-    const response = await $fetch(`${apiBase}/races/${slug}`)
+    const response = await apiFetch(`/races/${slug}`)
     return response.data
   }
 )

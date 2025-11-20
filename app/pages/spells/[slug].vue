@@ -3,13 +3,13 @@ const route = useRoute()
 const slug = route.params.slug as string
 
 // API configuration
-const { apiBase } = useApi()
+const { apiFetch } = useApi()
 
-// Fetch spell data using useAsyncData for SSR support
+// Fetch spell data using useAsyncData for SSR support (via Nitro proxy)
 const { data: spell, error, pending } = await useAsyncData(
   `spell-${slug}`,
   async () => {
-    const response = await $fetch(`${apiBase}/spells/${slug}`)
+    const response = await apiFetch(`/spells/${slug}`)
     return response.data
   }
 )

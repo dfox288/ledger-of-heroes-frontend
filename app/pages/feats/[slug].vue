@@ -1,13 +1,12 @@
 <script setup lang="ts">
-const { apiBase } = useApi()
+const { apiFetch } = useApi()
 const route = useRoute()
 const slug = route.params.slug as string
 
 const { data: entity, error, pending } = await useAsyncData(
   `feat-${slug}`,
   async () => {
-    
-    const response = await $fetch(`${apiBase}/feats/${slug}`)
+    const response = await apiFetch(`/feats/${slug}`)
     return response.data
   }
 )
