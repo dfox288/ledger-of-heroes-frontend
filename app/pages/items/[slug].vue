@@ -28,19 +28,19 @@ const costInGold = computed(() => {
 })
 
 /**
- * Get rarity color for badge
+ * Get rarity color for badge (NuxtUI v4 semantic colors)
  */
 const rarityColor = computed(() => {
-  if (!item.value) return 'gray'
+  if (!item.value) return 'neutral'
   const colors: Record<string, string> = {
-    common: 'gray',
-    uncommon: 'green',
-    rare: 'blue',
-    'very rare': 'purple',
-    legendary: 'amber',
-    artifact: 'red'
+    common: 'neutral',
+    uncommon: 'success',
+    rare: 'info',
+    'very rare': 'primary',
+    legendary: 'warning',
+    artifact: 'error'
   }
-  return colors[item.value.rarity.toLowerCase()] || 'gray'
+  return colors[item.value.rarity.toLowerCase()] || 'neutral'
 })
 
 // JSON debug toggle
@@ -106,16 +106,16 @@ const copyJson = () => {
       <div>
         <div class="flex items-center justify-between mb-3 flex-wrap gap-4">
           <div class="flex items-center gap-2 flex-wrap">
-            <UBadge color="amber" variant="subtle" size="lg">
+            <UBadge color="warning" variant="subtle" size="lg">
               {{ item.item_type.name }}
             </UBadge>
-            <UBadge :color="rarityColor" variant="soft" size="lg">
+            <UBadge :color="rarityColor" variant="subtle" size="lg">
               {{ item.rarity }}
             </UBadge>
-            <UBadge v-if="item.is_magic" color="purple" variant="soft" size="sm">
+            <UBadge v-if="item.is_magic" color="primary" variant="soft" size="sm">
               ✨ Magic
             </UBadge>
-            <UBadge v-if="item.requires_attunement" color="blue" variant="soft" size="sm">
+            <UBadge v-if="item.requires_attunement" color="info" variant="soft" size="sm">
               🔮 Attunement
             </UBadge>
           </div>
@@ -131,7 +131,7 @@ const copyJson = () => {
             {{ showJson ? 'Hide JSON' : 'View JSON' }}
           </UButton>
         </div>
-        <h1 class="text-5xl font-bold text-gray-900 dark:text-gray-100">
+        <h1 class="text-4xl font-bold text-gray-900 dark:text-gray-100">
           {{ item.name }}
         </h1>
       </div>
@@ -225,115 +225,126 @@ const copyJson = () => {
         </div>
       </UCard>
 
-      <!-- Properties -->
-      <UCard v-if="item.properties && item.properties.length > 0">
-        <template #header>
-          <h2 class="text-2xl font-semibold text-gray-900 dark:text-gray-100">
-            Properties
-          </h2>
-        </template>
-        <div class="flex flex-wrap gap-2">
-          <UBadge
-            v-for="property in item.properties"
-            :key="property.id"
-            color="gray"
-            variant="soft"
-          >
-            {{ property.name }}
-          </UBadge>
-        </div>
-        <div class="mt-4 space-y-2">
-          <div
-            v-for="property in item.properties"
-            :key="`desc-${property.id}`"
-            class="text-sm"
-          >
-            <span class="font-medium text-gray-900 dark:text-gray-100">{{ property.name }}:</span>
-            <span class="text-gray-600 dark:text-gray-400 ml-1">{{ property.description }}</span>
-          </div>
-        </div>
-      </UCard>
-
-      <!-- Description -->
+      <!-- Description (Always Visible) -->
       <UCard>
         <template #header>
-          <h2 class="text-2xl font-semibold text-gray-900 dark:text-gray-100">
+          <h2 class="text-lg font-semibold text-gray-900 dark:text-gray-100">
             Description
           </h2>
         </template>
         <div class="prose dark:prose-invert max-w-none">
-          <p class="whitespace-pre-line text-lg leading-relaxed text-gray-700 dark:text-gray-300">{{ item.description }}</p>
+          <p class="whitespace-pre-line text-base leading-relaxed text-gray-700 dark:text-gray-300">{{ item.description }}</p>
         </div>
       </UCard>
 
-      <!-- Modifiers (for magic items) -->
-      <UCard v-if="item.modifiers && item.modifiers.length > 0">
-        <template #header>
-          <h2 class="text-2xl font-semibold text-gray-900 dark:text-gray-100">
-            Modifiers
-          </h2>
-        </template>
-        <div class="space-y-3">
-          <div
-            v-for="modifier in item.modifiers"
-            :key="modifier.id"
-            class="p-3 rounded-lg bg-gray-50 dark:bg-gray-800"
-          >
-            <div class="font-medium text-gray-900 dark:text-gray-100">
-              {{ modifier.modifier_type }}: {{ modifier.value > 0 ? '+' : '' }}{{ modifier.value }}
+      <!-- Additional Details (Accordion) -->
+      <UAccordion
+        :items="[
+          ...(item.properties && item.properties.length > 0 ? [{
+            label: 'Properties',
+            slot: 'properties',
+            defaultOpen: false
+          }] : []),
+          ...(item.modifiers && item.modifiers.length > 0 ? [{
+            label: 'Modifiers',
+            slot: 'modifiers',
+            defaultOpen: false
+          }] : []),
+          ...(item.abilities && item.abilities.length > 0 ? [{
+            label: 'Abilities',
+            slot: 'abilities',
+            defaultOpen: false
+          }] : []),
+          ...(item.sources && item.sources.length > 0 ? [{
+            label: 'Source',
+            slot: 'source',
+            defaultOpen: false
+          }] : [])
+        ]"
+        type="multiple"
+      >
+        <!-- Properties Slot -->
+        <template v-if="item.properties && item.properties.length > 0" #properties>
+          <div class="p-4">
+            <div class="flex flex-wrap gap-2 mb-4">
+              <UBadge
+                v-for="property in item.properties"
+                :key="property.id"
+                color="neutral"
+                variant="soft"
+              >
+                {{ property.name }}
+              </UBadge>
             </div>
-            <div v-if="modifier.description" class="text-sm text-gray-600 dark:text-gray-400 mt-1">
-              {{ modifier.description }}
+            <div class="space-y-2">
+              <div
+                v-for="property in item.properties"
+                :key="`desc-${property.id}`"
+                class="text-sm"
+              >
+                <span class="font-medium text-gray-900 dark:text-gray-100">{{ property.name }}:</span>
+                <span class="text-gray-600 dark:text-gray-400 ml-1">{{ property.description }}</span>
+              </div>
             </div>
           </div>
-        </div>
-      </UCard>
+        </template>
 
-      <!-- Abilities (for magic items) -->
-      <UCard v-if="item.abilities && item.abilities.length > 0">
-        <template #header>
-          <h2 class="text-2xl font-semibold text-gray-900 dark:text-gray-100">
-            Abilities
-          </h2>
-        </template>
-        <div class="space-y-4">
-          <div
-            v-for="ability in item.abilities"
-            :key="ability.id"
-            class="p-4 rounded-lg bg-primary-50 dark:bg-primary-900/20"
-          >
-            <div class="font-semibold text-gray-900 dark:text-gray-100 mb-2">
-              {{ ability.name }}
-            </div>
-            <div class="text-gray-700 dark:text-gray-300 whitespace-pre-line">
-              {{ ability.description }}
+        <!-- Modifiers Slot -->
+        <template v-if="item.modifiers && item.modifiers.length > 0" #modifiers>
+          <div class="p-4 space-y-3">
+            <div
+              v-for="modifier in item.modifiers"
+              :key="modifier.id"
+              class="p-3 rounded-lg bg-gray-50 dark:bg-gray-800"
+            >
+              <div class="font-medium text-gray-900 dark:text-gray-100">
+                {{ modifier.modifier_type }}: {{ modifier.value > 0 ? '+' : '' }}{{ modifier.value }}
+              </div>
+              <div v-if="modifier.description" class="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                {{ modifier.description }}
+              </div>
             </div>
           </div>
-        </div>
-      </UCard>
+        </template>
 
-      <!-- Sources -->
-      <UCard v-if="item.sources && item.sources.length > 0">
-        <template #header>
-          <h2 class="text-2xl font-semibold text-gray-900 dark:text-gray-100">
-            Source
-          </h2>
-        </template>
-        <div class="flex flex-wrap gap-2">
-          <div
-            v-for="source in item.sources"
-            :key="source.code"
-            class="flex items-center gap-2"
-          >
-            <UBadge color="gray" variant="soft">
-              {{ source.name }}
-            </UBadge>
-            <span class="text-sm text-gray-600 dark:text-gray-400">
-              p. {{ source.pages }}
-            </span>
+        <!-- Abilities Slot -->
+        <template v-if="item.abilities && item.abilities.length > 0" #abilities>
+          <div class="p-4 space-y-4">
+            <div
+              v-for="ability in item.abilities"
+              :key="ability.id"
+              class="p-4 rounded-lg bg-primary-50 dark:bg-primary-900/20"
+            >
+              <div class="font-semibold text-gray-900 dark:text-gray-100 mb-2">
+                {{ ability.name }}
+              </div>
+              <div class="text-gray-700 dark:text-gray-300 whitespace-pre-line">
+                {{ ability.description }}
+              </div>
+            </div>
           </div>
-        </div>
-      </UCard>
+        </template>
+
+        <!-- Source Slot -->
+        <template v-if="item.sources && item.sources.length > 0" #source>
+          <div class="p-4">
+            <div class="flex flex-wrap gap-3">
+              <div
+                v-for="source in item.sources"
+                :key="source.code"
+                class="flex items-center gap-2"
+              >
+                <UBadge color="neutral" variant="soft">
+                  {{ source.name }}
+                </UBadge>
+                <span class="text-sm text-gray-600 dark:text-gray-400">
+                  p. {{ source.pages }}
+                </span>
+              </div>
+            </div>
+          </div>
+        </template>
+      </UAccordion>
 
       <!-- JSON Debug Panel -->
       <div

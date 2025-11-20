@@ -3,13 +3,14 @@ import { ref, computed, watch } from 'vue'
 
 // API configuration
 const { apiFetch } = useApi()
+const route = useRoute()
 
-// Reactive filters
-const searchQuery = ref('')
-const selectedType = ref<number | null>(null)
-const selectedRarity = ref<string | null>(null)
-const selectedMagic = ref<string | null>(null)
-const currentPage = ref(1)
+// Reactive filters - initialize from URL query params
+const searchQuery = ref((route.query.q as string) || '')
+const selectedType = ref(route.query.type ? Number(route.query.type) : null)
+const selectedRarity = ref((route.query.rarity as string) || null)
+const selectedMagic = ref((route.query.is_magic as string) || null)
+const currentPage = ref(route.query.page ? Number(route.query.page) : 1)
 const perPage = 24
 
 // Fetch item types for filter options (via Nitro proxy)
@@ -72,7 +73,7 @@ const { data: itemsResponse, pending: loading, error, refresh } = await useAsync
     return response
   },
   {
-    watch: [queryParams]
+    watch: [currentPage, searchQuery, selectedType, selectedRarity, selectedMagic]
   }
 )
 
@@ -116,6 +117,19 @@ const clearFilters = () => {
 // Reset to page 1 when filters change
 watch([searchQuery, selectedType, selectedRarity, selectedMagic], () => {
   currentPage.value = 1
+})
+
+// Sync URL query params with filter state
+watch([currentPage, searchQuery, selectedType, selectedRarity, selectedMagic], () => {
+  const query: Record<string, any> = {}
+
+  if (currentPage.value > 1) query.page = currentPage.value.toString()
+  if (searchQuery.value) query.q = searchQuery.value
+  if (selectedType.value !== null) query.type = selectedType.value.toString()
+  if (selectedRarity.value !== null) query.rarity = selectedRarity.value
+  if (selectedMagic.value !== null) query.is_magic = selectedMagic.value
+
+  navigateTo({ query }, { replace: true })
 })
 
 // SEO meta tags
@@ -329,12 +343,12 @@ useHead({
       </div>
 
       <!-- Pagination -->
-      <div v-if="lastPage > 1" class="flex justify-center">
+      <div v-if="totalResults > perPage" class="flex justify-center">
         <UPagination
-          v-model="currentPage"
-          :page-count="perPage"
+          v-model:page="currentPage"
           :total="totalResults"
-          :max="7"
+          :items-per-page="perPage"
+          show-edges
         />
       </div>
     </div>
