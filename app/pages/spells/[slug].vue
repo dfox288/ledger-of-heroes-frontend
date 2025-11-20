@@ -27,8 +27,35 @@ const spellLevelText = computed(() => {
   if (!spell.value) return ''
   if (spell.value.level === 0) return 'Cantrip'
   const suffix = ['th', 'st', 'nd', 'rd', 'th', 'th', 'th', 'th', 'th', 'th']
-  return `${spell.value.level}${suffix[spell.value.level]}-level`
+  return `${spell.value.level}${suffix[spell.value.level]} Level`
 })
+
+/**
+ * Get badge color for spell level
+ */
+const getLevelColor = (level: number): string => {
+  if (level === 0) return 'primary'
+  if (level <= 3) return 'info'
+  if (level <= 6) return 'warning'
+  return 'error'
+}
+
+/**
+ * Get badge color for spell school
+ */
+const getSchoolColor = (schoolCode: string): string => {
+  const colorMap: Record<string, string> = {
+    'A': 'info',
+    'C': 'primary',
+    'D': 'info',
+    'EN': 'warning',
+    'EV': 'error',
+    'I': 'primary',
+    'N': 'neutral',
+    'T': 'success',
+  }
+  return colorMap[schoolCode] || 'info'
+}
 
 /**
  * Format components for display
@@ -117,17 +144,28 @@ const copyJson = () => {
       <div class="flex justify-between items-start gap-4">
         <div class="flex-1">
           <div class="flex items-center gap-2 mb-3 flex-wrap">
-            <UBadge color="purple" variant="subtle" size="lg">
-              {{ spellLevelText }} {{ spell.school.name }}
+            <UBadge
+              :color="getLevelColor(spell.level)"
+              variant="subtle"
+              size="lg"
+            >
+              {{ spellLevelText }}
             </UBadge>
-            <UBadge v-if="spell.is_ritual" color="blue" variant="soft" size="sm">
+            <UBadge
+              :color="getSchoolColor(spell.school.code)"
+              variant="subtle"
+              size="lg"
+            >
+              {{ spell.school.name }}
+            </UBadge>
+            <UBadge v-if="spell.is_ritual" color="info" variant="soft" size="sm">
               🔮 Ritual
             </UBadge>
-            <UBadge v-if="spell.needs_concentration" color="orange" variant="soft" size="sm">
+            <UBadge v-if="spell.needs_concentration" color="warning" variant="soft" size="sm">
               ⭐ Concentration
             </UBadge>
           </div>
-          <h1 class="text-5xl font-bold text-gray-900 dark:text-gray-100">
+          <h1 class="text-4xl font-bold text-gray-900 dark:text-gray-100">
             {{ spell.name }}
           </h1>
         </div>
@@ -198,75 +236,117 @@ const copyJson = () => {
         </div>
       </UCard>
 
-      <!-- Description -->
+      <!-- Description (Always Visible) -->
       <UCard>
         <template #header>
-          <h2 class="text-2xl font-semibold text-gray-900 dark:text-gray-100">
+          <h2 class="text-lg font-semibold text-gray-900 dark:text-gray-100">
             Description
           </h2>
         </template>
         <div class="prose dark:prose-invert max-w-none">
-          <p class="whitespace-pre-line text-lg text-gray-700 dark:text-gray-300 leading-relaxed">{{ spell.description }}</p>
+          <p class="whitespace-pre-line text-base text-gray-700 dark:text-gray-300 leading-relaxed">{{ spell.description }}</p>
         </div>
       </UCard>
 
-      <!-- Damage Effects (if any) -->
-      <UCard v-if="damageEffects.length > 0">
-        <template #header>
-          <h2 class="text-2xl font-semibold text-gray-900 dark:text-gray-100">
-            Damage
-          </h2>
-        </template>
-        <div class="space-y-3">
-          <div
-            v-for="effect in damageEffects"
-            :key="effect.id"
-            class="flex items-center justify-between p-3 rounded-lg bg-gray-50 dark:bg-gray-800"
-          >
-            <div>
-              <div class="font-medium text-gray-900 dark:text-gray-100">
-                {{ effect.description }}
-              </div>
-              <div class="text-sm text-gray-600 dark:text-gray-400">
-                Spell Slot Level {{ effect.min_spell_slot }}
-              </div>
-            </div>
-            <div class="text-2xl font-bold text-primary-600 dark:text-primary-400">
-              {{ effect.dice_formula }}
-            </div>
+      <!-- Additional Details (Accordion) -->
+      <UAccordion
+        :items="[
+          ...(spell.higher_levels ? [{
+            label: 'At Higher Levels',
+            slot: 'higher-levels',
+            defaultOpen: false
+          }] : []),
+          ...(damageEffects.length > 0 ? [{
+            label: 'Damage',
+            slot: 'damage',
+            defaultOpen: false
+          }] : []),
+          ...(spell.classes && spell.classes.length > 0 ? [{
+            label: 'Available to Classes',
+            slot: 'classes',
+            defaultOpen: false
+          }] : []),
+          ...(spell.sources && spell.sources.length > 0 ? [{
+            label: 'Source',
+            slot: 'source',
+            defaultOpen: false
+          }] : [])
+        ]"
+        type="multiple"
+      >
+        <!-- Higher Levels Slot -->
+        <template v-if="spell.higher_levels" #higher-levels>
+          <div class="p-4">
+            <p class="text-gray-700 dark:text-gray-300">{{ spell.higher_levels }}</p>
           </div>
-        </div>
-      </UCard>
+        </template>
 
-      <!-- Sources -->
-      <UCard v-if="spell.sources && spell.sources.length > 0">
-        <template #header>
-          <h2 class="text-2xl font-semibold text-gray-900 dark:text-gray-100">
-            Source
-          </h2>
-        </template>
-        <div class="flex flex-wrap gap-2">
-          <div
-            v-for="source in spell.sources"
-            :key="source.code"
-            class="flex items-center gap-2"
-          >
-            <UBadge color="gray" variant="soft">
-              {{ source.name }}
-            </UBadge>
-            <span class="text-sm text-gray-600 dark:text-gray-400">
-              p. {{ source.pages }}
-            </span>
+        <!-- Damage Slot -->
+        <template v-if="damageEffects.length > 0" #damage>
+          <div class="p-4 space-y-3">
+            <div
+              v-for="effect in damageEffects"
+              :key="effect.id"
+              class="flex items-center justify-between p-3 rounded-lg bg-gray-50 dark:bg-gray-800"
+            >
+              <div>
+                <div class="font-medium text-gray-900 dark:text-gray-100">
+                  {{ effect.description }}
+                </div>
+                <div class="text-sm text-gray-600 dark:text-gray-400">
+                  Spell Slot Level {{ effect.min_spell_slot }}
+                </div>
+              </div>
+              <div class="text-2xl font-bold text-primary-600 dark:text-primary-400">
+                {{ effect.dice_formula }}
+              </div>
+            </div>
           </div>
-        </div>
-      </UCard>
+        </template>
+
+        <!-- Classes Slot -->
+        <template v-if="spell.classes && spell.classes.length > 0" #classes>
+          <div class="p-4">
+            <div class="flex flex-wrap gap-2">
+              <UBadge
+                v-for="cls in spell.classes"
+                :key="cls.id"
+                color="primary"
+                variant="soft"
+              >
+                {{ cls.name }}
+              </UBadge>
+            </div>
+          </div>
+        </template>
+
+        <!-- Source Slot -->
+        <template v-if="spell.sources && spell.sources.length > 0" #source>
+          <div class="p-4">
+            <div class="flex flex-wrap gap-3">
+              <div
+                v-for="source in spell.sources"
+                :key="source.code"
+                class="flex items-center gap-2"
+              >
+                <UBadge color="gray" variant="soft">
+                  {{ source.name }}
+                </UBadge>
+                <span class="text-sm text-gray-600 dark:text-gray-400">
+                  p. {{ source.pages }}
+                </span>
+              </div>
+            </div>
+          </div>
+        </template>
+      </UAccordion>
 
       <!-- JSON Debug Panel -->
       <div v-if="showJson" ref="jsonPanelRef">
         <UCard>
           <template #header>
             <div class="flex justify-between items-center">
-              <h2 class="text-xl font-semibold text-gray-900 dark:text-gray-100">
+              <h2 class="text-lg font-semibold text-gray-900 dark:text-gray-100">
                 Raw JSON Data
               </h2>
             <div class="flex gap-2">
