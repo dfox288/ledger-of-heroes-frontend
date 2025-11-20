@@ -187,9 +187,24 @@ const copyJson = () => {
       <!-- Additional Details (Accordion) -->
       <UAccordion
         :items="[
+          ...(race.parent_race ? [{
+            label: 'Parent Race',
+            slot: 'parent',
+            defaultOpen: false
+          }] : []),
+          ...(race.subraces && race.subraces.length > 0 ? [{
+            label: 'Subraces',
+            slot: 'subraces',
+            defaultOpen: false
+          }] : []),
           ...(race.traits && race.traits.length > 0 ? [{
             label: 'Racial Traits',
             slot: 'traits',
+            defaultOpen: false
+          }] : []),
+          ...(race.modifiers && race.modifiers.length > 0 ? [{
+            label: 'Modifiers',
+            slot: 'modifiers',
             defaultOpen: false
           }] : []),
           ...(race.languages && race.languages.length > 0 ? [{
@@ -202,6 +217,16 @@ const copyJson = () => {
             slot: 'proficiencies',
             defaultOpen: false
           }] : []),
+          ...(race.spells && race.spells.length > 0 ? [{
+            label: 'Spells',
+            slot: 'spells',
+            defaultOpen: false
+          }] : []),
+          ...(race.conditions && race.conditions.length > 0 ? [{
+            label: 'Conditions',
+            slot: 'conditions',
+            defaultOpen: false
+          }] : []),
           ...(race.sources && race.sources.length > 0 ? [{
             label: 'Source',
             slot: 'source',
@@ -210,6 +235,34 @@ const copyJson = () => {
         ]"
         type="multiple"
       >
+        <!-- Parent Race Slot -->
+        <template v-if="race.parent_race" #parent>
+          <div class="p-4">
+            <NuxtLink :to="`/races/${race.parent_race.slug}`">
+              <UButton color="primary" variant="soft">
+                View {{ race.parent_race.name }}
+              </UButton>
+            </NuxtLink>
+          </div>
+        </template>
+
+        <!-- Subraces Slot -->
+        <template v-if="race.subraces && race.subraces.length > 0" #subraces>
+          <div class="p-4">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+              <NuxtLink
+                v-for="subrace in race.subraces"
+                :key="subrace.id"
+                :to="`/races/${subrace.slug}`"
+                class="p-3 rounded-lg border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
+              >
+                <div class="font-medium text-gray-900 dark:text-gray-100">{{ subrace.name }}</div>
+                <div v-if="subrace.speed" class="text-sm text-gray-600 dark:text-gray-400">Speed: {{ subrace.speed }} ft</div>
+              </NuxtLink>
+            </div>
+          </div>
+        </template>
+
         <!-- Traits Slot -->
         <template v-if="race.traits && race.traits.length > 0" #traits>
           <div class="p-4 space-y-4">
@@ -244,6 +297,24 @@ const copyJson = () => {
           </div>
         </template>
 
+        <!-- Modifiers Slot -->
+        <template v-if="race.modifiers && race.modifiers.length > 0" #modifiers>
+          <div class="p-4 space-y-3">
+            <div
+              v-for="modifier in race.modifiers"
+              :key="modifier.id"
+              class="p-3 rounded-lg bg-gray-50 dark:bg-gray-800"
+            >
+              <div class="font-medium text-gray-900 dark:text-gray-100">
+                {{ modifier.modifier_type }}: {{ modifier.value > 0 ? '+' : '' }}{{ modifier.value }}
+              </div>
+              <div v-if="modifier.description" class="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                {{ modifier.description }}
+              </div>
+            </div>
+          </div>
+        </template>
+
         <!-- Proficiencies Slot -->
         <template v-if="race.proficiencies && race.proficiencies.length > 0" #proficiencies>
           <div class="p-4 space-y-2">
@@ -253,6 +324,38 @@ const copyJson = () => {
               class="text-gray-700 dark:text-gray-300"
             >
               • {{ prof.proficiency_name }}
+            </div>
+          </div>
+        </template>
+
+        <!-- Spells Slot -->
+        <template v-if="race.spells && race.spells.length > 0" #spells>
+          <div class="p-4">
+            <div class="flex flex-wrap gap-2">
+              <UBadge
+                v-for="spell in race.spells"
+                :key="spell.id"
+                color="primary"
+                variant="soft"
+              >
+                {{ spell.name }}
+              </UBadge>
+            </div>
+          </div>
+        </template>
+
+        <!-- Conditions Slot -->
+        <template v-if="race.conditions && race.conditions.length > 0" #conditions>
+          <div class="p-4">
+            <div class="flex flex-wrap gap-2">
+              <UBadge
+                v-for="condition in race.conditions"
+                :key="condition.id"
+                color="warning"
+                variant="soft"
+              >
+                {{ condition.name }}
+              </UBadge>
             </div>
           </div>
         </template>

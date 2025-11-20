@@ -76,9 +76,12 @@ useHead({
     <div class="mb-8">
       <h1 class="text-4xl font-bold text-gray-900 dark:text-gray-100 mb-2">
         Races
+        <span v-if="!loading" class="text-2xl text-gray-500 dark:text-gray-400 font-normal">
+          ({{ totalResults }} total)
+        </span>
       </h1>
       <p class="text-gray-600 dark:text-gray-400">
-        Browse all {{ totalResults }} D&D 5e races and subraces
+        Browse D&D 5e races and subraces
       </p>
     </div>
 

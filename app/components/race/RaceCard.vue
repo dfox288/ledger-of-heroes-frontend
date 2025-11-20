@@ -33,9 +33,15 @@ const props = defineProps<Props>()
 
 /**
  * Check if this is a subrace
+ * Subraces don't have their own subraces array, parent races do
  */
 const isSubrace = computed(() => {
-  return props.race.parent_race_id !== null && props.race.parent_race_id !== undefined
+  // If parent_race_id exists (from detail page), use it
+  if (props.race.parent_race_id !== undefined) {
+    return props.race.parent_race_id !== null
+  }
+  // Otherwise infer from presence of subraces array (parent races have subraces, subraces don't)
+  return !props.race.subraces || props.race.subraces.length === 0
 })
 
 /**
