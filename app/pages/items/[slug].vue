@@ -28,6 +28,16 @@ const costInGold = computed(() => {
 })
 
 /**
+ * Format rarity for display
+ */
+const rarityText = computed(() => {
+  if (!item.value) return ''
+  return item.value.rarity?.split(' ').map(w =>
+    w.charAt(0).toUpperCase() + w.slice(1)
+  ).join(' ') || 'Common'
+})
+
+/**
  * Get rarity color for badge (NuxtUI v4 semantic colors)
  * Progressive rarity scale from common to artifact
  */
@@ -150,7 +160,7 @@ const copyJson = () => {
               {{ item.item_type.name }}
             </UBadge>
             <UBadge :color="rarityColor" variant="subtle" size="lg">
-              {{ item.rarity }}
+              {{ rarityText }}
             </UBadge>
             <UBadge v-if="item.is_magic" color="primary" variant="soft" size="sm">
               ✨ Magic
