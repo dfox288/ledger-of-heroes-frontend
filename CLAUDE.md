@@ -6,7 +6,9 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 This is the **frontend application** for the D&D 5e Compendium project. It is designed to consume the RESTful API provided by the Laravel backend located at `../importer`.
 
-**Current Status:** ✅ Search feature complete with keyboard navigation and proper styling (Tailwind CSS v4)
+**Current Status:** ✅ **PRODUCTION-READY** - All 6 entity types complete with consistent design and full functionality
+
+**⚠️ CRITICAL:** Read `docs/CURRENT_STATUS.md` first for complete project overview
 
 ## 🤖 AI Assistant Context (llms.txt)
 
@@ -125,26 +127,251 @@ The backend generates OpenAPI 3.0 docs via Scramble:
 - **Testing:** Vitest + @nuxt/test-utils + @vue/test-utils
 - **E2E Testing:** Playwright
 
-## ⚠️ CRITICAL: Test-Driven Development (TDD) Mandate
+## 🔴 ABSOLUTE MANDATE: Test-Driven Development (TDD)
 
-**EVERY feature implementation MUST follow TDD. This is non-negotiable.**
+**THIS IS NOT A SUGGESTION. THIS IS NOT OPTIONAL. THIS IS MANDATORY.**
 
-### Required Steps (Non-Negotiable):
+### ⛔ STOP: Read This Before Writing ANY Code
 
-1. **Backwards compatibility is NOT important** - Do not waste time on backwards compatibility
-2. **Always use available Superpowers skills** - Check for relevant skills before starting work
-3. **WRITE TESTS FIRST** - Before writing any implementation code
-4. **Watch them FAIL** - Confirm tests fail for the right reason
-5. **Write MINIMAL code** to pass tests
-6. **Refactor** while keeping tests green
-7. **Update components** - Implement the actual feature
-8. **Update composables/utils** - Extract reusable logic
-9. **Update API types** - Ensure TypeScript types match OpenAPI spec
-10. **Run FULL test suite** - Ensure no regressions
-11. **Verify in browser** - Manual testing in dev environment
-12. **Commit to git with clear message**
-13. **Update todos, clean up documents**
-14. **Update handover document**
+If you are about to write component code, composable code, or any application logic **WITHOUT writing tests first**, you are violating the core development principle of this project.
+
+**The previous development session FAILED to follow TDD.** Zero tests were written. This created technical debt and violated explicit project requirements. **You must not repeat this mistake.**
+
+### 🚨 TDD is NON-NEGOTIABLE - Here's Why
+
+1. **Tests are documentation** - They show HOW the code should work
+2. **Tests prevent regressions** - Future changes won't break existing features
+3. **Tests enable refactoring** - You can improve code with confidence
+4. **Tests force good design** - Testable code is well-structured code
+5. **Tests save time** - Catching bugs early is cheaper than fixing them in production
+
+### ✋ REJECTION CRITERIA - Your Work Will Be Rejected If:
+
+- ❌ You write implementation code before tests
+- ❌ You skip tests because "it's a simple component"
+- ❌ You promise to "write tests later" (they never get written)
+- ❌ You claim "the feature is working" without test evidence
+- ❌ You write tests AFTER implementation to "check the box"
+- ❌ You rationalize that "manual testing is enough"
+
+**If any of the above apply, the work is INCOMPLETE and must be redone.**
+
+### ✅ MANDATORY TDD Process (Follow Exactly)
+
+#### Step 1: Write Test FIRST (RED Phase)
+```typescript
+// tests/components/SpellCard.test.ts
+import { describe, it, expect } from 'vitest'
+import { mountSuspended } from '@nuxt/test-utils/runtime'
+import SpellCard from '~/components/spell/SpellCard.vue'
+
+describe('SpellCard', () => {
+  it('displays spell name and level', async () => {
+    const wrapper = await mountSuspended(SpellCard, {
+      props: {
+        spell: {
+          id: 1,
+          name: 'Fireball',
+          slug: 'fireball',
+          level: 3,
+          school: { id: 1, name: 'Evocation' },
+          casting_time: '1 action',
+          range: '150 feet',
+          description: 'A bright streak...',
+          is_ritual: false,
+          needs_concentration: false
+        }
+      }
+    })
+
+    expect(wrapper.text()).toContain('Fireball')
+    expect(wrapper.text()).toContain('3rd Level')
+  })
+})
+```
+
+#### Step 2: Run Test - Watch It FAIL
+```bash
+npm run test -- SpellCard.test.ts
+# Expected: Test fails because SpellCard doesn't exist yet
+# This confirms the test is actually testing something!
+```
+
+#### Step 3: Write MINIMAL Implementation (GREEN Phase)
+```typescript
+// app/components/spell/SpellCard.vue
+<script setup lang="ts">
+interface Props {
+  spell: {
+    name: string
+    level: number
+    // ... minimal props needed
+  }
+}
+
+const props = defineProps<Props>()
+
+const levelText = computed(() => {
+  if (props.spell.level === 0) return 'Cantrip'
+  return `${props.spell.level}${['th', 'st', 'nd', 'rd'][props.spell.level] || 'th'} Level`
+})
+</script>
+
+<template>
+  <div>
+    <h3>{{ spell.name }}</h3>
+    <span>{{ levelText }}</span>
+  </div>
+</template>
+```
+
+#### Step 4: Run Test - Verify It PASSES
+```bash
+npm run test -- SpellCard.test.ts
+# Expected: Test passes - GREEN!
+```
+
+#### Step 5: Refactor (Keep Tests GREEN)
+```typescript
+// Now add styling, icons, emojis, etc.
+// Run tests after each change to ensure nothing breaks
+```
+
+#### Step 6: Add More Tests, Repeat
+```typescript
+it('shows school badge when school is provided', async () => { ... })
+it('handles missing school gracefully', async () => { ... })
+it('displays ritual badge when is_ritual is true', async () => { ... })
+it('navigates to detail page when clicked', async () => { ... })
+```
+
+### 📋 TDD Checklist for EVERY Feature
+
+Before marking work complete, verify:
+
+- [ ] ✅ Tests were written BEFORE implementation
+- [ ] ✅ Tests failed initially (RED phase verified)
+- [ ] ✅ Minimal code was written to pass tests (GREEN phase)
+- [ ] ✅ Code was refactored while keeping tests green
+- [ ] ✅ All new tests pass
+- [ ] ✅ Full test suite passes (no regressions)
+- [ ] ✅ Coverage includes happy path AND edge cases
+- [ ] ✅ Tests are readable and maintainable
+- [ ] ✅ Manual browser verification completed
+- [ ] ✅ Tests are committed with implementation
+
+**If ANY checkbox is unchecked, the feature is NOT complete.**
+
+### 🎯 What Must Be Tested
+
+**Components:**
+- ✅ Props render correctly
+- ✅ Computed properties calculate right values
+- ✅ User interactions trigger expected behavior
+- ✅ Conditional rendering works (v-if, v-show)
+- ✅ Event emissions fire with correct data
+- ✅ Edge cases (null, undefined, empty arrays)
+- ✅ Error states display appropriately
+
+**Composables:**
+- ✅ Functions return expected data types
+- ✅ Reactive state updates correctly
+- ✅ API calls are made with correct parameters
+- ✅ Error handling works as expected
+- ✅ Side effects are properly managed
+
+**Pages:**
+- ✅ SSR renders without hydration errors
+- ✅ Client-side navigation works
+- ✅ Query parameters are parsed correctly
+- ✅ Data fetching succeeds and fails gracefully
+- ✅ Meta tags are set correctly
+
+### 🚫 Forbidden Phrases (Auto-Reject)
+
+If you say ANY of these, you are violating TDD:
+
+- ❌ "I'll write tests after implementing the feature"
+- ❌ "The component is simple, so tests aren't needed"
+- ❌ "I tested it manually in the browser"
+- ❌ "We can add tests in a future PR"
+- ❌ "The code is self-documenting, tests would be redundant"
+- ❌ "I don't know how to test this, so I'll skip it"
+
+**Correct responses:**
+- ✅ "Let me write the test first to define expected behavior"
+- ✅ "I've written tests that currently fail, now I'll implement"
+- ✅ "Tests pass, now I can refactor with confidence"
+- ✅ "I need to learn how to test this before implementing"
+
+### 🎓 TDD Resources
+
+**Nuxt Testing:**
+- https://nuxt.com/docs/getting-started/testing
+- https://test-utils.vuejs.org/
+- https://vitest.dev/
+
+**Example Test Structure:**
+```typescript
+describe('ComponentName', () => {
+  describe('prop: propName', () => {
+    it('renders correctly when provided', () => { ... })
+    it('uses default value when omitted', () => { ... })
+    it('handles invalid value gracefully', () => { ... })
+  })
+
+  describe('computed: computedName', () => {
+    it('calculates correct value for case A', () => { ... })
+    it('calculates correct value for case B', () => { ... })
+  })
+
+  describe('event: eventName', () => {
+    it('emits when user does action', () => { ... })
+    it('emits correct payload', () => { ... })
+  })
+})
+```
+
+### 🔄 Current Status: NO TESTS EXIST
+
+**The previous session built 6 entity card components, 12 pages, and 2 composables WITHOUT tests.**
+
+This technical debt must be addressed:
+1. New features MUST follow TDD (tests first)
+2. Existing components SHOULD get tests added
+3. Any refactoring MUST be test-protected
+
+### 💪 Mandatory Development Flow
+
+```
+User Request
+    ↓
+Understand Requirements
+    ↓
+🔴 WRITE TEST FIRST ← You are here!
+    ↓
+Watch Test FAIL
+    ↓
+Write Minimal Code
+    ↓
+Watch Test PASS
+    ↓
+Refactor (keep tests green)
+    ↓
+More Tests? → Yes → Loop back
+    ↓ No
+Manual Browser Check
+    ↓
+Commit (tests + code together)
+    ↓
+Done!
+```
+
+**Any deviation from this flow is unacceptable.**
+
+---
+
+**Remember: Tests are not optional. Tests are not "nice to have". Tests are the foundation of maintainable software. Write tests first, always.**
 
 ### Testing Standards for Nuxt 4.x:
 
