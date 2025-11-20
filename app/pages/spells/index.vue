@@ -167,9 +167,6 @@ useHead({
           value-key="value"
           placeholder="Select level"
           class="w-40"
-          :ui="{
-            content: 'bg-white dark:bg-gray-900'
-          }"
         >
           <template #label>
             <span v-if="selectedLevel === null">All Levels</span>
@@ -185,9 +182,6 @@ useHead({
           value-key="value"
           placeholder="Select school"
           class="w-48"
-          :ui="{
-            content: 'bg-white dark:bg-gray-900'
-          }"
         >
           <template #label>
             <span v-if="selectedSchool === null">All Schools</span>
