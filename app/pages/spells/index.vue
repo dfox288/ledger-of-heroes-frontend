@@ -49,7 +49,7 @@ const { data: spellsResponse, pending: loading, error, refresh } = await useAsyn
     return response
   },
   {
-    watch: [queryParams]
+    watch: [queryParams, currentPage]
   }
 )
 
