@@ -10,6 +10,16 @@ This is the **frontend application** for the D&D 5e Compendium project. It is de
 
 **⚠️ CRITICAL:** Read `docs/CURRENT_STATUS.md` first for complete project overview
 
+## 🚨 SUPERPOWERS SKILLS - IMPORTANT
+
+**This is a JavaScript/TypeScript/Nuxt.js frontend project, NOT a Laravel project.**
+
+When using Superpowers skills:
+- ✅ **USE:** `superpowers:*` skills (e.g., `superpowers:brainstorming`, `superpowers:test-driven-development`, `superpowers:systematic-debugging`)
+- ❌ **DO NOT USE:** `superpowers-laravel:*` skills (these are for the backend Laravel project at `../importer`)
+
+The Laravel superpowers are for the **backend API project only**. This frontend uses standard JavaScript/TypeScript workflows and Vitest (not Laravel/PHPUnit/Pest).
+
 ## 🤖 AI Assistant Context (llms.txt)
 
 **For AI-Assisted Development:**
