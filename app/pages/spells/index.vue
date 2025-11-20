@@ -3,12 +3,13 @@ import { ref, computed, watch } from 'vue'
 
 // API configuration
 const { apiFetch } = useApi()
+const route = useRoute()
 
-// Reactive filters
-const searchQuery = ref('')
-const selectedLevel = ref<number | null>(null)
-const selectedSchool = ref<number | null>(null)
-const currentPage = ref(1)
+// Reactive filters - initialize from URL query params
+const searchQuery = ref((route.query.q as string) || '')
+const selectedLevel = ref(route.query.level ? Number(route.query.level) : null)
+const selectedSchool = ref(route.query.school ? Number(route.query.school) : null)
+const currentPage = ref(route.query.page ? Number(route.query.page) : 1)
 const perPage = 24
 
 // Fetch spell schools for filter options (via Nitro proxy)
@@ -49,7 +50,7 @@ const { data: spellsResponse, pending: loading, error, refresh } = await useAsyn
     return response
   },
   {
-    watch: [queryParams, currentPage]
+    watch: [currentPage, searchQuery, selectedLevel, selectedSchool]
   }
 )
 
@@ -109,6 +110,18 @@ const clearFilters = () => {
 // Reset to page 1 when filters change
 watch([searchQuery, selectedLevel, selectedSchool], () => {
   currentPage.value = 1
+})
+
+// Sync URL query params with filter state (optional but improves UX)
+watch([currentPage, searchQuery, selectedLevel, selectedSchool], () => {
+  const query: Record<string, any> = {}
+
+  if (currentPage.value > 1) query.page = currentPage.value.toString()
+  if (searchQuery.value) query.q = searchQuery.value
+  if (selectedLevel.value !== null) query.level = selectedLevel.value.toString()
+  if (selectedSchool.value !== null) query.school = selectedSchool.value.toString()
+
+  navigateTo({ query }, { replace: true })
 })
 
 // SEO meta tags
@@ -290,12 +303,12 @@ useHead({
       </div>
 
       <!-- Pagination -->
-      <div v-if="lastPage > 1" class="flex justify-center">
+      <div v-if="totalResults > perPage" class="flex justify-center">
         <UPagination
-          v-model="currentPage"
-          :page-count="lastPage"
+          v-model:page="currentPage"
           :total="totalResults"
-          :max="7"
+          :items-per-page="perPage"
+          show-edges
         />
       </div>
     </div>

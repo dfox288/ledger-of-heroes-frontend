@@ -47,30 +47,31 @@ const truncatedDescription = computed(() => {
 
 /**
  * Get badge color for spell school
- * Maps D&D schools to thematic colors
+ * Maps D&D schools to NuxtUI v4 color names
  */
 const getSchoolColor = (schoolCode: string): string => {
   const colorMap: Record<string, string> = {
-    'A': 'sky',       // Abjuration (protection)
-    'C': 'violet',    // Conjuration (summoning)
-    'D': 'cyan',      // Divination (knowledge)
-    'EN': 'pink',     // Enchantment (mind)
-    'EV': 'red',      // Evocation (energy/damage)
-    'I': 'indigo',    // Illusion (deception)
-    'N': 'slate',     // Necromancy (death)
-    'T': 'emerald',   // Transmutation (transformation)
+    'A': 'info',      // Abjuration (protection)
+    'C': 'primary',   // Conjuration (summoning)
+    'D': 'info',      // Divination (knowledge)
+    'EN': 'warning',  // Enchantment (mind)
+    'EV': 'error',    // Evocation (energy/damage)
+    'I': 'primary',   // Illusion (deception)
+    'N': 'neutral',   // Necromancy (death)
+    'T': 'success',   // Transmutation (transformation)
   }
-  return colorMap[schoolCode] || 'sky'
+  return colorMap[schoolCode] || 'info'
 }
 
 /**
  * Get badge color for spell level (progressive color scale)
+ * Using NuxtUI v4 color names
  */
 const getLevelColor = (level: number): string => {
-  if (level === 0) return 'purple'  // Cantrip - purple
-  if (level <= 3) return 'blue'     // Low level - blue
-  if (level <= 6) return 'orange'   // Mid level - orange
-  return 'red'                      // High level - red
+  if (level === 0) return 'primary'   // Cantrip - primary
+  if (level <= 3) return 'info'       // Low level - info
+  if (level <= 6) return 'warning'    // Mid level - warning
+  return 'error'                      // High level - error
 }
 </script>
 
@@ -80,11 +81,11 @@ const getLevelColor = (level: number): string => {
       <div class="flex flex-col h-full">
         <!-- Top content -->
         <div class="space-y-3 flex-1">
-          <!-- Level and School Badges (RIGHT ALIGNED, COLORED) -->
-          <div class="flex items-center gap-2 flex-wrap justify-end">
+          <!-- Level and School Badges -->
+          <div class="flex items-center gap-2 flex-wrap justify-between">
             <UBadge
               :color="getLevelColor(spell.level)"
-              variant="solid"
+              variant="subtle"
               size="md"
             >
               {{ levelText }}
@@ -92,7 +93,7 @@ const getLevelColor = (level: number): string => {
             <UBadge
               v-if="spell.school"
               :color="getSchoolColor(spell.school.code)"
-              variant="solid"
+              variant="subtle"
               size="md"
             >
               {{ spell.school.name }}
@@ -104,8 +105,8 @@ const getLevelColor = (level: number): string => {
             {{ spell.name }}
           </h3>
 
-          <!-- Quick Stats -->
-          <div class="flex items-center gap-4 text-sm text-gray-600 dark:text-gray-400">
+          <!-- Quick Stats (with Concentration) -->
+          <div class="flex items-center gap-4 flex-wrap text-sm text-gray-600 dark:text-gray-400">
             <div class="flex items-center gap-1">
               <UIcon name="i-heroicons-clock" class="w-4 h-4" />
               <span>{{ spell.casting_time }}</span>
@@ -114,15 +115,11 @@ const getLevelColor = (level: number): string => {
               <UIcon name="i-heroicons-arrow-trending-up" class="w-4 h-4" />
               <span>{{ spell.range }}</span>
             </div>
-          </div>
-
-          <!-- Ritual/Concentration Badges (BIGGER) -->
-          <div v-if="spell.is_ritual || spell.needs_concentration" class="flex items-center gap-2">
-            <UBadge v-if="spell.is_ritual" color="cyan" variant="soft" size="md">
-              🔮 Ritual
-            </UBadge>
-            <UBadge v-if="spell.needs_concentration" color="amber" variant="soft" size="md">
+            <UBadge v-if="spell.needs_concentration" color="warning" variant="soft" size="sm">
               ⭐ Concentration
+            </UBadge>
+            <UBadge v-if="spell.is_ritual" color="info" variant="soft" size="sm">
+              🔮 Ritual
             </UBadge>
           </div>
 
