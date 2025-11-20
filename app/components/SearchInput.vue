@@ -202,8 +202,7 @@ const resetGlobalIndex = () => { globalIndex = 0 }
     <!-- Dropdown with instant results -->
     <UCard
       v-if="showDropdown && results && getTotalResults(results) > 0"
-      class="absolute z-50 mt-2 w-full shadow-xl max-h-96 overflow-y-auto"
-      :ui="{ body: { padding: 'p-2' } }"
+      class="absolute z-50 mt-2 w-full max-h-96 overflow-y-auto"
       @mousedown.prevent
     >
       <div>

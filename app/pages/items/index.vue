@@ -174,6 +174,9 @@ useHead({
           value-key="value"
           placeholder="Select type"
           class="w-48"
+          :ui="{
+            content: 'bg-white dark:bg-gray-900'
+          }"
         >
           <template #label>
             <span v-if="selectedType === null">All Types</span>
@@ -188,6 +191,9 @@ useHead({
           value-key="value"
           placeholder="Select rarity"
           class="w-44"
+          :ui="{
+            content: 'bg-white dark:bg-gray-900'
+          }"
         >
           <template #label>
             <span v-if="selectedRarity === null">All Rarities</span>
@@ -202,6 +208,9 @@ useHead({
           value-key="value"
           placeholder="Filter by magic"
           class="w-44"
+          :ui="{
+            content: 'bg-white dark:bg-gray-900'
+          }"
         >
           <template #label>
             <span v-if="selectedMagic === null">All Items</span>
