@@ -32,10 +32,8 @@ const toggleJson = () => {
 
 
 const copyJson = () => {
-  const data = route.params.slug
-  if (data) {
-    const entity = 'race' // Will fix per file
-    navigator.clipboard.writeText(JSON.stringify(data, null, 2))
+  if (entity.value) {
+    navigator.clipboard.writeText(JSON.stringify(entity.value, null, 2))
   }
 }
 
@@ -61,10 +59,33 @@ const copyJson = () => {
       </UCard>
     </div>
 
-    <div v-else-if="entity" class="space-y-6">
+    <div v-else-if="entity" class="space-y-8">
+      <!-- Breadcrumb Navigation -->
       <div>
-        <UBadge color="orange" variant="subtle" class="mb-2">Feat</UBadge>
-        <h1 class="text-4xl font-bold text-gray-900 dark:text-gray-100">{{ entity.name }}</h1>
+        <NuxtLink to="/feats">
+          <UButton color="gray" variant="ghost" icon="i-heroicons-arrow-left" size="sm">
+            Back to Feats
+          </UButton>
+        </NuxtLink>
+      </div>
+
+      <!-- Header -->
+      <div>
+        <div class="flex items-center justify-between mb-3 flex-wrap gap-4">
+          <UBadge color="orange" variant="subtle" size="lg">Feat</UBadge>
+
+          <!-- JSON Debug Button -->
+          <UButton
+            color="gray"
+            variant="soft"
+            size="sm"
+            @click="toggleJson"
+          >
+            <UIcon :name="showJson ? 'i-heroicons-eye-slash' : 'i-heroicons-code-bracket'" class="w-4 h-4" />
+            {{ showJson ? 'Hide JSON' : 'View JSON' }}
+          </UButton>
+        </div>
+        <h1 class="text-5xl font-bold text-gray-900 dark:text-gray-100">{{ entity.name }}</h1>
       </div>
 
       <UCard v-if="entity.prerequisites && entity.prerequisites.length > 0">
@@ -115,8 +136,27 @@ const copyJson = () => {
         </div>
       </UCard>
 
-      <div class="flex justify-center pt-4">
-        <UButton to="/search" variant="soft" color="gray" icon="i-heroicons-arrow-left">Back to Search</UButton>
+      <!-- JSON Debug Panel -->
+      <div
+        v-if="showJson"
+        ref="jsonPanelRef"
+        class="border border-gray-300 dark:border-gray-600 rounded-lg overflow-hidden"
+      >
+        <div class="bg-gray-900 text-gray-100 p-4 flex items-center justify-between">
+          <h3 class="text-lg font-semibold">Raw JSON Data</h3>
+          <div class="flex gap-2">
+            <UButton color="gray" variant="soft" size="xs" icon="i-heroicons-clipboard" @click="copyJson">Copy</UButton>
+            <UButton color="gray" variant="soft" size="xs" icon="i-heroicons-x-mark" @click="showJson = false">Close</UButton>
+          </div>
+        </div>
+        <pre class="bg-gray-900 text-gray-100 p-4 overflow-x-auto text-sm"><code>{{ JSON.stringify(entity, null, 2) }}</code></pre>
+      </div>
+
+      <!-- Back Button -->
+      <div class="pt-6 border-t border-gray-200 dark:border-gray-700">
+        <NuxtLink to="/feats">
+          <UButton color="gray" variant="soft" icon="i-heroicons-arrow-left">Back to Feats</UButton>
+        </NuxtLink>
       </div>
     </div>
   </div>
