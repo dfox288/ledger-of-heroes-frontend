@@ -182,22 +182,31 @@ const resetGlobalIndex = () => { globalIndex = 0 }
         type="search"
         placeholder="Search spells, items, races..."
         icon="i-heroicons-magnifying-glass"
-        size="lg"
+        size="xl"
         :loading="loading"
         autocomplete="off"
-        color="white"
+        variant="outline"
+        :ui="{
+          size: {
+            xl: 'text-lg'
+          },
+          padding: {
+            xl: 'px-4 py-3'
+          }
+        }"
         @blur="closeDropdown"
         @keydown="handleKeydown"
       />
     </form>
 
     <!-- Dropdown with instant results -->
-    <div
+    <UCard
       v-if="showDropdown && results && getTotalResults(results) > 0"
-      class="absolute z-50 mt-2 w-full rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 shadow-lg max-h-96 overflow-y-auto"
+      class="absolute z-50 mt-2 w-full shadow-xl max-h-96 overflow-y-auto"
+      :ui="{ body: { padding: 'p-2' } }"
       @mousedown.prevent
     >
-      <div class="p-2">
+      <div>
         {{ resetGlobalIndex() }}
         <!-- Spells -->
         <div v-if="results.data.spells && results.data.spells.length > 0" class="mb-3">
@@ -354,14 +363,16 @@ const resetGlobalIndex = () => { globalIndex = 0 }
           </button>
         </div>
       </div>
-    </div>
+    </UCard>
 
     <!-- No results message -->
-    <div
+    <UCard
       v-if="showDropdown && results && getTotalResults(results) === 0"
-      class="absolute z-50 mt-2 w-full rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 shadow-lg p-4 text-center text-gray-500 dark:text-gray-400"
+      class="absolute z-50 mt-2 w-full shadow-xl"
     >
-      No results found for "{{ query }}"
-    </div>
+      <div class="text-center text-gray-500 dark:text-gray-400">
+        No results found for "{{ query }}"
+      </div>
+    </UCard>
   </div>
 </template>
