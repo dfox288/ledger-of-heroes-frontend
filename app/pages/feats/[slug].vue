@@ -16,6 +16,29 @@ useSeoMeta({
   title: computed(() => entity.value ? `${entity.value.name} - D&D 5e Feat` : 'Feat - D&D 5e Compendium'),
   description: computed(() => entity.value?.description?.substring(0, 160)),
 })
+
+// JSON debug toggle
+const showJson = ref(false)
+const jsonPanelRef = ref<HTMLElement | null>(null)
+
+const toggleJson = () => {
+  showJson.value = !showJson.value
+  if (showJson.value) {
+    nextTick(() => {
+      jsonPanelRef.value?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    })
+  }
+}
+
+
+const copyJson = () => {
+  const data = route.params.slug
+  if (data) {
+    const entity = 'race' // Will fix per file
+    navigator.clipboard.writeText(JSON.stringify(data, null, 2))
+  }
+}
+
 </script>
 
 <template>

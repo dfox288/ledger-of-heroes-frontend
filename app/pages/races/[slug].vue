@@ -18,6 +18,29 @@ useSeoMeta({
   title: computed(() => race.value ? `${race.value.name} - D&D 5e Race` : 'Race - D&D 5e Compendium'),
   description: computed(() => race.value?.description?.substring(0, 160) || `Learn about the ${race.value?.name} race in D&D 5e`),
 })
+
+// JSON debug toggle
+const showJson = ref(false)
+const jsonPanelRef = ref<HTMLElement | null>(null)
+
+const toggleJson = () => {
+  showJson.value = !showJson.value
+  if (showJson.value) {
+    nextTick(() => {
+      jsonPanelRef.value?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    })
+  }
+}
+
+
+const copyJson = () => {
+  const data = route.params.slug
+  if (data) {
+    const entity = 'race' // Will fix per file
+    navigator.clipboard.writeText(JSON.stringify(data, null, 2))
+  }
+}
+
 </script>
 
 <template>
