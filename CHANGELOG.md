@@ -9,6 +9,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+- Empty stats card no longer renders when entity has no quick stats (2025-11-21)
+
 ### Added
 - Random tables display for spells (2025-11-21)
 - Save modifier badges (advantage/disadvantage/standard roll) to saving throws (2025-11-21)

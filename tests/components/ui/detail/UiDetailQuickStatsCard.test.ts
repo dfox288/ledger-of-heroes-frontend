@@ -143,4 +143,28 @@ describe('UiDetailQuickStatsCard', () => {
     expect(value.classes()).toContain('text-gray-900')
     expect(value.classes()).toContain('dark:text-gray-100')
   })
+
+  it('does not render when stats array is empty', () => {
+    const wrapper = mount(UiDetailQuickStatsCard, {
+      props: {
+        stats: []
+      },
+      ...mountOptions
+    })
+
+    // Card should not exist
+    expect(wrapper.find('.card').exists()).toBe(false)
+  })
+
+  it('does not render any content when no stats provided', () => {
+    const wrapper = mount(UiDetailQuickStatsCard, {
+      props: {
+        stats: []
+      },
+      ...mountOptions
+    })
+
+    // Component HTML should be empty (or just comment nodes)
+    expect(wrapper.html()).toBe('<!--v-if-->')
+  })
 })

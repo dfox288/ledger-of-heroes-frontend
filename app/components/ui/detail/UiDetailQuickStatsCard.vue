@@ -21,7 +21,7 @@ const gridClass = computed(() => `md:grid-cols-${props.columns}`)
 </script>
 
 <template>
-  <UCard>
+  <UCard v-if="stats.length > 0">
     <div class="grid grid-cols-1 gap-6" :class="gridClass">
       <div v-for="(stat, index) in stats" :key="index" class="flex items-start gap-3">
         <UIcon :name="stat.icon" class="w-5 h-5 text-gray-400 mt-1 flex-shrink-0" />
