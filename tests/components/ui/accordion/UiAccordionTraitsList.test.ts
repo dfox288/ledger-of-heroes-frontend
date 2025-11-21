@@ -91,7 +91,7 @@ describe('UiAccordionTraitsList', () => {
 
     const container = wrapper.find('.p-4')
     expect(container.exists()).toBe(true)
-    expect(container.classes()).toContain('space-y-4')
+    expect(container.classes()).toContain('space-y-3')
   })
 
   it('applies border color', async () => {
@@ -128,7 +128,7 @@ describe('UiAccordionTraitsList', () => {
     expect(description.classes()).toContain('dark:text-gray-300')
   })
 
-  // Integration tests for random tables (RED phase - will fail until Task 4)
+  // Integration tests for random tables (GREEN phase - tables now render)
   it('renders random tables when trait has them', async () => {
     const traitsWithTables = [
       {
@@ -159,8 +159,8 @@ describe('UiAccordionTraitsList', () => {
       props: { traits: traitsWithTables }
     })
 
-    // Verify random tables component is rendered (should fail until component supports random_tables)
-    expect(wrapper.find('table').exists()).toBe(false) // No table yet in RED phase
+    // Verify random tables component is rendered (GREEN phase - now working!)
+    expect(wrapper.find('table').exists()).toBe(true) // Tables render now!
     expect(wrapper.text()).toContain('Test Table')
     expect(wrapper.text()).toContain('(d10)')
     expect(wrapper.text()).toContain('Result 1')
