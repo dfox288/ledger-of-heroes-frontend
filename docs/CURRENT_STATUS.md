@@ -1,9 +1,9 @@
 # D&D 5e Compendium Frontend - Current Status
 
-**Last Updated:** 2025-11-21 (Reference Pages Session)
+**Last Updated:** 2025-11-21 (Reference Pages Batch 2 Complete)
 **Status:** ✅ **PRODUCTION-READY**
 **Framework:** Nuxt 4.x + NuxtUI 4.x
-**6 of 6 Entity Types + 4 Reference Pages** (All Complete!)
+**6 of 6 Entity Types + 10 Reference Pages** (All Complete!)
 
 ---
 
@@ -11,8 +11,8 @@
 
 A full-featured D&D 5e reference application with:
 - **6 Entity Types:** Spells, Items, Races, Classes, Backgrounds, Feats
-- **4 Reference Pages:** Source Books, Languages, Creature Sizes, Damage Types
-- **1,000+ D&D Resources** from official sourcebooks
+- **10 Reference Pages:** Ability Scores, Conditions, Damage Types, Item Types, Languages, Proficiency Types, Sizes, Skills, Spell Schools, Sources
+- **1,100+ D&D Resources** from official sourcebooks
 - **Production-Quality UI** with dark mode, skeleton loading, and responsive design
 - **Scalable Navigation** with dropdown menu for reference section
 - **Developer Tools** including JSON debug panels on all pages
@@ -43,8 +43,8 @@ A full-featured D&D 5e reference application with:
 - **Backgrounds:** Traits (Description, Feature, Characteristics), proficiencies, languages, **tags**
 - **Feats:** Prerequisites (emphasized), modifiers, conditions, **tags**
 
-### Reference Pages (4/4) ✅
-**✅ Sources, ✅ Languages, ✅ Sizes, ✅ Damage Types**
+### Reference Pages (10/10) ✅
+**✅ Ability Scores, ✅ Conditions, ✅ Damage Types, ✅ Item Types, ✅ Languages, ✅ Proficiency Types, ✅ Sizes, ✅ Skills, ✅ Spell Schools, ✅ Sources**
 
 **All Reference Pages Include:**
 - ✅ Search functionality with real-time filtering
@@ -55,10 +55,16 @@ A full-featured D&D 5e reference application with:
 - ✅ JSON debug panels
 
 **Reference Page Details:**
-- **Source Books** (8 items) - Official D&D 5e sourcebooks with code, publisher, year
-- **Languages** (30 items) - D&D languages with script, typical speakers, description
-- **Creature Sizes** (6 items) - Size categories from Tiny to Gargantuan with codes
+- **Ability Scores** (6 items) - Core ability scores (STR, DEX, CON, INT, WIS, CHA)
+- **Conditions** (15 items) - Game conditions with descriptions (Blinded, Charmed, etc.)
 - **Damage Types** (13 items) - All damage types (Physical, Energy, Magical)
+- **Item Types** (20 items) - Item categories with descriptions (Ammunition, Weapons, etc.)
+- **Languages** (30 items) - D&D languages with script, typical speakers, description
+- **Proficiency Types** (40 items) - Proficiency categories and subcategories
+- **Creature Sizes** (6 items) - Size categories from Tiny to Gargantuan with codes
+- **Skills** (18 items) - Skills with linked ability scores (Acrobatics, Stealth, etc.)
+- **Spell Schools** (8 items) - Schools of magic with descriptions (Abjuration, Evocation, etc.)
+- **Source Books** (8 items) - Official D&D 5e sourcebooks with code, publisher, year
 
 ### Common Features (All Pages)
 - ✅ Entity-specific card components with semantic colors
@@ -216,23 +222,26 @@ docker compose exec nuxt sh
 
 **Total Files:**
 - 6 entity card components
+- 11 reference card components (6 with tests, 5 without)
 - 19 reusable UI components (11 new detail/accordion + 8 list components)
-- 12 page files (6 list + 6 detail - refactored)
+- 12 entity page files (6 list + 6 detail)
+- 10 reference page files
 - 2 composables
 
-**Lines of Code:** ~3,200+ (after detail page refactoring - 48% reduction in detail pages)
+**Lines of Code:** ~4,500+ (added 1,300+ lines for reference pages batch 2)
 
 **Test Coverage:**
-- ✅ **244 tests total** (ALL PASSING ✅)
+- ✅ **276 tests total** (ALL PASSING ✅)
 - ✅ **87 tests** for list infrastructure components
 - ✅ **31 tests** for core detail page components
-- ✅ **40 tests** for accordion components (includes UiAccordionSavingThrows)
-- ✅ **34 tests** for general UI components (includes TagsDisplay)
-- ✅ **20 tests** for reference components (SourceCard, UiAccordionSavingThrows)
+- ✅ **40 tests** for accordion components
+- ✅ **34 tests** for general UI components
+- ✅ **52 tests** for reference components (SourceCard + 6 new card components)
+- ✅ **32 tests** for new reference components (AbilityScoreCard, SpellSchoolCard, ItemTypeCard, ProficiencyTypeCard, SkillCard, ConditionCard)
 - ✅ **Test fixes:** BackLink (7 tests) + useSearch (7 tests) now passing
 - ⚠️ Main entity card components still lack tests (technical debt)
-- ⚠️ New reference card components lack tests (LanguageCard, SizeCard, DamageTypeCard)
-- **Next priority:** Add tests for entity/reference card components
+- ⚠️ Old reference card components lack tests (LanguageCard, SizeCard, DamageTypeCard)
+- **Next priority:** Add tests for entity card components and remaining reference cards
 
 ---
 
