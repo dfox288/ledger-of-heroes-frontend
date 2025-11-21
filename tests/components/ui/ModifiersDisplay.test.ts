@@ -13,7 +13,10 @@ describe('ModifiersDisplay', () => {
         name: 'Strength'
       },
       value: '2',
-      condition: null
+      condition: null,
+      is_choice: false,
+      choice_count: null,
+      choice_constraint: null
     },
     {
       id: 2,
@@ -24,7 +27,10 @@ describe('ModifiersDisplay', () => {
         name: 'Charisma'
       },
       value: '1',
-      condition: null
+      condition: null,
+      is_choice: false,
+      choice_count: null,
+      choice_constraint: null
     }
   ]
 
@@ -34,7 +40,23 @@ describe('ModifiersDisplay', () => {
       modifier_category: 'speed',
       ability_score: null,
       value: '10',
-      condition: 'while not wearing armor'
+      condition: 'while not wearing armor',
+      is_choice: false,
+      choice_count: null,
+      choice_constraint: null
+    }
+  ]
+
+  const choiceModifiers = [
+    {
+      id: 4,
+      modifier_category: 'ability_score',
+      ability_score: null,
+      value: '+1',
+      condition: null,
+      is_choice: true,
+      choice_count: 2,
+      choice_constraint: 'different'
     }
   ]
 
@@ -84,7 +106,10 @@ describe('ModifiersDisplay', () => {
         name: 'Dexterity'
       },
       value: '-2',
-      condition: null
+      condition: null,
+      is_choice: false,
+      choice_count: null,
+      choice_constraint: null
     }]
 
     const wrapper = mount(ModifiersDisplay, {
@@ -140,14 +165,20 @@ describe('ModifiersDisplay', () => {
           name: 'Strength'
         },
         value: '2',
-        condition: null
+        condition: null,
+        is_choice: false,
+        choice_count: null,
+        choice_constraint: null
       },
       {
         id: 2,
         modifier_category: 'movement',
         ability_score: null,
         value: '5',
-        condition: 'in difficult terrain'
+        condition: 'in difficult terrain',
+        is_choice: false,
+        choice_count: null,
+        choice_constraint: null
       }
     ]
 
@@ -158,5 +189,70 @@ describe('ModifiersDisplay', () => {
     expect(wrapper.text()).toContain('Strength (STR): +2')
     expect(wrapper.text()).toContain('movement: +5')
     expect(wrapper.text()).toContain('in difficult terrain')
+  })
+
+  // NEW TESTS FOR CHOICE MODIFIERS
+  it('displays CHOICE badge for choice modifiers', () => {
+    const wrapper = mount(ModifiersDisplay, {
+      props: { modifiers: choiceModifiers }
+    })
+
+    expect(wrapper.text()).toContain('CHOICE')
+  })
+
+  it('displays choice description with count and constraint', () => {
+    const wrapper = mount(ModifiersDisplay, {
+      props: { modifiers: choiceModifiers }
+    })
+
+    expect(wrapper.text()).toContain('Choose 2 different ability scores')
+  })
+
+  it('displays choice value after description', () => {
+    const wrapper = mount(ModifiersDisplay, {
+      props: { modifiers: choiceModifiers }
+    })
+
+    expect(wrapper.text()).toContain('+1')
+  })
+
+  it('handles choice with singular count', () => {
+    const singleChoice = [{
+      id: 5,
+      modifier_category: 'ability_score',
+      ability_score: null,
+      value: '+2',
+      condition: null,
+      is_choice: true,
+      choice_count: 1,
+      choice_constraint: null
+    }]
+
+    const wrapper = mount(ModifiersDisplay, {
+      props: { modifiers: singleChoice }
+    })
+
+    expect(wrapper.text()).toContain('Choose 1 ability score')
+  })
+
+  it('does not show CHOICE badge for fixed modifiers', () => {
+    const wrapper = mount(ModifiersDisplay, {
+      props: { modifiers: abilityScoreModifiers }
+    })
+
+    expect(wrapper.text()).not.toContain('CHOICE')
+  })
+
+  it('handles mixed fixed and choice modifiers', () => {
+    const mixed = [...abilityScoreModifiers, ...choiceModifiers]
+    const wrapper = mount(ModifiersDisplay, {
+      props: { modifiers: mixed }
+    })
+
+    // Fixed modifiers display normally
+    expect(wrapper.text()).toContain('Strength (STR): +2')
+    // Choice modifiers show badge and description
+    expect(wrapper.text()).toContain('CHOICE')
+    expect(wrapper.text()).toContain('Choose 2 different ability scores')
   })
 })
