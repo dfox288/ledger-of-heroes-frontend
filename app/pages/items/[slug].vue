@@ -95,22 +95,6 @@ const getItemTypeColor = computed(() => {
 
 // JSON debug toggle
 const showJson = ref(false)
-const jsonPanelRef = ref<HTMLElement | null>(null)
-
-const toggleJson = () => {
-  showJson.value = !showJson.value
-  if (showJson.value) {
-    nextTick(() => {
-      jsonPanelRef.value?.scrollIntoView({ behavior: 'smooth', block: 'start' })
-    })
-  }
-}
-
-const copyJson = () => {
-  if (item.value) {
-    navigator.clipboard.writeText(JSON.stringify(item.value, null, 2))
-  }
-}
 </script>
 
 <template>
@@ -175,7 +159,7 @@ const copyJson = () => {
             color="gray"
             variant="soft"
             size="sm"
-            @click="toggleJson"
+            @click="showJson = !showJson"
           >
             <UIcon :name="showJson ? 'i-heroicons-eye-slash' : 'i-heroicons-code-bracket'" class="w-4 h-4" />
             {{ showJson ? 'Hide JSON' : 'View JSON' }}
@@ -377,56 +361,16 @@ const copyJson = () => {
 
         <!-- Source Slot -->
         <template v-if="item.sources && item.sources.length > 0" #source>
-          <div class="p-4">
-            <div class="flex flex-wrap gap-3">
-              <div
-                v-for="source in item.sources"
-                :key="source.code"
-                class="flex items-center gap-2"
-              >
-                <UBadge color="neutral" variant="soft">
-                  {{ source.name }}
-                </UBadge>
-                <span class="text-sm text-gray-600 dark:text-gray-400">
-                  p. {{ source.pages }}
-                </span>
-              </div>
-            </div>
-          </div>
+          <SourceDisplay :sources="item.sources" />
         </template>
       </UAccordion>
 
       <!-- JSON Debug Panel -->
-      <div
-        v-if="showJson"
-        ref="jsonPanelRef"
-        class="border border-gray-300 dark:border-gray-600 rounded-lg overflow-hidden"
-      >
-        <div class="bg-gray-900 text-gray-100 p-4 flex items-center justify-between">
-          <h3 class="text-lg font-semibold">Raw JSON Data</h3>
-          <div class="flex gap-2">
-            <UButton
-              color="gray"
-              variant="soft"
-              size="xs"
-              icon="i-heroicons-clipboard"
-              @click="copyJson"
-            >
-              Copy
-            </UButton>
-            <UButton
-              color="gray"
-              variant="soft"
-              size="xs"
-              icon="i-heroicons-x-mark"
-              @click="showJson = false"
-            >
-              Close
-            </UButton>
-          </div>
-        </div>
-        <pre class="bg-gray-900 text-gray-100 p-4 overflow-x-auto text-sm"><code>{{ JSON.stringify(item, null, 2) }}</code></pre>
-      </div>
+      <JsonDebugPanel
+        :data="item"
+        :visible="showJson"
+        @close="showJson = false"
+      />
 
       <!-- Back Button -->
       <div class="pt-6 border-t border-gray-200 dark:border-gray-700">

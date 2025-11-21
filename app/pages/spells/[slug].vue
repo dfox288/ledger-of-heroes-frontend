@@ -81,26 +81,6 @@ const damageEffects = computed(() => {
 
 // JSON debug toggle
 const showJson = ref(false)
-const jsonPanelRef = ref<HTMLElement | null>(null)
-
-// Toggle JSON and scroll to it
-const toggleJson = () => {
-  showJson.value = !showJson.value
-  if (showJson.value) {
-    // Wait for DOM update, then scroll
-    nextTick(() => {
-      jsonPanelRef.value?.scrollIntoView({ behavior: 'smooth', block: 'start' })
-    })
-  }
-}
-
-// Copy JSON to clipboard
-const copyJson = () => {
-  if (spell.value) {
-    navigator.clipboard.writeText(JSON.stringify(spell.value, null, 2))
-    // TODO: Show toast notification
-  }
-}
 </script>
 
 <template>
@@ -170,7 +150,7 @@ const copyJson = () => {
           </h1>
         </div>
         <UButton
-          @click="toggleJson"
+          @click="showJson = !showJson"
           variant="ghost"
           color="gray"
           icon="i-heroicons-code-bracket"
@@ -322,46 +302,16 @@ const copyJson = () => {
 
         <!-- Source Slot -->
         <template v-if="spell.sources && spell.sources.length > 0" #source>
-          <div class="p-4">
-            <div class="flex flex-wrap gap-3">
-              <div
-                v-for="source in spell.sources"
-                :key="source.code"
-                class="flex items-center gap-2"
-              >
-                <UBadge color="gray" variant="soft">
-                  {{ source.name }}
-                </UBadge>
-                <span class="text-sm text-gray-600 dark:text-gray-400">
-                  p. {{ source.pages }}
-                </span>
-              </div>
-            </div>
-          </div>
+          <SourceDisplay :sources="spell.sources" />
         </template>
       </UAccordion>
 
       <!-- JSON Debug Panel -->
-      <div v-if="showJson" ref="jsonPanelRef">
-        <UCard>
-          <template #header>
-            <div class="flex justify-between items-center">
-              <h2 class="text-lg font-semibold text-gray-900 dark:text-gray-100">
-                Raw JSON Data
-              </h2>
-            <div class="flex gap-2">
-              <UButton @click="copyJson" size="xs" variant="ghost" icon="i-heroicons-clipboard">
-                Copy
-              </UButton>
-              <UButton @click="showJson = false" size="xs" variant="ghost" icon="i-heroicons-x-mark">
-                Close
-              </UButton>
-            </div>
-          </div>
-          </template>
-          <pre class="bg-gray-900 text-gray-100 p-4 rounded-lg overflow-x-auto text-sm"><code>{{ JSON.stringify(spell, null, 2) }}</code></pre>
-        </UCard>
-      </div>
+      <JsonDebugPanel
+        :data="spell"
+        :visible="showJson"
+        @close="showJson = false"
+      />
     </div>
   </div>
 </template>

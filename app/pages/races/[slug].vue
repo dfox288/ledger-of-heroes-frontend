@@ -36,23 +36,6 @@ const getSizeColor = computed(() => {
 
 // JSON debug toggle
 const showJson = ref(false)
-const jsonPanelRef = ref<HTMLElement | null>(null)
-
-const toggleJson = () => {
-  showJson.value = !showJson.value
-  if (showJson.value) {
-    nextTick(() => {
-      jsonPanelRef.value?.scrollIntoView({ behavior: 'smooth', block: 'start' })
-    })
-  }
-}
-
-
-const copyJson = () => {
-  if (race.value) {
-    navigator.clipboard.writeText(JSON.stringify(race.value, null, 2))
-  }
-}
 
 </script>
 
@@ -102,7 +85,7 @@ const copyJson = () => {
             <UBadge v-if="race.size" :color="getSizeColor" variant="subtle" size="lg">
               {{ race.size.name }}
             </UBadge>
-            <UBadge v-if="race.parent_race_id" color="primary" variant="subtle" size="lg">
+            <UBadge v-if="race.parent_race" color="primary" variant="subtle" size="lg">
               Subrace
             </UBadge>
             <UBadge v-else color="info" variant="subtle" size="lg">
@@ -115,7 +98,7 @@ const copyJson = () => {
             color="gray"
             variant="soft"
             size="sm"
-            @click="toggleJson"
+            @click="showJson = !showJson"
           >
             <UIcon :name="showJson ? 'i-heroicons-eye-slash' : 'i-heroicons-code-bracket'" class="w-4 h-4" />
             {{ showJson ? 'Hide JSON' : 'View JSON' }}
@@ -286,12 +269,12 @@ const copyJson = () => {
           <div class="p-4">
             <div class="flex flex-wrap gap-2">
               <UBadge
-                v-for="language in race.languages"
-                :key="language.id"
+                v-for="lang in race.languages"
+                :key="lang.language.id"
                 color="neutral"
                 variant="soft"
               >
-                {{ language.name }}
+                {{ lang.language.name }}
               </UBadge>
             </div>
           </div>
@@ -306,10 +289,15 @@ const copyJson = () => {
               class="p-3 rounded-lg bg-gray-50 dark:bg-gray-800"
             >
               <div class="font-medium text-gray-900 dark:text-gray-100">
-                {{ modifier.modifier_type }}: {{ modifier.value > 0 ? '+' : '' }}{{ modifier.value }}
+                <template v-if="modifier.ability_score">
+                  {{ modifier.ability_score.name }} ({{ modifier.ability_score.code }}): {{ modifier.value > 0 ? '+' : '' }}{{ modifier.value }}
+                </template>
+                <template v-else>
+                  {{ modifier.modifier_category }}: {{ modifier.value > 0 ? '+' : '' }}{{ modifier.value }}
+                </template>
               </div>
-              <div v-if="modifier.description" class="text-sm text-gray-600 dark:text-gray-400 mt-1">
-                {{ modifier.description }}
+              <div v-if="modifier.condition" class="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                {{ modifier.condition }}
               </div>
             </div>
           </div>
@@ -346,72 +334,44 @@ const copyJson = () => {
 
         <!-- Conditions Slot -->
         <template v-if="race.conditions && race.conditions.length > 0" #conditions>
-          <div class="p-4">
-            <div class="flex flex-wrap gap-2">
-              <UBadge
-                v-for="condition in race.conditions"
-                :key="condition.id"
-                color="warning"
-                variant="soft"
-              >
-                {{ condition.name }}
-              </UBadge>
+          <div class="p-4 space-y-3">
+            <div
+              v-for="conditionRelation in race.conditions"
+              :key="conditionRelation.id"
+              class="p-3 rounded-lg bg-gray-50 dark:bg-gray-800"
+            >
+              <div class="flex items-start gap-3">
+                <UBadge color="warning" variant="soft">
+                  {{ conditionRelation.condition.name }}
+                </UBadge>
+                <div class="flex-1">
+                  <div v-if="conditionRelation.effect_type" class="text-sm font-medium text-gray-900 dark:text-gray-100 mb-1">
+                    Effect: {{ conditionRelation.effect_type.charAt(0).toUpperCase() + conditionRelation.effect_type.slice(1) }}
+                  </div>
+                  <div class="text-sm text-gray-700 dark:text-gray-300">
+                    {{ conditionRelation.condition.description }}
+                  </div>
+                  <div v-if="conditionRelation.description" class="text-sm text-gray-600 dark:text-gray-400 mt-2 italic">
+                    {{ conditionRelation.description }}
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </template>
 
         <!-- Source Slot -->
         <template v-if="race.sources && race.sources.length > 0" #source>
-          <div class="p-4">
-            <div class="flex flex-wrap gap-3">
-              <div
-                v-for="source in race.sources"
-                :key="source.code"
-                class="flex items-center gap-2"
-              >
-                <UBadge color="neutral" variant="soft">
-                  {{ source.name }}
-                </UBadge>
-                <span class="text-sm text-gray-600 dark:text-gray-400">
-                  p. {{ source.pages }}
-                </span>
-              </div>
-            </div>
-          </div>
+          <SourceDisplay :sources="race.sources" />
         </template>
       </UAccordion>
 
       <!-- JSON Debug Panel -->
-      <div
-        v-if="showJson"
-        ref="jsonPanelRef"
-        class="border border-gray-300 dark:border-gray-600 rounded-lg overflow-hidden"
-      >
-        <div class="bg-gray-900 text-gray-100 p-4 flex items-center justify-between">
-          <h3 class="text-lg font-semibold">Raw JSON Data</h3>
-          <div class="flex gap-2">
-            <UButton
-              color="gray"
-              variant="soft"
-              size="xs"
-              icon="i-heroicons-clipboard"
-              @click="copyJson"
-            >
-              Copy
-            </UButton>
-            <UButton
-              color="gray"
-              variant="soft"
-              size="xs"
-              icon="i-heroicons-x-mark"
-              @click="showJson = false"
-            >
-              Close
-            </UButton>
-          </div>
-        </div>
-        <pre class="bg-gray-900 text-gray-100 p-4 overflow-x-auto text-sm"><code>{{ JSON.stringify(race, null, 2) }}</code></pre>
-      </div>
+      <JsonDebugPanel
+        :data="race"
+        :visible="showJson"
+        @close="showJson = false"
+      />
 
       <!-- Back Button -->
       <div class="pt-6 border-t border-gray-200 dark:border-gray-700">
