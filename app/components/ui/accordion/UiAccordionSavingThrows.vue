@@ -55,7 +55,7 @@ const formatSaveEffect = (effect: string | null): string | null => {
         <UBadge
           :color="save.is_initial_save ? 'primary' : 'info'"
           variant="soft"
-          size="xs"
+          size="sm"
         >
           {{ save.is_initial_save ? 'Initial Save' : 'Recurring Save' }}
         </UBadge>
