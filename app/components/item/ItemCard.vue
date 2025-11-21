@@ -1,22 +1,5 @@
 <script setup lang="ts">
-import type { Source } from '~/types'
-
-interface Item {
-  id: number
-  name: string
-  slug: string
-  rarity: string
-  item_type?: {
-    id: number
-    name: string
-  }
-  is_magic: boolean
-  requires_attunement: boolean
-  cost_cp?: number
-  weight?: number
-  description?: string
-  sources?: Source[]
-}
+import type { Item } from '~/types'
 
 interface Props {
   item: Item
