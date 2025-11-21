@@ -31,7 +31,7 @@ const formatRollRange = (min: number, max: number): string => {
 
 <template>
   <div v-if="tables.length > 0" class="space-y-6 pl-4">
-    <div v-for="table in tables" :key="table.id" class="space-y-2">
+    <div v-for="table in tables" :key="table.id" class="space-y-2 border-l-4 pl-4" :class="`border-${borderColor}`">
       <!-- Table Name and Dice Type -->
       <h4 class="text-base font-semibold text-gray-900 dark:text-gray-100">
         {{ table.table_name }}
