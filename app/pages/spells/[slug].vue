@@ -180,7 +180,7 @@ const spellEffects = computed(() => {
 
         <!-- Tags Slot -->
         <template v-if="spell.tags && spell.tags.length > 0" #tags>
-          <TagsDisplay :tags="spell.tags" />
+          <UiTagsDisplay :tags="spell.tags" />
         </template>
       </UAccordion>
 

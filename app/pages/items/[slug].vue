@@ -208,7 +208,7 @@ const getItemTypeColor = computed(() => {
 
         <!-- Tags Slot -->
         <template v-if="item.tags && item.tags.length > 0" #tags>
-          <TagsDisplay :tags="item.tags" />
+          <UiTagsDisplay :tags="item.tags" />
         </template>
       </UAccordion>
 

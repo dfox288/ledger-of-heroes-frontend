@@ -90,7 +90,7 @@ useSeoMeta({
 
         <!-- Tags Slot -->
         <template v-if="entity.tags && entity.tags.length > 0" #tags>
-          <TagsDisplay :tags="entity.tags" />
+          <UiTagsDisplay :tags="entity.tags" />
         </template>
       </UAccordion>
 

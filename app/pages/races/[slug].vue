@@ -233,7 +233,7 @@ const getSizeColor = computed(() => {
 
         <!-- Tags Slot -->
         <template v-if="race.tags && race.tags.length > 0" #tags>
-          <TagsDisplay :tags="race.tags" />
+          <UiTagsDisplay :tags="race.tags" />
         </template>
       </UAccordion>
 
