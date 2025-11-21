@@ -164,6 +164,11 @@ const getItemTypeColor = computed(() => {
             label: 'Source',
             slot: 'source',
             defaultOpen: false
+          }] : []),
+          ...(item.tags && item.tags.length > 0 ? [{
+            label: 'Tags',
+            slot: 'tags',
+            defaultOpen: false
           }] : [])
         ]"
         type="multiple"
@@ -199,6 +204,11 @@ const getItemTypeColor = computed(() => {
         <!-- Source Slot -->
         <template v-if="item.sources && item.sources.length > 0" #source>
           <UiSourceDisplay :sources="item.sources" />
+        </template>
+
+        <!-- Tags Slot -->
+        <template v-if="item.tags && item.tags.length > 0" #tags>
+          <TagsDisplay :tags="item.tags" />
         </template>
       </UAccordion>
 

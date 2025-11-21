@@ -147,6 +147,11 @@ const spellEffects = computed(() => {
             label: 'Source',
             slot: 'source',
             defaultOpen: false
+          }] : []),
+          ...(spell.tags && spell.tags.length > 0 ? [{
+            label: 'Tags',
+            slot: 'tags',
+            defaultOpen: false
           }] : [])
         ]"
         type="multiple"
@@ -171,6 +176,11 @@ const spellEffects = computed(() => {
         <!-- Source Slot -->
         <template v-if="spell.sources && spell.sources.length > 0" #source>
           <UiSourceDisplay :sources="spell.sources" />
+        </template>
+
+        <!-- Tags Slot -->
+        <template v-if="spell.tags && spell.tags.length > 0" #tags>
+          <TagsDisplay :tags="spell.tags" />
         </template>
       </UAccordion>
 

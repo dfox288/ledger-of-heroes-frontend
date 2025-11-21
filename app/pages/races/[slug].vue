@@ -148,6 +148,11 @@ const getSizeColor = computed(() => {
             label: 'Source',
             slot: 'source',
             defaultOpen: false
+          }] : []),
+          ...(race.tags && race.tags.length > 0 ? [{
+            label: 'Tags',
+            slot: 'tags',
+            defaultOpen: false
           }] : [])
         ]"
         type="multiple"
@@ -224,6 +229,11 @@ const getSizeColor = computed(() => {
         <!-- Source Slot -->
         <template v-if="race.sources && race.sources.length > 0" #source>
           <UiSourceDisplay :sources="race.sources" />
+        </template>
+
+        <!-- Tags Slot -->
+        <template v-if="race.tags && race.tags.length > 0" #tags>
+          <TagsDisplay :tags="race.tags" />
         </template>
       </UAccordion>
 

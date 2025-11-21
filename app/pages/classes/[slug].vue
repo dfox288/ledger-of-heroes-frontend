@@ -79,6 +79,11 @@ useSeoMeta({
             label: 'Source',
             slot: 'source',
             defaultOpen: false
+          }] : []),
+          ...(entity.tags && entity.tags.length > 0 ? [{
+            label: 'Tags',
+            slot: 'tags',
+            defaultOpen: false
           }] : [])
         ]"
         type="multiple"
@@ -101,6 +106,11 @@ useSeoMeta({
         <!-- Source Slot -->
         <template v-if="entity.sources && entity.sources.length > 0" #source>
           <UiSourceDisplay :sources="entity.sources" />
+        </template>
+
+        <!-- Tags Slot -->
+        <template v-if="entity.tags && entity.tags.length > 0" #tags>
+          <TagsDisplay :tags="entity.tags" />
         </template>
       </UAccordion>
 
