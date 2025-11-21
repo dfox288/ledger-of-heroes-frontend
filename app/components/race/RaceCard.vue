@@ -1,33 +1,5 @@
 <script setup lang="ts">
-import type { Source } from '~/types'
-
-interface Race {
-  id: number
-  name: string
-  slug: string
-  size?: {
-    id: number
-    name: string
-    code: string
-  }
-  speed: number
-  parent_race_id?: number | null
-  parent_race?: {
-    id: number
-    slug: string
-    name: string
-    speed: number
-  } | null
-  subraces?: Array<{
-    id: number
-    slug: string
-    name: string
-  }>
-  modifiers?: any[]
-  traits?: any[]
-  description?: string
-  sources?: Source[]
-}
+import type { Race } from '~/types'
 
 interface Props {
   race: Race
