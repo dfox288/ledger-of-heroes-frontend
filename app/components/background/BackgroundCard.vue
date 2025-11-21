@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import type { Source } from '~/types'
+
 interface Background {
   id: number
   name: string
@@ -8,11 +10,7 @@ interface Background {
   languages?: any[]
   feature_name?: string
   description?: string
-  sources?: Array<{
-    code: string
-    name: string
-    pages: string
-  }>
+  sources?: Source[]
 }
 
 interface Props {

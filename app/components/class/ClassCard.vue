@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import type { Source } from '~/types'
+
 interface CharacterClass {
   id: number
   name: string
@@ -19,11 +21,7 @@ interface CharacterClass {
   subclasses?: any[]
   proficiencies?: any[]
   description?: string
-  sources?: Array<{
-    code: string
-    name: string
-    pages: string
-  }>
+  sources?: Source[]
 }
 
 interface Props {

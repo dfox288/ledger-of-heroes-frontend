@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import type { Source } from '~/types'
+
 interface Feat {
   id: number
   name: string
@@ -6,11 +8,7 @@ interface Feat {
   prerequisites?: any[]
   modifiers?: any[]
   description?: string
-  sources?: Array<{
-    code: string
-    name: string
-    pages: string
-  }>
+  sources?: Source[]
 }
 
 interface Props {
