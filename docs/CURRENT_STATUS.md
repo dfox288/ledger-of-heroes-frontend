@@ -1,6 +1,6 @@
 # D&D 5e Compendium Frontend - Current Status
 
-**Last Updated:** 2025-01-21
+**Last Updated:** 2025-11-21
 **Status:** ✅ **PRODUCTION-READY**
 **Framework:** Nuxt 4.x + NuxtUI 4.x
 **6 of 6 Entity Types Fully Enhanced** (All Complete!)
@@ -34,12 +34,12 @@ A full-featured D&D 5e reference application with:
 - ✅ Reusable UI components (`<UiSourceDisplay>`, `<UiModifiersDisplay>`, `<JsonDebugPanel>`)
 
 **Entity-Specific Features:**
-- **Spells:** Level/school filters, ritual/concentration badges
-- **Items:** Rarity colors, magic/attunement badges, weapon/armor stats
-- **Races:** Traits, ability modifiers, languages, size/speed
-- **Classes:** Features, proficiencies, subclasses, hit die, spellcasting ability
-- **Backgrounds:** Traits (Description, Feature, Characteristics), proficiencies, languages
-- **Feats:** Prerequisites (emphasized), modifiers, conditions
+- **Spells:** Level/school filters, ritual/concentration badges, **character level scaling**, **all effect types** (damage + other), **tags**
+- **Items:** Rarity colors, magic/attunement badges, weapon/armor stats, **tags**
+- **Races:** Traits, ability modifiers, languages, size/speed, **tags**
+- **Classes:** Features, proficiencies, subclasses, hit die, spellcasting ability, **tags**
+- **Backgrounds:** Traits (Description, Feature, Characteristics), proficiencies, languages, **tags**
+- **Feats:** Prerequisites (emphasized), modifiers, conditions, **tags**
 
 ### Common Features (All Pages)
 - ✅ Entity-specific card components with semantic colors
@@ -76,7 +76,7 @@ A full-featured D&D 5e reference application with:
 - `app/components/ui/detail/UiDetailPageLoading.vue` - Loading state (7 tests)
 - `app/components/ui/detail/UiDetailPageError.vue` - 404 error state (9 tests)
 - `app/components/ui/detail/UiDetailPageHeader.vue` - Title + badges (7 tests)
-- `app/components/ui/detail/UiQuickStatsCard.vue` - Stats grid (8 tests)
+- `app/components/ui/detail/UiDetailQuickStatsCard.vue` - Stats grid (8 tests) **[Renamed from UiQuickStatsCard]**
 
 *Accordion Slot Components:*
 - `app/components/ui/accordion/UiAccordionBadgeList.vue` - Badge collections
@@ -85,13 +85,15 @@ A full-featured D&D 5e reference application with:
 - `app/components/ui/accordion/UiAccordionEntityGrid.vue` - Entity grids
 - `app/components/ui/accordion/UiAccordionPropertiesList.vue` - Item properties (6 tests)
 - `app/components/ui/accordion/UiAccordionAbilitiesList.vue` - Item abilities (6 tests)
-- `app/components/ui/accordion/UiAccordionDamageEffects.vue` - Spell damage (6 tests)
+- `app/components/ui/accordion/UiAccordionDamageEffects.vue` - Spell effects **with character level scaling** (12 tests) **[Enhanced]**
+- `app/components/ui/accordion/UiAccordionRandomTablesList.vue` - Random tables with results
 
 *General UI Components:*
 - `app/components/ui/BackLink.vue` - Breadcrumb navigation
-- `app/components/ui/SourceDisplay.vue` - Source citation display
-- `app/components/ui/ModifiersDisplay.vue` - Character modifier display
-- `app/components/JsonDebugPanel.vue` - JSON debug toggle (self-contained)
+- `app/components/ui/SourceDisplay.vue` - Source citation display (6 tests)
+- `app/components/ui/ModifiersDisplay.vue` - Character modifier display (10 tests)
+- `app/components/ui/TagsDisplay.vue` - **Universal tags display (8 tests)** **[NEW]**
+- `app/components/JsonDebugPanel.vue` - JSON debug toggle (self-contained, 8 tests)
 
 **Entity Card Components:**
 - `app/components/spell/SpellCard.vue` - Purple theme, level/school badges, sources
@@ -195,11 +197,13 @@ docker compose exec nuxt sh
 **Lines of Code:** ~3,200+ (after detail page refactoring - 48% reduction in detail pages)
 
 **Test Coverage:**
-- ✅ **167 tests total** (159 passing, 8 pre-existing failures in useSearch)
-- ✅ **49 new tests** for detail page refactoring (all passing)
+- ✅ **224 tests total** (210 passing, 14 pre-existing failures in useSearch + BackLink)
 - ✅ **87 tests** for list infrastructure components
-- ✅ **31 tests** for core detail page components
-- ✅ **18 tests** for accordion components
+- ✅ **31 tests** for core detail page components (includes UiDetailQuickStatsCard)
+- ✅ **30 tests** for accordion components (includes enhanced UiAccordionDamageEffects)
+- ✅ **24 tests** for general UI components (includes new TagsDisplay)
+- ✅ **49 tests** for detail page refactoring (from previous session)
+- ✅ **15 new tests** from this session (character level scaling, tags, effect types)
 - ⚠️ Main entity card components still lack tests (technical debt from initial development)
 - **Next priority:** Add tests for SpellCard, ItemCard, RaceCard, ClassCard, BackgroundCard, FeatCard
 
