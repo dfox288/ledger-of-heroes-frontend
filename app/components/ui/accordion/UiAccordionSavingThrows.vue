@@ -9,6 +9,7 @@ interface SavingThrow {
   ability_score: AbilityScore
   save_effect: 'negates' | 'ends_effect' | null
   is_initial_save: boolean
+  save_modifier: 'advantage' | 'disadvantage' | 'none' | null
 }
 
 interface Props {
@@ -57,6 +58,24 @@ const formatSaveEffect = (effect: string | null): string | null => {
           size="xs"
         >
           {{ save.is_initial_save ? 'Initial Save' : 'Recurring Save' }}
+        </UBadge>
+
+        <!-- Save Modifier Badge (advantage/disadvantage/standard roll) -->
+        <UBadge
+          v-if="save.save_modifier && save.save_modifier !== 'none'"
+          :color="save.save_modifier === 'advantage' ? 'success' : 'error'"
+          variant="soft"
+          size="xs"
+        >
+          {{ save.save_modifier === 'advantage' ? 'Advantage' : 'Disadvantage' }}
+        </UBadge>
+        <UBadge
+          v-else-if="save.save_modifier === 'none'"
+          color="neutral"
+          variant="soft"
+          size="xs"
+        >
+          Standard Roll
         </UBadge>
       </div>
 

@@ -10,7 +10,8 @@ describe('UiAccordionSavingThrows', () => {
           {
             ability_score: { id: 2, code: 'DEX', name: 'Dexterity' },
             save_effect: null,
-            is_initial_save: true
+            is_initial_save: true,
+            save_modifier: null
           }
         ]
       }
@@ -26,12 +27,14 @@ describe('UiAccordionSavingThrows', () => {
           {
             ability_score: { id: 2, code: 'DEX', name: 'Dexterity' },
             save_effect: null,
-            is_initial_save: true
+            is_initial_save: true,
+            save_modifier: null
           },
           {
             ability_score: { id: 5, code: 'WIS', name: 'Wisdom' },
             save_effect: 'negates',
-            is_initial_save: true
+            is_initial_save: true,
+            save_modifier: null
           }
         ]
       }
@@ -48,7 +51,8 @@ describe('UiAccordionSavingThrows', () => {
           {
             ability_score: { id: 2, code: 'DEX', name: 'Dexterity' },
             save_effect: null,
-            is_initial_save: true
+            is_initial_save: true,
+            save_modifier: null
           }
         ]
       }
@@ -64,7 +68,8 @@ describe('UiAccordionSavingThrows', () => {
           {
             ability_score: { id: 5, code: 'WIS', name: 'Wisdom' },
             save_effect: 'ends_effect',
-            is_initial_save: false
+            is_initial_save: false,
+            save_modifier: null
           }
         ]
       }
@@ -80,7 +85,8 @@ describe('UiAccordionSavingThrows', () => {
           {
             ability_score: { id: 5, code: 'WIS', name: 'Wisdom' },
             save_effect: 'negates',
-            is_initial_save: true
+            is_initial_save: true,
+            save_modifier: null
           }
         ]
       }
@@ -96,7 +102,8 @@ describe('UiAccordionSavingThrows', () => {
           {
             ability_score: { id: 5, code: 'WIS', name: 'Wisdom' },
             save_effect: 'ends_effect',
-            is_initial_save: false
+            is_initial_save: false,
+            save_modifier: null
           }
         ]
       }
@@ -112,7 +119,8 @@ describe('UiAccordionSavingThrows', () => {
           {
             ability_score: { id: 2, code: 'DEX', name: 'Dexterity' },
             save_effect: null,
-            is_initial_save: true
+            is_initial_save: true,
+            save_modifier: null
           }
         ]
       }
@@ -139,7 +147,8 @@ describe('UiAccordionSavingThrows', () => {
           {
             ability_score: { id: 2, code: 'DEX', name: 'Dexterity' },
             save_effect: null,
-            is_initial_save: true
+            is_initial_save: true,
+            save_modifier: null
           }
         ]
       }
@@ -155,7 +164,8 @@ describe('UiAccordionSavingThrows', () => {
           {
             ability_score: { id: 2, code: 'DEX', name: 'Dexterity' },
             save_effect: null,
-            is_initial_save: true
+            is_initial_save: true,
+            save_modifier: null
           }
         ]
       }
@@ -163,5 +173,75 @@ describe('UiAccordionSavingThrows', () => {
 
     const container = wrapper.find('.space-y-3')
     expect(container.exists()).toBe(true)
+  })
+
+  it('displays "Advantage" badge when save_modifier is "advantage"', async () => {
+    const wrapper = await mountSuspended(UiAccordionSavingThrows, {
+      props: {
+        savingThrows: [
+          {
+            ability_score: { id: 2, code: 'DEX', name: 'Dexterity' },
+            save_effect: null,
+            is_initial_save: true,
+            save_modifier: 'advantage'
+          }
+        ]
+      }
+    })
+
+    expect(wrapper.text()).toContain('Advantage')
+  })
+
+  it('displays "Disadvantage" badge when save_modifier is "disadvantage"', async () => {
+    const wrapper = await mountSuspended(UiAccordionSavingThrows, {
+      props: {
+        savingThrows: [
+          {
+            ability_score: { id: 5, code: 'WIS', name: 'Wisdom' },
+            save_effect: null,
+            is_initial_save: true,
+            save_modifier: 'disadvantage'
+          }
+        ]
+      }
+    })
+
+    expect(wrapper.text()).toContain('Disadvantage')
+  })
+
+  it('displays "Standard Roll" badge when save_modifier is "none"', async () => {
+    const wrapper = await mountSuspended(UiAccordionSavingThrows, {
+      props: {
+        savingThrows: [
+          {
+            ability_score: { id: 3, code: 'CON', name: 'Constitution' },
+            save_effect: null,
+            is_initial_save: true,
+            save_modifier: 'none'
+          }
+        ]
+      }
+    })
+
+    expect(wrapper.text()).toContain('Standard Roll')
+  })
+
+  it('does not display save_modifier badge when it is null', async () => {
+    const wrapper = await mountSuspended(UiAccordionSavingThrows, {
+      props: {
+        savingThrows: [
+          {
+            ability_score: { id: 2, code: 'DEX', name: 'Dexterity' },
+            save_effect: null,
+            is_initial_save: true,
+            save_modifier: null
+          }
+        ]
+      }
+    })
+
+    expect(wrapper.text()).not.toContain('Advantage')
+    expect(wrapper.text()).not.toContain('Disadvantage')
+    expect(wrapper.text()).not.toContain('Standard Roll')
   })
 })
