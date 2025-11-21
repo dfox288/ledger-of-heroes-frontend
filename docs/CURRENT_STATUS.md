@@ -1,9 +1,9 @@
 # D&D 5e Compendium Frontend - Current Status
 
-**Last Updated:** 2025-11-21
+**Last Updated:** 2025-11-21 (Reference Pages Session)
 **Status:** ✅ **PRODUCTION-READY**
 **Framework:** Nuxt 4.x + NuxtUI 4.x
-**6 of 6 Entity Types Fully Enhanced** (All Complete!)
+**6 of 6 Entity Types + 4 Reference Pages** (All Complete!)
 
 ---
 
@@ -11,8 +11,10 @@
 
 A full-featured D&D 5e reference application with:
 - **6 Entity Types:** Spells, Items, Races, Classes, Backgrounds, Feats
+- **4 Reference Pages:** Source Books, Languages, Creature Sizes, Damage Types
 - **1,000+ D&D Resources** from official sourcebooks
 - **Production-Quality UI** with dark mode, skeleton loading, and responsive design
+- **Scalable Navigation** with dropdown menu for reference section
 - **Developer Tools** including JSON debug panels on all pages
 - **Complete Visual Consistency** across all entity types
 
@@ -34,12 +36,29 @@ A full-featured D&D 5e reference application with:
 - ✅ Reusable UI components (`<UiSourceDisplay>`, `<UiModifiersDisplay>`, `<JsonDebugPanel>`)
 
 **Entity-Specific Features:**
-- **Spells:** Level/school filters, ritual/concentration badges, **character level scaling**, **all effect types** (damage + other), **tags**
+- **Spells:** Level/school filters, ritual/concentration badges, **character level scaling**, **all effect types** (damage + other), **tags**, **saving throws**
 - **Items:** Rarity colors, magic/attunement badges, weapon/armor stats, **tags**
 - **Races:** Traits, ability modifiers, languages, size/speed, **tags**
 - **Classes:** Features, proficiencies, subclasses, hit die, spellcasting ability, **tags**
 - **Backgrounds:** Traits (Description, Feature, Characteristics), proficiencies, languages, **tags**
 - **Feats:** Prerequisites (emphasized), modifiers, conditions, **tags**
+
+### Reference Pages (4/4) ✅
+**✅ Sources, ✅ Languages, ✅ Sizes, ✅ Damage Types**
+
+**All Reference Pages Include:**
+- ✅ Search functionality with real-time filtering
+- ✅ Clean card-based layouts
+- ✅ Neutral gray theme (reference material)
+- ✅ Loading/error/empty states
+- ✅ No pagination (small datasets)
+- ✅ JSON debug panels
+
+**Reference Page Details:**
+- **Source Books** (8 items) - Official D&D 5e sourcebooks with code, publisher, year
+- **Languages** (30 items) - D&D languages with script, typical speakers, description
+- **Creature Sizes** (6 items) - Size categories from Tiny to Gargantuan with codes
+- **Damage Types** (13 items) - All damage types (Physical, Energy, Magical)
 
 ### Common Features (All Pages)
 - ✅ Entity-specific card components with semantic colors
@@ -86,6 +105,7 @@ A full-featured D&D 5e reference application with:
 - `app/components/ui/accordion/UiAccordionPropertiesList.vue` - Item properties (6 tests)
 - `app/components/ui/accordion/UiAccordionAbilitiesList.vue` - Item abilities (6 tests)
 - `app/components/ui/accordion/UiAccordionDamageEffects.vue` - Spell effects **with character level scaling** (12 tests) **[Enhanced]**
+- `app/components/ui/accordion/UiAccordionSavingThrows.vue` - **Spell saving throws (10 tests)** **[NEW]**
 - `app/components/ui/accordion/UiAccordionRandomTablesList.vue` - Random tables with results
 
 *General UI Components:*
@@ -98,6 +118,12 @@ A full-featured D&D 5e reference application with:
 **Entity Card Components:**
 - `app/components/spell/SpellCard.vue` - Purple theme, level/school badges, sources
 - `app/components/item/ItemCard.vue` - Rarity-based colors, magic/attunement, sources
+
+**Reference Card Components:**
+- `app/components/source/SourceCard.vue` - Source books (code, publisher, year) **(10 tests)**
+- `app/components/language/LanguageCard.vue` - Languages (script, speakers, description)
+- `app/components/size/SizeCard.vue` - Creature sizes (code, name)
+- `app/components/damage-type/DamageTypeCard.vue` - Damage types (name only)
 - `app/components/race/RaceCard.vue` - Blue theme, size/speed/traits, sources
 - `app/components/class/ClassCard.vue` - Red theme, hit die, spellcasting, sources
 - `app/components/background/BackgroundCard.vue` - Green theme, skills/languages, sources
@@ -197,15 +223,16 @@ docker compose exec nuxt sh
 **Lines of Code:** ~3,200+ (after detail page refactoring - 48% reduction in detail pages)
 
 **Test Coverage:**
-- ✅ **224 tests total** (210 passing, 14 pre-existing failures in useSearch + BackLink)
+- ✅ **244 tests total** (ALL PASSING ✅)
 - ✅ **87 tests** for list infrastructure components
-- ✅ **31 tests** for core detail page components (includes UiDetailQuickStatsCard)
-- ✅ **30 tests** for accordion components (includes enhanced UiAccordionDamageEffects)
-- ✅ **24 tests** for general UI components (includes new TagsDisplay)
-- ✅ **49 tests** for detail page refactoring (from previous session)
-- ✅ **15 new tests** from this session (character level scaling, tags, effect types)
-- ⚠️ Main entity card components still lack tests (technical debt from initial development)
-- **Next priority:** Add tests for SpellCard, ItemCard, RaceCard, ClassCard, BackgroundCard, FeatCard
+- ✅ **31 tests** for core detail page components
+- ✅ **40 tests** for accordion components (includes UiAccordionSavingThrows)
+- ✅ **34 tests** for general UI components (includes TagsDisplay)
+- ✅ **20 tests** for reference components (SourceCard, UiAccordionSavingThrows)
+- ✅ **Test fixes:** BackLink (7 tests) + useSearch (7 tests) now passing
+- ⚠️ Main entity card components still lack tests (technical debt)
+- ⚠️ New reference card components lack tests (LanguageCard, SizeCard, DamageTypeCard)
+- **Next priority:** Add tests for entity/reference card components
 
 ---
 
@@ -404,43 +431,50 @@ If you find issues:
 
 ---
 
-## 🎉 Latest Session Summary (2025-01-21)
+## 🎉 Latest Session Summary (2025-11-21)
 
-### Session 3: Detail Page Refactoring (COMPLETE) ✅
-**Focus:** Extract reusable components from detail pages
+### Session: Reference Pages & Navigation (COMPLETE) ✅
+**Focus:** Saving throws, source books, navigation dropdown, three reference pages
 
 **Accomplished:**
-- ✅ Created 11 reusable components (4 core + 7 accordion)
-- ✅ Refactored all 6 detail pages (~48% code reduction)
-- ✅ Wrote 49 new tests (all passing, TDD followed)
-- ✅ Eliminated ~795 lines of duplicate code
-- ✅ Established component library for future entity types
+- ✅ Added saving throws display to spell detail pages (10 tests)
+- ✅ Created Sources reference page with search (10 tests)
+- ✅ Implemented scalable navigation dropdown (desktop + mobile)
+- ✅ Added 3 new reference pages: Languages, Sizes, Damage Types
+- ✅ Fixed all failing tests - now 244/244 passing
+- ✅ Created 4 Nitro API proxies for reference endpoints
 
 **Impact:**
-- **Code Reduction:** Detail pages went from ~1,465 lines → ~760 lines
-- **Maintainability:** Fix bugs once, apply everywhere (6× improvement)
-- **Consistency:** All detail pages use identical loading/error/header/stats patterns
-- **Test Coverage:** +49 tests (+41% coverage increase)
-- **Future-Proof:** Adding 7th entity type now trivial
+- **Reference Section:** 1 page → 4 pages (Sources, Languages, Sizes, Damage Types)
+- **Navigation:** Scalable dropdown menu replaces flat list
+- **Data Coverage:** +57 reference items (8 sources + 30 languages + 13 damage types + 6 sizes)
+- **Test Coverage:** +20 tests (244 total, ALL passing)
+- **User Value:** Comprehensive game mechanics reference library
 
 **Components Created:**
-- Core: UiDetailPageLoading, UiDetailPageError, UiDetailPageHeader, UiQuickStatsCard
-- Accordion: BadgeList, BulletList, TraitsList, EntityGrid, PropertiesList, AbilitiesList, DamageEffects
+- `UiAccordionSavingThrows.vue` (10 tests)
+- `SourceCard.vue` (10 tests)
+- `LanguageCard.vue`, `SizeCard.vue`, `DamageTypeCard.vue` (no tests yet)
 
 **Git Commits:**
-- `34f1a14` - Core refactoring (8 components, 31 tests)
-- `d4b7c4f` - Additional accordion components (3 components, 18 tests)
+- `22d5250` - Saving throws display
+- `c7bcd1d` - Test fixes (BackLink, useSearch)
+- `1549663` - Sources page
+- `a7a463c` - Sources navigation + API proxy
+- `1c93e03` - Navigation dropdown
+- `20d4b45` - UDropdownMenu fix (NuxtUI v4)
+- `dca004f` - Three new reference pages
 
 **Documentation:**
-- `docs/HANDOVER-2025-01-21-DETAIL-PAGE-REFACTORING.md` (comprehensive session doc)
+- `docs/HANDOVER-2025-11-21-REFERENCE-PAGES.md` (comprehensive session doc)
 
-**Status:** Detail page refactoring 100% complete. All tests passing. Ready for production.
+**Status:** Reference section complete. Navigation scalable. All tests passing. Production-ready.
 
-**What Works:** All previous features + new component library, TDD-backed refactoring, consistent patterns.
+**What Works:** 6 entity types + 4 reference pages, saving throws, dropdown navigation, all 244 tests passing.
 
-**What's Missing:** Entity card tests (SpellCard, ItemCard, etc.), advanced features, size filter.
+**What's Missing:** Tests for new reference cards, entity card tests, advanced filtering.
 
-**Ready for:** Entity card testing, new features, performance optimization, 7th entity type.
+**Ready for:** More reference pages (spell schools, item types), advanced features, performance optimization.
 
 ---
 
