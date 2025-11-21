@@ -46,3 +46,68 @@ export interface Item {
   description?: string
   sources?: Source[]
 }
+
+/**
+ * Race entity from D&D 5e API
+ *
+ * Used in: RaceCard, race detail pages, tests
+ * API endpoint: /api/v1/races
+ */
+export interface Race {
+  id: number
+  name: string
+  slug: string
+  size?: {
+    id: number
+    name: string
+    code: string
+  }
+  speed: number
+  parent_race_id?: number | null
+  parent_race?: {
+    id: number
+    slug: string
+    name: string
+    speed: number
+  } | null
+  subraces?: Array<{
+    id: number
+    slug: string
+    name: string
+  }>
+  modifiers?: any[]  // TODO: Type with Modifier interface
+  traits?: any[]     // TODO: Type trait structure
+  description?: string
+  sources?: Source[]
+}
+
+/**
+ * Character Class entity from D&D 5e API
+ *
+ * Used in: ClassCard, class detail pages, tests
+ * API endpoint: /api/v1/classes
+ *
+ * Note: Named CharacterClass to avoid conflict with JS 'class' keyword
+ */
+export interface CharacterClass {
+  id: number
+  name: string
+  slug: string
+  hit_die: number
+  is_base_class: boolean
+  parent_class_id?: number | null
+  primary_ability?: {
+    id: number
+    code: string
+    name: string
+  } | null
+  spellcasting_ability?: {
+    id: number
+    code: string
+    name: string
+  } | null
+  subclasses?: any[]      // TODO: Type subclass structure
+  proficiencies?: any[]   // TODO: Type proficiency structure
+  description?: string
+  sources?: Source[]
+}

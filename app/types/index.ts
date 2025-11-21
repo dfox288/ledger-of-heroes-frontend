@@ -9,10 +9,10 @@
 
 // API types
 export type { Source, AbilityScore, Modifier, Tag } from './api/common'
-export type { Spell, Item } from './api/entities'
+export type { Spell, Item, Race, CharacterClass } from './api/entities'
 
 // Search types
-export type { SearchResult, SearchResultData, EntityType, SearchOptions, SearchEntity, Race, Class, Background, Feat } from './search'
+export type { SearchResult, SearchResultData, EntityType, SearchOptions, SearchEntity, Class, Background, Feat } from './search'
 
 // API Response types
 export interface ApiListResponse<T = any> {
