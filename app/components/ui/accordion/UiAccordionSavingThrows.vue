@@ -65,7 +65,7 @@ const formatSaveEffect = (effect: string | null): string | null => {
           v-if="save.save_modifier && save.save_modifier !== 'none'"
           :color="save.save_modifier === 'advantage' ? 'success' : 'error'"
           variant="soft"
-          size="xs"
+          size="sm"
         >
           {{ save.save_modifier === 'advantage' ? 'Advantage' : 'Disadvantage' }}
         </UBadge>
@@ -73,7 +73,7 @@ const formatSaveEffect = (effect: string | null): string | null => {
           v-else-if="save.save_modifier === 'none'"
           color="neutral"
           variant="soft"
-          size="xs"
+          size="sm"
         >
           Standard Roll
         </UBadge>
