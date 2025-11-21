@@ -111,3 +111,37 @@ export interface CharacterClass {
   description?: string
   sources?: Source[]
 }
+
+/**
+ * Background entity from D&D 5e API
+ *
+ * Used in: BackgroundCard, background detail pages, tests
+ * API endpoint: /api/v1/backgrounds
+ */
+export interface Background {
+  id: number
+  name: string
+  slug: string
+  skill_proficiencies?: any[]   // TODO: Type skill proficiency structure
+  tool_proficiencies?: any[]    // TODO: Type tool proficiency structure
+  languages?: any[]             // TODO: Type language structure
+  feature_name?: string
+  description?: string
+  sources?: Source[]
+}
+
+/**
+ * Feat entity from D&D 5e API
+ *
+ * Used in: FeatCard, feat detail pages, tests
+ * API endpoint: /api/v1/feats
+ */
+export interface Feat {
+  id: number
+  name: string
+  slug: string
+  prerequisites?: any[]   // TODO: Type prerequisite structure
+  modifiers?: any[]       // TODO: Use Modifier interface
+  description?: string
+  sources?: Source[]
+}

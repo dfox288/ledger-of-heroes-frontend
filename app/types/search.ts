@@ -4,11 +4,22 @@
  * Used by: SearchInput.vue, search.vue, useSearch composable
  */
 
-import type { Spell as SpellEntity, Item as ItemEntity } from './api/entities'
+import type {
+  Spell as SpellEntity,
+  Item as ItemEntity,
+  Race as RaceEntity,
+  CharacterClass as CharacterClassEntity,
+  Background as BackgroundEntity,
+  Feat as FeatEntity
+} from './api/entities'
 
 // Re-export entity types
 export type Spell = SpellEntity
 export type Item = ItemEntity
+export type Race = RaceEntity
+export type CharacterClass = CharacterClassEntity
+export type Background = BackgroundEntity
+export type Feat = FeatEntity
 
 /**
  * Entity type identifiers for search filtering
@@ -34,39 +45,8 @@ export interface SearchEntity {
   slug: string
 }
 
-/**
- * Race entity (minimal for search)
- */
-export interface Race extends SearchEntity {
-  size?: string
-  speed?: number
-}
-
-/**
- * Class entity (minimal for search)
- * Exported as CharacterClass to avoid conflicts with JS keyword 'class'
- */
-export interface CharacterClass extends SearchEntity {
-  hit_dice?: string
-}
-
 // Alias for backward compatibility
 export type Class = CharacterClass
-
-/**
- * Background entity (minimal for search)
- */
-export interface Background extends SearchEntity {
-  description?: string
-}
-
-/**
- * Feat entity (minimal for search)
- */
-export interface Feat extends SearchEntity {
-  prerequisite?: string
-  description?: string
-}
 
 /**
  * Search result data structure
