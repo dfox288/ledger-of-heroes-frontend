@@ -9,6 +9,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+- **Centralized type system** - Extracted shared TypeScript interfaces to `app/types/` (2025-11-21)
+  - Created `app/types/api/common.ts` with Source, AbilityScore, Modifier, Tag
+  - Migrated 12 components to use centralized types
+  - Eliminated 15+ duplicate interface definitions
+
 ### Fixed
 - Empty stats card no longer renders when entity has no quick stats (2025-11-21)
 
