@@ -170,28 +170,7 @@ const getItemTypeColor = computed(() => {
       >
         <!-- Properties Slot -->
         <template v-if="item.properties && item.properties.length > 0" #properties>
-          <div class="p-4">
-            <div class="flex flex-wrap gap-2 mb-4">
-              <UBadge
-                v-for="property in item.properties"
-                :key="property.id"
-                color="neutral"
-                variant="soft"
-              >
-                {{ property.name }}
-              </UBadge>
-            </div>
-            <div class="space-y-2">
-              <div
-                v-for="property in item.properties"
-                :key="`desc-${property.id}`"
-                class="text-sm"
-              >
-                <span class="font-medium text-gray-900 dark:text-gray-100">{{ property.name }}:</span>
-                <span class="text-gray-600 dark:text-gray-400 ml-1">{{ property.description }}</span>
-              </div>
-            </div>
-          </div>
+          <UiAccordionPropertiesList :properties="item.properties" />
         </template>
 
         <!-- Modifiers Slot -->
@@ -214,20 +193,7 @@ const getItemTypeColor = computed(() => {
 
         <!-- Abilities Slot -->
         <template v-if="item.abilities && item.abilities.length > 0" #abilities>
-          <div class="p-4 space-y-4">
-            <div
-              v-for="ability in item.abilities"
-              :key="ability.id"
-              class="p-4 rounded-lg bg-primary-50 dark:bg-primary-900/20"
-            >
-              <div class="font-semibold text-gray-900 dark:text-gray-100 mb-2">
-                {{ ability.name }}
-              </div>
-              <div class="text-gray-700 dark:text-gray-300 whitespace-pre-line">
-                {{ ability.description }}
-              </div>
-            </div>
-          </div>
+          <UiAccordionAbilitiesList :abilities="item.abilities" />
         </template>
 
         <!-- Source Slot -->
