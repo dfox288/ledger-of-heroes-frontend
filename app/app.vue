@@ -33,16 +33,35 @@ const toggleColorMode = () => {
   colorMode.preference = colorMode.value === 'dark' ? 'light' : 'dark'
 }
 
-// Navigation items
+// Main navigation items (top-level entities)
 const navItems = [
   { label: 'Spells', to: '/spells' },
   { label: 'Items', to: '/items' },
   { label: 'Races', to: '/races' },
   { label: 'Classes', to: '/classes' },
   { label: 'Backgrounds', to: '/backgrounds' },
-  { label: 'Feats', to: '/feats' },
-  { label: 'Sources', to: '/sources' }
+  { label: 'Feats', to: '/feats' }
 ]
+
+// Reference dropdown items (metadata/reference endpoints)
+const referenceItems = [
+  [
+    { label: 'Source Books', to: '/sources', icon: 'i-heroicons-book-open' }
+    // Future additions:
+    // { label: 'Spell Schools', to: '/spell-schools', icon: 'i-heroicons-academic-cap' },
+    // { label: 'Item Types', to: '/item-types', icon: 'i-heroicons-cube' },
+  ]
+]
+
+// Check if current route is in reference section
+const isReferenceActive = computed(() => {
+  return referenceItems.some(group =>
+    group.some(item => route.path.startsWith(item.to))
+  )
+})
+
+// Mobile menu state
+const isReferenceExpanded = ref(false)
 </script>
 
 <template>
@@ -65,6 +84,7 @@ const navItems = [
 
           <!-- Navigation Links (Center) - Desktop -->
           <div class="hidden md:flex items-center space-x-1">
+            <!-- Main navigation items -->
             <NuxtLink
               v-for="item in navItems"
               :key="item.to"
@@ -76,6 +96,20 @@ const navItems = [
             >
               {{ item.label }}
             </NuxtLink>
+
+            <!-- Reference dropdown -->
+            <UDropdown :items="referenceItems" :popper="{ placement: 'bottom-start' }">
+              <UButton
+                color="gray"
+                variant="ghost"
+                trailing-icon="i-heroicons-chevron-down-20-solid"
+                :class="isReferenceActive
+                  ? 'bg-gray-100 dark:bg-gray-800 text-blue-600 dark:text-blue-400'
+                  : 'text-gray-700 dark:text-gray-300'"
+              >
+                Reference
+              </UButton>
+            </UDropdown>
           </div>
 
           <!-- Dark Mode Toggle (Right) -->
@@ -92,6 +126,7 @@ const navItems = [
 
         <!-- Mobile Navigation -->
         <div class="md:hidden pb-3 space-y-1">
+          <!-- Main navigation items -->
           <NuxtLink
             v-for="item in navItems"
             :key="item.to"
@@ -103,6 +138,41 @@ const navItems = [
           >
             {{ item.label }}
           </NuxtLink>
+
+          <!-- Reference expandable section -->
+          <div>
+            <button
+              @click="isReferenceExpanded = !isReferenceExpanded"
+              class="w-full flex items-center justify-between px-3 py-2 rounded-md text-base font-medium transition-colors"
+              :class="isReferenceActive
+                ? 'bg-gray-100 dark:bg-gray-800 text-blue-600 dark:text-blue-400'
+                : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800'"
+            >
+              <span>Reference</span>
+              <UIcon
+                :name="isReferenceExpanded ? 'i-heroicons-chevron-up-20-solid' : 'i-heroicons-chevron-down-20-solid'"
+                class="w-5 h-5"
+              />
+            </button>
+
+            <!-- Reference submenu -->
+            <div v-show="isReferenceExpanded" class="pl-4 space-y-1 mt-1">
+              <template v-for="group in referenceItems" :key="group">
+                <NuxtLink
+                  v-for="item in group"
+                  :key="item.to"
+                  :to="item.to"
+                  class="flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition-colors"
+                  :class="route.path.startsWith(item.to)
+                    ? 'bg-gray-100 dark:bg-gray-800 text-blue-600 dark:text-blue-400'
+                    : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800'"
+                >
+                  <UIcon v-if="item.icon" :name="item.icon" class="w-4 h-4" />
+                  {{ item.label }}
+                </NuxtLink>
+              </template>
+            </div>
+          </div>
         </div>
       </div>
     </nav>
