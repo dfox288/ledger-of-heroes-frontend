@@ -9,3 +9,4 @@
 
 // API types
 export type { Source, AbilityScore, Modifier, Tag } from './api/common'
+export type { Spell, Item } from './api/entities'
