@@ -138,17 +138,13 @@ useHead({
 <template>
   <div class="container mx-auto px-4 py-8 max-w-7xl">
     <!-- Header -->
-    <div class="mb-8">
-      <h1 class="text-4xl font-bold text-gray-900 dark:text-gray-100 mb-2">
-        Spells
-        <span v-if="!loading" class="text-2xl text-gray-500 dark:text-gray-400 font-normal">
-          ({{ totalResults }} {{ hasActiveFilters ? 'filtered' : 'total' }})
-        </span>
-      </h1>
-      <p class="text-gray-600 dark:text-gray-400">
-        Browse and search D&D 5e spells
-      </p>
-    </div>
+    <UiListPageHeader
+      title="Spells"
+      :total="totalResults"
+      description="Browse and search D&D 5e spells"
+      :loading="loading"
+      :has-active-filters="hasActiveFilters"
+    />
 
     <!-- Filters -->
     <div class="mb-6 space-y-4">
@@ -238,60 +234,23 @@ useHead({
     </div>
 
     <!-- Loading State (Skeleton Cards) -->
-    <div v-if="loading" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-      <UCard v-for="i in 6" :key="i" class="animate-pulse">
-        <div class="space-y-3">
-          <div class="flex gap-2">
-            <div class="h-5 bg-gray-200 dark:bg-gray-700 rounded w-20"></div>
-            <div class="h-5 bg-gray-200 dark:bg-gray-700 rounded w-24"></div>
-          </div>
-          <div class="h-6 bg-gray-200 dark:bg-gray-700 rounded w-3/4"></div>
-          <div class="h-4 bg-gray-200 dark:bg-gray-700 rounded w-1/2"></div>
-          <div class="h-16 bg-gray-200 dark:bg-gray-700 rounded"></div>
-        </div>
-      </UCard>
-    </div>
+    <UiListSkeletonCards v-if="loading" />
 
     <!-- Error State -->
-    <div v-else-if="error" class="py-12">
-      <UCard>
-        <div class="text-center">
-          <UIcon name="i-heroicons-exclamation-triangle" class="w-12 h-12 mx-auto mb-4 text-red-500" />
-          <h2 class="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-2">
-            Error Loading Spells
-          </h2>
-          <p class="text-gray-600 dark:text-gray-400">{{ error.message }}</p>
-          <UButton color="primary" class="mt-4" @click="refresh">
-            Try Again
-          </UButton>
-        </div>
-      </UCard>
-    </div>
+    <UiListErrorState v-else-if="error" :error="error" entity-name="Spells" @retry="refresh" />
 
     <!-- Empty State -->
-    <div v-else-if="spells.length === 0" class="py-12">
-      <UCard>
-        <div class="text-center py-8">
-          <UIcon name="i-heroicons-magnifying-glass" class="w-16 h-16 mx-auto mb-4 text-gray-400" />
-          <h2 class="text-2xl font-semibold text-gray-900 dark:text-gray-100 mb-2">
-            No spells found
-          </h2>
-          <p class="text-gray-600 dark:text-gray-400 mb-6">
-            Try adjusting your filters or searching for different keywords
-          </p>
-          <UButton color="primary" @click="clearFilters">
-            Clear All Filters
-          </UButton>
-        </div>
-      </UCard>
-    </div>
+    <UiListEmptyState v-else-if="spells.length === 0" entity-name="spells" :has-filters="hasActiveFilters" @clear-filters="clearFilters" />
 
     <!-- Results -->
     <div v-else>
       <!-- Results count -->
-      <div class="mb-4 text-sm text-gray-600 dark:text-gray-400">
-        Showing {{ meta?.from || 0 }}-{{ meta?.to || 0 }} of {{ totalResults }} spells
-      </div>
+      <UiListResultsCount
+        :from="meta?.from || 0"
+        :to="meta?.to || 0"
+        :total="totalResults"
+        entity-name="spell"
+      />
 
       <!-- Spells Grid -->
       <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
@@ -303,23 +262,10 @@ useHead({
       </div>
 
       <!-- Pagination -->
-      <div v-if="totalResults > perPage" class="flex justify-center">
-        <UPagination
-          v-model:page="currentPage"
-          :total="totalResults"
-          :items-per-page="perPage"
-          show-edges
-        />
-      </div>
+      <UiListPagination v-model="currentPage" :total="totalResults" :items-per-page="perPage" />
     </div>
 
     <!-- Back to Home -->
-    <div class="mt-8 pt-6 border-t border-gray-200 dark:border-gray-700">
-      <NuxtLink to="/">
-        <UButton color="gray" variant="soft" icon="i-heroicons-arrow-left">
-          Back to Home
-        </UButton>
-      </NuxtLink>
-    </div>
+    <UiBackLink />
   </div>
 </template>

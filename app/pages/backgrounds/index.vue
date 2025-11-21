@@ -62,14 +62,12 @@ useHead({
 <template>
   <div class="container mx-auto px-4 py-8 max-w-7xl">
     <!-- Header -->
-    <div class="mb-8">
-      <h1 class="text-4xl font-bold text-gray-900 dark:text-gray-100 mb-2">
-        Backgrounds
-      </h1>
-      <p class="text-gray-600 dark:text-gray-400">
-        Browse all {{ totalResults }} D&D 5e character backgrounds
-      </p>
-    </div>
+    <UiListPageHeader
+      title="Backgrounds"
+      :total="totalResults"
+      description="Browse D&D 5e character backgrounds"
+      :loading="loading"
+    />
 
     <!-- Search -->
     <div class="mb-6">
@@ -93,53 +91,33 @@ useHead({
     </div>
 
     <!-- Loading State -->
-    <div v-if="loading" class="flex justify-center items-center py-12">
-      <div class="flex flex-col items-center gap-4">
-        <UIcon name="i-heroicons-arrow-path" class="w-8 h-8 animate-spin text-primary-500" />
-        <p class="text-gray-600 dark:text-gray-400">Loading backgrounds...</p>
-      </div>
-    </div>
+    <UiListSkeletonCards v-if="loading" />
 
     <!-- Error State -->
-    <div v-else-if="error" class="py-12">
-      <UCard>
-        <div class="text-center">
-          <UIcon name="i-heroicons-exclamation-triangle" class="w-12 h-12 mx-auto mb-4 text-red-500" />
-          <h2 class="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-2">
-            Error Loading Backgrounds
-          </h2>
-          <p class="text-gray-600 dark:text-gray-400">{{ error.message }}</p>
-          <UButton color="primary" class="mt-4" @click="refresh">
-            Try Again
-          </UButton>
-        </div>
-      </UCard>
-    </div>
+    <UiListErrorState
+      v-else-if="error"
+      :error="error"
+      entity-name="Backgrounds"
+      @retry="refresh"
+    />
 
     <!-- Empty State -->
-    <div v-else-if="backgrounds.length === 0" class="py-12">
-      <UCard>
-        <div class="text-center">
-          <UIcon name="i-heroicons-magnifying-glass" class="w-12 h-12 mx-auto mb-4 text-gray-400" />
-          <h2 class="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-2">
-            No Backgrounds Found
-          </h2>
-          <p class="text-gray-600 dark:text-gray-400 mb-4">
-            Try adjusting your search query
-          </p>
-          <UButton color="gray" @click="searchQuery = ''">
-            Clear Search
-          </UButton>
-        </div>
-      </UCard>
-    </div>
+    <UiListEmptyState
+      v-else-if="backgrounds.length === 0"
+      entity-name="backgrounds"
+      :has-filters="!!searchQuery"
+      @clear-filters="searchQuery = ''"
+    />
 
     <!-- Results -->
     <div v-else>
       <!-- Results count -->
-      <div class="mb-4 text-sm text-gray-600 dark:text-gray-400">
-        Showing {{ meta?.from || 0 }}-{{ meta?.to || 0 }} of {{ totalResults }} backgrounds
-      </div>
+      <UiListResultsCount
+        :from="meta?.from || 0"
+        :to="meta?.to || 0"
+        :total="totalResults"
+        entity-name="background"
+      />
 
       <!-- Backgrounds Grid -->
       <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
@@ -152,23 +130,14 @@ useHead({
       </div>
 
       <!-- Pagination -->
-      <div v-if="lastPage > 1" class="flex justify-center">
-        <UPagination
-          v-model="currentPage"
-          :page-count="perPage"
-          :total="totalResults"
-          :max="7"
-        />
-      </div>
+      <UiListPagination
+        v-model="currentPage"
+        :total="totalResults"
+        :items-per-page="perPage"
+      />
     </div>
 
     <!-- Back to Home -->
-    <div class="mt-8 pt-6 border-t border-gray-200 dark:border-gray-700">
-      <NuxtLink to="/">
-        <UButton color="gray" variant="soft" icon="i-heroicons-arrow-left">
-          Back to Home
-        </UButton>
-      </NuxtLink>
-    </div>
+    <UiBackLink />
   </div>
 </template>
