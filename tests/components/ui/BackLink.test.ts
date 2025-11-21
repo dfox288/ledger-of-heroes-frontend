@@ -1,17 +1,17 @@
 import { describe, it, expect } from 'vitest'
-import { mount } from '@vue/test-utils'
+import { mountSuspended } from '@nuxt/test-utils/runtime'
 import BackLink from '~/components/ui/BackLink.vue'
 
 describe('UiBackLink', () => {
   describe('basic rendering', () => {
-    it('renders with default "Back to Home" label', () => {
-      const wrapper = mount(BackLink)
+    it('renders with default "Back to Home" label', async () => {
+      const wrapper = await mountSuspended(BackLink)
 
       expect(wrapper.text()).toContain('Back to Home')
     })
 
-    it('renders with custom label', () => {
-      const wrapper = mount(BackLink, {
+    it('renders with custom label', async () => {
+      const wrapper = await mountSuspended(BackLink, {
         props: {
           label: 'Back to Spells'
         }
@@ -20,8 +20,8 @@ describe('UiBackLink', () => {
       expect(wrapper.text()).toContain('Back to Spells')
     })
 
-    it('accepts custom "to" prop', () => {
-      const wrapper = mount(BackLink, {
+    it('accepts custom "to" prop', async () => {
+      const wrapper = await mountSuspended(BackLink, {
         props: {
           to: '/spells'
         }
@@ -34,8 +34,8 @@ describe('UiBackLink', () => {
   })
 
   describe('styling and layout', () => {
-    it('has correct container styling with border-top', () => {
-      const wrapper = mount(BackLink)
+    it('has correct container styling with border-top', async () => {
+      const wrapper = await mountSuspended(BackLink)
 
       const container = wrapper.find('.border-t')
       expect(container.exists()).toBe(true)
@@ -45,8 +45,8 @@ describe('UiBackLink', () => {
       expect(container.classes()).toContain('pt-6')
     })
 
-    it('contains button element with correct classes', () => {
-      const wrapper = mount(BackLink)
+    it('contains button element with correct classes', async () => {
+      const wrapper = await mountSuspended(BackLink)
 
       // UButton renders as a button element, check for its presence
       const button = wrapper.find('button')
@@ -55,16 +55,16 @@ describe('UiBackLink', () => {
   })
 
   describe('icon customization', () => {
-    it('renders button with default icon', () => {
-      const wrapper = mount(BackLink)
+    it('renders button with default icon', async () => {
+      const wrapper = await mountSuspended(BackLink)
 
       // Icon is passed to UButton internally, check button exists
       const button = wrapper.find('button')
       expect(button.exists()).toBe(true)
     })
 
-    it('renders button with custom icon', () => {
-      const wrapper = mount(BackLink, {
+    it('renders button with custom icon', async () => {
+      const wrapper = await mountSuspended(BackLink, {
         props: {
           icon: 'i-heroicons-home'
         }
@@ -77,8 +77,8 @@ describe('UiBackLink', () => {
   })
 
   describe('edge cases', () => {
-    it('handles empty label gracefully', () => {
-      const wrapper = mount(BackLink, {
+    it('handles empty label gracefully', async () => {
+      const wrapper = await mountSuspended(BackLink, {
         props: {
           label: ''
         }
@@ -88,9 +88,9 @@ describe('UiBackLink', () => {
       expect(wrapper.exists()).toBe(true)
     })
 
-    it('handles very long labels', () => {
+    it('handles very long labels', async () => {
       const longLabel = 'Back to Very Long Page Title That Should Not Break Layout'
-      const wrapper = mount(BackLink, {
+      const wrapper = await mountSuspended(BackLink, {
         props: {
           label: longLabel
         }
@@ -99,8 +99,8 @@ describe('UiBackLink', () => {
       expect(wrapper.text()).toContain(longLabel)
     })
 
-    it('handles paths with query parameters', () => {
-      const wrapper = mount(BackLink, {
+    it('handles paths with query parameters', async () => {
+      const wrapper = await mountSuspended(BackLink, {
         props: {
           to: '/spells?level=3'
         }
@@ -110,8 +110,8 @@ describe('UiBackLink', () => {
       expect(wrapper.exists()).toBe(true)
     })
 
-    it('handles external URLs', () => {
-      const wrapper = mount(BackLink, {
+    it('handles external URLs', async () => {
+      const wrapper = await mountSuspended(BackLink, {
         props: {
           to: 'https://example.com'
         }

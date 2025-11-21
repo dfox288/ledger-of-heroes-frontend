@@ -1,8 +1,8 @@
 import { describe, it, expect } from 'vitest'
 import { mount } from '@vue/test-utils'
-import UiQuickStatsCard from '~/components/ui/detail/UiQuickStatsCard.vue'
+import UiDetailQuickStatsCard from '~/components/ui/detail/UiDetailQuickStatsCard.vue'
 
-describe('UiQuickStatsCard', () => {
+describe('UiDetailQuickStatsCard', () => {
   const mountOptions = {
     global: {
       stubs: {
@@ -18,7 +18,7 @@ describe('UiQuickStatsCard', () => {
   }
 
   it('renders stat labels', () => {
-    const wrapper = mount(UiQuickStatsCard, {
+    const wrapper = mount(UiDetailQuickStatsCard, {
       props: {
         stats: [
           { icon: 'i-heroicons-clock', label: 'Casting Time', value: '1 action' }
@@ -31,7 +31,7 @@ describe('UiQuickStatsCard', () => {
   })
 
   it('renders stat values', () => {
-    const wrapper = mount(UiQuickStatsCard, {
+    const wrapper = mount(UiDetailQuickStatsCard, {
       props: {
         stats: [
           { icon: 'i-heroicons-bolt', label: 'Range', value: '150 feet' }
@@ -44,7 +44,7 @@ describe('UiQuickStatsCard', () => {
   })
 
   it('renders subtext when provided', () => {
-    const wrapper = mount(UiQuickStatsCard, {
+    const wrapper = mount(UiDetailQuickStatsCard, {
       props: {
         stats: [
           { icon: 'i-heroicons-sparkles', label: 'Components', value: 'V, S, M', subtext: 'A tiny ball of bat guano' }
@@ -58,7 +58,7 @@ describe('UiQuickStatsCard', () => {
   })
 
   it('does not render subtext when omitted', () => {
-    const wrapper = mount(UiQuickStatsCard, {
+    const wrapper = mount(UiDetailQuickStatsCard, {
       props: {
         stats: [
           { icon: 'i-heroicons-clock', label: 'Duration', value: 'Instantaneous' }
@@ -74,7 +74,7 @@ describe('UiQuickStatsCard', () => {
   })
 
   it('renders multiple stats', () => {
-    const wrapper = mount(UiQuickStatsCard, {
+    const wrapper = mount(UiDetailQuickStatsCard, {
       props: {
         stats: [
           { icon: 'i-heroicons-clock', label: 'Casting Time', value: '1 action' },
@@ -91,7 +91,7 @@ describe('UiQuickStatsCard', () => {
   })
 
   it('uses default 2-column grid', () => {
-    const wrapper = mount(UiQuickStatsCard, {
+    const wrapper = mount(UiDetailQuickStatsCard, {
       props: {
         stats: [
           { icon: 'i-heroicons-clock', label: 'Test', value: '1' }
@@ -106,7 +106,7 @@ describe('UiQuickStatsCard', () => {
   })
 
   it('uses custom column count when provided', () => {
-    const wrapper = mount(UiQuickStatsCard, {
+    const wrapper = mount(UiDetailQuickStatsCard, {
       props: {
         stats: [
           { icon: 'i-heroicons-clock', label: 'Test 1', value: '1' },
@@ -124,7 +124,7 @@ describe('UiQuickStatsCard', () => {
   })
 
   it('applies dark mode support', () => {
-    const wrapper = mount(UiQuickStatsCard, {
+    const wrapper = mount(UiDetailQuickStatsCard, {
       props: {
         stats: [
           { icon: 'i-heroicons-clock', label: 'Test', value: 'Value' }

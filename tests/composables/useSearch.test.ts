@@ -2,6 +2,16 @@ import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { useSearch } from '~/composables/useSearch'
 import type { SearchResult } from '~/types/search'
 
+// Create a mock function that will persist across all tests
+const mockApiFetch = vi.fn()
+
+// Mock useApi composable to return our mock function
+vi.mock('~/composables/useApi', () => ({
+  useApi: () => ({
+    apiFetch: mockApiFetch
+  })
+}))
+
 describe('useSearch', () => {
   beforeEach(() => {
     // Clear all mocks before each test
@@ -17,14 +27,12 @@ describe('useSearch', () => {
   })
 
   it('sets loading state while searching', async () => {
-    // Mock $fetch to return after a delay
-    const mockFetch = vi.fn().mockImplementation(() => {
+    // Mock apiFetch to return after a delay
+    mockApiFetch.mockImplementation(() => {
       return new Promise((resolve) => {
         setTimeout(() => resolve({ data: { spells: [] } }), 100)
       })
     })
-
-    global.$fetch = mockFetch as any
 
     const { search, loading } = useSearch()
 
@@ -58,7 +66,7 @@ describe('useSearch', () => {
       },
     }
 
-    global.$fetch = vi.fn().mockResolvedValue(mockData)
+    mockApiFetch.mockResolvedValue(mockData)
 
     const { search, results, error } = useSearch()
     await search('fireball')
@@ -69,7 +77,7 @@ describe('useSearch', () => {
 
   it('handles API errors gracefully', async () => {
     const errorMessage = 'Network error'
-    global.$fetch = vi.fn().mockRejectedValue(new Error(errorMessage))
+    mockApiFetch.mockRejectedValue(new Error(errorMessage))
 
     const { search, results, error } = useSearch()
     await search('fireball')
@@ -82,7 +90,7 @@ describe('useSearch', () => {
     const { search, results } = useSearch()
 
     // Initially set some results
-    global.$fetch = vi.fn().mockResolvedValue({ data: { spells: [] } })
+    mockApiFetch.mockResolvedValue({ data: { spells: [] } })
     await search('fire')
     expect(results.value).not.toBeNull()
 
@@ -92,14 +100,13 @@ describe('useSearch', () => {
   })
 
   it('passes entity type filters to API', async () => {
-    const mockFetch = vi.fn().mockResolvedValue({ data: {} })
-    global.$fetch = mockFetch
+    mockApiFetch.mockResolvedValue({ data: {} })
 
     const { search } = useSearch()
     await search('dragon', { types: ['spells', 'items'] })
 
-    expect(mockFetch).toHaveBeenCalledWith(
-      expect.any(String),
+    expect(mockApiFetch).toHaveBeenCalledWith(
+      '/search',
       expect.objectContaining({
         query: expect.objectContaining({
           q: 'dragon',
@@ -110,14 +117,13 @@ describe('useSearch', () => {
   })
 
   it('passes limit parameter to API', async () => {
-    const mockFetch = vi.fn().mockResolvedValue({ data: {} })
-    global.$fetch = mockFetch
+    mockApiFetch.mockResolvedValue({ data: {} })
 
     const { search } = useSearch()
     await search('sword', { limit: 5 })
 
-    expect(mockFetch).toHaveBeenCalledWith(
-      expect.any(String),
+    expect(mockApiFetch).toHaveBeenCalledWith(
+      '/search',
       expect.objectContaining({
         query: expect.objectContaining({
           q: 'sword',
@@ -128,7 +134,7 @@ describe('useSearch', () => {
   })
 
   it('clears results using clearResults method', async () => {
-    global.$fetch = vi.fn().mockResolvedValue({ data: { spells: [] } })
+    mockApiFetch.mockResolvedValue({ data: { spells: [] } })
 
     const { search, results, clearResults } = useSearch()
 
