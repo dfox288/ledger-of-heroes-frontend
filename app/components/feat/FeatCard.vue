@@ -1,15 +1,5 @@
 <script setup lang="ts">
-import type { Source } from '~/types'
-
-interface Feat {
-  id: number
-  name: string
-  slug: string
-  prerequisites?: any[]
-  modifiers?: any[]
-  description?: string
-  sources?: Source[]
-}
+import type { Feat } from '~/types'
 
 interface Props {
   feat: Feat
