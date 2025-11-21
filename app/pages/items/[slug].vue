@@ -119,7 +119,7 @@ const getItemTypeColor = computed(() => {
       />
 
       <!-- Quick Stats -->
-      <UiQuickStatsCard
+      <UiDetailQuickStatsCard
         :stats="[
           ...(costInGold ? [{ icon: 'i-heroicons-currency-dollar', label: 'Cost', value: costInGold }] : []),
           ...(item.weight ? [{ icon: 'i-heroicons-scale', label: 'Weight', value: `${item.weight} lb` }] : []),

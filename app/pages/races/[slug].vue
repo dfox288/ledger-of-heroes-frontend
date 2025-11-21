@@ -59,7 +59,7 @@ const getSizeColor = computed(() => {
       />
 
       <!-- Quick Stats -->
-      <UiQuickStatsCard
+      <UiDetailQuickStatsCard
         :stats="[
           ...(race.size ? [{ icon: 'i-heroicons-user', label: 'Size', value: race.size.name }] : []),
           ...(race.speed ? [{ icon: 'i-heroicons-bolt', label: 'Speed', value: `${race.speed} ft.` }] : [])

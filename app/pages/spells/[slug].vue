@@ -105,7 +105,7 @@ const damageEffects = computed(() => {
       />
 
       <!-- Quick Stats -->
-      <UiQuickStatsCard
+      <UiDetailQuickStatsCard
         :stats="[
           { icon: 'i-heroicons-clock', label: 'Casting Time', value: spell.casting_time },
           { icon: 'i-heroicons-arrow-trending-up', label: 'Range', value: spell.range },

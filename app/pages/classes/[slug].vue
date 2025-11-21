@@ -38,7 +38,7 @@ useSeoMeta({
       />
 
       <!-- Quick Stats -->
-      <UiQuickStatsCard
+      <UiDetailQuickStatsCard
         :columns="3"
         :stats="[
           ...(entity.hit_die ? [{ icon: 'i-heroicons-heart', label: 'Hit Die', value: `1d${entity.hit_die}` }] : []),
