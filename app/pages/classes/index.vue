@@ -1,72 +1,30 @@
 <script setup lang="ts">
-import { ref, computed, watch } from 'vue'
+import { computed } from 'vue'
 
-// API configuration
-const { apiFetch } = useApi()
+// Use entity list composable for all shared logic
+const {
+  searchQuery,
+  currentPage,
+  data: classes,
+  meta,
+  totalResults,
+  loading,
+  error,
+  refresh,
+  clearFilters,
+  hasActiveFilters
+} = useEntityList({
+  endpoint: '/classes',
+  cacheKey: 'classes-list',
+  queryBuilder: computed(() => ({})),  // No custom filters for classes
+  seo: {
+    title: 'Classes - D&D 5e Compendium',
+    description: 'Browse all D&D 5e player classes and subclasses.'
+  }
+})
 
-// Reactive filters
-const searchQuery = ref('')
-const currentPage = ref(1)
+// Pagination settings
 const perPage = 24
-
-// Computed query params for API
-const queryParams = computed(() => {
-  const params: Record<string, any> = {
-    per_page: perPage,
-    page: currentPage.value,
-  }
-
-  if (searchQuery.value.trim()) {
-    params.q = searchQuery.value.trim()
-  }
-
-  return params
-})
-
-// Fetch classes with reactive filters (via Nitro proxy)
-const { data: classesResponse, pending: loading, error, refresh } = await useAsyncData(
-  'classes-list',
-  async () => {
-    const response = await apiFetch('/classes', {
-      query: queryParams.value
-    })
-    return response
-  },
-  {
-    watch: [queryParams]
-  }
-)
-
-// Computed values
-const classes = computed(() => classesResponse.value?.data || [])
-const meta = computed(() => classesResponse.value?.meta || null)
-const totalResults = computed(() => meta.value?.total || 0)
-const lastPage = computed(() => meta.value?.last_page || 1)
-
-// Reset to page 1 when search changes
-watch(searchQuery, () => {
-  currentPage.value = 1
-})
-
-// Check if any filters are active
-const hasActiveFilters = computed(() => {
-  return searchQuery.value.trim() !== ''
-})
-
-// Clear all filters
-const clearFilters = () => {
-  searchQuery.value = ''
-}
-
-// SEO meta tags
-useSeoMeta({
-  title: 'Classes - D&D 5e Compendium',
-  description: 'Browse all D&D 5e player classes and subclasses.',
-})
-
-useHead({
-  title: 'Classes - D&D 5e Compendium',
-})
 </script>
 
 <template>

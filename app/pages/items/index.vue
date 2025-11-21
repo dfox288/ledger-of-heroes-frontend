@@ -1,19 +1,15 @@
 <script setup lang="ts">
-import { ref, computed, watch } from 'vue'
+import { ref, computed } from 'vue'
 
-// API configuration
-const { apiFetch } = useApi()
 const route = useRoute()
+const { apiFetch } = useApi()
 
-// Reactive filters - initialize from URL query params
-const searchQuery = ref((route.query.q as string) || '')
+// Custom filter state (entity-specific)
 const selectedType = ref(route.query.type ? Number(route.query.type) : null)
 const selectedRarity = ref((route.query.rarity as string) || null)
 const selectedMagic = ref((route.query.is_magic as string) || null)
-const currentPage = ref(route.query.page ? Number(route.query.page) : 1)
-const perPage = 24
 
-// Fetch item types for filter options (via Nitro proxy)
+// Fetch item types for filter options
 const { data: itemTypes } = await useAsyncData('item-types', async () => {
   const response = await apiFetch('/item-types')
   return response.data
@@ -37,62 +33,6 @@ const magicOptions = [
   { label: 'Non-Magic Items', value: 'false' },
 ]
 
-// Computed query params for API
-const queryParams = computed(() => {
-  const params: Record<string, any> = {
-    per_page: perPage,
-    page: currentPage.value,
-  }
-
-  if (searchQuery.value.trim()) {
-    params.q = searchQuery.value.trim()
-  }
-
-  if (selectedType.value !== null) {
-    params.type = selectedType.value
-  }
-
-  if (selectedRarity.value !== null) {
-    params.rarity = selectedRarity.value
-  }
-
-  if (selectedMagic.value !== null) {
-    params.is_magic = selectedMagic.value
-  }
-
-  return params
-})
-
-// Fetch items with reactive filters (via Nitro proxy)
-const { data: itemsResponse, pending: loading, error, refresh } = await useAsyncData(
-  'items-list',
-  async () => {
-    const response = await apiFetch('/items', {
-      query: queryParams.value
-    })
-    return response
-  },
-  {
-    watch: [currentPage, searchQuery, selectedType, selectedRarity, selectedMagic]
-  }
-)
-
-// Computed values
-const items = computed(() => itemsResponse.value?.data || [])
-const meta = computed(() => itemsResponse.value?.meta || null)
-const totalResults = computed(() => meta.value?.total || 0)
-const lastPage = computed(() => meta.value?.last_page || 1)
-
-// Check if filters are active
-const hasActiveFilters = computed(() =>
-  searchQuery.value || selectedType.value !== null || selectedRarity.value !== null || selectedMagic.value !== null
-)
-
-// Get type name by ID for filter chips
-const getTypeName = (typeId: number) => {
-  return itemTypes.value?.find((t: any) => t.id === typeId)?.name || 'Unknown'
-}
-
 // Item type filter options
 const typeOptions = computed(() => {
   const options = [{ label: 'All Types', value: null }]
@@ -105,42 +45,52 @@ const typeOptions = computed(() => {
   return options
 })
 
-// Clear all filters
+// Query builder for custom filters
+const queryBuilder = computed(() => {
+  const params: Record<string, any> = {}
+  if (selectedType.value !== null) params.type = selectedType.value
+  if (selectedRarity.value !== null) params.rarity = selectedRarity.value
+  if (selectedMagic.value !== null) params.is_magic = selectedMagic.value
+  return params
+})
+
+// Use entity list composable for all shared logic
+const {
+  searchQuery,
+  currentPage,
+  data: items,
+  meta,
+  totalResults,
+  loading,
+  error,
+  refresh,
+  clearFilters: clearBaseFilters,
+  hasActiveFilters
+} = useEntityList({
+  endpoint: '/items',
+  cacheKey: 'items-list',
+  queryBuilder,
+  seo: {
+    title: 'Items & Equipment - D&D 5e Compendium',
+    description: 'Browse all D&D 5e items and equipment. Filter by type, rarity, and magic properties.'
+  }
+})
+
+// Clear all filters (base + custom)
 const clearFilters = () => {
-  searchQuery.value = ''
+  clearBaseFilters()
   selectedType.value = null
   selectedRarity.value = null
   selectedMagic.value = null
-  currentPage.value = 1
 }
 
-// Reset to page 1 when filters change
-watch([searchQuery, selectedType, selectedRarity, selectedMagic], () => {
-  currentPage.value = 1
-})
+// Get type name by ID for filter chips
+const getTypeName = (typeId: number) => {
+  return itemTypes.value?.find((t: any) => t.id === typeId)?.name || 'Unknown'
+}
 
-// Sync URL query params with filter state
-watch([currentPage, searchQuery, selectedType, selectedRarity, selectedMagic], () => {
-  const query: Record<string, any> = {}
-
-  if (currentPage.value > 1) query.page = currentPage.value.toString()
-  if (searchQuery.value) query.q = searchQuery.value
-  if (selectedType.value !== null) query.type = selectedType.value.toString()
-  if (selectedRarity.value !== null) query.rarity = selectedRarity.value
-  if (selectedMagic.value !== null) query.is_magic = selectedMagic.value
-
-  navigateTo({ query }, { replace: true })
-})
-
-// SEO meta tags
-useSeoMeta({
-  title: 'Items & Equipment - D&D 5e Compendium',
-  description: 'Browse all D&D 5e items and equipment. Filter by type, rarity, and magic properties.',
-})
-
-useHead({
-  title: 'Items & Equipment - D&D 5e Compendium',
-})
+// Pagination settings
+const perPage = 24
 </script>
 
 <template>

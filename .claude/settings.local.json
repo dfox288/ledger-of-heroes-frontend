@@ -101,7 +101,15 @@
       "Bash(git remote set-url:*)",
       "Bash(gh auth:*)",
       "Bash(gh repo view:*)",
-      "Bash(gh repo edit:*)"
+      "Bash(gh repo edit:*)",
+      "Bash(for entity in spells items races classes)",
+      "Bash(for page in spells/simulacrum items/1 races/1 classes/1 backgrounds/1 feats/1)",
+      "Bash(do echo -n \"$page: \")",
+      "Bash(for path in sizes languages damage-types)",
+      "Bash(do curl -s \"http://localhost:3000/$path\" -o /dev/null -w \"$path: HTTP %{http_code}\\n\")",
+      "Bash(git rev-parse:*)",
+      "Bash(for path in spell-schools item-types proficiency-types skills conditions)",
+      "Bash(do echo -n \"$path: \")"
     ],
     "deny": [],
     "ask": []

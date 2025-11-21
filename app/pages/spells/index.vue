@@ -1,77 +1,20 @@
 <script setup lang="ts">
-import { ref, computed, watch } from 'vue'
+import { ref, computed } from 'vue'
 
-// API configuration
-const { apiFetch } = useApi()
 const route = useRoute()
+const { apiFetch } = useApi()
 
-// Reactive filters - initialize from URL query params
-const searchQuery = ref((route.query.q as string) || '')
+// Custom filter state (entity-specific)
 const selectedLevel = ref(route.query.level ? Number(route.query.level) : null)
 const selectedSchool = ref(route.query.school ? Number(route.query.school) : null)
-const currentPage = ref(route.query.page ? Number(route.query.page) : 1)
-const perPage = 24
 
-// Fetch spell schools for filter options (via Nitro proxy)
+// Fetch spell schools for filter options
 const { data: spellSchools } = await useAsyncData('spell-schools', async () => {
   const response = await apiFetch('/spell-schools')
   return response.data
 })
 
-// Computed query params for API
-const queryParams = computed(() => {
-  const params: Record<string, any> = {
-    per_page: perPage,
-    page: currentPage.value,
-  }
-
-  if (searchQuery.value.trim()) {
-    params.q = searchQuery.value.trim()
-  }
-
-  if (selectedLevel.value !== null) {
-    params.level = selectedLevel.value
-  }
-
-  if (selectedSchool.value !== null) {
-    params.school = selectedSchool.value
-  }
-
-  return params
-})
-
-// Fetch spells with reactive filters (via Nitro proxy)
-const { data: spellsResponse, pending: loading, error, refresh } = await useAsyncData(
-  'spells-list',
-  async () => {
-    const response = await apiFetch('/spells', {
-      query: queryParams.value
-    })
-    return response
-  },
-  {
-    watch: [currentPage, searchQuery, selectedLevel, selectedSchool]
-  }
-)
-
-// Computed values
-const spells = computed(() => spellsResponse.value?.data || [])
-const meta = computed(() => spellsResponse.value?.meta || null)
-const totalResults = computed(() => meta.value?.total || 0)
-const lastPage = computed(() => meta.value?.last_page || 1)
-
-// Check if filters are active
-const hasActiveFilters = computed(() =>
-  searchQuery.value || selectedLevel.value !== null || selectedSchool.value !== null
-)
-
-// Get school name by ID for filter chips
-const getSchoolName = (schoolId: number) => {
-  return spellSchools.value?.find((s: any) => s.id === schoolId)?.name || 'Unknown'
-}
-
 // Spell level options (0 = Cantrip, 1-9 = Spell levels)
-// Note: Using "label" key for NuxtUI v4 USelectMenu
 const levelOptions = [
   { label: 'All Levels', value: null },
   { label: 'Cantrip', value: 0 },
@@ -87,7 +30,6 @@ const levelOptions = [
 ]
 
 // School filter options
-// Note: Using "label" key for NuxtUI v4 USelectMenu
 const schoolOptions = computed(() => {
   const options = [{ label: 'All Schools', value: null }]
   if (spellSchools.value) {
@@ -99,40 +41,50 @@ const schoolOptions = computed(() => {
   return options
 })
 
-// Clear all filters
+// Query builder for custom filters
+const queryBuilder = computed(() => {
+  const params: Record<string, any> = {}
+  if (selectedLevel.value !== null) params.level = selectedLevel.value
+  if (selectedSchool.value !== null) params.school = selectedSchool.value
+  return params
+})
+
+// Use entity list composable for all shared logic
+const {
+  searchQuery,
+  currentPage,
+  data: spells,
+  meta,
+  totalResults,
+  loading,
+  error,
+  refresh,
+  clearFilters: clearBaseFilters,
+  hasActiveFilters
+} = useEntityList({
+  endpoint: '/spells',
+  cacheKey: 'spells-list',
+  queryBuilder,
+  seo: {
+    title: 'Spells - D&D 5e Compendium',
+    description: 'Browse all D&D 5e spells. Filter by level, school, and search for specific spells.'
+  }
+})
+
+// Clear all filters (base + custom)
 const clearFilters = () => {
-  searchQuery.value = ''
+  clearBaseFilters()
   selectedLevel.value = null
   selectedSchool.value = null
-  currentPage.value = 1
 }
 
-// Reset to page 1 when filters change
-watch([searchQuery, selectedLevel, selectedSchool], () => {
-  currentPage.value = 1
-})
+// Get school name by ID for filter chips
+const getSchoolName = (schoolId: number) => {
+  return spellSchools.value?.find((s: any) => s.id === schoolId)?.name || 'Unknown'
+}
 
-// Sync URL query params with filter state (optional but improves UX)
-watch([currentPage, searchQuery, selectedLevel, selectedSchool], () => {
-  const query: Record<string, any> = {}
-
-  if (currentPage.value > 1) query.page = currentPage.value.toString()
-  if (searchQuery.value) query.q = searchQuery.value
-  if (selectedLevel.value !== null) query.level = selectedLevel.value.toString()
-  if (selectedSchool.value !== null) query.school = selectedSchool.value.toString()
-
-  navigateTo({ query }, { replace: true })
-})
-
-// SEO meta tags
-useSeoMeta({
-  title: 'Spells - D&D 5e Compendium',
-  description: 'Browse all D&D 5e spells. Filter by level, school, and search for specific spells.',
-})
-
-useHead({
-  title: 'Spells - D&D 5e Compendium',
-})
+// Pagination settings
+const perPage = 24
 </script>
 
 <template>

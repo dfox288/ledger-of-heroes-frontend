@@ -1,62 +1,30 @@
 <script setup lang="ts">
-import { ref, computed, watch } from 'vue'
+import { computed } from 'vue'
 
-// API configuration
-const { apiFetch } = useApi()
+// Use entity list composable for all shared logic
+const {
+  searchQuery,
+  currentPage,
+  data: feats,
+  meta,
+  totalResults,
+  loading,
+  error,
+  refresh,
+  clearFilters,
+  hasActiveFilters
+} = useEntityList({
+  endpoint: '/feats',
+  cacheKey: 'feats-list',
+  queryBuilder: computed(() => ({})),  // No custom filters for feats
+  seo: {
+    title: 'Feats - D&D 5e Compendium',
+    description: 'Browse all D&D 5e feats and character abilities.'
+  }
+})
 
-// Reactive filters
-const searchQuery = ref('')
-const currentPage = ref(1)
+// Pagination settings
 const perPage = 24
-
-// Computed query params for API
-const queryParams = computed(() => {
-  const params: Record<string, any> = {
-    per_page: perPage,
-    page: currentPage.value,
-  }
-
-  if (searchQuery.value.trim()) {
-    params.q = searchQuery.value.trim()
-  }
-
-  return params
-})
-
-// Fetch feats with reactive filters (via Nitro proxy)
-const { data: featsResponse, pending: loading, error, refresh } = await useAsyncData(
-  'feats-list',
-  async () => {
-    const response = await apiFetch('/feats', {
-      query: queryParams.value
-    })
-    return response
-  },
-  {
-    watch: [queryParams]
-  }
-)
-
-// Computed values
-const feats = computed(() => featsResponse.value?.data || [])
-const meta = computed(() => featsResponse.value?.meta || null)
-const totalResults = computed(() => meta.value?.total || 0)
-const lastPage = computed(() => meta.value?.last_page || 1)
-
-// Reset to page 1 when search changes
-watch(searchQuery, () => {
-  currentPage.value = 1
-})
-
-// SEO meta tags
-useSeoMeta({
-  title: 'Feats - D&D 5e Compendium',
-  description: 'Browse all D&D 5e feats and character abilities.',
-})
-
-useHead({
-  title: 'Feats - D&D 5e Compendium',
-})
 </script>
 
 <template>
@@ -105,8 +73,8 @@ useHead({
     <UiListEmptyState
       v-else-if="feats.length === 0"
       entity-name="feats"
-      :has-filters="!!searchQuery"
-      @clear-filters="searchQuery = ''"
+      :has-filters="hasActiveFilters"
+      @clear-filters="clearFilters"
     />
 
     <!-- Results -->

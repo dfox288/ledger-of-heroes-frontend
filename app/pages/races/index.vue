@@ -1,17 +1,13 @@
 <script setup lang="ts">
-import { ref, computed, watch } from 'vue'
+import { ref, computed } from 'vue'
 
-// API configuration
-const { apiFetch } = useApi()
 const route = useRoute()
+const { apiFetch } = useApi()
 
-// Reactive filters - initialize from URL query params
-const searchQuery = ref((route.query.q as string) || '')
-const currentPage = ref(route.query.page ? Number(route.query.page) : 1)
+// Custom filter state (entity-specific)
 const selectedSize = ref((route.query.size as string) || '')
-const perPage = 24
 
-// Fetch available sizes
+// Fetch available sizes for filter options
 const { data: sizesResponse } = await useAsyncData(
   'sizes',
   async () => {
@@ -22,81 +18,43 @@ const { data: sizesResponse } = await useAsyncData(
 
 const sizes = computed(() => sizesResponse.value?.data || [])
 
-// Computed query params for API
-const queryParams = computed(() => {
-  const params: Record<string, any> = {
-    per_page: perPage,
-    page: currentPage.value,
-  }
-
-  if (searchQuery.value.trim()) {
-    params.q = searchQuery.value.trim()
-  }
-
-  // Size filter ready for when backend adds support
-  if (selectedSize.value) {
-    params.size = selectedSize.value
-  }
-
+// Query builder for custom filters
+const queryBuilder = computed(() => {
+  const params: Record<string, any> = {}
+  if (selectedSize.value) params.size = selectedSize.value
   return params
 })
 
-// Fetch races with reactive filters (via Nitro proxy)
-const { data: racesResponse, pending: loading, error, refresh } = await useAsyncData(
-  'races-list',
-  async () => {
-    const response = await apiFetch('/races', {
-      query: queryParams.value
-    })
-    return response
-  },
-  {
-    watch: [currentPage, searchQuery, selectedSize]
+// Use entity list composable for all shared logic
+const {
+  searchQuery,
+  currentPage,
+  data: races,
+  meta,
+  totalResults,
+  loading,
+  error,
+  refresh,
+  clearFilters: clearBaseFilters,
+  hasActiveFilters
+} = useEntityList({
+  endpoint: '/races',
+  cacheKey: 'races-list',
+  queryBuilder,
+  seo: {
+    title: 'Races - D&D 5e Compendium',
+    description: 'Browse all D&D 5e player races and subraces.'
   }
-)
-
-// Computed values
-const races = computed(() => racesResponse.value?.data || [])
-const meta = computed(() => racesResponse.value?.meta || null)
-const totalResults = computed(() => meta.value?.total || 0)
-const lastPage = computed(() => meta.value?.last_page || 1)
-
-// Reset to page 1 when filters change
-watch([searchQuery, selectedSize], () => {
-  currentPage.value = 1
 })
 
-// Sync URL query params with filter state
-watch([currentPage, searchQuery, selectedSize], () => {
-  const query: Record<string, any> = {}
-
-  if (currentPage.value > 1) query.page = currentPage.value.toString()
-  if (searchQuery.value) query.q = searchQuery.value
-  if (selectedSize.value) query.size = selectedSize.value
-
-  navigateTo({ query }, { replace: true })
-})
-
-// Check if any filters are active
-const hasActiveFilters = computed(() => {
-  return searchQuery.value.trim() !== '' || selectedSize.value !== ''
-})
-
-// Clear all filters
+// Clear all filters (base + custom)
 const clearFilters = () => {
-  searchQuery.value = ''
+  clearBaseFilters()
   selectedSize.value = ''
 }
 
-// SEO meta tags
-useSeoMeta({
-  title: 'Races - D&D 5e Compendium',
-  description: 'Browse all D&D 5e player races and subraces.',
-})
-
-useHead({
-  title: 'Races - D&D 5e Compendium',
-})
+// Pagination settings
+const perPage = 24
 </script>
 
 <template>
