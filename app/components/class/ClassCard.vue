@@ -1,28 +1,5 @@
 <script setup lang="ts">
-import type { Source } from '~/types'
-
-interface CharacterClass {
-  id: number
-  name: string
-  slug: string
-  hit_die: number
-  is_base_class: boolean
-  parent_class_id?: number | null
-  primary_ability?: {
-    id: number
-    code: string
-    name: string
-  } | null
-  spellcasting_ability?: {
-    id: number
-    code: string
-    name: string
-  } | null
-  subclasses?: any[]
-  proficiencies?: any[]
-  description?: string
-  sources?: Source[]
-}
+import type { CharacterClass } from '~/types'
 
 interface Props {
   characterClass: CharacterClass
