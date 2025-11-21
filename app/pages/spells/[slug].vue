@@ -190,7 +190,7 @@ const spellEffects = computed(() => {
 
         <!-- Random Tables Slot -->
         <template v-if="spell.random_tables && spell.random_tables.length > 0" #random-tables>
-          <UiAccordionRandomTablesList :random-tables="spell.random_tables" />
+          <UiAccordionRandomTablesList :tables="spell.random_tables" />
         </template>
 
         <!-- Source Slot -->
