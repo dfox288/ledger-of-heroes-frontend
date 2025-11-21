@@ -504,6 +504,66 @@ Before marking ANY feature complete:
 
 ## Development Workflow
 
+### 🔴 CRITICAL: Always Commit When Task Complete
+
+**⚠️ MANDATORY WORKFLOW:**
+When you complete ANY task (feature, refactoring, bug fix, etc.), you MUST:
+1. ✅ Verify all tests pass
+2. ✅ Verify pages work in browser (HTTP 200)
+3. ✅ **COMMIT THE WORK IMMEDIATELY**
+
+**Why This Matters:**
+- Prevents work from being lost
+- Creates clear history of changes
+- Allows easy rollback if needed
+- Maintains clean development flow
+- Enables collaboration with proper context
+
+**When to Commit:**
+- ✅ After completing a feature
+- ✅ After refactoring work
+- ✅ After fixing a bug
+- ✅ After creating/updating tests
+- ✅ After ANY meaningful unit of work
+
+**Example Workflow:**
+```bash
+# 1. Complete the work
+npm test              # All tests pass ✅
+curl http://localhost:3000/spells  # Page works ✅
+
+# 2. Stage changes
+git add <files>
+
+# 3. Commit with descriptive message
+git commit -m "feat: Add new component with tests
+
+- Created <ComponentName> following TDD
+- Added 15 tests (all passing)
+- Integrated into 6 pages
+- Verified all pages work
+
+🤖 Generated with [Claude Code](https://claude.com/claude-code)
+
+Co-Authored-By: Claude <noreply@anthropic.com>"
+
+# 4. Continue to next task
+```
+
+**DO NOT:**
+- ❌ Wait until "everything is perfect" to commit
+- ❌ Batch multiple unrelated changes into one commit
+- ❌ Leave uncommitted work at end of session
+- ❌ Skip commits for "small changes"
+
+**Commit messages should:**
+- Start with type: `feat:`, `refactor:`, `fix:`, `test:`, `docs:`
+- Be descriptive (what and why)
+- Include impact metrics (tests added, lines saved, etc.)
+- End with Claude Code attribution
+
+---
+
 ### Docker Setup
 
 This project uses Docker Compose with:
@@ -544,6 +604,13 @@ docker compose exec nuxt npm install
 - **Nuxt Dev Server (direct):** http://localhost:24678
 - **Backend API:** http://localhost:8080/api/v1
 - **API Docs:** http://localhost:8080/docs/api
+
+**⚠️ CRITICAL TESTING PROTOCOL:**
+- **ALWAYS use Docker containers for development and testing**
+- **NEVER start the dev server locally outside Docker**
+- All development commands must be run via `docker compose exec nuxt <command>`
+- The dev server should be accessed through the Docker container ports (3000, or alternative ports like 3001, 3002 if 3000 is occupied)
+- Testing in the browser MUST be done against the Docker container URLs (e.g., http://localhost:3000, http://localhost:3001, etc.)
 
 ### Docker Commands Reference
 
@@ -668,6 +735,39 @@ frontend/
 ├── tsconfig.json            # TypeScript config
 └── package.json
 ```
+
+### Nuxt 4 Component Auto-Import Rules
+
+**⚠️ CRITICAL:** Nuxt 4 auto-imports components from the `components/` directory with specific naming conventions based on folder structure.
+
+**Component Naming Patterns:**
+- **Root level** (`components/Foo.vue`) → Use as `<Foo>`
+- **Nested folders** (`components/ui/Bar.vue`) → Use as `<UiBar>`
+- **Deep nesting** (`components/foo/bar/Baz.vue`) → Use as `<FooBarBaz>`
+
+**When Multiple Components Share the Same Name:**
+- Components in the root `components/` directory take priority
+- Components in subdirectories MUST use the folder prefix
+- Example:
+  - `components/JsonDebugPanel.vue` → `<JsonDebugPanel>` (priority)
+  - `components/ui/JsonDebugPanel.vue` → `<UiJsonDebugPanel>` (explicit prefix required)
+
+**Common Pitfalls:**
+- ❌ Using `<SourceDisplay>` for `components/ui/SourceDisplay.vue` → **WILL FAIL SILENTLY**
+- ✅ Using `<UiSourceDisplay>` for `components/ui/SourceDisplay.vue` → **CORRECT**
+- ❌ Using `<ModifiersDisplay>` for `components/ui/ModifiersDisplay.vue` → **WILL FAIL SILENTLY**
+- ✅ Using `<UiModifiersDisplay>` for `components/ui/ModifiersDisplay.vue` → **CORRECT**
+
+**Why This Matters:**
+- Silent failures occur when components don't render in accordion slots or conditional blocks
+- The Vue template compiles successfully but renders nothing
+- Always use explicit folder prefixes for components in subdirectories
+
+**Debugging Component Issues:**
+1. Check if the component exists: `ls -la app/components/ui/`
+2. Verify correct naming: `<UiComponentName>` for `components/ui/ComponentName.vue`
+3. Check dev server output for compilation errors
+4. Test in Docker container, not locally
 
 ### API Client Design (Nuxt Pattern)
 
