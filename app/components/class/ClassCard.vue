@@ -4,15 +4,26 @@ interface CharacterClass {
   name: string
   slug: string
   hit_die: number
+  is_base_class: boolean
+  parent_class_id?: number | null
   primary_ability?: {
     id: number
     code: string
     name: string
-  }
-  saving_throws?: any[]
+  } | null
+  spellcasting_ability?: {
+    id: number
+    code: string
+    name: string
+  } | null
+  subclasses?: any[]
   proficiencies?: any[]
-  subclass_name?: string
   description?: string
+  sources?: Array<{
+    code: string
+    name: string
+    pages: string
+  }>
 }
 
 interface Props {
@@ -29,15 +40,24 @@ const hitDieText = computed(() => {
 })
 
 /**
- * Get saving throw proficiencies
+ * Check if this is a base class or subclass
  */
-const savingThrows = computed(() => {
-  if (!props.characterClass.saving_throws || props.characterClass.saving_throws.length === 0) {
-    return null
-  }
-  return props.characterClass.saving_throws
-    .map((st: any) => st.ability_score?.code || st.name)
-    .join(', ')
+const isBaseClass = computed(() => {
+  return props.characterClass.is_base_class === true
+})
+
+/**
+ * Get type badge color
+ */
+const typeBadgeColor = computed(() => {
+  return isBaseClass.value ? 'error' : 'warning'
+})
+
+/**
+ * Get type badge text
+ */
+const typeBadgeText = computed(() => {
+  return isBaseClass.value ? 'Base Class' : 'Subclass'
 })
 
 /**
@@ -45,7 +65,7 @@ const savingThrows = computed(() => {
  */
 const truncatedDescription = computed(() => {
   if (!props.characterClass.description) return 'A playable class for D&D 5e characters'
-  const maxLength = 150
+  const maxLength = 120
   if (props.characterClass.description.length <= maxLength) return props.characterClass.description
   return props.characterClass.description.substring(0, maxLength).trim() + '...'
 })
@@ -55,13 +75,16 @@ const truncatedDescription = computed(() => {
   <NuxtLink :to="`/classes/${characterClass.slug}`" class="block h-full">
     <UCard class="hover:shadow-lg transition-shadow h-full border border-gray-200 dark:border-gray-700">
       <div class="space-y-3">
-        <!-- Hit Die and Primary Ability Badges -->
+        <!-- Type, Hit Die, and Ability Badges -->
         <div class="flex items-center gap-2 flex-wrap">
-          <UBadge color="red" variant="subtle" size="sm">
-            ❤️ {{ hitDieText }}
+          <UBadge :color="typeBadgeColor" variant="subtle" size="sm">
+            {{ typeBadgeText }}
           </UBadge>
-          <UBadge v-if="characterClass.primary_ability" color="blue" variant="soft" size="sm">
-            {{ characterClass.primary_ability.code }}
+          <UBadge v-if="characterClass.primary_ability" color="info" variant="soft" size="sm">
+            🎯 {{ characterClass.primary_ability.code }}
+          </UBadge>
+          <UBadge v-if="characterClass.spellcasting_ability" color="primary" variant="soft" size="sm">
+            ✨ {{ characterClass.spellcasting_ability.name }}
           </UBadge>
         </div>
 
@@ -71,22 +94,15 @@ const truncatedDescription = computed(() => {
         </h3>
 
         <!-- Quick Stats -->
-        <div class="flex items-center gap-4 text-sm text-gray-600 dark:text-gray-400 flex-wrap">
-          <div v-if="savingThrows" class="flex items-center gap-1">
-            <UIcon name="i-heroicons-shield-check" class="w-4 h-4" />
-            <span>{{ savingThrows }}</span>
+        <div class="flex items-center gap-4 flex-wrap text-sm text-gray-600 dark:text-gray-400">
+          <div class="flex items-center gap-1">
+            <UIcon name="i-heroicons-heart" class="w-4 h-4" />
+            <span>Hit Die: {{ hitDieText }}</span>
           </div>
-          <div v-if="characterClass.subclass_name" class="flex items-center gap-1">
+          <div v-if="isBaseClass && characterClass.subclasses && characterClass.subclasses.length > 0" class="flex items-center gap-1">
             <UIcon name="i-heroicons-users" class="w-4 h-4" />
-            <span>{{ characterClass.subclass_name }}</span>
+            <span>{{ characterClass.subclasses.length }} {{ characterClass.subclasses.length === 1 ? 'Subclass' : 'Subclasses' }}</span>
           </div>
-        </div>
-
-        <!-- Proficiencies Count -->
-        <div v-if="characterClass.proficiencies && characterClass.proficiencies.length > 0" class="flex items-center gap-2">
-          <UBadge color="green" variant="soft" size="xs">
-            ⚔️ {{ characterClass.proficiencies.length }} Proficiencies
-          </UBadge>
         </div>
 
         <!-- Description Preview -->
@@ -94,6 +110,8 @@ const truncatedDescription = computed(() => {
           {{ truncatedDescription }}
         </p>
       </div>
+
+      <UiCardSourceFooter :sources="characterClass.sources" />
     </UCard>
   </NuxtLink>
 </template>

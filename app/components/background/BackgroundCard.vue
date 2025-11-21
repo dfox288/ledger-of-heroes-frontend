@@ -8,6 +8,11 @@ interface Background {
   languages?: any[]
   feature_name?: string
   description?: string
+  sources?: Array<{
+    code: string
+    name: string
+    pages: string
+  }>
 }
 
 interface Props {
@@ -53,11 +58,8 @@ const truncatedDescription = computed(() => {
     <UCard class="hover:shadow-lg transition-shadow h-full border border-gray-200 dark:border-gray-700">
       <div class="space-y-3">
         <!-- Feature Badge -->
-        <div class="flex items-center gap-2 flex-wrap">
-          <UBadge color="green" variant="subtle" size="sm">
-            📖 Background
-          </UBadge>
-          <UBadge v-if="background.feature_name" color="purple" variant="soft" size="sm">
+        <div v-if="background.feature_name" class="flex items-center gap-2 flex-wrap">
+          <UBadge color="purple" variant="soft" size="sm">
             {{ background.feature_name }}
           </UBadge>
         </div>
@@ -91,6 +93,8 @@ const truncatedDescription = computed(() => {
           {{ truncatedDescription }}
         </p>
       </div>
+
+      <UiCardSourceFooter :sources="background.sources" />
     </UCard>
   </NuxtLink>
 </template>

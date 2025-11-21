@@ -6,6 +6,11 @@ interface Feat {
   prerequisites?: any[]
   modifiers?: any[]
   description?: string
+  sources?: Array<{
+    code: string
+    name: string
+    pages: string
+  }>
 }
 
 interface Props {
@@ -63,10 +68,7 @@ const truncatedDescription = computed(() => {
       <div class="space-y-3">
         <!-- Feat Type Badge -->
         <div class="flex items-center gap-2 flex-wrap">
-          <UBadge color="orange" variant="subtle" size="sm">
-            ⭐ Feat
-          </UBadge>
-          <UBadge v-if="hasPrerequisites" color="red" variant="soft" size="sm">
+          <UBadge v-if="hasPrerequisites" color="red" variant="soft" size="md">
             Prerequisites
           </UBadge>
         </div>
@@ -100,6 +102,8 @@ const truncatedDescription = computed(() => {
           {{ truncatedDescription }}
         </p>
       </div>
+
+      <UiCardSourceFooter :sources="feat.sources" />
     </UCard>
   </NuxtLink>
 </template>
