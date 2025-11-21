@@ -1,110 +1,92 @@
 import { describe, it, expect } from 'vitest'
-import { mount } from '@vue/test-utils'
+import { mountSuspended } from '@nuxt/test-utils/runtime'
 import UiAccordionTraitsList from '~/components/ui/accordion/UiAccordionTraitsList.vue'
 
 describe('UiAccordionTraitsList', () => {
-  const mountOptions = {
-    global: {
-      stubs: {
-        UBadge: {
-          template: '<span class="badge"><slot /></span>',
-          props: ['color', 'variant', 'size']
-        }
-      }
-    }
-  }
-
-  it('renders trait names', () => {
-    const wrapper = mount(UiAccordionTraitsList, {
+  it('renders trait names', async () => {
+    const wrapper = await mountSuspended(UiAccordionTraitsList, {
       props: {
         traits: [
           { id: 1, name: 'Darkvision', description: 'You can see in the dark' }
         ]
-      },
-      ...mountOptions
+      }
     })
 
     expect(wrapper.text()).toContain('Darkvision')
   })
 
-  it('renders trait descriptions', () => {
-    const wrapper = mount(UiAccordionTraitsList, {
+  it('renders trait descriptions', async () => {
+    const wrapper = await mountSuspended(UiAccordionTraitsList, {
       props: {
         traits: [
           { id: 1, name: 'Brave', description: 'You have advantage on saving throws against being frightened' }
         ]
-      },
-      ...mountOptions
+      }
     })
 
     expect(wrapper.text()).toContain('You have advantage on saving throws against being frightened')
   })
 
-  it('renders multiple traits', () => {
-    const wrapper = mount(UiAccordionTraitsList, {
+  it('renders multiple traits', async () => {
+    const wrapper = await mountSuspended(UiAccordionTraitsList, {
       props: {
         traits: [
           { id: 1, name: 'Trait 1', description: 'Description 1' },
           { id: 2, name: 'Trait 2', description: 'Description 2' }
         ]
-      },
-      ...mountOptions
+      }
     })
 
     expect(wrapper.text()).toContain('Trait 1')
     expect(wrapper.text()).toContain('Trait 2')
   })
 
-  it('renders level badge when showLevel is true', () => {
-    const wrapper = mount(UiAccordionTraitsList, {
+  it('renders level badge when showLevel is true', async () => {
+    const wrapper = await mountSuspended(UiAccordionTraitsList, {
       props: {
         traits: [
           { id: 1, name: 'Ability Score Improvement', description: 'Increase stats', level: 4 }
         ],
         showLevel: true
-      },
-      ...mountOptions
+      }
     })
 
     expect(wrapper.text()).toContain('Level 4')
   })
 
-  it('renders category badge when showCategory is true', () => {
-    const wrapper = mount(UiAccordionTraitsList, {
+  it('renders category badge when showCategory is true', async () => {
+    const wrapper = await mountSuspended(UiAccordionTraitsList, {
       props: {
         traits: [
           { id: 1, name: 'Sneak Attack', description: 'Extra damage', category: 'Combat' }
         ],
         showCategory: true
-      },
-      ...mountOptions
+      }
     })
 
     expect(wrapper.text()).toContain('Combat')
   })
 
-  it('uses feature_name when provided', () => {
-    const wrapper = mount(UiAccordionTraitsList, {
+  it('uses feature_name when provided', async () => {
+    const wrapper = await mountSuspended(UiAccordionTraitsList, {
       props: {
         traits: [
           { id: 1, name: 'base_name', description: 'Test', feature_name: 'Custom Feature Name' }
         ]
-      },
-      ...mountOptions
+      }
     })
 
     expect(wrapper.text()).toContain('Custom Feature Name')
     expect(wrapper.text()).not.toContain('base_name')
   })
 
-  it('applies correct spacing', () => {
-    const wrapper = mount(UiAccordionTraitsList, {
+  it('applies correct spacing', async () => {
+    const wrapper = await mountSuspended(UiAccordionTraitsList, {
       props: {
         traits: [
           { id: 1, name: 'Test', description: 'Test' }
         ]
-      },
-      ...mountOptions
+      }
     })
 
     const container = wrapper.find('.p-4')
@@ -112,15 +94,14 @@ describe('UiAccordionTraitsList', () => {
     expect(container.classes()).toContain('space-y-4')
   })
 
-  it('applies border color', () => {
-    const wrapper = mount(UiAccordionTraitsList, {
+  it('applies border color', async () => {
+    const wrapper = await mountSuspended(UiAccordionTraitsList, {
       props: {
         traits: [
           { id: 1, name: 'Test', description: 'Test' }
         ],
         borderColor: 'red-500'
-      },
-      ...mountOptions
+      }
     })
 
     const border = wrapper.find('.border-l-4')
@@ -128,14 +109,13 @@ describe('UiAccordionTraitsList', () => {
     expect(border.classes()).toContain('border-red-500')
   })
 
-  it('applies dark mode support', () => {
-    const wrapper = mount(UiAccordionTraitsList, {
+  it('applies dark mode support', async () => {
+    const wrapper = await mountSuspended(UiAccordionTraitsList, {
       props: {
         traits: [
           { id: 1, name: 'Test', description: 'Test description' }
         ]
-      },
-      ...mountOptions
+      }
     })
 
     // Name should have dark mode classes
@@ -149,7 +129,7 @@ describe('UiAccordionTraitsList', () => {
   })
 
   // Integration tests for random tables (RED phase - will fail until Task 4)
-  it('renders random tables when trait has them', () => {
+  it('renders random tables when trait has them', async () => {
     const traitsWithTables = [
       {
         id: 1,
@@ -175,18 +155,18 @@ describe('UiAccordionTraitsList', () => {
       }
     ]
 
-    const wrapper = mount(UiAccordionTraitsList, {
-      props: { traits: traitsWithTables },
-      ...mountOptions
+    const wrapper = await mountSuspended(UiAccordionTraitsList, {
+      props: { traits: traitsWithTables }
     })
 
-    // Verify random tables component is rendered
+    // Verify random tables component is rendered (should fail until component supports random_tables)
+    expect(wrapper.find('table').exists()).toBe(false) // No table yet in RED phase
     expect(wrapper.text()).toContain('Test Table')
     expect(wrapper.text()).toContain('(d10)')
     expect(wrapper.text()).toContain('Result 1')
   })
 
-  it('does not render random tables when array is empty', () => {
+  it('does not render random tables when array is empty', async () => {
     const traitsWithoutTables = [
       {
         id: 1,
@@ -196,16 +176,15 @@ describe('UiAccordionTraitsList', () => {
       }
     ]
 
-    const wrapper = mount(UiAccordionTraitsList, {
-      props: { traits: traitsWithoutTables },
-      ...mountOptions
+    const wrapper = await mountSuspended(UiAccordionTraitsList, {
+      props: { traits: traitsWithoutTables }
     })
 
     // Should not render any table elements
     expect(wrapper.find('table').exists()).toBe(false)
   })
 
-  it('passes borderColor to random tables component', () => {
+  it('passes borderColor to random tables component', async () => {
     const traitsWithTables = [
       {
         id: 1,
@@ -231,12 +210,11 @@ describe('UiAccordionTraitsList', () => {
       }
     ]
 
-    const wrapper = mount(UiAccordionTraitsList, {
+    const wrapper = await mountSuspended(UiAccordionTraitsList, {
       props: {
         traits: traitsWithTables,
         borderColor: 'purple-500'
-      },
-      ...mountOptions
+      }
     })
 
     // Component should render without errors
