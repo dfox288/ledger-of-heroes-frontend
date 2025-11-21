@@ -1,9 +1,10 @@
 import { describe, it, expect } from 'vitest'
 import { mountSuspended } from '@nuxt/test-utils/runtime'
 import SpellCard from '~/components/spell/SpellCard.vue'
+import type { Spell } from '~/types'
 
 describe('SpellCard', () => {
-  const mockSpell = {
+  const mockSpell: Spell = {
     id: 1,
     name: 'Fireball',
     slug: 'fireball',
