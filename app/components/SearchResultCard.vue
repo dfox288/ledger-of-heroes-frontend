@@ -10,18 +10,19 @@ const props = defineProps<Props>()
 
 /**
  * Get badge color based on entity type
+ * Returns NuxtUI 4 semantic colors
  */
-const getBadgeColor = () => {
-  const colors = {
-    spell: 'purple',
-    item: 'amber',
-    race: 'blue',
-    class: 'red',
-    background: 'green',
-    feat: 'orange'
+const getBadgeColor = computed<'primary' | 'secondary' | 'success' | 'info' | 'warning' | 'error' | 'neutral'>(() => {
+  const colors: Record<string, 'primary' | 'secondary' | 'success' | 'info' | 'warning' | 'error' | 'neutral'> = {
+    spell: 'primary',    // purple → primary
+    item: 'warning',     // amber → warning
+    race: 'info',        // blue → info
+    class: 'error',      // red → error
+    background: 'success', // green → success
+    feat: 'warning'      // orange → warning
   }
-  return colors[props.type]
-}
+  return colors[props.type] || 'neutral'
+})
 
 /**
  * Get URL path for entity detail page
@@ -71,7 +72,7 @@ const isItem = (result: any): result is Item => props.type === 'item'
             {{ result.name }}
           </h3>
           <UBadge
-            :color="getBadgeColor()"
+            :color="getBadgeColor"
             variant="subtle"
             size="sm"
           >
@@ -105,7 +106,7 @@ const isItem = (result: any): result is Item => props.type === 'item'
           class="flex flex-wrap gap-2 text-sm text-gray-600 dark:text-gray-400"
         >
           <UBadge
-            :color="result.is_magic ? 'primary' : 'gray'"
+            :color="result.is_magic ? 'primary' : 'neutral'"
             variant="soft"
             size="xs"
           >
@@ -113,14 +114,14 @@ const isItem = (result: any): result is Item => props.type === 'item'
           </UBadge>
           <span v-if="result.is_magic">
             <UBadge
-              color="purple"
+              color="primary"
               variant="soft"
               size="xs"
             >Magic</UBadge>
           </span>
           <span v-if="result.requires_attunement">
             <UBadge
-              color="blue"
+              color="info"
               variant="soft"
               size="xs"
             >Attunement</UBadge>

@@ -119,7 +119,7 @@ const perPage = 24
           #trailing
         >
           <UButton
-            color="gray"
+            color="neutral"
             variant="link"
             icon="i-heroicons-x-mark-20-solid"
             :padded="false"
@@ -179,7 +179,7 @@ const perPage = 24
         <!-- Clear filters button -->
         <UButton
           v-if="searchQuery || selectedType !== null || selectedRarity !== null || selectedMagic !== null"
-          color="gray"
+          color="neutral"
           variant="soft"
           @click="clearFilters"
         >
@@ -205,7 +205,7 @@ const perPage = 24
         <UButton
           v-if="selectedRarity !== null"
           size="xs"
-          color="purple"
+          color="primary"
           variant="soft"
           @click="selectedRarity = null"
         >
@@ -214,7 +214,7 @@ const perPage = 24
         <UButton
           v-if="selectedMagic !== null"
           size="xs"
-          color="blue"
+          color="info"
           variant="soft"
           @click="selectedMagic = null"
         >
@@ -223,7 +223,7 @@ const perPage = 24
         <UButton
           v-if="searchQuery"
           size="xs"
-          color="gray"
+          color="neutral"
           variant="soft"
           @click="searchQuery = ''"
         >

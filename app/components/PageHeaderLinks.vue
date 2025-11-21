@@ -4,7 +4,8 @@ import { useClipboard } from '@vueuse/core'
 const route = useRoute()
 const toast = useToast()
 const { copy, copied } = useClipboard()
-const site = useSiteConfig()
+// TODO: useSiteConfig() is not available - needs @nuxtjs/site-config module or custom implementation
+const site = { url: 'http://localhost:3000' }
 const isCopying = ref(false)
 console.log(site)
 

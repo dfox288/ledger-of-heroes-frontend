@@ -16,7 +16,7 @@ const props = withDefaults(defineProps<Props>(), {
   <div class="mt-8 pt-6 border-t border-gray-200 dark:border-gray-700">
     <NuxtLink :to="to">
       <UButton
-        color="gray"
+        color="neutral"
         variant="soft"
         :icon="icon"
       >

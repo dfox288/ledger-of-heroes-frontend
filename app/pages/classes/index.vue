@@ -51,7 +51,7 @@ const perPage = 24
           #trailing
         >
           <UButton
-            color="gray"
+            color="neutral"
             variant="link"
             icon="i-heroicons-x-mark-20-solid"
             :padded="false"

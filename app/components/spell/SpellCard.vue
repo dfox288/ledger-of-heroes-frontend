@@ -29,8 +29,8 @@ const truncatedDescription = computed(() => {
  * Get badge color for spell school
  * Maps D&D schools to NuxtUI v4 color names
  */
-const getSchoolColor = (schoolCode: string): string => {
-  const colorMap: Record<string, string> = {
+const getSchoolColor = (schoolCode: string): 'primary' | 'secondary' | 'success' | 'info' | 'warning' | 'error' | 'neutral' => {
+  const colorMap: Record<string, 'primary' | 'secondary' | 'success' | 'info' | 'warning' | 'error' | 'neutral'> = {
     A: 'info', // Abjuration (protection)
     C: 'primary', // Conjuration (summoning)
     D: 'info', // Divination (knowledge)
@@ -47,7 +47,7 @@ const getSchoolColor = (schoolCode: string): string => {
  * Get badge color for spell level (progressive color scale)
  * Using NuxtUI v4 color names
  */
-const getLevelColor = (level: number): string => {
+const getLevelColor = (level: number): 'primary' | 'secondary' | 'success' | 'info' | 'warning' | 'error' | 'neutral' => {
   if (level === 0) return 'primary' // Cantrip - primary
   if (level <= 3) return 'info' // Low level - info
   if (level <= 6) return 'warning' // Mid level - warning

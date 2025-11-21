@@ -101,7 +101,7 @@ const isReferenceExpanded = ref(false)
               <!-- Reference dropdown -->
               <UDropdownMenu :items="referenceItems">
                 <UButton
-                  color="gray"
+                  color="neutral"
                   variant="ghost"
                   trailing-icon="i-heroicons-chevron-down-20-solid"
                   :class="isReferenceActive
@@ -117,7 +117,7 @@ const isReferenceExpanded = ref(false)
             <div class="flex items-center space-x-4">
               <UButton
                 :icon="colorMode.value === 'dark' ? 'i-heroicons-moon-20-solid' : 'i-heroicons-sun-20-solid'"
-                color="gray"
+                color="neutral"
                 variant="ghost"
                 aria-label="Toggle dark mode"
                 @click="toggleColorMode"

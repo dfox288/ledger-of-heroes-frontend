@@ -22,7 +22,7 @@ defineProps<Props>()
         data-testid="source-badge"
       >
         <UBadge
-          color="gray"
+          color="neutral"
           variant="soft"
         >
           {{ source.name }}

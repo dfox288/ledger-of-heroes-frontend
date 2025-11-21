@@ -113,7 +113,7 @@ const perPage = 24
           #trailing
         >
           <UButton
-            color="gray"
+            color="neutral"
             variant="link"
             icon="i-heroicons-x-mark-20-solid"
             :padded="false"
@@ -147,7 +147,7 @@ const perPage = 24
         <!-- Clear filters button -->
         <UButton
           v-if="searchQuery || selectedLevel !== null || selectedSchool !== null"
-          color="gray"
+          color="neutral"
           variant="soft"
           @click="clearFilters"
         >
@@ -164,7 +164,7 @@ const perPage = 24
         <UButton
           v-if="selectedLevel !== null"
           size="xs"
-          color="purple"
+          color="primary"
           variant="soft"
           @click="selectedLevel = null"
         >
@@ -173,7 +173,7 @@ const perPage = 24
         <UButton
           v-if="selectedSchool !== null"
           size="xs"
-          color="blue"
+          color="info"
           variant="soft"
           @click="selectedSchool = null"
         >
@@ -182,7 +182,7 @@ const perPage = 24
         <UButton
           v-if="searchQuery"
           size="xs"
-          color="gray"
+          color="neutral"
           variant="soft"
           @click="searchQuery = ''"
         >

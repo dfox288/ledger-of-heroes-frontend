@@ -65,7 +65,7 @@ withDefaults(defineProps<Props>(), {
           </span>
           <UBadge
             v-if="showCategory && trait.category"
-            color="purple"
+            color="primary"
             variant="soft"
             size="xs"
           >

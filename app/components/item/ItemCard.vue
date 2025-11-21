@@ -11,8 +11,8 @@ const props = defineProps<Props>()
  * Get rarity color for badge (NuxtUI v4 semantic colors)
  * Progressive rarity scale from common to artifact
  */
-const rarityColor = computed(() => {
-  const colors: Record<string, string> = {
+const rarityColor = computed<'primary' | 'secondary' | 'success' | 'info' | 'warning' | 'error' | 'neutral'>(() => {
+  const colors: Record<string, 'primary' | 'secondary' | 'success' | 'info' | 'warning' | 'error' | 'neutral'> = {
     'common': 'neutral', // Gray - most basic
     'uncommon': 'success', // Green - slightly better
     'rare': 'info', // Blue - notable
@@ -27,7 +27,7 @@ const rarityColor = computed(() => {
  * Get item type color for badge
  * Color-coded by general category
  */
-const getItemTypeColor = (typeName: string): string => {
+const getItemTypeColor = (typeName: string): 'primary' | 'secondary' | 'success' | 'info' | 'warning' | 'error' | 'neutral' => {
   const type = typeName.toLowerCase()
 
   // Weapons (red/error)

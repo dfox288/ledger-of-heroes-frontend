@@ -71,7 +71,7 @@ const truncatedDescription = computed(() => {
         <div class="flex items-center gap-2 flex-wrap">
           <UBadge
             v-if="hasPrerequisites"
-            color="red"
+            color="error"
             variant="soft"
             size="md"
           >
@@ -114,7 +114,7 @@ const truncatedDescription = computed(() => {
           class="flex items-center gap-2"
         >
           <UBadge
-            color="green"
+            color="success"
             variant="soft"
             size="xs"
           >

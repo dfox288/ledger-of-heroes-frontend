@@ -64,7 +64,7 @@ const truncatedDescription = computed(() => {
           class="flex items-center gap-2 flex-wrap"
         >
           <UBadge
-            color="purple"
+            color="primary"
             variant="soft"
             size="sm"
           >
@@ -107,7 +107,7 @@ const truncatedDescription = computed(() => {
           class="flex items-center gap-2"
         >
           <UBadge
-            color="blue"
+            color="info"
             variant="soft"
             size="xs"
           >

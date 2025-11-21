@@ -31,7 +31,7 @@ const copyJson = () => {
   <div>
     <!-- JSON Toggle Button (shown in header) -->
     <UButton
-      color="gray"
+      color="neutral"
       variant="soft"
       size="sm"
       @click="toggleJson"
@@ -55,7 +55,7 @@ const copyJson = () => {
         </h3>
         <div class="flex gap-2">
           <UButton
-            color="gray"
+            color="neutral"
             variant="soft"
             size="xs"
             icon="i-heroicons-clipboard"
@@ -64,7 +64,7 @@ const copyJson = () => {
             Copy
           </UButton>
           <UButton
-            color="gray"
+            color="neutral"
             variant="soft"
             size="xs"
             icon="i-heroicons-x-mark"

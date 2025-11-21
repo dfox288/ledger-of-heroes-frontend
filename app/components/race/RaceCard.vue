@@ -46,8 +46,8 @@ const isSubrace = computed(() => {
 /**
  * Get size color based on size code (NuxtUI v4 semantic colors)
  */
-const getSizeColor = (sizeCode: string): string => {
-  const colors: Record<string, string> = {
+const getSizeColor = (sizeCode: string): 'primary' | 'secondary' | 'success' | 'info' | 'warning' | 'error' | 'neutral' => {
+  const colors: Record<string, 'primary' | 'secondary' | 'success' | 'info' | 'warning' | 'error' | 'neutral'> = {
     T: 'neutral', // Tiny - gray
     S: 'success', // Small - green
     M: 'info', // Medium - blue
