@@ -8,10 +8,10 @@ const { apiFetch } = useApi()
 const selectedSize = ref((route.query.size as string) || '')
 
 // Fetch available sizes for filter options
-const { data: sizesResponse } = await useAsyncData(
+const { data: sizesResponse } = await useAsyncData<{ data: Array<any> }>(
   'sizes',
   async () => {
-    const response = await apiFetch('/sizes')
+    const response = await apiFetch<{ data: Array<any> }>('/sizes')
     return response
   }
 )

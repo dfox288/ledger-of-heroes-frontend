@@ -19,10 +19,10 @@ const queryParams = computed(() => {
 })
 
 // Fetch ability scores with reactive filters (via Nitro proxy)
-const { data: abilityScoresResponse, pending: loading, error, refresh } = await useAsyncData(
+const { data: abilityScoresResponse, pending: loading, error, refresh } = await useAsyncData<{ data: Array<any> }>(
   'ability-scores-list',
   async () => {
-    const response = await apiFetch('/ability-scores', {
+    const response = await apiFetch<{ data: Array<any> }>('/ability-scores', {
       query: queryParams.value
     })
     return response

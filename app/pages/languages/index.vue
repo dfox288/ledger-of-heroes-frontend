@@ -19,10 +19,10 @@ const queryParams = computed(() => {
 })
 
 // Fetch languages with reactive filters (via Nitro proxy)
-const { data: languagesResponse, pending: loading, error, refresh } = await useAsyncData(
+const { data: languagesResponse, pending: loading, error, refresh } = await useAsyncData<{ data: Array<any> }>(
   'languages-list',
   async () => {
-    const response = await apiFetch('/languages', {
+    const response = await apiFetch<{ data: Array<any> }>('/languages', {
       query: queryParams.value
     })
     return response

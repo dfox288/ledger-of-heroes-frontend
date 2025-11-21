@@ -12,10 +12,10 @@ const queryParams = computed(() => {
   return params
 })
 
-const { data: spellSchoolsResponse, pending: loading, error, refresh } = await useAsyncData(
+const { data: spellSchoolsResponse, pending: loading, error, refresh } = await useAsyncData<{ data: Array<any> }>(
   'spell-schools-list',
   async () => {
-    const response = await apiFetch('/spell-schools', {
+    const response = await apiFetch<{ data: Array<any> }>('/spell-schools', {
       query: queryParams.value
     })
     return response

@@ -6,7 +6,7 @@ const slug = route.params.slug as string
 const { data: entity, error, pending } = await useAsyncData(
   `class-${slug}`,
   async () => {
-    const response = await apiFetch(`/classes/${slug}`)
+    const response = await apiFetch<{ data: any }>(`/classes/${slug}`)
     return response.data
   }
 )

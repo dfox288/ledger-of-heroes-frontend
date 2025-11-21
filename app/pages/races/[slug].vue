@@ -9,7 +9,7 @@ const slug = route.params.slug as string
 const { data: race, error, pending } = await useAsyncData(
   `race-${slug}`,
   async () => {
-    const response = await apiFetch(`/races/${slug}`)
+    const response = await apiFetch<{ data: any }>(`/races/${slug}`)
     return response.data
   }
 )

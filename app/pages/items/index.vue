@@ -11,7 +11,7 @@ const selectedMagic = ref((route.query.is_magic as string) || null)
 
 // Fetch item types for filter options
 const { data: itemTypes } = await useAsyncData('item-types', async () => {
-  const response = await apiFetch('/item-types')
+  const response = await apiFetch<{ data: any }>('/item-types')
   return response.data
 })
 

@@ -13,3 +13,20 @@ export type { Spell, Item } from './api/entities'
 
 // Search types
 export type { SearchResult, SearchResultData, EntityType, SearchOptions, SearchEntity, Race, Class, Background, Feat } from './search'
+
+// API Response types
+export interface ApiListResponse<T = any> {
+  data: T[]
+  meta?: {
+    total: number
+    from: number
+    to: number
+    current_page: number
+    last_page: number
+    per_page: number
+  }
+}
+
+export interface ApiSingleResponse<T = any> {
+  data: T
+}

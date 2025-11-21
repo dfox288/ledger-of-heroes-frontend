@@ -19,10 +19,10 @@ const queryParams = computed(() => {
 })
 
 // Fetch sizes with reactive filters (via Nitro proxy)
-const { data: sizesResponse, pending: loading, error, refresh } = await useAsyncData(
+const { data: sizesResponse, pending: loading, error, refresh } = await useAsyncData<{ data: Array<any> }>(
   'sizes-list',
   async () => {
-    const response = await apiFetch('/sizes', {
+    const response = await apiFetch<{ data: Array<any> }>('/sizes', {
       query: queryParams.value
     })
     return response

@@ -19,10 +19,10 @@ const queryParams = computed(() => {
 })
 
 // Fetch sources with reactive filters (via Nitro proxy)
-const { data: sourcesResponse, pending: loading, error, refresh } = await useAsyncData(
+const { data: sourcesResponse, pending: loading, error, refresh } = await useAsyncData<{ data: Array<any> }>(
   'sources-list',
   async () => {
-    const response = await apiFetch('/sources', {
+    const response = await apiFetch<{ data: Array<any> }>('/sources', {
       query: queryParams.value
     })
     return response

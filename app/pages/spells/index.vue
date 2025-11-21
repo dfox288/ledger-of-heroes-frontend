@@ -10,7 +10,7 @@ const selectedSchool = ref(route.query.school ? Number(route.query.school) : nul
 
 // Fetch spell schools for filter options
 const { data: spellSchools } = await useAsyncData('spell-schools', async () => {
-  const response = await apiFetch('/spell-schools')
+  const response = await apiFetch<{ data: any }>('/spell-schools')
   return response.data
 })
 

@@ -6,7 +6,7 @@ const slug = route.params.slug as string
 const { data: entity, error, pending } = await useAsyncData(
   `background-${slug}`,
   async () => {
-    const response = await apiFetch(`/backgrounds/${slug}`)
+    const response = await apiFetch<{ data: any }>(`/backgrounds/${slug}`)
     return response.data
   }
 )

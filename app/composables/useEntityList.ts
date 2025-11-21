@@ -130,10 +130,10 @@ export function useEntityList(config: UseEntityListConfig): UseEntityListReturn 
   })
 
   // Fetch data with Nuxt's useAsyncData (SSR support + caching)
-  const { data: response, pending: loading, error, refresh } = useAsyncData(
+  const { data: response, pending: loading, error, refresh } = useAsyncData<{ data: Array<any>, meta: PaginationMeta }>(
     config.cacheKey,
     async () => {
-      const result = await apiFetch(config.endpoint, {
+      const result = await apiFetch<{ data: Array<any>, meta: PaginationMeta }>(config.endpoint, {
         query: queryParams.value
       })
       return result

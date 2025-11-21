@@ -19,10 +19,10 @@ const queryParams = computed(() => {
 })
 
 // Fetch damage types with reactive filters (via Nitro proxy)
-const { data: damageTypesResponse, pending: loading, error, refresh } = await useAsyncData(
+const { data: damageTypesResponse, pending: loading, error, refresh } = await useAsyncData<{ data: Array<any> }>(
   'damage-types-list',
   async () => {
-    const response = await apiFetch('/damage-types', {
+    const response = await apiFetch<{ data: Array<any> }>('/damage-types', {
       query: queryParams.value
     })
     return response

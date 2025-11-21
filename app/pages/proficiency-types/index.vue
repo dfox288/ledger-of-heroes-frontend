@@ -12,10 +12,10 @@ const queryParams = computed(() => {
   return params
 })
 
-const { data: proficiencyTypesResponse, pending: loading, error, refresh } = await useAsyncData(
+const { data: proficiencyTypesResponse, pending: loading, error, refresh } = await useAsyncData<{ data: Array<any> }>(
   'proficiency-types-list',
   async () => {
-    const response = await apiFetch('/proficiency-types', {
+    const response = await apiFetch<{ data: Array<any> }>('/proficiency-types', {
       query: queryParams.value
     })
     return response
