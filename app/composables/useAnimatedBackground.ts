@@ -169,3 +169,101 @@ export class Rune {
     ctx.restore()
   }
 }
+
+interface ColorPalette {
+  swirlColor: string
+  runeColor: string
+}
+
+const LIGHT_MODE_COLORS: ColorPalette = {
+  swirlColor: 'rgba(139, 92, 246, OPACITY)', // violet-500
+  runeColor: 'rgba(79, 70, 229, OPACITY)'     // indigo-600
+}
+
+const DARK_MODE_COLORS: ColorPalette = {
+  swirlColor: 'rgba(167, 139, 250, OPACITY)', // violet-400
+  runeColor: 'rgba(34, 211, 238, OPACITY)'    // cyan-400
+}
+
+export function useAnimatedBackground(canvas: HTMLCanvasElement, isDark: boolean) {
+  const ctx = canvas.getContext('2d')
+  if (!ctx) throw new Error('Canvas context not available')
+
+  let swirls: Swirl[] = []
+  let runes: Rune[] = []
+  let animationFrameId: number | null = null
+  let lastTime = 0
+
+  const colors = isDark ? DARK_MODE_COLORS : LIGHT_MODE_COLORS
+
+  function initialize() {
+    const width = canvas.width
+    const height = canvas.height
+
+    // Create 40 swirls
+    swirls = Array.from({ length: 40 }, () => new Swirl(width, height))
+
+    // Create 6 runes
+    runes = Array.from({ length: 6 }, () => new Rune(width, height))
+  }
+
+  function animate(currentTime: number) {
+    if (!lastTime) lastTime = currentTime
+    const deltaTime = currentTime - lastTime
+    lastTime = currentTime
+
+    // Throttle to 30 FPS (33.33ms per frame)
+    if (deltaTime < 33) {
+      animationFrameId = requestAnimationFrame(animate)
+      return
+    }
+
+    // Clear canvas
+    ctx.clearRect(0, 0, canvas.width, canvas.height)
+
+    // Update and draw swirls
+    for (const swirl of swirls) {
+      swirl.update(deltaTime)
+      swirl.draw(ctx, colors.swirlColor)
+    }
+
+    // Update and draw runes
+    for (const rune of runes) {
+      rune.update(deltaTime)
+      rune.draw(ctx, colors.runeColor)
+    }
+
+    // Continue animation
+    animationFrameId = requestAnimationFrame(animate)
+  }
+
+  function start() {
+    if (animationFrameId !== null) return // Already running
+    lastTime = 0
+    animationFrameId = requestAnimationFrame(animate)
+  }
+
+  function stop() {
+    if (animationFrameId !== null) {
+      cancelAnimationFrame(animationFrameId)
+      animationFrameId = null
+      lastTime = 0
+    }
+  }
+
+  function isRunning() {
+    return animationFrameId !== null
+  }
+
+  function getParticleCount() {
+    return swirls.length + runes.length
+  }
+
+  return {
+    initialize,
+    start,
+    stop,
+    isRunning,
+    getParticleCount
+  }
+}

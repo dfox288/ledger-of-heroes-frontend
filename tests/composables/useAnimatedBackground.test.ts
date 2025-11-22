@@ -148,4 +148,46 @@ describe('useAnimatedBackground', () => {
       expect(fillTextSpy).toHaveBeenCalledWith(rune.symbol, 0, 0)
     })
   })
+
+  describe('useAnimatedBackground composable', () => {
+    it('initializes particles', async () => {
+      const { useAnimatedBackground } = await import('~/composables/useAnimatedBackground')
+
+      const canvas = document.createElement('canvas')
+      canvas.width = 1920
+      canvas.height = 1080
+      const ctx = canvas.getContext('2d')!
+
+      const { initialize, getParticleCount } = useAnimatedBackground(canvas, false)
+      initialize()
+
+      // Should create particles (we'll add a getter for testing)
+      expect(getParticleCount()).toBeGreaterThan(0)
+    })
+
+    it('starts animation loop', async () => {
+      const { useAnimatedBackground } = await import('~/composables/useAnimatedBackground')
+
+      const canvas = document.createElement('canvas')
+      const { initialize, start, isRunning } = useAnimatedBackground(canvas, false)
+
+      initialize()
+      start()
+
+      expect(isRunning()).toBe(true)
+    })
+
+    it('stops animation loop', async () => {
+      const { useAnimatedBackground } = await import('~/composables/useAnimatedBackground')
+
+      const canvas = document.createElement('canvas')
+      const { initialize, start, stop, isRunning } = useAnimatedBackground(canvas, false)
+
+      initialize()
+      start()
+      stop()
+
+      expect(isRunning()).toBe(false)
+    })
+  })
 })
