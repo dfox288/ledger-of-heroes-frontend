@@ -1,51 +1,29 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { computed } from 'vue'
 import type { DamageType } from '~/types'
 
-// API configuration
-const { apiFetch } = useApi()
-
-// Reactive filters
-const searchQuery = ref('')
-
-// Computed query params for API
-const queryParams = computed(() => {
-  const params: Record<string, string> = {}
-
-  if (searchQuery.value.trim()) {
-    params.q = searchQuery.value.trim()
+// Use entity list composable with noPagination
+const {
+  searchQuery,
+  data,
+  totalResults,
+  loading,
+  error,
+  refresh,
+  clearFilters,
+  hasActiveFilters
+} = useEntityList({
+  endpoint: '/damage-types',
+  cacheKey: 'damage-types-list',
+  queryBuilder: computed(() => ({})), // No custom filters
+  noPagination: true, // Small dataset, no pagination needed
+  seo: {
+    title: 'Damage Types - D&D 5e Compendium',
+    description: 'Browse all D&D 5e damage types including Fire, Cold, Lightning, and more.'
   }
-
-  return params
 })
 
-// Fetch damage types with reactive filters (via Nitro proxy)
-const { data: damageTypesResponse, pending: loading, error, refresh } = await useAsyncData<{ data: DamageType[] }>(
-  'damage-types-list',
-  async () => {
-    const response = await apiFetch<{ data: DamageType[] }>('/damage-types', {
-      query: queryParams.value
-    })
-    return response
-  },
-  {
-    watch: [queryParams]
-  }
-)
-
-// Computed values
-const damageTypes = computed(() => damageTypesResponse.value?.data || [])
-const totalResults = computed(() => damageTypes.value.length)
-
-// SEO meta tags
-useSeoMeta({
-  title: 'Damage Types - D&D 5e Compendium',
-  description: 'Browse all D&D 5e damage types including Fire, Cold, Lightning, and more.'
-})
-
-useHead({
-  title: 'Damage Types - D&D 5e Compendium'
-})
+const damageTypes = computed(() => data.value as DamageType[])
 </script>
 
 <template>
@@ -56,6 +34,7 @@ useHead({
       :total="totalResults"
       description="Browse D&D 5e damage types"
       :loading="loading"
+      :has-active-filters="hasActiveFilters"
     />
 
     <!-- Search -->
@@ -93,8 +72,8 @@ useHead({
     <UiListEmptyState
       v-else-if="damageTypes.length === 0"
       entity-name="damage types"
-      :has-filters="!!searchQuery"
-      @clear-filters="searchQuery = ''"
+      :has-filters="hasActiveFilters"
+      @clear-filters="clearFilters"
     />
 
     <!-- Results -->
