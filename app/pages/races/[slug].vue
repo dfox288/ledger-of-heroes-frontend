@@ -26,6 +26,14 @@ const sizeColor = computed(() => {
   if (!race.value?.size) return 'info'
   return getSizeColor(race.value.size.code)
 })
+
+/**
+ * Get entity image path (512px variant)
+ */
+const imagePath = computed(() => {
+  if (!race.value) return null
+  return useEntityImage(race.value.slug, 'races', '512')
+})
 </script>
 
 <template>
@@ -53,13 +61,15 @@ const sizeColor = computed(() => {
         label="Back to Races"
       />
 
-      <!-- Header -->
-      <UiDetailPageHeader
+      <!-- Header with Image -->
+      <UiEntityHeaderWithImage
         :title="race.name"
         :badges="[
           ...(race.size ? [{ label: race.size.name, color: sizeColor, variant: 'subtle' as const, size: 'lg' as const }] : []),
           { label: race.parent_race ? 'Subrace' : 'Race', color: (race.parent_race ? 'primary' : 'info') as const, variant: 'subtle' as const, size: 'lg' as const }
         ]"
+        :image-path="imagePath"
+        :image-alt="`${race.name} character portrait`"
       />
 
       <!-- Quick Stats -->

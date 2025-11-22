@@ -13,7 +13,7 @@ interface Props {
   imageAlt?: string
 }
 
-const props = withDefaults(defineProps<Props>(), {
+withDefaults(defineProps<Props>(), {
   badges: () => [],
   imagePath: null,
   imageAlt: ''
