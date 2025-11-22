@@ -478,8 +478,8 @@ export function useAnimatedBackground(canvas: HTMLCanvasElement, isDark: boolean
    * Draw constellation lines between nearby particles
    */
   function drawConstellations(ctx: CanvasRenderingContext2D, particles: MagicParticle[]) {
-    const maxDistance = 120 // Max distance to draw connection (increased)
-    const maxConnections = 3 // Max connections per particle (increased)
+    const maxDistance = 120 // Max distance to draw connection
+    const maxConnections = 3 // Max connections per particle
 
     ctx.save()
 
@@ -497,17 +497,17 @@ export function useAnimatedBackground(canvas: HTMLCanvasElement, isDark: boolean
 
         // Only draw if within range
         if (distance < maxDistance) {
-          // Opacity fades with distance (increased visibility)
-          const opacity = (1 - distance / maxDistance) * 0.15
+          // Much higher opacity for visibility
+          const opacity = (1 - distance / maxDistance) * 0.35
 
-          // Draw line with gradient (using darker mid-tones for visibility)
+          // Draw line with gradient (brighter colors)
           const gradient = ctx.createLinearGradient(p1.x, p1.y, p2.x, p2.y)
-          // Use lower lightness (50%) instead of particle's high lightness (70-85%)
-          gradient.addColorStop(0, `hsla(${p1.color.h}, ${p1.color.s}%, 50%, ${opacity})`)
-          gradient.addColorStop(1, `hsla(${p2.color.h}, ${p2.color.s}%, 50%, ${opacity})`)
+          // Use vibrant mid-tones (L: 60%, higher saturation)
+          gradient.addColorStop(0, `hsla(${p1.color.h}, 90%, 60%, ${opacity})`)
+          gradient.addColorStop(1, `hsla(${p2.color.h}, 90%, 60%, ${opacity})`)
 
           ctx.strokeStyle = gradient
-          ctx.lineWidth = 0.8 // Slightly thicker
+          ctx.lineWidth = 1.0 // Thicker for visibility
           ctx.beginPath()
           ctx.moveTo(p1.x, p1.y)
           ctx.lineTo(p2.x, p2.y)
