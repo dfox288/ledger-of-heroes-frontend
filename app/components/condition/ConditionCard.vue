@@ -22,7 +22,7 @@ const backgroundImageUrl = computed(() =>
     <!-- Background Image Layer -->
     <div
       v-if="backgroundImageUrl"
-      class="absolute inset-0 bg-cover bg-center opacity-10 transition-opacity duration-300 group-hover:opacity-20"
+      class="absolute inset-0 bg-cover bg-center opacity-15 transition-all duration-300 group-hover:opacity-30 group-hover:scale-110"
       :style="{ backgroundImage: `url(${backgroundImageUrl})` }"
     />
 
