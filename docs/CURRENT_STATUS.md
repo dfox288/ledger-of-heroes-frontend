@@ -1,12 +1,12 @@
 # D&D 5e Compendium Frontend - Current Status
 
-**Last Updated:** 2025-11-22 (Entity Images Feature Complete!)
+**Last Updated:** 2025-11-22 (Entity Images Expanded to All 6 Main Entities!)
 **Status:** ✅ **PRODUCTION-READY - 100% Tests Passing!**
 **Framework:** Nuxt 4.x + NuxtUI 4.x
 **7 of 7 Entity Types + 10 Reference Pages** (All Complete!)
-**Test Coverage:** 630/630 tests passing (100% pass rate!) ✨
+**Test Coverage:** 645/645 tests passing (100% pass rate!) ✨
 **Code Quality:** ESLint 0 errors ✅ | TypeScript: 13 errors (93% reduction from 176 original)
-**NEW:** AI-generated images on race pages (hero + background images) 🎨
+**NEW:** AI-generated images on all 6 main entity types (hero + background images) 🎨
 
 ---
 
@@ -39,18 +39,18 @@ A full-featured D&D 5e reference application with:
 - ✅ Reusable UI components (`<UiSourceDisplay>`, `<UiModifiersDisplay>`, `<JsonDebugPanel>`)
 
 **Entity-Specific Features:**
-- **Spells:** Level/school filters, ritual/concentration badges, **character level scaling**, **all effect types** (damage + other), **tags**, **saving throws with DC** ⭐, **random tables**
-- **Items:** Rarity colors, magic/attunement badges, weapon/armor stats, **proficiencies**, **charges** (max/recharge), **advantage/disadvantage modifiers**, **item spells**, **random tables**, **tags**
+- **Spells:** Level/school filters, ritual/concentration badges, **character level scaling**, **all effect types** (damage + other), **tags**, **saving throws with DC** ⭐, **random tables**, **AI-generated images** 🎨
+- **Items:** Rarity colors, magic/attunement badges, weapon/armor stats, **proficiencies**, **charges** (max/recharge), **advantage/disadvantage modifiers**, **item spells**, **random tables**, **tags**, **AI-generated images** 🎨
 - **Races:** Traits, ability modifiers, languages, size/speed, **tags**, **AI-generated images** (hero + background) 🎨
-- **Classes:** Features, proficiencies, subclasses, hit die, spellcasting ability, **tags**
-- **Backgrounds:** Traits (Description, Feature, Characteristics), proficiencies, languages, **tags**
-- **Feats:** Prerequisites (emphasized), modifiers, conditions, **tags**
+- **Classes:** Features, proficiencies, subclasses, hit die, spellcasting ability, **tags**, **AI-generated images** 🎨
+- **Backgrounds:** Traits (Description, Feature, Characteristics), proficiencies, languages, **tags**, **AI-generated images** 🎨
+- **Feats:** Prerequisites (emphasized), modifiers, conditions, **tags**, **AI-generated images** 🎨
 - **Monsters:** CR/Type filters, **color-coded CR badges** (Easy/Medium/Hard/Deadly), full stat blocks (AC, HP, speeds, ability scores), **traits**, **actions**, **legendary actions** with action costs, legendary creature indicator, modifiers, conditions
 
 ### Entity Images Feature (NEW! 🎨)
-**Status:** ✅ Complete for Races | Ready to extend to other entities
+**Status:** ✅ Complete for All 6 Main Entities
 
-**Race Pages:**
+**All Entity Pages (Races, Classes, Backgrounds, Feats, Spells, Items):**
 - **Detail Pages:** CV-style hero images (512px, right-aligned 1/3 width, responsive)
 - **List Cards:** Subtle background images (256px, 10% opacity, 20% on hover)
 - **Lazy Loading:** NuxtImg with automatic optimization
@@ -70,12 +70,12 @@ A full-featured D&D 5e reference application with:
 **Testing:**
 - 19 new tests (9 composable, 7 component, 3 integration)
 - All tests passing, no regressions
-- Browser verified on 6+ race pages
+- Browser verified on all 6 entity types
 
 **Documentation:**
 - Design: `docs/plans/2025-11-22-entity-images-design.md`
-- Implementation: `docs/plans/2025-11-22-entity-images-implementation.md`
-- Handover: `docs/HANDOVER-2025-11-22-ENTITY-IMAGES.md`
+- Implementation Plans: `docs/plans/2025-11-22-entity-images-implementation.md` (races) + `docs/plans/2025-11-22-entity-images-expansion-implementation.md` (all others)
+- Handovers: `docs/HANDOVER-2025-11-22-ENTITY-IMAGES.md` (races) + `docs/HANDOVER-2025-11-22-ENTITY-IMAGES-EXPANSION.md` (expansion)
 
 ### Reference Pages (10/10) ✅
 **✅ Ability Scores, ✅ Conditions, ✅ Damage Types, ✅ Item Types, ✅ Languages, ✅ Proficiency Types, ✅ Sizes, ✅ Skills, ✅ Spell Schools, ✅ Sources**
@@ -271,24 +271,32 @@ docker compose exec nuxt sh
 **Lines of Code:** ~4,500+ (added 1,300+ lines for reference pages batch 2)
 
 **Test Coverage:**
-- ✅ **564 tests total** (ALL PASSING ✅) ⭐ (+6 type compatibility tests, +13 test suite refactoring)
+- ✅ **645 tests total** (ALL PASSING ✅) ⭐ (+81 entity images expansion tests)
 - ✅ **87 tests** for list infrastructure components
 - ✅ **31 tests** for core detail page components
 - ✅ **43 tests** for accordion components (+3 for DC feature) ⭐
 - ✅ **34 tests** for general UI components
 - ✅ **84 tests** for reference card components
-- ✅ **215 tests** for entity card components
-  - SpellCard: 29 tests
-  - ItemCard: 35 tests
-  - RaceCard: 33 tests
-  - ClassCard: 30 tests
-  - BackgroundCard: 26 tests
-  - FeatCard: 27 tests
-  - LanguageCard: 15 tests
-  - SizeCard: 10 tests
-  - DamageTypeCard: 10 tests
+- ✅ **296 tests** for entity card components (+81 new)
+  - SpellCard: 27 tests
+  - ItemCard: 37 tests
+  - RaceCard: 35 tests
+  - ClassCard: 32 tests
+  - BackgroundCard: 28 tests
+  - FeatCard: 29 tests
+  - MonsterCard: 16 tests
+  - LanguageCard: 13 tests
+  - SizeCard: 7 tests
+  - DamageTypeCard: 7 tests
+  - ConditionCard: 7 tests
+  - AbilityScoreCard: 6 tests
+  - SkillCard: 8 tests
+  - SpellSchoolCard: 8 tests
+  - ItemTypeCard: 7 tests
+  - ProficiencyTypeCard: 7 tests
+  - SourceCard: 8 tests
 - ✅ **Code Quality:** ESLint 0 errors (down from 97) ⭐
-- **Next priority:** TypeScript errors (17 remaining), E2E tests, or performance optimization
+- **Next priority:** TypeScript errors (13 remaining), E2E tests, or performance optimization
 
 ---
 
