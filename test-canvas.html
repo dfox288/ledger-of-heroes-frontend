@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Canvas Test</title>
+    <style>
+        body { margin: 0; background: #f9fafb; }
+        canvas {
+            position: fixed;
+            inset: 0;
+            z-index: -10;
+            pointer-events: none;
+            border: 2px solid red; /* Debug border */
+        }
+    </style>
+</head>
+<body>
+    <h1 style="position: relative; z-index: 1; padding: 20px;">Test Content</h1>
+    <canvas id="canvas"></canvas>
+    <script>
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+
+        console.log('Canvas size:', canvas.width, 'x', canvas.height);
+
+        // Draw a very visible test circle
+        ctx.fillStyle = 'rgba(139, 92, 246, 0.5)'; // 50% opacity purple
+        ctx.beginPath();
+        ctx.arc(200, 200, 100, 0, Math.PI * 2);
+        ctx.fill();
+
+        console.log('Test circle drawn at 200,200 with 100px radius');
+
+        // Draw some text
+        ctx.fillStyle = 'rgba(255, 0, 0, 0.8)';
+        ctx.font = '48px serif';
+        ctx.fillText('TEST', 400, 200);
+
+        console.log('Animation test complete');
+    </script>
+</body>
+</html>

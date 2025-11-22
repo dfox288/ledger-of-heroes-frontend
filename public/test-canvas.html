@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Canvas Test</title>
+    <style>
+        body { margin: 0; background: #f9fafb; }
+        canvas { 
+            position: fixed; 
+            inset: 0; 
+            z-index: 1000; /* ABOVE everything */
+            pointer-events: none;
+            border: 5px solid red;
+        }
+    </style>
+</head>
+<body>
+    <h1 style="position: relative; padding: 20px;">Test Content</h1>
+    <canvas id="canvas"></canvas>
+    <script>
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+
+        // Draw visible circle
+        ctx.fillStyle = 'rgba(139, 92, 246, 0.8)';
+        ctx.beginPath();
+        ctx.arc(200, 200, 100, 0, Math.PI * 2);
+        ctx.fill();
+
+        console.log('Circle drawn');
+    </script>
+</body>
+</html>

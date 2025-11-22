@@ -244,6 +244,12 @@ export function useAnimatedBackground(canvas: HTMLCanvasElement, isDark: boolean
     // Clear canvas
     ctx.clearRect(0, 0, canvas.width, canvas.height)
 
+    // DEBUG: Draw a very obvious test circle
+    ctx.fillStyle = 'rgba(255, 0, 0, 0.5)' // Red, 50% opacity
+    ctx.beginPath()
+    ctx.arc(100, 100, 50, 0, Math.PI * 2)
+    ctx.fill()
+
     // Update and draw swirls
     for (const swirl of swirls) {
       swirl.update(deltaTime)
