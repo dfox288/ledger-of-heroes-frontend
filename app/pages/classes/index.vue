@@ -39,6 +39,7 @@ const perPage = 24
       :total="totalResults"
       description="Browse D&D 5e classes and subclasses"
       :loading="loading"
+      :has-active-filters="hasActiveFilters"
     />
 
     <!-- Search -->
@@ -101,7 +102,6 @@ const perPage = 24
 
       <!-- Pagination -->
       <UiListPagination
-        v-if="totalResults > perPage"
         v-model="currentPage"
         :total="totalResults"
         :items-per-page="perPage"
