@@ -56,6 +56,11 @@ const clearFilters = () => {
   selectedSize.value = ''
 }
 
+// Helper for filter chips
+const getSizeName = (code: string) => {
+  return sizes.value.find(s => s.code === code)?.name || code
+}
+
 // Pagination settings
 const perPage = 24
 </script>
@@ -68,6 +73,7 @@ const perPage = 24
       :total="totalResults"
       description="Browse D&D 5e races and subraces"
       :loading="loading"
+      :has-active-filters="hasActiveFilters"
     />
 
     <!-- Search and Filters -->
@@ -112,6 +118,42 @@ const perPage = 24
             {{ size.name }}
           </UButton>
         </div>
+
+        <!-- Clear filters button -->
+        <UButton
+          v-if="hasActiveFilters"
+          color="neutral"
+          variant="soft"
+          @click="clearFilters"
+        >
+          Clear Filters
+        </UButton>
+      </div>
+
+      <!-- Active Filter Chips -->
+      <div
+        v-if="hasActiveFilters"
+        class="flex flex-wrap items-center gap-2 pt-2"
+      >
+        <span class="text-sm font-medium text-gray-600 dark:text-gray-400">Active:</span>
+        <UButton
+          v-if="selectedSize"
+          size="xs"
+          color="primary"
+          variant="soft"
+          @click="selectedSize = ''"
+        >
+          {{ getSizeName(selectedSize) }} ✕
+        </UButton>
+        <UButton
+          v-if="searchQuery"
+          size="xs"
+          color="neutral"
+          variant="soft"
+          @click="searchQuery = ''"
+        >
+          "{{ searchQuery }}" ✕
+        </UButton>
       </div>
     </div>
 
@@ -155,7 +197,6 @@ const perPage = 24
 
       <!-- Pagination -->
       <UiListPagination
-        v-if="totalResults > perPage"
         v-model="currentPage"
         :total="totalResults"
         :items-per-page="perPage"
