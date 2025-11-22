@@ -70,6 +70,11 @@ const isReferenceExpanded = ref(false)
 <template>
   <UApp>
     <div class="min-h-screen bg-gray-50 dark:bg-gray-950 text-gray-900 dark:text-gray-100">
+      <!-- Animated background -->
+      <ClientOnly>
+        <AnimatedBackground />
+      </ClientOnly>
+
       <!-- Navigation Bar -->
       <nav class="border-b border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
