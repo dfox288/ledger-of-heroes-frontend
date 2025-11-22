@@ -73,8 +73,8 @@ const imagePath = computed(() => {
         label="Back to Spells"
       />
 
-      <!-- Header with Image -->
-      <UiEntityHeaderWithImage
+      <!-- Header (title + badges) -->
+      <UiDetailPageHeader
         :title="spell.name"
         :badges="[
           { label: spellLevelText, color: getSpellLevelColor(spell.level), variant: 'subtle' as const, size: 'lg' as const },
@@ -82,8 +82,6 @@ const imagePath = computed(() => {
           ...(spell.is_ritual ? [{ label: '🔮 Ritual', color: 'info' as const, variant: 'soft' as const, size: 'sm' as const }] : []),
           ...(spell.needs_concentration ? [{ label: '⭐ Concentration', color: 'warning' as const, variant: 'soft' as const, size: 'sm' as const }] : [])
         ]"
-        :image-path="imagePath"
-        :image-alt="`${spell.name} spell illustration`"
       />
 
       <!-- Quick Stats -->
@@ -96,19 +94,12 @@ const imagePath = computed(() => {
         ]"
       />
 
-      <!-- Description (Always Visible) -->
-      <UCard>
-        <template #header>
-          <h2 class="text-lg font-semibold text-gray-900 dark:text-gray-100">
-            Description
-          </h2>
-        </template>
-        <div class="prose dark:prose-invert max-w-none">
-          <p class="whitespace-pre-line text-base text-gray-700 dark:text-gray-300 leading-relaxed">
-            {{ spell.description }}
-          </p>
-        </div>
-      </UCard>
+      <!-- Description + Image (integrated) -->
+      <UiDetailDescriptionWithImage
+        :description="spell.description"
+        :image-path="imagePath"
+        :image-alt="`${spell.name} spell illustration`"
+      />
 
       <!-- Additional Details (Accordion) -->
       <UAccordion
