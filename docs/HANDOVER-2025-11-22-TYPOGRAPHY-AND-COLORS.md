@@ -77,8 +77,12 @@
 export default defineAppConfig({
   ui: {
     colors: {
-      primary: 'amber',
-      neutral: 'stone'
+      primary: 'amber',     // Main actions, links - Treasure, legendary items
+      success: 'emerald',   // Positive actions - Nature, healing, growth
+      warning: 'orange',    // Caution, notices - Cursed items, important
+      error: 'red',         // Danger, destruction - Fire damage, danger
+      info: 'blue',         // Informational - Arcane knowledge, AC
+      neutral: 'stone'      // Default, secondary - Source books, gray text
     }
   }
 })
@@ -95,16 +99,20 @@ ui: {
 
 **Solution Steps:**
 1. ✅ Created `app.config.ts` in project root
-2. ✅ Configured `primary: 'amber'` and `neutral: 'stone'`
+2. ✅ Configured ALL semantic colors (primary, success, warning, error, info, neutral)
 3. ✅ Removed 'primary' from theme.colors (redundant)
 4. ✅ Restarted dev server (docker compose restart nuxt)
-5. ✅ Colors now apply correctly!
+5. ✅ All colors now apply correctly!
 
 **Results:**
 ✅ Primary buttons show amber (golden) color
+✅ Success elements use emerald (green)
+✅ Warning elements use orange
+✅ Error elements use red
+✅ Info elements use blue
 ✅ Neutral elements use stone (warm gray)
 ✅ All 6 entity pages load successfully
-✅ Color test page confirms amber primary
+✅ Color test page confirms all semantic colors
 
 ---
 
