@@ -6,6 +6,7 @@ import { testCardHoverEffects, testCardBorderStyling } from '../../helpers/cardB
 describe('SkillCard', () => {
   const mockSkill = {
     id: 1,
+    slug: 'acrobatics',
     name: 'Acrobatics',
     ability_score: {
       id: 2,
@@ -76,5 +77,44 @@ describe('SkillCard', () => {
     const html = wrapper.html()
     // Info color badge should be present (bg-info class)
     expect(html).toContain('bg-info')
+  })
+
+  describe('background images', () => {
+    it('computes background image URL correctly', async () => {
+      const wrapper = await mountSuspended(SkillCard, {
+        props: {
+          skill: {
+            id: 1,
+            slug: 'acrobatics',
+            name: 'Acrobatics',
+            ability_score: {
+              id: 2,
+              code: 'DEX',
+              name: 'Dexterity'
+            }
+          }
+        }
+      })
+
+      const url = wrapper.vm.backgroundImageUrl
+      expect(url).toBe('/images/generated/conversions/256/skills/stability-ai/acrobatics.png')
+    })
+
+    it('applies background image styles when URL exists', async () => {
+      const wrapper = await mountSuspended(SkillCard, {
+        props: {
+          skill: {
+            id: 1,
+            slug: 'acrobatics',
+            name: 'Acrobatics'
+          }
+        }
+      })
+
+      const card = wrapper.find('.group')
+      const style = card.attributes('style')
+      expect(style).toContain('background-image')
+      expect(style).toContain('acrobatics.png')
+    })
   })
 })
