@@ -62,6 +62,9 @@ export class ParchmentBackground {
 
     // If image loaded, draw it as tiled background
     if (this.imageLoaded && this.image) {
+      // Apply grayscale filter to desaturate colors
+      ctx.filter = 'grayscale(100%) brightness(1.1)'
+
       // Draw tiled pattern with parallax offset
       const pattern = ctx.createPattern(this.image, 'repeat')
       if (pattern) {
