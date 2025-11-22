@@ -65,10 +65,13 @@
 
 #### 3. Color Implementation - ✅ COMPLETE (FIXED!)
 
-**Root Cause:**
-- **The `app.config.ts` file was MISSING from the project root!**
-- Without this file, NuxtUI v4 couldn't load custom color configuration
-- Previous attempts were editing a non-existent file
+**Root Causes (Two Issues):**
+1. **The `app.config.ts` file was MISSING from the project root!**
+   - Without this file, NuxtUI v4 couldn't load custom color configuration
+2. **Misunderstood NuxtUI's two-layer color system**
+   - `nuxt.config.ts` registers SEMANTIC ALIASES (primary, success, neutral)
+   - `app.config.ts` maps aliases to TAILWIND COLORS (amber, emerald, stone)
+   - Was incorrectly putting Tailwind colors in nuxt.config.ts
 
 **Working Configuration:**
 
@@ -88,19 +91,24 @@ export default defineAppConfig({
 })
 ```
 
-`nuxt.config.ts`:
+`nuxt.config.ts` (registers semantic ALIASES):
 ```typescript
 ui: {
   theme: {
-    colors: ['amber', 'emerald', 'stone', 'orange', 'red', 'blue']
+    colors: ['primary', 'success', 'warning', 'error', 'info', 'neutral']
   }
 }
 ```
 
+**CRITICAL: Two-Layer System**
+- Layer 1 (`nuxt.config.ts`): Register semantic COLOR ALIASES
+- Layer 2 (`app.config.ts`): Map aliases to actual Tailwind colors
+- Common mistake: Putting Tailwind colors in nuxt.config.ts won't work!
+
 **Solution Steps:**
 1. ✅ Created `app.config.ts` in project root
 2. ✅ Configured ALL semantic colors (primary, success, warning, error, info, neutral)
-3. ✅ Removed 'primary' from theme.colors (redundant)
+3. ✅ Fixed `nuxt.config.ts` to use semantic ALIASES not Tailwind color names
 4. ✅ Restarted dev server (docker compose restart nuxt)
 5. ✅ All colors now apply correctly!
 
