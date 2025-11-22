@@ -48,77 +48,96 @@ const truncatedDescription = computed(() => {
   if (props.feat.description.length <= maxLength) return props.feat.description
   return props.feat.description.substring(0, maxLength).trim() + '...'
 })
+
+/**
+ * Get background image path (256px variant)
+ */
+const backgroundImage = computed(() => {
+  return useEntityImage(props.feat.slug, 'feats', '256')
+})
 </script>
 
 <template>
   <NuxtLink
     :to="`/feats/${feat.slug}`"
-    class="block h-full"
+    class="block h-full group"
   >
-    <UCard class="hover:shadow-lg transition-shadow h-full border border-gray-200 dark:border-gray-700">
-      <div class="space-y-3">
-        <!-- Feat Type Badge -->
-        <div class="flex items-center gap-2 flex-wrap">
-          <UBadge
-            v-if="hasPrerequisites"
-            color="error"
-            variant="soft"
-            size="md"
-          >
-            Prerequisites
-          </UBadge>
-        </div>
+    <UCard class="relative overflow-hidden hover:shadow-lg transition-shadow h-full border border-gray-200 dark:border-gray-700">
+      <!-- Background Image Layer -->
+      <div
+        v-if="backgroundImage"
+        data-test="card-background"
+        class="absolute inset-0 bg-cover bg-center opacity-10 transition-opacity duration-300 group-hover:opacity-20"
+        :style="{ backgroundImage: `url(${backgroundImage})` }"
+      />
 
-        <!-- Feat Name -->
-        <h3 class="text-xl font-semibold text-gray-900 dark:text-gray-100 line-clamp-2">
-          {{ feat.name }}
-        </h3>
-
-        <!-- Quick Stats -->
-        <div class="flex items-center gap-4 text-sm text-gray-600 dark:text-gray-400 flex-wrap">
-          <div
-            v-if="prerequisitesSummary"
-            class="flex items-center gap-1"
-          >
-            <UIcon
-              name="i-heroicons-exclamation-circle"
-              class="w-4 h-4"
-            />
-            <span>{{ prerequisitesSummary }}</span>
+      <!-- Content Layer -->
+      <div class="relative z-10 flex flex-col h-full">
+        <!-- Top content -->
+        <div class="space-y-3 flex-1">
+          <!-- Feat Type Badge -->
+          <div class="flex items-center gap-2 flex-wrap">
+            <UBadge
+              v-if="hasPrerequisites"
+              color="error"
+              variant="soft"
+              size="md"
+            >
+              Prerequisites
+            </UBadge>
           </div>
-          <div
-            v-if="modifiersCount"
-            class="flex items-center gap-1"
-          >
-            <UIcon
-              name="i-heroicons-arrow-trending-up"
-              class="w-4 h-4"
-            />
-            <span>{{ modifiersCount }} {{ modifiersCount === 1 ? 'Bonus' : 'Bonuses' }}</span>
+
+          <!-- Feat Name -->
+          <h3 class="text-xl font-semibold text-gray-900 dark:text-gray-100 line-clamp-2">
+            {{ feat.name }}
+          </h3>
+
+          <!-- Quick Stats -->
+          <div class="flex items-center gap-4 text-sm text-gray-600 dark:text-gray-400 flex-wrap">
+            <div
+              v-if="prerequisitesSummary"
+              class="flex items-center gap-1"
+            >
+              <UIcon
+                name="i-heroicons-exclamation-circle"
+                class="w-4 h-4"
+              />
+              <span>{{ prerequisitesSummary }}</span>
+            </div>
+            <div
+              v-if="modifiersCount"
+              class="flex items-center gap-1"
+            >
+              <UIcon
+                name="i-heroicons-arrow-trending-up"
+                class="w-4 h-4"
+              />
+              <span>{{ modifiersCount }} {{ modifiersCount === 1 ? 'Bonus' : 'Bonuses' }}</span>
+            </div>
           </div>
-        </div>
 
-        <!-- No Prerequisites Badge -->
-        <div
-          v-if="!hasPrerequisites"
-          class="flex items-center gap-2"
-        >
-          <UBadge
-            color="success"
-            variant="soft"
-            size="xs"
+          <!-- No Prerequisites Badge -->
+          <div
+            v-if="!hasPrerequisites"
+            class="flex items-center gap-2"
           >
-            ✅ No Prerequisites
-          </UBadge>
+            <UBadge
+              color="success"
+              variant="soft"
+              size="xs"
+            >
+              ✅ No Prerequisites
+            </UBadge>
+          </div>
+
+          <!-- Description Preview -->
+          <p class="text-sm text-gray-700 dark:text-gray-300 line-clamp-3">
+            {{ truncatedDescription }}
+          </p>
         </div>
 
-        <!-- Description Preview -->
-        <p class="text-sm text-gray-700 dark:text-gray-300 line-clamp-3">
-          {{ truncatedDescription }}
-        </p>
+        <UiCardSourceFooter :sources="feat.sources" />
       </div>
-
-      <UiCardSourceFooter :sources="feat.sources" />
     </UCard>
   </NuxtLink>
 </template>

@@ -7,7 +7,7 @@
  */
 export function useEntityImage(
   slug: string,
-  entity: 'races' | 'classes' | 'backgrounds' | 'spells' | 'items',
+  entity: 'races' | 'classes' | 'backgrounds' | 'feats' | 'spells' | 'items',
   size: '256' | '512' | 'original' = '512'
 ): string | null {
   // Validate inputs
@@ -15,7 +15,7 @@ export function useEntityImage(
     return null
   }
 
-  const validEntities = ['races', 'classes', 'backgrounds', 'spells', 'items']
+  const validEntities = ['races', 'classes', 'backgrounds', 'feats', 'spells', 'items']
   if (!validEntities.includes(entity)) {
     return null
   }
