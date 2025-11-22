@@ -27,7 +27,8 @@ export default defineNuxtConfig({
     // Public keys (exposed to client)
     public: {
       // apiBase no longer needed - frontend uses /api/* (Nitro routes)
-      apiDocsUrl: process.env.NUXT_PUBLIC_API_DOCS_URL || 'http://localhost:8080/docs/api'
+      apiDocsUrl: process.env.NUXT_PUBLIC_API_DOCS_URL || 'http://localhost:8080/docs/api',
+      imageProvider: process.env.NUXT_PUBLIC_IMAGE_PROVIDER || 'stability-ai'
     }
   },
 
