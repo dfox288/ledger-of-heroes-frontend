@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue'
+import type { DamageType } from '~/types'
 
 // API configuration
 const { apiFetch } = useApi()
@@ -19,10 +20,10 @@ const queryParams = computed(() => {
 })
 
 // Fetch damage types with reactive filters (via Nitro proxy)
-const { data: damageTypesResponse, pending: loading, error, refresh } = await useAsyncData<{ data: unknown[] }>(
+const { data: damageTypesResponse, pending: loading, error, refresh } = await useAsyncData<{ data: DamageType[] }>(
   'damage-types-list',
   async () => {
-    const response = await apiFetch<{ data: unknown[] }>('/damage-types', {
+    const response = await apiFetch<{ data: DamageType[] }>('/damage-types', {
       query: queryParams.value
     })
     return response

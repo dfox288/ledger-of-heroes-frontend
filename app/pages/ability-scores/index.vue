@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue'
+import type { AbilityScore } from '~/types'
 
 // API configuration
 const { apiFetch } = useApi()
@@ -19,10 +20,10 @@ const queryParams = computed(() => {
 })
 
 // Fetch ability scores with reactive filters (via Nitro proxy)
-const { data: abilityScoresResponse, pending: loading, error, refresh } = await useAsyncData<{ data: unknown[] }>(
+const { data: abilityScoresResponse, pending: loading, error, refresh } = await useAsyncData<{ data: AbilityScore[] }>(
   'ability-scores-list',
   async () => {
-    const response = await apiFetch<{ data: unknown[] }>('/ability-scores', {
+    const response = await apiFetch<{ data: AbilityScore[] }>('/ability-scores', {
       query: queryParams.value
     })
     return response

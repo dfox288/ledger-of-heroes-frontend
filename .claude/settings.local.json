@@ -117,7 +117,8 @@
       "Bash(do echo \"=== $entity ===\")",
       "WebFetch(domain:localhost)",
       "Bash(git reset:*)",
-      "Bash(1)"
+      "Bash(1)",
+      "Bash(cut:*)"
     ],
     "deny": [],
     "ask": []

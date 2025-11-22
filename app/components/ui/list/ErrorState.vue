@@ -2,7 +2,7 @@
 import { computed } from 'vue'
 
 interface Props {
-  error: Error | string
+  error: Error | string | unknown
   entityName?: string
 }
 
@@ -13,7 +13,14 @@ const emit = defineEmits<{
 }>()
 
 const errorMessage = computed(() => {
-  return typeof props.error === 'string' ? props.error : props.error.message
+  if (typeof props.error === 'string') {
+    return props.error
+  }
+  if (props.error instanceof Error) {
+    return props.error.message
+  }
+  // Fallback for unknown error types
+  return 'An unexpected error occurred'
 })
 
 const heading = computed(() => {

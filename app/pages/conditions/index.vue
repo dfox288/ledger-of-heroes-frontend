@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue'
+import type { Condition } from '~/types'
 
 const { apiFetch } = useApi()
 const searchQuery = ref('')
@@ -12,10 +13,10 @@ const queryParams = computed(() => {
   return params
 })
 
-const { data: conditionsResponse, pending: loading, error, refresh } = await useAsyncData<{ data: unknown[] }>(
+const { data: conditionsResponse, pending: loading, error, refresh } = await useAsyncData<{ data: Condition[] }>(
   'conditions-list',
   async () => {
-    const response = await apiFetch<{ data: unknown[] }>('/conditions', {
+    const response = await apiFetch<{ data: Condition[] }>('/conditions', {
       query: queryParams.value
     })
     return response

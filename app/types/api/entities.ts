@@ -69,6 +69,7 @@ export interface Item {
   modifiers?: Modifier[]
   spells?: unknown[] // Spells granted by item
   abilities?: unknown[] // Special abilities
+  proficiencies?: unknown[] // Proficiencies required or granted
   saving_throws?: unknown[] // Saving throw requirements
   random_tables?: unknown[] // Random tables for item effects
   tags?: unknown[] // Item tags
