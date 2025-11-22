@@ -107,8 +107,8 @@ export class Rune {
     // Random size (40-80px)
     this.size = 40 + Math.random() * 40
 
-    // Start with random opacity (0-0.3) - INCREASED FOR VISIBILITY
-    this.opacity = Math.random() * 0.3
+    // Start with random opacity (0.3-0.6) - VERY INCREASED FOR VISIBILITY
+    this.opacity = 0.3 + Math.random() * 0.3
 
     // Random initial rotation
     this.rotation = Math.random() * Math.PI * 2
@@ -133,8 +133,8 @@ export class Rune {
     this.opacity += this.fadeDirection * this.fadeSpeed * dt
 
     // Clamp opacity and reverse direction at limits
-    if (this.opacity >= 0.3) {
-      this.opacity = 0.3
+    if (this.opacity >= 0.6) {
+      this.opacity = 0.6
       this.fadeDirection = -1 // Start fading out
     } else if (this.opacity <= 0) {
       this.opacity = 0
@@ -252,16 +252,6 @@ export function useAnimatedBackground(canvas: HTMLCanvasElement, isDark: boolean
 
     // Clear canvas
     ctx.clearRect(0, 0, canvas.width, canvas.height)
-
-    // DEBUG: Draw a very obvious test circle
-    ctx.fillStyle = 'rgba(255, 0, 0, 0.8)' // Bright red, 80% opacity
-    ctx.beginPath()
-    ctx.arc(100, 100, 80, 0, Math.PI * 2)
-    ctx.fill()
-
-    // DEBUG: Draw a rectangle
-    ctx.fillStyle = 'rgba(0, 255, 0, 0.8)' // Bright green
-    ctx.fillRect(300, 300, 200, 200)
 
     // Update and draw swirls
     for (const swirl of swirls) {
