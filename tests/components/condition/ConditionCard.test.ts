@@ -72,4 +72,39 @@ describe('ConditionCard', () => {
 
     expect(wrapper.text()).toContain('Custom')
   })
+
+  describe('background images', () => {
+    it('computes background image URL correctly', async () => {
+      const wrapper = await mountSuspended(ConditionCard, {
+        props: {
+          condition: {
+            id: 1,
+            slug: 'blinded',
+            name: 'Blinded',
+            description: 'Test description'
+          }
+        }
+      })
+
+      const url = wrapper.vm.backgroundImageUrl
+      expect(url).toBe('/images/generated/conversions/256/conditions/stability-ai/blinded.png')
+    })
+
+    it('applies background image styles when URL exists', async () => {
+      const wrapper = await mountSuspended(ConditionCard, {
+        props: {
+          condition: {
+            id: 1,
+            slug: 'blinded',
+            name: 'Blinded',
+            description: 'Test description'
+          }
+        }
+      })
+
+      const card = wrapper.find('.group')
+      const style = card.attributes('style')
+      expect(style).toContain('background-image')
+    })
+  })
 })
