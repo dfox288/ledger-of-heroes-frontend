@@ -1,10 +1,11 @@
 <script setup lang="ts">
+import type { Spell } from '~/types/api/entities'
 import { getSpellLevelColor, getSpellSchoolColor } from '~/utils/badgeColors'
 
 const route = useRoute()
 
 // Fetch spell data and setup SEO
-const { data: spell, loading, error } = useEntityDetail({
+const { data: spell, loading, error } = useEntityDetail<Spell>({
   slug: route.params.slug as string,
   endpoint: '/spells',
   cacheKey: 'spell',
