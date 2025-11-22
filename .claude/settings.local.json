@@ -137,7 +137,19 @@
       "Bash(else echo \"$entity: NO detail\")",
       "Bash(fi)",
       "Bash(do)",
-      "Bash(git -C /Users/dfox/Development/dnd/frontend status)"
+      "Bash(git -C /Users/dfox/Development/dnd/frontend status)",
+      "Bash(docs/HANDOVER-2025-11-22-CODE-QUALITY-COMPLETE.md )",
+      "Bash(docs/HANDOVER-2025-11-22-ENTITY-IMAGES-EXPANSION.md )",
+      "Bash(docs/HANDOVER-2025-11-22-ENTITY-IMAGES-PLANNING.md )",
+      "Bash(docs/HANDOVER-2025-11-22-ENTITY-IMAGES.md )",
+      "Bash(docs/HANDOVER-2025-11-22-ITEM-SPELLS-COMPLETE.md )",
+      "Bash(docs/HANDOVER-2025-11-22-MONSTERS-FEATURE-COMPLETE.md )",
+      "Bash(docs/HANDOVER-2025-11-22-OPENAPI-TYPES-TYPESCRIPT-CLEANUP.md )",
+      "Bash(docs/HANDOVER-2025-11-22-REFERENCE-ENTITY-IMAGES.md )",
+      "Bash(docs/HANDOVER-2025-11-22-SESSION-2.md )",
+      "Bash(docs/HANDOVER-2025-11-22-TEST-SUITE-REFACTORING.md )",
+      "Bash(docs/HANDOVER-2025-11-22-TYPESCRIPT-TEST-CLEANUP.md )",
+      "Bash(docs/archive/2025-11-22-session-complete/)"
     ],
     "deny": [],
     "ask": []
