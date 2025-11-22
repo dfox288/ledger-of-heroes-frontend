@@ -30,7 +30,7 @@ const truncatedDescription = computed(() => {
 </script>
 
 <template>
-  <UCard class="relative overflow-hidden hover:shadow-lg transition-shadow h-full border border-gray-200 dark:border-gray-700 group">
+  <UCard class="relative overflow-hidden hover:shadow-lg transition-shadow h-full border-2 border-language-300 dark:border-language-700 hover:border-language-500 group">
     <!-- Background Image Layer -->
     <div
       v-if="backgroundImageUrl"
