@@ -47,39 +47,23 @@ export interface Item extends Omit<ItemFromAPI, 'sources' | 'item_type' | 'damag
 /**
  * Race entity from D&D 5e API
  *
+ * Base type generated from OpenAPI spec, extended with application-specific utilities.
+ *
  * Used in: RaceCard, race detail pages, tests
  * API endpoint: /api/v1/races
  */
-export interface Race {
-  id: number
-  name: string
-  slug: string
+type RaceFromAPI = components['schemas']['RaceResource']
+
+export interface Race extends Omit<RaceFromAPI, 'sources' | 'modifiers' | 'size'> {
+  // Override with our custom types that have better structure
   size?: {
     id: number
     name: string
     code: string
   }
-  speed: number
-  parent_race_id?: number | null
-  parent_race?: {
-    id: number
-    slug: string
-    name: string
-    speed: number
-  } | null
-  subraces?: Array<{
-    id: number
-    slug: string
-    name: string
-  }>
   modifiers?: Modifier[]
-  traits?: unknown[] // Complex nested structure, varies by race
-  proficiencies?: unknown[] // Proficiency structure
-  languages?: unknown[] // Language structure
-  abilities?: unknown[] // Special abilities
-  description?: string
   sources?: Source[]
-  tags?: unknown[] // Race tags
+  // All other fields inherited from RaceFromAPI
 }
 
 /**

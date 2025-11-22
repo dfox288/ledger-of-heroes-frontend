@@ -1,10 +1,29 @@
 import { describe, it, expect } from 'vitest'
 import { mountSuspended } from '@nuxt/test-utils/runtime'
 import type { Race } from '~/types'
+import type { components } from '~/types/api/generated'
 import RaceCard from '~/components/race/RaceCard.vue'
 import { testCardLinkBehavior, testCardHoverEffects, testCardBorderStyling } from '../../helpers/cardBehavior'
 import { testDescriptionTruncation } from '../../helpers/descriptionBehavior'
 import { testSourceFooter, testOptionalSourceFooter } from '../../helpers/sourceBehavior'
+
+describe('RaceCard - Type Compatibility', () => {
+  it('should accept OpenAPI-generated Race type', () => {
+    // This test verifies that our Race interface is compatible with the generated type
+    const generatedRace: components['schemas']['RaceResource'] = {
+      id: 1,
+      name: 'Elf',
+      slug: 'elf',
+      speed: 30
+    }
+
+    // Should be assignable to our application Race type
+    const race: Race = generatedRace
+
+    expect(race.id).toBe(1)
+    expect(race.name).toBe('Elf')
+  })
+})
 
 describe('RaceCard', () => {
   const mockRace: Race = {
