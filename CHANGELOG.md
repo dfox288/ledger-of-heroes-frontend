@@ -10,6 +10,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- Animated fantasy background with mystical swirls and D&D runes (2025-11-22)
+  - Canvas-based particle system with 40 swirls and 6 runic symbols
+  - 30 FPS performance-optimized animation
+  - Respects prefers-reduced-motion accessibility setting
+  - Pauses when tab not visible (battery friendly)
+  - Light/dark mode color palettes
+  - 19 new tests (composable + component)
 - **Entity Images Feature - Complete for All 6 Main Entities (2025-11-22)** - AI-generated images across all entity types
   - CV-style hero images on detail pages (512px variants, right-aligned 1/3 width)
   - Subtle background images on list cards (256px, 10% opacity, 20% hover)

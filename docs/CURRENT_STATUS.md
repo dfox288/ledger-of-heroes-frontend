@@ -1,12 +1,12 @@
 # D&D 5e Compendium Frontend - Current Status
 
-**Last Updated:** 2025-11-22 (Entity Images Expanded to All 6 Main Entities!)
+**Last Updated:** 2025-11-22 (Animated Fantasy Background Complete!)
 **Status:** ✅ **PRODUCTION-READY - 100% Tests Passing!**
 **Framework:** Nuxt 4.x + NuxtUI 4.x
 **7 of 7 Entity Types + 10 Reference Pages** (All Complete!)
-**Test Coverage:** 645/645 tests passing (100% pass rate!) ✨
+**Test Coverage:** 664/664 tests passing (100% pass rate!) ✨
 **Code Quality:** ESLint 0 errors ✅ | TypeScript: 13 errors (93% reduction from 176 original)
-**NEW:** AI-generated images on all 6 main entity types (hero + background images) 🎨
+**NEW:** Animated fantasy background with mystical swirls and D&D runes 🎨
 
 ---
 
@@ -76,6 +76,32 @@ A full-featured D&D 5e reference application with:
 - Design: `docs/plans/2025-11-22-entity-images-design.md`
 - Implementation Plans: `docs/plans/2025-11-22-entity-images-implementation.md` (races) + `docs/plans/2025-11-22-entity-images-expansion-implementation.md` (all others)
 - Handovers: `docs/HANDOVER-2025-11-22-ENTITY-IMAGES.md` (races) + `docs/HANDOVER-2025-11-22-ENTITY-IMAGES-EXPANSION.md` (expansion)
+
+### Animated Fantasy Background (NEW! ✨)
+**Status:** ✅ Complete
+
+**Visual Features:**
+- 40 mystical energy swirls flowing across screen
+- 6 D&D runic symbols fading in/out
+- Organic movement with sine wave drift
+- Light/dark mode color adaptation (purple/blue → purple/cyan)
+
+**Performance:**
+- 30 FPS throttled animation (battery efficient)
+- Pauses when tab hidden (Visibility API)
+- Respects prefers-reduced-motion accessibility setting
+- <5% CPU usage on modern devices
+
+**Technical:**
+- Canvas 2D API with particle system
+- `AnimatedBackground.vue` component + `useAnimatedBackground.ts` composable
+- SSR compatible (ClientOnly wrapper)
+- 19 new tests (all passing)
+
+**Files:**
+- Component: `app/components/AnimatedBackground.vue`
+- Composable: `app/composables/useAnimatedBackground.ts`
+- Tests: `tests/components/AnimatedBackground.test.ts` + `tests/composables/useAnimatedBackground.test.ts`
 
 ### Reference Pages (10/10) ✅
 **✅ Ability Scores, ✅ Conditions, ✅ Damage Types, ✅ Item Types, ✅ Languages, ✅ Proficiency Types, ✅ Sizes, ✅ Skills, ✅ Spell Schools, ✅ Sources**
