@@ -13,7 +13,8 @@
     "test:ui": "vitest --ui",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
-    "typecheck": "nuxt typecheck"
+    "typecheck": "nuxt typecheck",
+    "types:sync": "node scripts/sync-api-types.js"
   },
   "dependencies": {
     "@nuxt/eslint": "^1.10.0",
