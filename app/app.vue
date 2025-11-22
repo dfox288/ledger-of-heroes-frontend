@@ -37,6 +37,7 @@ const toggleColorMode = () => {
 const navItems = [
   { label: 'Spells', to: '/spells' },
   { label: 'Items', to: '/items' },
+  { label: 'Monsters', to: '/monsters' },
   { label: 'Races', to: '/races' },
   { label: 'Classes', to: '/classes' },
   { label: 'Backgrounds', to: '/backgrounds' },
