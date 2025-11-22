@@ -142,6 +142,11 @@ const itemTypeColor = computed(() => {
             slot: 'abilities',
             defaultOpen: false
           }] : []),
+          ...(item.spells && item.spells.length > 0 ? [{
+            label: 'Spells',
+            slot: 'spells',
+            defaultOpen: false
+          }] : []),
           ...(item.random_tables && item.random_tables.length > 0 ? [{
             label: 'Random Tables',
             slot: 'random_tables',
@@ -195,6 +200,14 @@ const itemTypeColor = computed(() => {
           #abilities
         >
           <UiAccordionAbilitiesList :abilities="item.abilities" />
+        </template>
+
+        <!-- Spells Slot -->
+        <template
+          v-if="item.spells && item.spells.length > 0"
+          #spells
+        >
+          <UiAccordionItemSpells :spells="item.spells" />
         </template>
 
         <!-- Random Tables Slot -->
