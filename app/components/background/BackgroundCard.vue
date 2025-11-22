@@ -39,79 +39,98 @@ const truncatedDescription = computed(() => {
   if (props.background.description.length <= maxLength) return props.background.description
   return props.background.description.substring(0, maxLength).trim() + '...'
 })
+
+/**
+ * Get background image path (256px variant)
+ */
+const backgroundImage = computed(() => {
+  return useEntityImage(props.background.slug, 'backgrounds', '256')
+})
 </script>
 
 <template>
   <NuxtLink
     :to="`/backgrounds/${background.slug}`"
-    class="block h-full"
+    class="block h-full group"
   >
-    <UCard class="hover:shadow-lg transition-shadow h-full border border-gray-200 dark:border-gray-700">
-      <div class="space-y-3">
-        <!-- Feature Badge -->
-        <div
-          v-if="background.feature_name"
-          class="flex items-center gap-2 flex-wrap"
-        >
-          <UBadge
-            color="primary"
-            variant="soft"
-            size="sm"
-          >
-            {{ background.feature_name }}
-          </UBadge>
-        </div>
+    <UCard class="relative overflow-hidden hover:shadow-lg transition-shadow h-full border border-gray-200 dark:border-gray-700">
+      <!-- Background Image Layer -->
+      <div
+        v-if="backgroundImage"
+        data-test="card-background"
+        class="absolute inset-0 bg-cover bg-center opacity-10 transition-opacity duration-300 group-hover:opacity-20"
+        :style="{ backgroundImage: `url(${backgroundImage})` }"
+      />
 
-        <!-- Background Name -->
-        <h3 class="text-xl font-semibold text-gray-900 dark:text-gray-100 line-clamp-2">
-          {{ background.name }}
-        </h3>
-
-        <!-- Quick Stats -->
-        <div class="flex items-center gap-4 text-sm text-gray-600 dark:text-gray-400 flex-wrap">
+      <!-- Content Layer -->
+      <div class="relative z-10 flex flex-col h-full">
+        <!-- Top content -->
+        <div class="space-y-3 flex-1">
+          <!-- Feature Badge -->
           <div
-            v-if="skillsSummary"
-            class="flex items-center gap-1"
+            v-if="background.feature_name"
+            class="flex items-center gap-2 flex-wrap"
           >
-            <UIcon
-              name="i-heroicons-academic-cap"
-              class="w-4 h-4"
-            />
-            <span>{{ skillsSummary }}</span>
+            <UBadge
+              color="primary"
+              variant="soft"
+              size="sm"
+            >
+              {{ background.feature_name }}
+            </UBadge>
           </div>
+
+          <!-- Background Name -->
+          <h3 class="text-xl font-semibold text-gray-900 dark:text-gray-100 line-clamp-2">
+            {{ background.name }}
+          </h3>
+
+          <!-- Quick Stats -->
+          <div class="flex items-center gap-4 text-sm text-gray-600 dark:text-gray-400 flex-wrap">
+            <div
+              v-if="skillsSummary"
+              class="flex items-center gap-1"
+            >
+              <UIcon
+                name="i-heroicons-academic-cap"
+                class="w-4 h-4"
+              />
+              <span>{{ skillsSummary }}</span>
+            </div>
+            <div
+              v-if="languagesCount"
+              class="flex items-center gap-1"
+            >
+              <UIcon
+                name="i-heroicons-language"
+                class="w-4 h-4"
+              />
+              <span>{{ languagesCount }} {{ languagesCount === 1 ? 'Language' : 'Languages' }}</span>
+            </div>
+          </div>
+
+          <!-- Tool Proficiencies -->
           <div
-            v-if="languagesCount"
-            class="flex items-center gap-1"
+            v-if="background.proficiencies && background.proficiencies.filter(p => p.proficiency_type === 'tool').length > 0"
+            class="flex items-center gap-2"
           >
-            <UIcon
-              name="i-heroicons-language"
-              class="w-4 h-4"
-            />
-            <span>{{ languagesCount }} {{ languagesCount === 1 ? 'Language' : 'Languages' }}</span>
+            <UBadge
+              color="info"
+              variant="soft"
+              size="xs"
+            >
+              🔧 {{ background.proficiencies.filter(p => p.proficiency_type === 'tool').length }} Tools
+            </UBadge>
           </div>
+
+          <!-- Description Preview -->
+          <p class="text-sm text-gray-700 dark:text-gray-300 line-clamp-3">
+            {{ truncatedDescription }}
+          </p>
         </div>
 
-        <!-- Tool Proficiencies -->
-        <div
-          v-if="background.proficiencies && background.proficiencies.filter(p => p.proficiency_type === 'tool').length > 0"
-          class="flex items-center gap-2"
-        >
-          <UBadge
-            color="info"
-            variant="soft"
-            size="xs"
-          >
-            🔧 {{ background.proficiencies.filter(p => p.proficiency_type === 'tool').length }} Tools
-          </UBadge>
-        </div>
-
-        <!-- Description Preview -->
-        <p class="text-sm text-gray-700 dark:text-gray-300 line-clamp-3">
-          {{ truncatedDescription }}
-        </p>
+        <UiCardSourceFooter :sources="background.sources" />
       </div>
-
-      <UiCardSourceFooter :sources="background.sources" />
     </UCard>
   </NuxtLink>
 </template>
