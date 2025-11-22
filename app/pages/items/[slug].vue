@@ -131,6 +131,11 @@ const itemTypeColor = computed(() => {
             slot: 'modifiers',
             defaultOpen: false
           }] : []),
+          ...(item.proficiencies && item.proficiencies.length > 0 ? [{
+            label: 'Proficiencies',
+            slot: 'proficiencies',
+            defaultOpen: false
+          }] : []),
           ...(item.abilities && item.abilities.length > 0 ? [{
             label: 'Abilities',
             slot: 'abilities',
@@ -168,6 +173,14 @@ const itemTypeColor = computed(() => {
           #modifiers
         >
           <UiModifiersDisplay :modifiers="item.modifiers" />
+        </template>
+
+        <!-- Proficiencies Slot -->
+        <template
+          v-if="item.proficiencies && item.proficiencies.length > 0"
+          #proficiencies
+        >
+          <UiAccordionBulletList :items="item.proficiencies" />
         </template>
 
         <!-- Abilities Slot -->
