@@ -69,37 +69,19 @@ export interface Race extends Omit<RaceFromAPI, 'sources' | 'modifiers' | 'size'
 /**
  * Character Class entity from D&D 5e API
  *
+ * Base type generated from OpenAPI spec, extended with application-specific utilities.
+ *
  * Used in: ClassCard, class detail pages, tests
  * API endpoint: /api/v1/classes
  *
  * Note: Named CharacterClass to avoid conflict with JS 'class' keyword
  */
-export interface CharacterClass {
-  id: number
-  name: string
-  slug: string
-  hit_die: number
-  is_base_class: boolean
-  parent_class_id?: number | null
-  primary_ability?: {
-    id: number
-    code: string
-    name: string
-  } | null
-  spellcasting_ability?: {
-    id: number
-    code: string
-    name: string
-  } | null
-  subclasses?: unknown[] // Complex nested structure with features
-  proficiencies?: unknown[] // Complex proficiency structure
-  features?: unknown[] // Class features
-  spells?: unknown[] // Spells for spellcasting classes
-  abilities?: unknown[] // Special abilities
-  starting_equipment?: unknown[] // Starting equipment
-  description?: string
+type CharacterClassFromAPI = components['schemas']['ClassResource']
+
+export interface CharacterClass extends Omit<CharacterClassFromAPI, 'sources'> {
+  // Override with our custom types that have better structure
   sources?: Source[]
-  tags?: unknown[] // Class tags
+  // All other fields inherited from CharacterClassFromAPI
 }
 
 /**

@@ -1,10 +1,32 @@
 import { describe, it, expect } from 'vitest'
 import { mountSuspended } from '@nuxt/test-utils/runtime'
 import type { CharacterClass } from '~/types'
+import type { components } from '~/types/api/generated'
 import ClassCard from '~/components/class/ClassCard.vue'
 import { testCardLinkBehavior, testCardHoverEffects, testCardBorderStyling } from '../../helpers/cardBehavior'
 import { testDescriptionTruncation } from '../../helpers/descriptionBehavior'
 import { testSourceFooter, testOptionalSourceFooter } from '../../helpers/sourceBehavior'
+
+describe('ClassCard - Type Compatibility', () => {
+  it('should accept OpenAPI-generated CharacterClass type', () => {
+    // This test verifies that our CharacterClass interface is compatible with the generated type
+    const generatedClass: components['schemas']['ClassResource'] = {
+      id: '1',
+      name: 'Fighter',
+      slug: 'fighter',
+      hit_die: '10',
+      is_base_class: 'true',
+      parent_class_id: '0',
+      description: 'A master of martial combat',
+      primary_ability: 'Strength or Dexterity'
+    }
+
+    // Should be assignable to our application CharacterClass type
+    const characterClass: CharacterClass = generatedClass
+
+    expect(characterClass.name).toBe('Fighter')
+  })
+})
 
 describe('ClassCard', () => {
   const mockClass: CharacterClass = {
