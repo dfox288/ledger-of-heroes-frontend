@@ -24,43 +24,6 @@ const rarityColor = computed<'primary' | 'secondary' | 'success' | 'info' | 'war
   return (rarity && colors[rarity]) || 'neutral'
 })
 
-/**
- * Get item type color for badge
- * Color-coded by general category
- */
-const getItemTypeColor = (typeName: string): 'primary' | 'secondary' | 'success' | 'info' | 'warning' | 'error' | 'neutral' => {
-  const type = typeName.toLowerCase()
-
-  // Weapons (red/error)
-  if (type.includes('weapon') || type.includes('sword') || type.includes('axe')
-    || type.includes('bow') || type.includes('dagger')) {
-    return 'error'
-  }
-
-  // Armor (info/blue)
-  if (type.includes('armor') || type.includes('shield')) {
-    return 'info'
-  }
-
-  // Tools & Equipment (warning/amber)
-  if (type.includes('tool') || type.includes('kit') || type.includes('instrument')) {
-    return 'warning'
-  }
-
-  // Potions & Consumables (success/green)
-  if (type.includes('potion') || type.includes('scroll') || type.includes('elixir')) {
-    return 'success'
-  }
-
-  // Wondrous Items & Magical (primary/teal)
-  if (type.includes('wondrous') || type.includes('ring') || type.includes('amulet')
-    || type.includes('staff') || type.includes('rod') || type.includes('wand')) {
-    return 'primary'
-  }
-
-  // Default
-  return 'neutral'
-}
 
 /**
  * Format rarity for display
@@ -107,7 +70,7 @@ const backgroundImage = computed(() => {
     :to="`/items/${item.slug}`"
     class="block h-full group"
   >
-    <UCard class="relative overflow-hidden hover:shadow-lg transition-shadow h-full border border-gray-200 dark:border-gray-700">
+    <UCard class="relative overflow-hidden hover:shadow-lg transition-shadow h-full border-2 border-item-300 dark:border-item-700 hover:border-item-500">
       <!-- Background Image Layer -->
       <div
         v-if="backgroundImage"
@@ -124,7 +87,7 @@ const backgroundImage = computed(() => {
           <div class="flex items-center gap-2 flex-wrap justify-between">
             <UBadge
               v-if="item.item_type"
-              :color="getItemTypeColor(item.item_type.name)"
+              color="item"
               variant="subtle"
               size="md"
             >
@@ -168,7 +131,7 @@ const backgroundImage = computed(() => {
             </div>
             <UBadge
               v-if="item.is_magic"
-              color="primary"
+              color="item"
               variant="soft"
               size="sm"
             >
@@ -176,7 +139,7 @@ const backgroundImage = computed(() => {
             </UBadge>
             <UBadge
               v-if="item.requires_attunement"
-              color="info"
+              color="item"
               variant="soft"
               size="sm"
             >
