@@ -34,7 +34,7 @@ describe('ClassCard', () => {
     name: 'Wizard',
     slug: 'wizard',
     hit_die: 6,
-    is_base_class: true,
+    is_base_class: '1', // API returns '1' for base class, '0' for subclass
     parent_class_id: null,
     primary_ability: {
       id: 4,
@@ -130,7 +130,7 @@ describe('ClassCard', () => {
   it('shows subclass badge when is_base_class is false', async () => {
     const subclass = {
       ...mockClass,
-      is_base_class: false,
+      is_base_class: '0', // API returns '0' for subclass
       subclasses: undefined
     }
     const wrapper = await mountSuspended(ClassCard, {
@@ -211,7 +211,7 @@ describe('ClassCard', () => {
   it('hides subclasses count for subclasses themselves', async () => {
     const subclass = {
       ...mockClass,
-      is_base_class: false,
+      is_base_class: '0', // API returns '0' for subclass
       subclasses: undefined
     }
     const wrapper = await mountSuspended(ClassCard, {
@@ -330,7 +330,7 @@ describe('ClassCard', () => {
       name: 'Barbarian',
       slug: 'barbarian',
       hit_die: 12,
-      is_base_class: true,
+      is_base_class: '1', // API returns '1' for base class
       parent_class_id: null
     }
     const wrapper = await mountSuspended(ClassCard, {
