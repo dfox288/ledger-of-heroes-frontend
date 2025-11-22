@@ -124,7 +124,9 @@
       "Bash(NUXT_API_SPEC_URL=http://host.docker.internal:8080/docs/api.json docker compose exec:*)",
       "Bash(tee:*)",
       "Bash(npm run typecheck:*)",
-      "Bash(git stash:*)"
+      "Bash(git stash:*)",
+      "Bash(git check-ignore:*)",
+      "Bash(do echo \"=== Commit: $commit ===\" git show $commit --format=\"%s\" --no-patch git show $commit)"
     ],
     "deny": [],
     "ask": []

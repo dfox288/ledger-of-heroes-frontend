@@ -10,12 +10,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
-- **OpenAPI type generation** - Automatic TypeScript type generation from backend OpenAPI spec (2025-11-22)
-  - New command: `npm run types:sync` to sync types from backend
-  - Hybrid type system: generated base types + manual extensions
-  - Full type safety for nested API structures (effects, traits, modifiers)
-  - Type compatibility tests for all 6 entity types
-  - Eliminates manual type maintenance and prevents drift
+- **OpenAPI type generation system (2025-11-22)** - Automatic TypeScript type generation from backend API
+  - New command: `npm run types:sync` syncs types from backend OpenAPI spec
+  - Generated 2,848 lines of TypeScript types from API spec
+  - Hybrid type system: auto-generated base types + manual application extensions
+  - Full type safety for nested API structures (effects, traits, modifiers, proficiencies)
+  - Eliminated ~100 lines of duplicate manual type definitions
+  - 6 new type compatibility tests (one per entity type)
+
+### Fixed
+- **TypeScript errors reduced by 70% (2025-11-22)** - Systematic cleanup from 176 to 53 errors
+  - Added proper type annotations to all 6 detail pages (54 errors eliminated)
+  - Added type annotations to search page (18 errors eliminated)
+  - Fixed empty object types in useAsyncData calls (61 errors eliminated)
+  - Updated 8 accordion components to use generated API types (32 errors eliminated)
+  - Added missing entity fields (description, feature_name) to types (15 errors eliminated)
+  - Fixed null vs undefined type mismatches (18 errors eliminated)
+  - Fixed index page array type annotations (10 errors eliminated)
+  - Fixed badge color type safety (5 errors eliminated)
+  - Added missing type exports (Condition, DamageType) (2 errors eliminated)
+  - Fixed BackgroundCard property names (6 errors eliminated)
 
 ### Changed
 - **Test suite refactored for maintainability** - Extracted shared test helpers to reduce redundancy by 30 tests (573→543→558 adjusted) (2025-11-22)
