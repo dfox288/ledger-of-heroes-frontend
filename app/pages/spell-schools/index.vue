@@ -1,40 +1,29 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { computed } from 'vue'
 import type { SpellSchool } from '~/types'
 
-const { apiFetch } = useApi()
-const searchQuery = ref('')
-
-const queryParams = computed(() => {
-  const params: Record<string, string> = {}
-  if (searchQuery.value.trim()) {
-    params.q = searchQuery.value.trim()
+// Use entity list composable with noPagination
+const {
+  searchQuery,
+  data,
+  totalResults,
+  loading,
+  error,
+  refresh,
+  clearFilters,
+  hasActiveFilters
+} = useEntityList({
+  endpoint: '/spell-schools',
+  cacheKey: 'spell-schools-list',
+  queryBuilder: computed(() => ({})), // No custom filters
+  noPagination: true, // Small dataset, no pagination needed
+  seo: {
+    title: 'Spell Schools - D&D 5e Compendium',
+    description: 'Browse all D&D 5e schools of magic: Abjuration, Conjuration, Divination, Enchantment, Evocation, Illusion, Necromancy, and Transmutation.'
   }
-  return params
 })
 
-const { data: spellSchoolsResponse, pending: loading, error, refresh } = await useAsyncData<{ data: SpellSchool[] }>(
-  'spell-schools-list',
-  async () => {
-    const response = await apiFetch<{ data: SpellSchool[] }>('/spell-schools', {
-      query: queryParams.value
-    })
-    return response
-  },
-  { watch: [queryParams] }
-)
-
-const spellSchools = computed(() => spellSchoolsResponse.value?.data || [])
-const totalResults = computed(() => spellSchools.value.length)
-
-useSeoMeta({
-  title: 'Spell Schools - D&D 5e Compendium',
-  description: 'Browse all D&D 5e schools of magic: Abjuration, Conjuration, Divination, Enchantment, Evocation, Illusion, Necromancy, and Transmutation.'
-})
-
-useHead({
-  title: 'Spell Schools - D&D 5e Compendium'
-})
+const spellSchools = computed(() => data.value as SpellSchool[])
 </script>
 
 <template>
@@ -44,6 +33,7 @@ useHead({
       :total="totalResults"
       description="Browse D&D 5e schools of magic"
       :loading="loading"
+      :has-active-filters="hasActiveFilters"
     />
 
     <div class="mb-6">
@@ -77,8 +67,8 @@ useHead({
     <UiListEmptyState
       v-else-if="spellSchools.length === 0"
       entity-name="spell schools"
-      :has-filters="!!searchQuery"
-      @clear-filters="searchQuery = ''"
+      :has-filters="hasActiveFilters"
+      @clear-filters="clearFilters"
     />
 
     <div v-else>
