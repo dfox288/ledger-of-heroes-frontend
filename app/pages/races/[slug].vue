@@ -63,15 +63,13 @@ const imagePath = computed(() => {
         label="Back to Races"
       />
 
-      <!-- Header with Image -->
-      <UiEntityHeaderWithImage
+      <!-- Header - UPDATED -->
+      <UiDetailPageHeader
         :title="race.name"
         :badges="[
           ...(race.size ? [{ label: race.size.name, color: sizeColor as unknown as BadgeColor, variant: 'subtle' as BadgeVariant, size: 'lg' as BadgeSize }] : []),
           { label: race.parent_race ? 'Subrace' : 'Race', color: (race.parent_race ? 'primary' : 'info') as BadgeColor, variant: 'subtle' as BadgeVariant, size: 'lg' as BadgeSize }
         ]"
-        :image-path="imagePath"
-        :image-alt="`${race.name} character portrait`"
       />
 
       <!-- Quick Stats -->
@@ -82,19 +80,13 @@ const imagePath = computed(() => {
         ]"
       />
 
-      <!-- Description (Always Visible) -->
-      <UCard v-if="race.description">
-        <template #header>
-          <h2 class="text-lg font-semibold text-gray-900 dark:text-gray-100">
-            Description
-          </h2>
-        </template>
-        <div class="prose dark:prose-invert max-w-none">
-          <p class="whitespace-pre-line text-base text-gray-700 dark:text-gray-300 leading-relaxed">
-            {{ race.description }}
-          </p>
-        </div>
-      </UCard>
+      <!-- Description + Image - NEW -->
+      <UiDetailDescriptionWithImage
+        v-if="race.description"
+        :description="race.description"
+        :image-path="imagePath"
+        :image-alt="`${race.name} character portrait`"
+      />
 
       <!-- Ability Score Increases (Always Visible) -->
       <UCard v-if="race.ability_score_increases && race.ability_score_increases.length > 0">
