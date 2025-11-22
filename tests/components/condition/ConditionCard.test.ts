@@ -50,12 +50,15 @@ describe('ConditionCard', () => {
     expect(html).toContain('line-clamp-3')
   })
 
-  it('displays category badge', async () => {
+  it('displays category badge with condition color', async () => {
     const wrapper = await mountSuspended(ConditionCard, {
       props: { condition: mockCondition }
     })
 
     expect(wrapper.text()).toContain('Condition')
+    // Verify badge uses condition entity color (rose)
+    const badge = wrapper.find('[class*="bg-condition"]')
+    expect(badge.exists()).toBe(true)
   })
 
   it('handles empty description', async () => {
