@@ -21,6 +21,14 @@ const { data: entity, loading, error } = useEntityDetail<CharacterClass>({
     fallbackTitle: 'Class - D&D 5e Compendium'
   }
 })
+
+/**
+ * Get entity image path (512px variant)
+ */
+const imagePath = computed(() => {
+  if (!entity.value) return null
+  return useEntityImage(entity.value.slug, 'classes', '512')
+})
 </script>
 
 <template>
@@ -45,13 +53,15 @@ const { data: entity, loading, error } = useEntityDetail<CharacterClass>({
         label="Back to Classes"
       />
 
-      <!-- Header -->
-      <UiDetailPageHeader
+      <!-- Header with Image -->
+      <UiEntityHeaderWithImage
         :title="entity.name"
         :badges="[
           { label: entity.is_base_class ? 'Base Class' : 'Subclass', color: (entity.is_base_class ? 'error' : 'warning') as BadgeColor, variant: 'subtle' as BadgeVariant, size: 'lg' as BadgeSize },
           ...(entity.spellcasting_ability ? [{ label: `✨ ${entity.spellcasting_ability.name}`, color: 'primary' as BadgeColor, variant: 'soft' as BadgeVariant, size: 'sm' as BadgeSize }] : [])
         ]"
+        :image-path="imagePath"
+        :image-alt="`${entity.name} class illustration`"
       />
 
       <!-- Quick Stats -->
