@@ -100,7 +100,8 @@ const itemTypeColor = computed(() => {
           ...(item.damage_dice ? [{ icon: 'i-heroicons-bolt', label: 'Damage', value: item.damage_dice + (item.damage_type ? ` ${item.damage_type.name}` : ''), subtext: item.versatile_damage ? `Versatile: ${item.versatile_damage}` : undefined }] : []),
           ...(item.armor_class !== null ? [{ icon: 'i-heroicons-shield-check', label: 'Armor Class', value: String(item.armor_class) }] : []),
           ...(item.range_normal ? [{ icon: 'i-heroicons-arrow-trending-up', label: 'Range', value: `${item.range_normal}${item.range_long ? `/${item.range_long}` : ''} ft.` }] : []),
-          ...(item.strength_requirement ? [{ icon: 'i-heroicons-hand-raised', label: 'Strength Required', value: String(item.strength_requirement) }] : [])
+          ...(item.strength_requirement ? [{ icon: 'i-heroicons-hand-raised', label: 'Strength Required', value: String(item.strength_requirement) }] : []),
+          ...(item.charges_max ? [{ icon: 'i-heroicons-bolt-slash', label: 'Charges', value: String(item.charges_max), subtext: item.recharge_formula && item.recharge_timing ? `Recharge: ${item.recharge_formula} at ${item.recharge_timing}` : undefined }] : [])
         ]"
       />
 
