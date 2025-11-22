@@ -75,8 +75,8 @@ export interface Race {
     slug: string
     name: string
   }>
-  modifiers?: any[]  // TODO: Type with Modifier interface
-  traits?: any[]     // TODO: Type trait structure
+  modifiers?: any[] // TODO: Type with Modifier interface
+  traits?: any[] // TODO: Type trait structure
   description?: string
   sources?: Source[]
 }
@@ -106,8 +106,8 @@ export interface CharacterClass {
     code: string
     name: string
   } | null
-  subclasses?: any[]      // TODO: Type subclass structure
-  proficiencies?: any[]   // TODO: Type proficiency structure
+  subclasses?: any[] // TODO: Type subclass structure
+  proficiencies?: any[] // TODO: Type proficiency structure
   description?: string
   sources?: Source[]
 }
@@ -122,9 +122,9 @@ export interface Background {
   id: number
   name: string
   slug: string
-  skill_proficiencies?: any[]   // TODO: Type skill proficiency structure
-  tool_proficiencies?: any[]    // TODO: Type tool proficiency structure
-  languages?: any[]             // TODO: Type language structure
+  skill_proficiencies?: any[] // TODO: Type skill proficiency structure
+  tool_proficiencies?: any[] // TODO: Type tool proficiency structure
+  languages?: any[] // TODO: Type language structure
   feature_name?: string
   description?: string
   sources?: Source[]
@@ -140,8 +140,8 @@ export interface Feat {
   id: number
   name: string
   slug: string
-  prerequisites?: any[]   // TODO: Type prerequisite structure
-  modifiers?: any[]       // TODO: Use Modifier interface
+  prerequisites?: any[] // TODO: Type prerequisite structure
+  modifiers?: any[] // TODO: Use Modifier interface
   description?: string
   sources?: Source[]
 }

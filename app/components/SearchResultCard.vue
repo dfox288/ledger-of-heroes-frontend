@@ -14,12 +14,12 @@ const props = defineProps<Props>()
  */
 const getBadgeColor = computed<'primary' | 'secondary' | 'success' | 'info' | 'warning' | 'error' | 'neutral'>(() => {
   const colors: Record<string, 'primary' | 'secondary' | 'success' | 'info' | 'warning' | 'error' | 'neutral'> = {
-    spell: 'primary',    // purple → primary
-    item: 'warning',     // amber → warning
-    race: 'info',        // blue → info
-    class: 'error',      // red → error
+    spell: 'primary', // purple → primary
+    item: 'warning', // amber → warning
+    race: 'info', // blue → info
+    class: 'error', // red → error
     background: 'success', // green → success
-    feat: 'warning'      // orange → warning
+    feat: 'warning' // orange → warning
   }
   return colors[props.type] || 'neutral'
 })

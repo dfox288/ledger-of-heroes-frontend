@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { AbilityScore, Modifier } from '~/types'
+import type { Modifier } from '~/types'
 
 interface Props {
   modifiers?: Modifier[]
