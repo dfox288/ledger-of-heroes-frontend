@@ -28,8 +28,9 @@ describe('AnimatedBackground', () => {
     const wrapper = await mountSuspended(AnimatedBackground)
 
     const canvas = wrapper.find('canvas')
-    expect(canvas.classes()).toContain('fixed')
-    expect(canvas.classes()).toContain('-z-10')
+    const style = canvas.attributes('style')
+    expect(style).toContain('position: fixed')
+    expect(style).toContain('z-index: 1')
   })
 
   it('makes canvas non-interactive', async () => {

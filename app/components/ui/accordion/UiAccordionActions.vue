@@ -40,11 +40,7 @@ function getActionCostText(cost: number): string {
   <UAccordion
     v-if="actions.length > 0"
     :items="items"
-    :ui="{
-      item: {
-        base: 'border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden mb-4'
-      }
-    }"
+    class="[&_.ui-accordion-item]:border [&_.ui-accordion-item]:border-gray-200 dark:[&_.ui-accordion-item]:border-gray-700 [&_.ui-accordion-item]:rounded-lg [&_.ui-accordion-item]:overflow-hidden [&_.ui-accordion-item]:mb-4"
   >
     <template #actions>
       <div class="space-y-4 p-4">

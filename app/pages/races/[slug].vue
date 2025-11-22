@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import type { Race } from '~/types/api/entities'
+import type { BadgeColor, BadgeSize, BadgeVariant } from '~/utils/badgeColors'
 import { getSizeColor } from '~/utils/badgeColors'
 
 const route = useRoute()
@@ -66,8 +67,8 @@ const imagePath = computed(() => {
       <UiEntityHeaderWithImage
         :title="race.name"
         :badges="[
-          ...(race.size ? [{ label: race.size.name, color: sizeColor, variant: 'subtle' as const, size: 'lg' as const }] : []),
-          { label: race.parent_race ? 'Subrace' : 'Race', color: (race.parent_race ? 'primary' : 'info') as const, variant: 'subtle' as const, size: 'lg' as const }
+          ...(race.size ? [{ label: race.size.name, color: sizeColor as unknown as BadgeColor, variant: 'subtle' as BadgeVariant, size: 'lg' as BadgeSize }] : []),
+          { label: race.parent_race ? 'Subrace' : 'Race', color: (race.parent_race ? 'primary' : 'info') as BadgeColor, variant: 'subtle' as BadgeVariant, size: 'lg' as BadgeSize }
         ]"
         :image-path="imagePath"
         :image-alt="`${race.name} character portrait`"

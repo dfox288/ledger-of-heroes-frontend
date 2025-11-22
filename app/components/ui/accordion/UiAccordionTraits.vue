@@ -29,11 +29,7 @@ const items = computed(() => {
   <UAccordion
     v-if="traits.length > 0"
     :items="items"
-    :ui="{
-      item: {
-        base: 'border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden mb-4'
-      }
-    }"
+    class="[&_.ui-accordion-item]:border [&_.ui-accordion-item]:border-gray-200 dark:[&_.ui-accordion-item]:border-gray-700 [&_.ui-accordion-item]:rounded-lg [&_.ui-accordion-item]:overflow-hidden [&_.ui-accordion-item]:mb-4"
   >
     <template #traits>
       <div class="space-y-4 p-4">

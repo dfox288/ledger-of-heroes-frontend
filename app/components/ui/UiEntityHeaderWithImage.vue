@@ -1,9 +1,11 @@
 <script setup lang="ts">
+import type { BadgeColor, BadgeSize, BadgeVariant } from '~/utils/badgeColors'
+
 interface Badge {
   label: string
-  color: string
-  variant: 'solid' | 'outline' | 'soft' | 'subtle'
-  size: 'sm' | 'md' | 'lg'
+  color: BadgeColor
+  variant: BadgeVariant
+  size: BadgeSize
 }
 
 interface Props {

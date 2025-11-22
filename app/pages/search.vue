@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref, watch, computed } from 'vue'
 import type { EntityType, SearchResultData } from '~/types/search'
+import type { BadgeColor } from '~/utils/badgeColors'
 
 const route = useRoute()
 const { search, results, loading, error } = useSearch()
@@ -42,23 +43,23 @@ const filteredResults = computed<SearchResultData>(() => {
   if (!results.value?.data) return {}
   if (selectedTypes.value.length === 0) return results.value.data
 
-  const filtered: SearchResultData = {}
+  const filtered: Partial<SearchResultData> = {}
   selectedTypes.value.forEach((type) => {
     const data = results.value?.data[type]
     if (data) {
       // Type assertion needed due to TypeScript's inability to narrow indexed access types
-      filtered[type] = data as SearchResultData[typeof type]
+      filtered[type] = data as any
     }
   })
-  return filtered
+  return filtered as SearchResultData
 })
 
 /**
  * Get entity color for filter buttons
  * Maps plural entity names to their semantic entity colors
  */
-const getFilterColor = (value: string) => {
-  const entityColors: Record<string, string> = {
+const getFilterColor = (value: string): BadgeColor => {
+  const entityColors: Record<string, BadgeColor> = {
     spells: 'spell',
     items: 'item',
     races: 'race',

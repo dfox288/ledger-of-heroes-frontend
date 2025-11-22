@@ -1,9 +1,6 @@
 <script setup lang="ts">
 import type { CharacterClass } from '~/types/api/entities'
-import type { BadgeColor } from '~/utils/badgeColors'
-
-type BadgeVariant = 'solid' | 'outline' | 'soft' | 'subtle'
-type BadgeSize = 'xs' | 'sm' | 'md' | 'lg' | 'xl'
+import type { BadgeColor, BadgeSize, BadgeVariant } from '~/utils/badgeColors'
 
 const route = useRoute()
 
