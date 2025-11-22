@@ -67,4 +67,37 @@ describe('SizeCard', () => {
       expect(wrapper.text()).toContain(size.name)
     }
   })
+
+  describe('background images', () => {
+    it('computes background image URL correctly', async () => {
+      const wrapper = await mountSuspended(SizeCard, {
+        props: {
+          size: {
+            id: 1,
+            code: 'M',
+            name: 'Medium'
+          }
+        }
+      })
+
+      const url = wrapper.vm.backgroundImageUrl
+      expect(url).toBe('/images/generated/conversions/256/sizes/stability-ai/m.png')
+    })
+
+    it('applies background image styles when URL exists', async () => {
+      const wrapper = await mountSuspended(SizeCard, {
+        props: {
+          size: {
+            id: 1,
+            code: 'M',
+            name: 'Medium'
+          }
+        }
+      })
+
+      const card = wrapper.find('.group')
+      const style = card.attributes('style')
+      expect(style).toContain('background-image')
+    })
+  })
 })

@@ -32,8 +32,8 @@ export class Swirl {
     // Random phase for sine wave
     this.phase = Math.random() * Math.PI * 2
 
-    // Random opacity (0.08-0.15)
-    this.opacity = 0.08 + Math.random() * 0.07
+    // Random opacity (0.2-0.4) - INCREASED FOR VISIBILITY
+    this.opacity = 0.2 + Math.random() * 0.2
   }
 
   update(deltaTime: number): void {
@@ -107,8 +107,8 @@ export class Rune {
     // Random size (40-80px)
     this.size = 40 + Math.random() * 40
 
-    // Start with random opacity (0-0.12)
-    this.opacity = Math.random() * 0.12
+    // Start with random opacity (0-0.3) - INCREASED FOR VISIBILITY
+    this.opacity = Math.random() * 0.3
 
     // Random initial rotation
     this.rotation = Math.random() * Math.PI * 2
@@ -133,8 +133,8 @@ export class Rune {
     this.opacity += this.fadeDirection * this.fadeSpeed * dt
 
     // Clamp opacity and reverse direction at limits
-    if (this.opacity >= 0.12) {
-      this.opacity = 0.12
+    if (this.opacity >= 0.3) {
+      this.opacity = 0.3
       this.fadeDirection = -1 // Start fading out
     } else if (this.opacity <= 0) {
       this.opacity = 0
