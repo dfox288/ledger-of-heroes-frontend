@@ -121,5 +121,31 @@ describe('useAnimatedBackground', () => {
       // When opacity is 0 and fading out, should flip to fading in
       expect(rune.fadeDirection).toBe(1)
     })
+
+    it('draws rune symbol with rotation', async () => {
+      const { Rune } = await import('~/composables/useAnimatedBackground')
+
+      const canvas = document.createElement('canvas')
+      canvas.width = 200
+      canvas.height = 200
+      const ctx = canvas.getContext('2d')!
+
+      const rune = new Rune(200, 200)
+      rune.opacity = 0.1 // Make visible
+      rune.x = 100 // Center position
+      rune.y = 100 // Center position
+
+      // Spy on canvas methods
+      const fillTextSpy = vi.spyOn(ctx, 'fillText')
+      const translateSpy = vi.spyOn(ctx, 'translate')
+      const rotateSpy = vi.spyOn(ctx, 'rotate')
+
+      rune.draw(ctx, 'rgba(79, 70, 229, OPACITY)')
+
+      // Verify text was drawn with proper transformations
+      expect(translateSpy).toHaveBeenCalledWith(100, 100)
+      expect(rotateSpy).toHaveBeenCalled()
+      expect(fillTextSpy).toHaveBeenCalledWith(rune.symbol, 0, 0)
+    })
   })
 })

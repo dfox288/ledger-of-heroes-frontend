@@ -148,6 +148,24 @@ export class Rune {
   }
 
   draw(ctx: CanvasRenderingContext2D, color: string): void {
-    // Will implement in next task
+    if (this.opacity === 0) return // Skip if invisible
+
+    ctx.save()
+
+    // Move to rune position and rotate
+    ctx.translate(this.x, this.y)
+    ctx.rotate(this.rotation)
+
+    // Replace OPACITY placeholder
+    const fillColor = color.replace('OPACITY', this.opacity.toString())
+
+    // Draw rune symbol
+    ctx.fillStyle = fillColor
+    ctx.font = `${this.size}px serif`
+    ctx.textAlign = 'center'
+    ctx.textBaseline = 'middle'
+    ctx.fillText(this.symbol, 0, 0)
+
+    ctx.restore()
   }
 }
