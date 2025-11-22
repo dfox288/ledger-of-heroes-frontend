@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **Test coverage for SearchResultCard component** - Added 12 comprehensive tests for global search results (573 total tests) (2025-11-22)
 - **Pipe-delimited column parsing in random tables** - Tables now split `result_text` by `|` into separate columns (2025-11-22)
 - **Conditional Roll column in random tables** - Hides Roll column entirely when no dice rolls present (2025-11-22)
 - **Test coverage for UiAccordionBulletList** - Added 10 comprehensive tests (555 total tests, all passing) (2025-11-22)
