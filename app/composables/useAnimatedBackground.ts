@@ -1,6 +1,6 @@
 const RUNE_SYMBOLS = [
-  'ᚠ', 'ᚢ', 'ᚦ', 'ᚨ', 'ᚱ', 'ᚲ',  // Norse runes
-  '⚔', '✦', '◈', '⬡', '⬢', '⬣'     // Geometric symbols
+  'ᚠ', 'ᚢ', 'ᚦ', 'ᚨ', 'ᚱ', 'ᚲ', // Norse runes
+  '⚔', '✦', '◈', '⬡', '⬢', '⬣' // Geometric symbols
 ]
 
 export class Swirl {
@@ -102,7 +102,7 @@ export class Rune {
     this.y = Math.random() * height
 
     // Random symbol
-    this.symbol = RUNE_SYMBOLS[Math.floor(Math.random() * RUNE_SYMBOLS.length)]
+    this.symbol = RUNE_SYMBOLS[Math.floor(Math.random() * RUNE_SYMBOLS.length)]!
 
     // Random size (40-80px)
     this.size = 40 + Math.random() * 40
@@ -143,7 +143,7 @@ export class Rune {
       // Reposition when fully faded
       this.x = Math.random() * this.width
       this.y = Math.random() * this.height
-      this.symbol = RUNE_SYMBOLS[Math.floor(Math.random() * RUNE_SYMBOLS.length)]
+      this.symbol = RUNE_SYMBOLS[Math.floor(Math.random() * RUNE_SYMBOLS.length)]!
     }
   }
 
@@ -177,12 +177,12 @@ interface ColorPalette {
 
 const LIGHT_MODE_COLORS: ColorPalette = {
   swirlColor: 'rgba(139, 92, 246, OPACITY)', // violet-500
-  runeColor: 'rgba(79, 70, 229, OPACITY)'     // indigo-600
+  runeColor: 'rgba(79, 70, 229, OPACITY)' // indigo-600
 }
 
 const DARK_MODE_COLORS: ColorPalette = {
   swirlColor: 'rgba(167, 139, 250, OPACITY)', // violet-400
-  runeColor: 'rgba(34, 211, 238, OPACITY)'    // cyan-400
+  runeColor: 'rgba(34, 211, 238, OPACITY)' // cyan-400
 }
 
 export function shouldAnimate(): boolean {
@@ -193,8 +193,10 @@ export function shouldAnimate(): boolean {
 }
 
 export function useAnimatedBackground(canvas: HTMLCanvasElement, isDark: boolean) {
-  const ctx = canvas.getContext('2d')
-  if (!ctx) throw new Error('Canvas context not available')
+  const context = canvas.getContext('2d')
+  if (!context) throw new Error('Canvas context not available')
+
+  const ctx: CanvasRenderingContext2D = context
 
   let swirls: Swirl[] = []
   let runes: Rune[] = []

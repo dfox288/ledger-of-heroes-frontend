@@ -3,13 +3,13 @@
  * Provides image paths for all entity types (main + reference)
  */
 
-export type EntityType =
+export type EntityType
   // Main entities
-  | 'races' | 'classes' | 'backgrounds' | 'feats' | 'spells' | 'items'
+  = | 'races' | 'classes' | 'backgrounds' | 'feats' | 'spells' | 'items'
   // Reference entities
-  | 'ability-scores' | 'conditions' | 'damage-types' | 'item-types'
-  | 'languages' | 'proficiency-types' | 'sizes' | 'skills'
-  | 'spell-schools' | 'sources'
+    | 'ability-scores' | 'conditions' | 'damage-types' | 'item-types'
+    | 'languages' | 'proficiency-types' | 'sizes' | 'skills'
+    | 'spell-schools' | 'sources'
 
 export type ImageSize = 256 | 512 | 'original'
 
@@ -38,7 +38,7 @@ const ENTITY_FOLDER_MAP: Record<EntityType, string> = {
   'languages': 'languages',
   'sizes': 'sizes',
   'skills': 'skills',
-  'sources': 'sources',
+  'sources': 'sources'
 }
 
 /**

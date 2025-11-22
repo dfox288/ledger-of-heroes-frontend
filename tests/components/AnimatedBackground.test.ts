@@ -5,7 +5,7 @@ import AnimatedBackground from '~/components/AnimatedBackground.vue'
 describe('AnimatedBackground', () => {
   beforeEach(() => {
     // Mock matchMedia to allow animations (prefers-reduced-motion: no-preference)
-    window.matchMedia = vi.fn().mockImplementation((query) => ({
+    window.matchMedia = vi.fn().mockImplementation(query => ({
       matches: false, // prefers-reduced-motion is NOT enabled
       media: query,
       onchange: null,
@@ -49,7 +49,7 @@ describe('AnimatedBackground', () => {
   it('skips rendering when prefers-reduced-motion is true', async () => {
     // Mock matchMedia BEFORE mounting to indicate reduced motion is preferred
     const originalMatchMedia = window.matchMedia
-    window.matchMedia = vi.fn().mockImplementation((query) => ({
+    window.matchMedia = vi.fn().mockImplementation(query => ({
       matches: true, // prefers-reduced-motion IS enabled
       media: query,
       onchange: null,

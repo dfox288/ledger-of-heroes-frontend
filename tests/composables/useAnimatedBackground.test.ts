@@ -113,8 +113,8 @@ describe('useAnimatedBackground', () => {
       const rune = new Rune(100, 100)
       rune.opacity = 0
       rune.fadeDirection = -1 // Fading out
-      const initialX = rune.x
-      const initialY = rune.y
+      const _initialX = rune.x
+      const _initialY = rune.y
 
       rune.update(16) // Trigger reposition check
 
@@ -156,7 +156,7 @@ describe('useAnimatedBackground', () => {
       const canvas = document.createElement('canvas')
       canvas.width = 1920
       canvas.height = 1080
-      const ctx = canvas.getContext('2d')!
+      const _ctx = canvas.getContext('2d')!
 
       const { initialize, getParticleCount } = useAnimatedBackground(canvas, false)
       initialize()
