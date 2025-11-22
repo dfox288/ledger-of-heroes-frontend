@@ -37,6 +37,14 @@ const spellEffects = computed(() => {
   return [...spell.value.effects]
     .sort((a, b) => (a.min_spell_slot || 0) - (b.min_spell_slot || 0))
 })
+
+/**
+ * Get entity image path (512px variant)
+ */
+const imagePath = computed(() => {
+  if (!spell.value) return null
+  return useEntityImage(spell.value.slug, 'spells', '512')
+})
 </script>
 
 <template>
@@ -64,8 +72,8 @@ const spellEffects = computed(() => {
         label="Back to Spells"
       />
 
-      <!-- Header -->
-      <UiDetailPageHeader
+      <!-- Header with Image -->
+      <UiEntityHeaderWithImage
         :title="spell.name"
         :badges="[
           { label: spellLevelText, color: getSpellLevelColor(spell.level), variant: 'subtle' as const, size: 'lg' as const },
@@ -73,6 +81,8 @@ const spellEffects = computed(() => {
           ...(spell.is_ritual ? [{ label: '🔮 Ritual', color: 'info' as const, variant: 'soft' as const, size: 'sm' as const }] : []),
           ...(spell.needs_concentration ? [{ label: '⭐ Concentration', color: 'warning' as const, variant: 'soft' as const, size: 'sm' as const }] : [])
         ]"
+        :image-path="imagePath"
+        :image-alt="`${spell.name} spell illustration`"
       />
 
       <!-- Quick Stats -->
