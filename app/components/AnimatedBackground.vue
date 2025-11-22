@@ -98,8 +98,8 @@ onBeforeUnmount(() => {
   <canvas
     v-if="animate"
     ref="canvasRef"
-    class="fixed inset-0 pointer-events-none"
-    style="z-index: 9999; border: 5px solid red; width: 100vw; height: 100vh;"
+    class="fixed inset-0 -z-10 pointer-events-none"
+    style="width: 100vw; height: 100vh;"
     aria-hidden="true"
   />
 </template>
