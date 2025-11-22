@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **DC (Difficulty Class) display in saving throws component** - Shows DC value in prominent red badge (2025-11-22)
 - Item spells display with charge costs - NEW component `UiAccordionItemSpells` shows spells castable from magic items (2025-11-22)
 - Random tables display for items - Shows dice rolls and results for items like Bag of Tricks (2025-11-22)
 - Proficiencies display for items - Shows weapon/armor proficiencies required or granted (2025-11-22)
