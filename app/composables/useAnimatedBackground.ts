@@ -497,17 +497,17 @@ export function useAnimatedBackground(canvas: HTMLCanvasElement, isDark: boolean
 
         // Only draw if within range
         if (distance < maxDistance) {
-          // Much higher opacity for visibility
-          const opacity = (1 - distance / maxDistance) * 0.35
+          // High opacity for clear visibility
+          const opacity = (1 - distance / maxDistance) * 0.5
 
-          // Draw line with gradient (brighter colors)
+          // Draw line with gradient (bright, saturated colors)
           const gradient = ctx.createLinearGradient(p1.x, p1.y, p2.x, p2.y)
-          // Use vibrant mid-tones (L: 60%, higher saturation)
-          gradient.addColorStop(0, `hsla(${p1.color.h}, 90%, 60%, ${opacity})`)
-          gradient.addColorStop(1, `hsla(${p2.color.h}, 90%, 60%, ${opacity})`)
+          // Use bright colors (L: 70%, full saturation)
+          gradient.addColorStop(0, `hsla(${p1.color.h}, 100%, 70%, ${opacity})`)
+          gradient.addColorStop(1, `hsla(${p2.color.h}, 100%, 70%, ${opacity})`)
 
           ctx.strokeStyle = gradient
-          ctx.lineWidth = 1.0 // Thicker for visibility
+          ctx.lineWidth = 1.5 // Thicker strokes for clarity
           ctx.beginPath()
           ctx.moveTo(p1.x, p1.y)
           ctx.lineTo(p2.x, p2.y)
