@@ -65,4 +65,39 @@ describe('ItemTypeCard', () => {
 
     expect(wrapper.text()).toContain('Item Type')
   })
+
+  describe('background images', () => {
+    it('computes background image URL correctly', async () => {
+      const wrapper = await mountSuspended(ItemTypeCard, {
+        props: {
+          itemType: {
+            id: 1,
+            code: 'LA',
+            name: 'Light Armor',
+            description: 'Test description'
+          }
+        }
+      })
+
+      const url = wrapper.vm.backgroundImageUrl
+      expect(url).toBe('/images/generated/conversions/256/item_types/stability-ai/la.png')
+    })
+
+    it('applies background image styles when URL exists', async () => {
+      const wrapper = await mountSuspended(ItemTypeCard, {
+        props: {
+          itemType: {
+            id: 1,
+            code: 'LA',
+            name: 'Light Armor',
+            description: 'Test description'
+          }
+        }
+      })
+
+      const card = wrapper.find('.group')
+      const style = card.attributes('style')
+      expect(style).toContain('background-image')
+    })
+  })
 })
