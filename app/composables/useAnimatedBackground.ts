@@ -202,6 +202,7 @@ export function useAnimatedBackground(canvas: HTMLCanvasElement, isDark: boolean
   let runes: Rune[] = []
   let animationFrameId: number | null = null
   let lastTime = 0
+  let frameCount = 0
 
   const colors = isDark ? DARK_MODE_COLORS : LIGHT_MODE_COLORS
 
@@ -231,19 +232,21 @@ export function useAnimatedBackground(canvas: HTMLCanvasElement, isDark: boolean
   }
 
   function animate(currentTime: number) {
+    frameCount++
+
     if (!lastTime) lastTime = currentTime
     const deltaTime = currentTime - lastTime
     lastTime = currentTime
+
+    // Log every 60 frames (~2 seconds at 30fps)
+    if (frameCount % 60 === 0) {
+      console.log(`[Animation] Frame ${frameCount}, Canvas: ${canvas.width}x${canvas.height}, Delta: ${deltaTime.toFixed(2)}ms`)
+    }
 
     // Throttle to 30 FPS (33.33ms per frame)
     if (deltaTime < 33) {
       animationFrameId = requestAnimationFrame(animate)
       return
-    }
-
-    // DEBUG: Log canvas state
-    if (Math.random() < 0.01) { // Log 1% of frames
-      console.log('[Animation] Canvas:', canvas.width, 'x', canvas.height, 'Context:', ctx)
     }
 
     // Clear canvas
