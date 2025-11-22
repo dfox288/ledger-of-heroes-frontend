@@ -459,7 +459,10 @@ export function useAnimatedBackground(canvas: HTMLCanvasElement, isDark: boolean
       parchment.draw(ctx)
     }
 
-    // Layer 2: Magic particles with mouse interaction
+    // Layer 2: Draw constellation connections (before particles)
+    drawConstellations(ctx, particles)
+
+    // Layer 3: Magic particles with mouse interaction
     for (const particle of particles) {
       // Apply mouse repulsion
       if (mouseX !== -1000) {
@@ -469,6 +472,52 @@ export function useAnimatedBackground(canvas: HTMLCanvasElement, isDark: boolean
       particle.update(deltaTime)
       particle.draw(ctx)
     }
+  }
+
+  /**
+   * Draw constellation lines between nearby particles
+   */
+  function drawConstellations(ctx: CanvasRenderingContext2D, particles: MagicParticle[]) {
+    const maxDistance = 80 // Max distance to draw connection
+    const maxConnections = 2 // Max connections per particle
+
+    ctx.save()
+
+    for (let i = 0; i < particles.length; i++) {
+      const p1 = particles[i]!
+      let connectionCount = 0
+
+      for (let j = i + 1; j < particles.length && connectionCount < maxConnections; j++) {
+        const p2 = particles[j]!
+
+        // Calculate distance
+        const dx = p2.x - p1.x
+        const dy = p2.y - p1.y
+        const distance = Math.sqrt(dx * dx + dy * dy)
+
+        // Only draw if within range
+        if (distance < maxDistance) {
+          // Opacity fades with distance
+          const opacity = (1 - distance / maxDistance) * 0.08
+
+          // Draw line with gradient
+          const gradient = ctx.createLinearGradient(p1.x, p1.y, p2.x, p2.y)
+          gradient.addColorStop(0, `hsla(${p1.color.h}, ${p1.color.s}%, ${p1.color.l}%, ${opacity})`)
+          gradient.addColorStop(1, `hsla(${p2.color.h}, ${p2.color.s}%, ${p2.color.l}%, ${opacity})`)
+
+          ctx.strokeStyle = gradient
+          ctx.lineWidth = 0.5
+          ctx.beginPath()
+          ctx.moveTo(p1.x, p1.y)
+          ctx.lineTo(p2.x, p2.y)
+          ctx.stroke()
+
+          connectionCount++
+        }
+      }
+    }
+
+    ctx.restore()
   }
 
   function start() {
