@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **Test coverage for UiAccordionBulletList** - Added 10 comprehensive tests (555 total tests, all passing) (2025-11-22)
 - **DC (Difficulty Class) display in saving throws component** - Shows DC value in prominent red badge (2025-11-22)
 - Item spells display with charge costs - NEW component `UiAccordionItemSpells` shows spells castable from magic items (2025-11-22)
 - Random tables display for items - Shows dice rolls and results for items like Bag of Tricks (2025-11-22)
@@ -18,6 +19,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Skill interface to type system for modifier display (2025-11-22)
 
 ### Fixed
+- **TypeScript type safety improved (31% error reduction)** - Fixed 81 type errors (261→180) by adding missing entity properties and strict NuxtUI types (2025-11-22)
+- **Modifier field name bug** - Fixed `modifier_type` → `modifier_category` to match API (RaceCard + 33 tests) (2025-11-22)
 - Modifier display for non-numeric values - Now correctly shows "disadvantage" and "advantage" instead of "NaN" (2025-11-22)
 - Skill-based modifiers now display skill name with ability score code (e.g., "Stealth (DEX): disadvantage") (2025-11-22)
 - **ESLint clean** - Eliminated all 97 ESLint errors by replacing `any` types with proper TypeScript types (2025-11-22)
