@@ -89,6 +89,19 @@ export class ParchmentBackground {
 }
 
 /**
+ * D&D themed color palette (HSL values from custom colors)
+ */
+const PARTICLE_COLORS = [
+  { h: 258, s: 89, l: 66, name: 'arcane' },     // Mystical purple (spells)
+  { h: 43, s: 96, l: 56, name: 'treasure' },    // Rich gold (items)
+  { h: 160, s: 84, l: 39, name: 'emerald' },    // Natural green (races)
+  { h: 0, s: 84, l: 60, name: 'red' },          // Heroic red (classes)
+  { h: 210, s: 95, l: 57, name: 'glory' },      // Bright blue (feats)
+  { h: 24, s: 95, l: 53, name: 'danger' },      // Vibrant orange (monsters)
+  { h: 48, s: 89, l: 50, name: 'lore' }         // Warm amber (backgrounds)
+]
+
+/**
  * Magical sparkle particle with mouse interaction
  */
 export class MagicParticle {
@@ -98,7 +111,7 @@ export class MagicParticle {
   vy: number
   size: number
   opacity: number
-  hue: number
+  color: { h: number; s: number; l: number; name: string }
   trail: Array<{ x: number; y: number; opacity: number }>
   private width: number
   private height: number
@@ -106,7 +119,7 @@ export class MagicParticle {
   private baseVx: number  // Original velocity for restoration
   private baseVy: number
 
-  constructor(width: number, height: number, hue: number = 260) {
+  constructor(width: number, height: number) {
     this.width = width
     this.height = height
 
@@ -120,14 +133,14 @@ export class MagicParticle {
     this.baseVx = this.vx
     this.baseVy = this.vy
 
-    // Size (wide variety: 3-14px)
-    this.size = 3 + Math.random() * 11
+    // Size (reduced max: 3-8px instead of 3-14px)
+    this.size = 3 + Math.random() * 5
 
     // Opacity (0.2-0.5)
     this.opacity = 0.2 + Math.random() * 0.3
 
-    // Color hue (for variety)
-    this.hue = hue + (Math.random() - 0.5) * 40
+    // Select random D&D themed color
+    this.color = PARTICLE_COLORS[Math.floor(Math.random() * PARTICLE_COLORS.length)]!
 
     // Trail positions
     this.trail = []
@@ -202,16 +215,16 @@ export class MagicParticle {
     // Draw trail
     for (let i = this.trail.length - 1; i >= 0; i--) {
       const point = this.trail[i]!
-      ctx.fillStyle = `hsla(${this.hue}, 70%, 70%, ${point.opacity * 0.3})`
+      ctx.fillStyle = `hsla(${this.color.h}, ${this.color.s}%, ${this.color.l}%, ${point.opacity * 0.3})`
       ctx.beginPath()
       ctx.arc(point.x, point.y, this.size * (0.3 + i * 0.1), 0, Math.PI * 2)
       ctx.fill()
     }
 
     // Draw main particle (star shape)
-    ctx.fillStyle = `hsla(${this.hue}, 80%, 80%, ${this.opacity})`
+    ctx.fillStyle = `hsla(${this.color.h}, ${this.color.s}%, ${this.color.l}%, ${this.opacity})`
     ctx.shadowBlur = 8
-    ctx.shadowColor = `hsla(${this.hue}, 80%, 80%, ${this.opacity})`
+    ctx.shadowColor = `hsla(${this.color.h}, ${this.color.s}%, ${this.color.l}%, ${this.opacity})`
 
     // Draw 4-pointed star
     ctx.beginPath()
@@ -234,17 +247,7 @@ export class MagicParticle {
   }
 }
 
-interface ColorPalette {
-  particleHue: number
-}
-
-const LIGHT_MODE_COLORS: ColorPalette = {
-  particleHue: 260 // Purple/violet
-}
-
-const DARK_MODE_COLORS: ColorPalette = {
-  particleHue: 180 // Cyan
-}
+// No longer need mode-specific colors since particles use themed palette
 
 export function shouldAnimate(): boolean {
   if (typeof window === 'undefined') return false
@@ -268,8 +271,6 @@ export function useAnimatedBackground(canvas: HTMLCanvasElement, isDark: boolean
   let mouseX = -1000
   let mouseY = -1000
   let lastScrollY = 0
-
-  const colors = isDark ? DARK_MODE_COLORS : LIGHT_MODE_COLORS
 
   // Mouse move handler
   function handleMouseMove(event: MouseEvent) {
@@ -312,7 +313,7 @@ export function useAnimatedBackground(canvas: HTMLCanvasElement, isDark: boolean
 
     // Create 80-120 magic particles (high count for rich atmosphere)
     const particleCount = 80 + Math.floor(Math.random() * 41)
-    particles = Array.from({ length: particleCount }, () => new MagicParticle(width, height, colors.particleHue))
+    particles = Array.from({ length: particleCount }, () => new MagicParticle(width, height))
 
     // Listen for events
     if (typeof window !== 'undefined') {
