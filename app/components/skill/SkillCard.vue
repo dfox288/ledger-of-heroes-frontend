@@ -1,6 +1,7 @@
 <script setup lang="ts">
 interface Skill {
   id: number
+  slug: string
   name: string
   ability_score?: {
     id: number
@@ -16,14 +17,10 @@ interface Props {
 const props = defineProps<Props>()
 const { getImagePath } = useEntityImage()
 
-// Generate slug from name (API doesn't provide slug field)
-// Transform: "Animal Handling" -> "animal-handling"
-const skillSlug = computed(() =>
-  props.skill.name.toLowerCase().replace(/ /g, '-')
-)
-
+// Use API slug
+// e.g., "Animal Handling" -> "animal-handling"
 const backgroundImageUrl = computed(() =>
-  getImagePath('skills', skillSlug.value, 256)
+  getImagePath('skills', props.skill.slug, 256)
 )
 </script>
 

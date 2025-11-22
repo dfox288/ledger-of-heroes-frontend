@@ -1,6 +1,7 @@
 <script setup lang="ts">
 interface ProficiencyType {
   id: number
+  slug: string
   name: string
   category: string
   subcategory?: string | null
@@ -13,12 +14,10 @@ interface Props {
 const props = defineProps<Props>()
 const { getImagePath } = useEntityImage()
 
-// Slugify name: Light Armor -> light-armor
-const slug = computed(() =>
-  props.proficiencyType.name.toLowerCase().replace(/\s+/g, '-')
-)
+// Use API slug (handles apostrophes, hyphens correctly)
+// e.g., "Thieves' Tools" -> "thieves-tools"
 const backgroundImageUrl = computed(() =>
-  getImagePath('proficiency-types', slug.value, 256)
+  getImagePath('proficiency-types', props.proficiencyType.slug, 256)
 )
 </script>
 
