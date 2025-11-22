@@ -10,6 +10,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **Pipe-delimited column parsing in random tables** - Tables now split `result_text` by `|` into separate columns (2025-11-22)
+- **Conditional Roll column in random tables** - Hides Roll column entirely when no dice rolls present (2025-11-22)
 - **Test coverage for UiAccordionBulletList** - Added 10 comprehensive tests (555 total tests, all passing) (2025-11-22)
 - **DC (Difficulty Class) display in saving throws component** - Shows DC value in prominent red badge (2025-11-22)
 - Item spells display with charge costs - NEW component `UiAccordionItemSpells` shows spells castable from magic items (2025-11-22)
