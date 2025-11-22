@@ -1,10 +1,11 @@
 import type { Config } from 'tailwindcss'
+import defaultTheme from 'tailwindcss/defaultTheme'
 
 export default {
   theme: {
     extend: {
       fontFamily: {
-        sans: ['Crimson Pro', 'Georgia', 'Times New Roman', 'serif']
+        sans: ['Crimson Pro', ...defaultTheme.fontFamily.sans]
       },
       fontSize: {
         // Increase base sizes by ~20%

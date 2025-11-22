@@ -149,7 +149,8 @@
       "Bash(docs/HANDOVER-2025-11-22-SESSION-2.md )",
       "Bash(docs/HANDOVER-2025-11-22-TEST-SUITE-REFACTORING.md )",
       "Bash(docs/HANDOVER-2025-11-22-TYPESCRIPT-TEST-CLEANUP.md )",
-      "Bash(docs/archive/2025-11-22-session-complete/)"
+      "Bash(docs/archive/2025-11-22-session-complete/)",
+      "WebFetch(domain:fonts.nuxt.com)"
     ],
     "deny": [],
     "ask": []

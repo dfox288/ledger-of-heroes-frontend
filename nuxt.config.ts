@@ -49,7 +49,8 @@ export default defineNuxtConfig({
       {
         name: 'Crimson Pro',
         provider: 'google',
-        weights: [400, 600, 700]
+        weights: ['200..900'], // Variable font - all weights
+        styles: ['normal', 'italic']
       }
     ]
   }
