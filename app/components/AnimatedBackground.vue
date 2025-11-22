@@ -21,8 +21,6 @@ function handleResize() {
   canvasRef.value.width = window.innerWidth
   canvasRef.value.height = window.innerHeight
 
-  console.log(`[AnimatedBackground] Resized: ${oldWidth}x${oldHeight} → ${canvasRef.value.width}x${canvasRef.value.height}`)
-
   // Reinitialize animation with new canvas size
   if (cleanup) {
     cleanup()
@@ -35,27 +33,14 @@ function handleResize() {
 }
 
 onMounted(() => {
-  console.log('[AnimatedBackground] onMounted called')
-  console.log('[AnimatedBackground] animate:', animate)
-  console.log('[AnimatedBackground] canvasRef.value:', canvasRef.value)
-
-  if (!animate || !canvasRef.value) {
-    console.log('[AnimatedBackground] Skipping initialization - animate:', animate, 'canvas:', canvasRef.value)
-    return
-  }
+  if (!animate || !canvasRef.value) return
 
   // Use setTimeout to ensure canvas is fully rendered
   setTimeout(() => {
-    if (!canvasRef.value) {
-      console.error('[AnimatedBackground] Canvas ref still null after timeout!')
-      return
-    }
-
-    console.log('[AnimatedBackground] Window size:', window.innerWidth, 'x', window.innerHeight)
+    if (!canvasRef.value) return
 
     // Set initial canvas size
     handleResize()
-    console.log('[AnimatedBackground] Canvas size AFTER resize:', canvasRef.value.width, 'x', canvasRef.value.height)
 
     // Listen for resize
     window.addEventListener('resize', handleResize)
@@ -64,12 +49,9 @@ onMounted(() => {
     const isDark = colorMode.value === 'dark'
     const { initialize, start, cleanup: cleanupFn } = useAnimatedBackground(canvasRef.value, isDark)
 
-    console.log('[AnimatedBackground] Initializing animation engine...')
     initialize()
-    console.log('[AnimatedBackground] Starting animation loop...')
     start()
     cleanup = cleanupFn
-    console.log('[AnimatedBackground] Animation started successfully!')
 
     // Watch for color mode changes
     watch(() => colorMode.value, (newMode) => {

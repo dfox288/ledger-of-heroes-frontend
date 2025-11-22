@@ -232,16 +232,10 @@ export function useAnimatedBackground(canvas: HTMLCanvasElement, isDark: boolean
   }
 
   function animate(currentTime: number) {
-    frameCount++
     animationFrameId = requestAnimationFrame(animate) // ALWAYS schedule next frame
 
     if (!lastTime) lastTime = currentTime
     const deltaTime = currentTime - lastTime
-
-    // Log every 60 frames (~2 seconds at 30fps)
-    if (frameCount % 60 === 0) {
-      console.log(`[Animation] Frame ${frameCount}, Canvas: ${canvas.width}x${canvas.height}, Delta: ${deltaTime.toFixed(2)}ms`)
-    }
 
     // Throttle to 30 FPS (33.33ms per frame) - skip drawing, not scheduling
     if (deltaTime < 33) {
