@@ -67,15 +67,15 @@ export class ParchmentBackground {
       if (pattern) {
         ctx.translate(this.offsetX, this.offsetY + this.scrollOffsetY * 0.3)
         ctx.fillStyle = pattern
-        // Very subtle opacity
-        ctx.globalAlpha = this.isDark ? 0.15 : 0.08
+        // Extremely subtle opacity
+        ctx.globalAlpha = this.isDark ? 0.08 : 0.04
         ctx.fillRect(-100, -100, this.width + 200, this.height + 200)
       }
     } else {
       // Fallback: solid color background
       const baseColor = this.isDark
-        ? 'rgba(35, 32, 28, 0.15)'  // Dark vellum
-        : 'rgba(245, 237, 220, 0.08)' // Aged parchment
+        ? 'rgba(35, 32, 28, 0.08)'  // Dark vellum
+        : 'rgba(245, 237, 220, 0.04)' // Aged parchment
 
       ctx.fillStyle = baseColor
       ctx.fillRect(0, 0, this.width, this.height)
@@ -159,8 +159,8 @@ export class MagicParticle {
    * Apply scroll momentum
    */
   applyScrollMomentum(scrollDelta: number): void {
-    // Add upward/downward momentum based on scroll (stronger reaction)
-    this.vy += scrollDelta * 1.5
+    // Add upward/downward momentum based on scroll (moderate reaction)
+    this.vy += scrollDelta * 0.6
   }
 
   update(deltaTime: number): void {
