@@ -25,9 +25,10 @@ const { data: entity, loading, error } = useEntityDetail<CharacterClass>({
 /**
  * Get entity image path (512px variant)
  */
+const { getImagePath } = useEntityImage()
 const imagePath = computed(() => {
   if (!entity.value) return null
-  return useEntityImage(entity.value.slug, 'classes', '512')
+  return getImagePath('classes', entity.value.slug, 512)
 })
 </script>
 

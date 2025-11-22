@@ -30,9 +30,10 @@ const sizeColor = computed(() => {
 /**
  * Get entity image path (512px variant)
  */
+const { getImagePath } = useEntityImage()
 const imagePath = computed(() => {
   if (!race.value) return null
-  return useEntityImage(race.value.slug, 'races', '512')
+  return getImagePath('races', race.value.slug, 512)
 })
 </script>
 

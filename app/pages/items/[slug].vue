@@ -57,9 +57,10 @@ const itemTypeColor = computed(() => {
 /**
  * Get entity image path (512px variant)
  */
+const { getImagePath } = useEntityImage()
 const imagePath = computed(() => {
   if (!item.value) return null
-  return useEntityImage(item.value.slug, 'items', '512')
+  return getImagePath('items', item.value.slug, 512)
 })
 </script>
 

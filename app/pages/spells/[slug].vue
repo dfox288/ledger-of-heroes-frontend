@@ -41,9 +41,10 @@ const spellEffects = computed(() => {
 /**
  * Get entity image path (512px variant)
  */
+const { getImagePath } = useEntityImage()
 const imagePath = computed(() => {
   if (!spell.value) return null
-  return useEntityImage(spell.value.slug, 'spells', '512')
+  return getImagePath('spells', spell.value.slug, 512)
 })
 </script>
 

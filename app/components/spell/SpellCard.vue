@@ -57,8 +57,9 @@ const getLevelColor = (level: number): 'primary' | 'secondary' | 'success' | 'in
 /**
  * Get background image path (256px variant)
  */
+const { getImagePath } = useEntityImage()
 const backgroundImage = computed(() => {
-  return useEntityImage(props.spell.slug, 'spells', '256')
+  return getImagePath('spells', props.spell.slug, 256)
 })
 </script>
 

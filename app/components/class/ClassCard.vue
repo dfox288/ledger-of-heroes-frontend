@@ -50,8 +50,9 @@ const truncatedDescription = computed(() => {
 /**
  * Get background image path (256px variant)
  */
+const { getImagePath } = useEntityImage()
 const backgroundImage = computed(() => {
-  return useEntityImage(props.characterClass.slug, 'classes', '256')
+  return getImagePath('classes', props.characterClass.slug, 256)
 })
 </script>
 
