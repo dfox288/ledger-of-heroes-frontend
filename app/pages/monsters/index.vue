@@ -3,7 +3,6 @@ import { ref, computed } from 'vue'
 import type { Monster } from '~/types'
 
 const route = useRoute()
-const { apiFetch } = useApi()
 
 // Custom filter state
 const selectedCR = ref(route.query.cr ? String(route.query.cr) : null)
@@ -53,10 +52,7 @@ const {
   meta,
   totalResults,
   loading,
-  error,
-  refresh,
-  clearFilters: clearBaseFilters,
-  hasActiveFilters
+  error
 } = useEntityList({
   endpoint: '/monsters',
   cacheKey: 'monsters-list',
@@ -69,13 +65,6 @@ const {
 
 // Type the data array
 const monsters = computed(() => data.value as Monster[])
-
-// Clear all filters (base + custom)
-const clearAllFilters = () => {
-  clearBaseFilters()
-  selectedCR.value = null
-  selectedType.value = null
-}
 </script>
 
 <template>
@@ -193,6 +182,5 @@ const clearAllFilters = () => {
         ↑ Back to Top
       </UButton>
     </div>
-
   </div>
 </template>

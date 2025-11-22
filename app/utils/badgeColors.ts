@@ -242,8 +242,8 @@ export function getChallengeRatingColor(cr: string): BadgeColor {
     return 'info' // Fallback for invalid CR
   }
 
-  if (numericCR <= 4) return 'success'  // Easy
-  if (numericCR <= 10) return 'info'    // Medium
+  if (numericCR <= 4) return 'success' // Easy
+  if (numericCR <= 10) return 'info' // Medium
   if (numericCR <= 16) return 'warning' // Hard
-  return 'error'                         // Deadly
+  return 'error' // Deadly
 }

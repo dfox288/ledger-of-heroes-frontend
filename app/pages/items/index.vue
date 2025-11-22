@@ -43,7 +43,7 @@ const magicOptions = [
 
 // Item type filter options
 const typeOptions = computed(() => {
-  const options: Array<{ label: string; value: number | null }> = [{ label: 'All Types', value: null }]
+  const options: Array<{ label: string, value: number | null }> = [{ label: 'All Types', value: null }]
   if (itemTypes.value) {
     options.push(...itemTypes.value.map((type: ItemType) => ({
       label: type.name,

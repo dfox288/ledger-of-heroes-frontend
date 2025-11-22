@@ -32,7 +32,7 @@ const levelOptions = [
 
 // School filter options
 const schoolOptions = computed(() => {
-  const options: Array<{ label: string; value: number | null }> = [{ label: 'All Schools', value: null }]
+  const options: Array<{ label: string, value: number | null }> = [{ label: 'All Schools', value: null }]
   if (spellSchools.value) {
     options.push(...spellSchools.value.map(school => ({
       label: school.name,

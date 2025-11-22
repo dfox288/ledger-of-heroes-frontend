@@ -110,7 +110,9 @@ const regularActions = computed(() => {
         v-if="monster.description"
         class="prose dark:prose-invert max-w-none"
       >
-        <p class="whitespace-pre-line">{{ monster.description }}</p>
+        <p class="whitespace-pre-line">
+          {{ monster.description }}
+        </p>
       </div>
 
       <!-- Traits -->

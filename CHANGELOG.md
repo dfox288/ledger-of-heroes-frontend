@@ -10,6 +10,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **Monsters entity type complete (2025-11-22)** - 7th entity type with full feature parity
+  - Monster list page with CR/Type filtering
+  - Monster detail page with full stat blocks (AC, HP, speeds, ability scores)
+  - MonsterCard component for list display (16 tests)
+  - UiAccordionActions component for actions/legendary actions (9 tests)
+  - UiAccordionTraits component for passive traits (7 tests)
+  - getChallengeRatingColor utility for CR badge colors (10 tests)
+  - CR range filters: Easy (0-4), Medium (5-10), Hard (11-16), Deadly (17+)
+  - Monster type filters (14 common types: aberration, beast, celestial, etc.)
+  - Legendary creature indicator badge
+  - Tests: 611/611 passing (42 new tests added)
 - **OpenAPI type generation system (2025-11-22)** - Automatic TypeScript type generation from backend API
   - New command: `npm run types:sync` syncs types from backend OpenAPI spec
   - Generated 2,848 lines of TypeScript types from API spec
