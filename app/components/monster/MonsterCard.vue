@@ -68,9 +68,9 @@ const crBadgeColor = computed(() => {
           <!-- Quick Stats -->
           <div class="space-y-1 text-sm text-gray-600 dark:text-gray-400">
             <div class="flex items-center gap-2">
-              <span>🔷 {{ monster.size.name }}</span>
-              <span>•</span>
-              <span>{{ monster.alignment }}</span>
+              <span v-if="monster.size">🔷 {{ monster.size.name }}</span>
+              <span v-if="monster.size && monster.alignment">•</span>
+              <span v-if="monster.alignment">{{ monster.alignment }}</span>
             </div>
             <div class="flex items-center gap-3">
               <span>⚔️ AC {{ monster.armor_class }}</span>
