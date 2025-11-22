@@ -1,6 +1,13 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue'
 
+interface ItemType {
+  id: number
+  code: string
+  name: string
+  description: string
+}
+
 const { apiFetch } = useApi()
 const searchQuery = ref('')
 
@@ -12,10 +19,10 @@ const queryParams = computed(() => {
   return params
 })
 
-const { data: itemTypesResponse, pending: loading, error, refresh } = await useAsyncData<{ data: unknown[] }>(
+const { data: itemTypesResponse, pending: loading, error, refresh } = await useAsyncData<{ data: ItemType[] }>(
   'item-types-list',
   async () => {
-    const response = await apiFetch<{ data: unknown[] }>('/item-types', {
+    const response = await apiFetch<{ data: ItemType[] }>('/item-types', {
       query: queryParams.value
     })
     return response
@@ -23,7 +30,7 @@ const { data: itemTypesResponse, pending: loading, error, refresh } = await useA
   { watch: [queryParams] }
 )
 
-const itemTypes = computed(() => itemTypesResponse.value?.data || [])
+const itemTypes = computed(() => (itemTypesResponse.value?.data || []) as ItemType[])
 const totalResults = computed(() => itemTypes.value.length)
 
 useSeoMeta({

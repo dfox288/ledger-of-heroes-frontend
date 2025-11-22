@@ -1,11 +1,12 @@
 <script setup lang="ts">
 import { computed } from 'vue'
+import type { Background } from '~/types/api/entities'
 
 // Use entity list composable for all shared logic
 const {
   searchQuery,
   currentPage,
-  data: backgrounds,
+  data,
   meta,
   totalResults,
   loading,
@@ -22,6 +23,9 @@ const {
     description: 'Browse all D&D 5e character backgrounds.'
   }
 })
+
+// Type the data array
+const backgrounds = computed(() => data.value as Background[])
 
 // Pagination settings
 const perPage = 24

@@ -1,11 +1,12 @@
 <script setup lang="ts">
 import { computed } from 'vue'
+import type { CharacterClass } from '~/types/api/entities'
 
 // Use entity list composable for all shared logic
 const {
   searchQuery,
   currentPage,
-  data: classes,
+  data,
   meta,
   totalResults,
   loading,
@@ -22,6 +23,9 @@ const {
     description: 'Browse all D&D 5e player classes and subclasses.'
   }
 })
+
+// Type the data array
+const classes = computed(() => data.value as CharacterClass[])
 
 // Pagination settings
 const perPage = 24

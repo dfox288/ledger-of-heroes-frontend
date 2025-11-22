@@ -1,5 +1,13 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue'
+import type { Item } from '~/types/api/entities'
+
+interface ItemType {
+  id: number
+  code: string
+  name: string
+  description: string
+}
 
 const route = useRoute()
 const { apiFetch } = useApi()
@@ -11,7 +19,7 @@ const selectedMagic = ref((route.query.is_magic as string) || null)
 
 // Fetch item types for filter options
 const { data: itemTypes } = await useAsyncData('item-types', async () => {
-  const response = await apiFetch<{ data: unknown[] }>('/item-types')
+  const response = await apiFetch<{ data: ItemType[] }>('/item-types')
   return response.data
 })
 
@@ -37,7 +45,7 @@ const magicOptions = [
 const typeOptions = computed(() => {
   const options = [{ label: 'All Types', value: null }]
   if (itemTypes.value) {
-    options.push(...itemTypes.value.map(type => ({
+    options.push(...itemTypes.value.map((type: ItemType) => ({
       label: type.name,
       value: type.id
     })))
@@ -58,7 +66,7 @@ const queryBuilder = computed(() => {
 const {
   searchQuery,
   currentPage,
-  data: items,
+  data,
   meta,
   totalResults,
   loading,
@@ -76,6 +84,9 @@ const {
   }
 })
 
+// Type the data array
+const items = computed(() => data.value as Item[])
+
 // Clear all filters (base + custom)
 const clearFilters = () => {
   clearBaseFilters()
@@ -86,7 +97,7 @@ const clearFilters = () => {
 
 // Get type name by ID for filter chips
 const getTypeName = (typeId: number) => {
-  return itemTypes.value?.find(t => t.id === typeId)?.name || 'Unknown'
+  return itemTypes.value?.find((t: ItemType) => t.id === typeId)?.name || 'Unknown'
 }
 
 // Pagination settings

@@ -1,11 +1,12 @@
 <script setup lang="ts">
 import { computed } from 'vue'
+import type { Feat } from '~/types/api/entities'
 
 // Use entity list composable for all shared logic
 const {
   searchQuery,
   currentPage,
-  data: feats,
+  data,
   meta,
   totalResults,
   loading,
@@ -22,6 +23,9 @@ const {
     description: 'Browse all D&D 5e feats and character abilities.'
   }
 })
+
+// Type the data array
+const feats = computed(() => data.value as Feat[])
 
 // Pagination settings
 const perPage = 24
