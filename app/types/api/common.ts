@@ -1,8 +1,9 @@
+import type { components } from './generated'
+
 /**
  * Common API types shared across entities
  *
- * These types represent data structures returned by the D&D 5e API
- * and are used across multiple entity types.
+ * These types extend or alias generated types from OpenAPI spec.
  */
 
 /**
@@ -10,61 +11,45 @@
  *
  * Appears in: Spells, Items, Races, Classes, Backgrounds, Feats
  * Used for: Citation and attribution of game content
+ *
+ * @see {components['schemas']['EntitySourceResource']} for generated type
  */
-export interface Source {
-  code: string
-  name: string
-  pages: string
-}
+export type Source = components['schemas']['EntitySourceResource']
 
 /**
  * Ability score (STR, DEX, CON, INT, WIS, CHA)
  *
  * Used for: Modifiers, saving throws, skill checks
+ *
+ * @see {components['schemas']['AbilityScoreResource']} for generated type
  */
-export interface AbilityScore {
-  id: number
-  code: string
-  name: string
-}
+export type AbilityScore = components['schemas']['AbilityScoreResource']
 
 /**
  * Skill reference
  *
  * Used in: Modifiers for skill-based bonuses/penalties
+ *
+ * @see {components['schemas']['SkillResource']} for generated type
  */
-export interface Skill {
-  id: number
-  name: string
-}
+export type Skill = components['schemas']['SkillResource']
 
 /**
  * Character modifier (stat bonuses, penalties, etc.)
  *
  * Used in: Races, Feats, Items
  * Supports both fixed values and player choices
+ *
+ * @see {components['schemas']['ModifierResource']} for generated type
  */
-export interface Modifier {
-  id: number
-  modifier_category: string
-  ability_score?: AbilityScore | null
-  skill?: Skill | null
-  value: string | number
-  condition?: string | null
-  is_choice: boolean
-  choice_count: number | null
-  choice_constraint: string | null
-}
+export type Modifier = components['schemas']['ModifierResource']
 
 /**
  * Tag for categorization and filtering
  *
  * Used across: All entity types
  * Enables cross-entity searching and organization
+ *
+ * @see {components['schemas']['TagResource']} for generated type
  */
-export interface Tag {
-  id: number
-  name: string
-  slug: string
-  type: string | null
-}
+export type Tag = components['schemas']['TagResource']
