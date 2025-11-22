@@ -4,7 +4,8 @@ export default defineNuxtConfig({
     '@nuxt/eslint',
     '@nuxt/ui',
     '@nuxt/test-utils',
-    '@nuxt/image'
+    '@nuxt/image',
+    '@nuxt/fonts'
   ],
 
   devtools: {
@@ -41,5 +42,15 @@ export default defineNuxtConfig({
         braceStyle: '1tbs'
       }
     }
+  },
+
+  fonts: {
+    families: [
+      {
+        name: 'Crimson Pro',
+        provider: 'google',
+        weights: [400, 600, 700]
+      }
+    ]
   }
 })
