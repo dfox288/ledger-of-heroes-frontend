@@ -142,6 +142,11 @@ const itemTypeColor = computed(() => {
             slot: 'abilities',
             defaultOpen: false
           }] : []),
+          ...(item.random_tables && item.random_tables.length > 0 ? [{
+            label: 'Random Tables',
+            slot: 'random_tables',
+            defaultOpen: false
+          }] : []),
           ...(item.saving_throws && item.saving_throws.length > 0 ? [{
             label: 'Saving Throws',
             slot: 'saving_throws',
@@ -190,6 +195,14 @@ const itemTypeColor = computed(() => {
           #abilities
         >
           <UiAccordionAbilitiesList :abilities="item.abilities" />
+        </template>
+
+        <!-- Random Tables Slot -->
+        <template
+          v-if="item.random_tables && item.random_tables.length > 0"
+          #random_tables
+        >
+          <UiAccordionRandomTablesList :tables="item.random_tables" />
         </template>
 
         <!-- Saving Throws Slot -->
