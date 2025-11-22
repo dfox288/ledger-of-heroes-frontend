@@ -52,6 +52,25 @@ export class Swirl {
   }
 
   draw(ctx: CanvasRenderingContext2D, color: string): void {
-    // Will implement in next task
+    ctx.save()
+
+    // Replace OPACITY placeholder with actual opacity
+    const fillColor = color.replace('OPACITY', this.opacity.toString())
+
+    // Create radial gradient for mystical glow effect
+    const gradient = ctx.createRadialGradient(
+      this.x, this.y, 0,
+      this.x, this.y, this.size
+    )
+    gradient.addColorStop(0, fillColor)
+    gradient.addColorStop(1, fillColor.replace(/[\d.]+\)$/, '0)')) // Fade to transparent
+
+    // Draw circle with gradient
+    ctx.fillStyle = gradient
+    ctx.beginPath()
+    ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2)
+    ctx.fill()
+
+    ctx.restore()
   }
 }

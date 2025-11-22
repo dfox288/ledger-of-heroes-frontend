@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest'
+import { describe, it, expect, vi } from 'vitest'
 
 describe('useAnimatedBackground', () => {
   describe('Swirl class', () => {
@@ -43,6 +43,28 @@ describe('useAnimatedBackground', () => {
 
       expect(swirl.x).toBeLessThanOrEqual(100)
       expect(swirl.y).toBeLessThanOrEqual(100)
+    })
+
+    it('draws swirl with gradient fill', async () => {
+      const { Swirl } = await import('~/composables/useAnimatedBackground')
+
+      const canvas = document.createElement('canvas')
+      canvas.width = 100
+      canvas.height = 100
+      const ctx = canvas.getContext('2d')!
+
+      const swirl = new Swirl(100, 100)
+
+      // Spy on canvas methods
+      const createRadialGradientSpy = vi.spyOn(ctx, 'createRadialGradient')
+      const fillSpy = vi.spyOn(ctx, 'fill')
+
+      swirl.draw(ctx, 'rgba(139, 92, 246, OPACITY)')
+
+      // Verify radial gradient was created
+      expect(createRadialGradientSpy).toHaveBeenCalled()
+      // Verify fill was called (drawing happened)
+      expect(fillSpy).toHaveBeenCalled()
     })
   })
 })

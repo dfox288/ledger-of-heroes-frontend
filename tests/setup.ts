@@ -1,4 +1,5 @@
 import { vi } from 'vitest'
+import 'vitest-canvas-mock'
 
 // Mock Nuxt's useRuntimeConfig globally
 global.useRuntimeConfig = vi.fn(() => ({
