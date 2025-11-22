@@ -1,6 +1,15 @@
 @import "tailwindcss";
 @import "@nuxt/ui";
 
+/* Global font override - Crimson Pro */
+:root {
+  --font-sans: 'Crimson Pro', Georgia, 'Times New Roman', serif;
+}
+
+* {
+  font-family: var(--font-sans) !important;
+}
+
 /* Set body background to match gradient colors */
 body {
   background-color: #faf5ff !important; /* Light mode: purple-50 */
