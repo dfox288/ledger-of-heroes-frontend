@@ -75,6 +75,47 @@ Both Nuxt and NuxtUI provide official documentation in LLM-friendly format:
 - **Testing:** Vitest + @nuxt/test-utils + @vue/test-utils
 - **E2E Testing:** Playwright
 
+## OpenAPI Type Generation
+
+**Type System:** Hybrid generated + manual extensions
+
+**Generate Types:**
+```bash
+npm run types:sync
+```
+
+**Architecture:**
+1. **Generated Layer** (`app/types/api/generated.ts`) - Auto-generated from backend OpenAPI spec, never manually edit
+2. **Application Layer** (`app/types/api/entities.ts`, `common.ts`) - Extends generated types with custom logic
+3. **Components** - Import and use application types
+
+**When to Sync:**
+- After backend API changes (new fields, endpoints, schema changes)
+- Weekly/monthly proactive check
+- Before major features that depend on API structure
+
+**Sync Workflow:**
+```bash
+# 1. Ensure backend is running
+cd ../importer && docker compose up -d
+
+# 2. Sync types
+cd ../frontend
+npm run types:sync
+
+# 3. Verify compatibility
+npm run typecheck
+npm run test
+
+# 4. Commit changes
+git add app/types/api/generated.ts
+git commit -m "chore: Sync API types from backend"
+```
+
+**Design Document:** `docs/plans/2025-11-22-openapi-type-generation-design.md`
+
+---
+
 ## 🔴 ABSOLUTE MANDATE: Test-Driven Development (TDD)
 
 **THIS IS NOT A SUGGESTION. THIS IS NOT OPTIONAL. THIS IS MANDATORY.**

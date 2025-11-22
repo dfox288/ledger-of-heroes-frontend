@@ -9,6 +9,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- **OpenAPI type generation** - Automatic TypeScript type generation from backend OpenAPI spec (2025-11-22)
+  - New command: `npm run types:sync` to sync types from backend
+  - Hybrid type system: generated base types + manual extensions
+  - Full type safety for nested API structures (effects, traits, modifiers)
+  - Type compatibility tests for all 6 entity types
+  - Eliminates manual type maintenance and prevents drift
+
 ### Changed
 - **Test suite refactored for maintainability** - Extracted shared test helpers to reduce redundancy by 30 tests (573→543→558 adjusted) (2025-11-22)
   - Created 3 test helper modules (cardBehavior, descriptionBehavior, sourceBehavior)
