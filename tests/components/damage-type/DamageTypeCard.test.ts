@@ -78,4 +78,35 @@ describe('DamageTypeCard', () => {
     expect(html).toContain('text-xl')
     expect(html).toContain('font-semibold')
   })
+
+  describe('background images', () => {
+    it('computes background image URL correctly', async () => {
+      const wrapper = await mountSuspended(DamageTypeCard, {
+        props: {
+          damageType: {
+            id: 1,
+            name: 'Fire'
+          }
+        }
+      })
+
+      const url = wrapper.vm.backgroundImageUrl
+      expect(url).toBe('/images/generated/conversions/256/damage_types/stability-ai/fire.png')
+    })
+
+    it('applies background image styles when URL exists', async () => {
+      const wrapper = await mountSuspended(DamageTypeCard, {
+        props: {
+          damageType: {
+            id: 1,
+            name: 'Fire'
+          }
+        }
+      })
+
+      const card = wrapper.find('.group')
+      const style = card.attributes('style')
+      expect(style).toContain('background-image')
+    })
+  })
 })
