@@ -255,4 +255,140 @@ describe('ModifiersDisplay', () => {
     expect(wrapper.text()).toContain('CHOICE')
     expect(wrapper.text()).toContain('Choose 2 different ability scores')
   })
+
+  // NEW TESTS FOR ADVANTAGE/DISADVANTAGE (non-numeric values)
+  it('displays disadvantage modifier correctly', () => {
+    const disadvantageModifier = [{
+      id: 498,
+      modifier_category: 'skill',
+      ability_score: {
+        id: 2,
+        code: 'DEX',
+        name: 'Dexterity'
+      },
+      skill: {
+        id: 17,
+        name: 'Stealth'
+      },
+      value: 'disadvantage',
+      condition: null,
+      is_choice: false,
+      choice_count: null,
+      choice_constraint: null
+    }]
+
+    const wrapper = mount(ModifiersDisplay, {
+      props: { modifiers: disadvantageModifier }
+    })
+
+    expect(wrapper.text()).toContain('Stealth')
+    expect(wrapper.text()).toContain('DEX')
+    expect(wrapper.text()).toContain('disadvantage')
+  })
+
+  it('displays advantage modifier correctly', () => {
+    const advantageModifier = [{
+      id: 500,
+      modifier_category: 'skill',
+      ability_score: {
+        id: 3,
+        code: 'WIS',
+        name: 'Wisdom'
+      },
+      skill: {
+        id: 10,
+        name: 'Perception'
+      },
+      value: 'advantage',
+      condition: null,
+      is_choice: false,
+      choice_count: null,
+      choice_constraint: null
+    }]
+
+    const wrapper = mount(ModifiersDisplay, {
+      props: { modifiers: advantageModifier }
+    })
+
+    expect(wrapper.text()).toContain('Perception')
+    expect(wrapper.text()).toContain('WIS')
+    expect(wrapper.text()).toContain('advantage')
+  })
+
+  it('does not add +/- signs to advantage/disadvantage values', () => {
+    const modifier = [{
+      id: 498,
+      modifier_category: 'skill',
+      ability_score: {
+        id: 2,
+        code: 'DEX',
+        name: 'Dexterity'
+      },
+      skill: {
+        id: 17,
+        name: 'Stealth'
+      },
+      value: 'disadvantage',
+      condition: null,
+      is_choice: false,
+      choice_count: null,
+      choice_constraint: null
+    }]
+
+    const wrapper = mount(ModifiersDisplay, {
+      props: { modifiers: modifier }
+    })
+
+    // Should not have +disadvantage or -disadvantage
+    expect(wrapper.text()).not.toContain('+disadvantage')
+    expect(wrapper.text()).not.toContain('-disadvantage')
+    expect(wrapper.text()).toContain('disadvantage')
+  })
+
+  it('handles mixed numeric and non-numeric modifier values', () => {
+    const mixed = [
+      {
+        id: 1,
+        modifier_category: 'ability_score',
+        ability_score: {
+          id: 1,
+          code: 'STR',
+          name: 'Strength'
+        },
+        value: '2',
+        condition: null,
+        is_choice: false,
+        choice_count: null,
+        choice_constraint: null
+      },
+      {
+        id: 2,
+        modifier_category: 'skill',
+        ability_score: {
+          id: 2,
+          code: 'DEX',
+          name: 'Dexterity'
+        },
+        skill: {
+          id: 17,
+          name: 'Stealth'
+        },
+        value: 'disadvantage',
+        condition: null,
+        is_choice: false,
+        choice_count: null,
+        choice_constraint: null
+      }
+    ]
+
+    const wrapper = mount(ModifiersDisplay, {
+      props: { modifiers: mixed }
+    })
+
+    // Numeric modifier formatted with +
+    expect(wrapper.text()).toContain('Strength (STR): +2')
+    // Non-numeric modifier displayed as-is
+    expect(wrapper.text()).toContain('Stealth')
+    expect(wrapper.text()).toContain('disadvantage')
+  })
 })

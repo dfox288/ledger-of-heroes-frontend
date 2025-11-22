@@ -29,6 +29,16 @@ export interface AbilityScore {
 }
 
 /**
+ * Skill reference
+ *
+ * Used in: Modifiers for skill-based bonuses/penalties
+ */
+export interface Skill {
+  id: number
+  name: string
+}
+
+/**
  * Character modifier (stat bonuses, penalties, etc.)
  *
  * Used in: Races, Feats, Items
@@ -38,6 +48,7 @@ export interface Modifier {
   id: number
   modifier_category: string
   ability_score?: AbilityScore | null
+  skill?: Skill | null
   value: string | number
   condition?: string | null
   is_choice: boolean

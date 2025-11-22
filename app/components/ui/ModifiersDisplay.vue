@@ -8,9 +8,22 @@ interface Props {
 defineProps<Props>()
 
 /**
- * Format modifier value with + or - sign
+ * Check if value is numeric
+ */
+const isNumeric = (value: string | number): boolean => {
+  if (typeof value === 'number') return true
+  const parsed = parseInt(value)
+  return !isNaN(parsed)
+}
+
+/**
+ * Format modifier value with + or - sign (for numeric values only)
  */
 const formatValue = (value: string | number): string => {
+  if (!isNumeric(value)) {
+    // Return non-numeric values as-is (e.g., "advantage", "disadvantage")
+    return String(value)
+  }
   const numValue = typeof value === 'string' ? parseInt(value) : value
   return numValue > 0 ? `+${numValue}` : `${numValue}`
 }
@@ -70,9 +83,15 @@ const formatChoiceDescription = (
       <!-- Fixed Modifier Display -->
       <div v-else>
         <div class="font-medium text-gray-900 dark:text-gray-100">
-          <template v-if="modifier.ability_score">
+          <!-- Skill Modifier (e.g., Stealth (DEX): disadvantage) -->
+          <template v-if="modifier.skill">
+            {{ modifier.skill.name }} ({{ modifier.ability_score?.code }}): {{ formatValue(modifier.value) }}
+          </template>
+          <!-- Ability Score Modifier (e.g., Strength (STR): +2) -->
+          <template v-else-if="modifier.ability_score">
             {{ modifier.ability_score.name }} ({{ modifier.ability_score.code }}): {{ formatValue(modifier.value) }}
           </template>
+          <!-- Generic Modifier (e.g., speed: +10) -->
           <template v-else>
             {{ modifier.modifier_category }}: {{ formatValue(modifier.value) }}
           </template>
