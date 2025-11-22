@@ -24,13 +24,6 @@ const isBaseClass = computed(() => {
 })
 
 /**
- * Get type badge color
- */
-const typeBadgeColor = computed(() => {
-  return isBaseClass.value ? 'error' : 'warning'
-})
-
-/**
  * Get type badge text
  */
 const typeBadgeText = computed(() => {
@@ -61,7 +54,7 @@ const backgroundImage = computed(() => {
     :to="`/classes/${characterClass.slug}`"
     class="block h-full group"
   >
-    <UCard class="relative overflow-hidden hover:shadow-lg transition-shadow h-full border border-gray-200 dark:border-gray-700">
+    <UCard class="relative overflow-hidden hover:shadow-lg transition-shadow h-full border-2 border-class-300 dark:border-class-700 hover:border-class-500">
       <!-- Background Image Layer -->
       <div
         v-if="backgroundImage"
@@ -77,7 +70,7 @@ const backgroundImage = computed(() => {
           <!-- Type, Hit Die, and Ability Badges -->
           <div class="flex items-center gap-2 flex-wrap">
             <UBadge
-              :color="typeBadgeColor"
+              color="class"
               variant="subtle"
               size="sm"
             >
@@ -85,7 +78,7 @@ const backgroundImage = computed(() => {
             </UBadge>
             <UBadge
               v-if="characterClass.primary_ability"
-              color="info"
+              color="class"
               variant="soft"
               size="sm"
             >
@@ -93,7 +86,7 @@ const backgroundImage = computed(() => {
             </UBadge>
             <UBadge
               v-if="characterClass.spellcasting_ability"
-              color="primary"
+              color="class"
               variant="soft"
               size="sm"
             >
