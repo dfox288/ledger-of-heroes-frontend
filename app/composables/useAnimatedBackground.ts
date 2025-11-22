@@ -241,14 +241,23 @@ export function useAnimatedBackground(canvas: HTMLCanvasElement, isDark: boolean
       return
     }
 
+    // DEBUG: Log canvas state
+    if (Math.random() < 0.01) { // Log 1% of frames
+      console.log('[Animation] Canvas:', canvas.width, 'x', canvas.height, 'Context:', ctx)
+    }
+
     // Clear canvas
     ctx.clearRect(0, 0, canvas.width, canvas.height)
 
     // DEBUG: Draw a very obvious test circle
-    ctx.fillStyle = 'rgba(255, 0, 0, 0.5)' // Red, 50% opacity
+    ctx.fillStyle = 'rgba(255, 0, 0, 0.8)' // Bright red, 80% opacity
     ctx.beginPath()
-    ctx.arc(100, 100, 50, 0, Math.PI * 2)
+    ctx.arc(100, 100, 80, 0, Math.PI * 2)
     ctx.fill()
+
+    // DEBUG: Draw a rectangle
+    ctx.fillStyle = 'rgba(0, 255, 0, 0.8)' // Bright green
+    ctx.fillRect(300, 300, 200, 200)
 
     // Update and draw swirls
     for (const swirl of swirls) {
