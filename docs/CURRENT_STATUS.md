@@ -1,11 +1,12 @@
 # D&D 5e Compendium Frontend - Current Status
 
-**Last Updated:** 2025-11-22 (Monsters Feature Complete!)
+**Last Updated:** 2025-11-22 (Entity Images Feature Complete!)
 **Status:** ✅ **PRODUCTION-READY - 100% Tests Passing!**
 **Framework:** Nuxt 4.x + NuxtUI 4.x
 **7 of 7 Entity Types + 10 Reference Pages** (All Complete!)
-**Test Coverage:** 611/611 tests passing (100% pass rate!) ✨
+**Test Coverage:** 630/630 tests passing (100% pass rate!) ✨
 **Code Quality:** ESLint 0 errors ✅ | TypeScript: 13 errors (93% reduction from 176 original)
+**NEW:** AI-generated images on race pages (hero + background images) 🎨
 
 ---
 
@@ -40,11 +41,41 @@ A full-featured D&D 5e reference application with:
 **Entity-Specific Features:**
 - **Spells:** Level/school filters, ritual/concentration badges, **character level scaling**, **all effect types** (damage + other), **tags**, **saving throws with DC** ⭐, **random tables**
 - **Items:** Rarity colors, magic/attunement badges, weapon/armor stats, **proficiencies**, **charges** (max/recharge), **advantage/disadvantage modifiers**, **item spells**, **random tables**, **tags**
-- **Races:** Traits, ability modifiers, languages, size/speed, **tags**
+- **Races:** Traits, ability modifiers, languages, size/speed, **tags**, **AI-generated images** (hero + background) 🎨
 - **Classes:** Features, proficiencies, subclasses, hit die, spellcasting ability, **tags**
 - **Backgrounds:** Traits (Description, Feature, Characteristics), proficiencies, languages, **tags**
 - **Feats:** Prerequisites (emphasized), modifiers, conditions, **tags**
 - **Monsters:** CR/Type filters, **color-coded CR badges** (Easy/Medium/Hard/Deadly), full stat blocks (AC, HP, speeds, ability scores), **traits**, **actions**, **legendary actions** with action costs, legendary creature indicator, modifiers, conditions
+
+### Entity Images Feature (NEW! 🎨)
+**Status:** ✅ Complete for Races | Ready to extend to other entities
+
+**Race Pages:**
+- **Detail Pages:** CV-style hero images (512px, right-aligned 1/3 width, responsive)
+- **List Cards:** Subtle background images (256px, 10% opacity, 20% on hover)
+- **Lazy Loading:** NuxtImg with automatic optimization
+- **Graceful Degradation:** Missing images handled seamlessly
+
+**Reusable Components:**
+- `useEntityImage` composable for path generation (all entity types)
+- `UiEntityHeaderWithImage` component for detail pages
+- Configurable provider via `NUXT_PUBLIC_IMAGE_PROVIDER` env variable
+
+**Image Architecture:**
+- Pre-optimized variants (256px/512px/original) from image-generator project
+- CSS background approach for cards (better opacity control)
+- Docker volume: `../image-generator/output` → `/images/generated/`
+- Provider: `stability-ai` (switchable via config)
+
+**Testing:**
+- 19 new tests (9 composable, 7 component, 3 integration)
+- All tests passing, no regressions
+- Browser verified on 6+ race pages
+
+**Documentation:**
+- Design: `docs/plans/2025-11-22-entity-images-design.md`
+- Implementation: `docs/plans/2025-11-22-entity-images-implementation.md`
+- Handover: `docs/HANDOVER-2025-11-22-ENTITY-IMAGES.md`
 
 ### Reference Pages (10/10) ✅
 **✅ Ability Scores, ✅ Conditions, ✅ Damage Types, ✅ Item Types, ✅ Languages, ✅ Proficiency Types, ✅ Sizes, ✅ Skills, ✅ Spell Schools, ✅ Sources**
@@ -100,6 +131,7 @@ A full-featured D&D 5e reference application with:
 **Composables:**
 - `app/composables/useApi.ts` - Smart API base URL (SSR vs client)
 - `app/composables/useSearch.ts` - Search functionality
+- `app/composables/useEntityImage.ts` - **Image path generation (9 tests)** **[NEW 2025-11-22]** 🎨
 
 **Reusable UI Components:**
 
@@ -108,6 +140,7 @@ A full-featured D&D 5e reference application with:
 - `app/components/ui/detail/UiDetailPageError.vue` - 404 error state (9 tests)
 - `app/components/ui/detail/UiDetailPageHeader.vue` - Title + badges (7 tests)
 - `app/components/ui/detail/UiDetailQuickStatsCard.vue` - Stats grid (8 tests) **[Renamed from UiQuickStatsCard]**
+- `app/components/ui/UiEntityHeaderWithImage.vue` - **CV-style header with hero image (7 tests)** **[NEW 2025-11-22]** 🎨
 
 *Accordion Slot Components:*
 - `app/components/ui/accordion/UiAccordionBadgeList.vue` - Badge collections
