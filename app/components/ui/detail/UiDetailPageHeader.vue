@@ -1,9 +1,13 @@
 <script setup lang="ts">
+type BadgeColor = 'primary' | 'secondary' | 'success' | 'info' | 'warning' | 'error' | 'neutral'
+type BadgeVariant = 'solid' | 'outline' | 'soft' | 'subtle'
+type BadgeSize = 'xs' | 'sm' | 'md' | 'lg' | 'xl'
+
 interface Badge {
   label: string
-  color: string
-  variant: string
-  size?: string
+  color: BadgeColor
+  variant: BadgeVariant
+  size?: BadgeSize
 }
 
 interface Props {

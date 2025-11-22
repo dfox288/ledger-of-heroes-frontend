@@ -99,7 +99,9 @@ const handleKeydown = (event: KeyboardEvent) => {
       event.preventDefault()
       if (selectedIndex.value >= 0 && selectedIndex.value < flatResults.value.length) {
         const selected = flatResults.value[selectedIndex.value]
-        selectResult(selected.type, selected.slug)
+        if (selected) {
+          selectResult(selected.type, selected.slug)
+        }
       } else {
         handleSubmit()
       }
@@ -182,12 +184,7 @@ const resetGlobalIndex = () => {
         autocomplete="off"
         variant="outline"
         :ui="{
-          size: {
-            xl: 'text-lg'
-          },
-          padding: {
-            xl: 'px-4 py-3'
-          }
+          base: 'text-lg px-4 py-3'
         }"
         @blur="closeDropdown"
         @keydown="handleKeydown"

@@ -22,7 +22,7 @@ describe('RaceCard', () => {
     ],
     modifiers: [
       {
-        modifier_type: 'ability_score',
+        modifier_category: 'ability_score',
         ability_score: { id: 2, code: 'DEX', name: 'Dexterity' },
         value: 2
       }
@@ -130,12 +130,12 @@ describe('RaceCard', () => {
       ...mockRace,
       modifiers: [
         {
-          modifier_type: 'ability_score',
+          modifier_category: 'ability_score',
           ability_score: { id: 2, code: 'DEX', name: 'Dexterity' },
           value: 2
         },
         {
-          modifier_type: 'ability_score',
+          modifier_category: 'ability_score',
           ability_score: { id: 3, code: 'CON', name: 'Constitution' },
           value: 1
         }
@@ -154,10 +154,10 @@ describe('RaceCard', () => {
     const manyModsRace = {
       ...mockRace,
       modifiers: [
-        { modifier_type: 'ability_score', ability_score: { id: 1, code: 'STR', name: 'Strength' }, value: 1 },
-        { modifier_type: 'ability_score', ability_score: { id: 2, code: 'DEX', name: 'Dexterity' }, value: 1 },
-        { modifier_type: 'ability_score', ability_score: { id: 3, code: 'CON', name: 'Constitution' }, value: 1 },
-        { modifier_type: 'ability_score', ability_score: { id: 4, code: 'INT', name: 'Intelligence' }, value: 1 }
+        { modifier_category: 'ability_score', ability_score: { id: 1, code: 'STR', name: 'Strength' }, value: 1 },
+        { modifier_category: 'ability_score', ability_score: { id: 2, code: 'DEX', name: 'Dexterity' }, value: 1 },
+        { modifier_category: 'ability_score', ability_score: { id: 3, code: 'CON', name: 'Constitution' }, value: 1 },
+        { modifier_category: 'ability_score', ability_score: { id: 4, code: 'INT', name: 'Intelligence' }, value: 1 }
       ]
     }
     const wrapper = await mountSuspended(RaceCard, {
@@ -174,8 +174,8 @@ describe('RaceCard', () => {
     const mixedModsRace = {
       ...mockRace,
       modifiers: [
-        { modifier_type: 'ability_score', ability_score: { id: 2, code: 'DEX', name: 'Dexterity' }, value: 2 },
-        { modifier_type: 'speed', value: 5 }
+        { modifier_category: 'ability_score', ability_score: { id: 2, code: 'DEX', name: 'Dexterity' }, value: 2 },
+        { modifier_category: 'speed', value: 5 }
       ]
     }
     const wrapper = await mountSuspended(RaceCard, {

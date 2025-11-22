@@ -22,6 +22,16 @@ export interface Spell {
   is_ritual: boolean
   needs_concentration: boolean
   sources?: Source[]
+  components?: string
+  material_components?: string
+  duration?: string
+  higher_levels?: string
+  effects?: unknown[] // Complex effect structure with damage, healing, etc.
+  classes?: unknown[] // Classes that can cast this spell
+  random_tables?: unknown[] // Random tables for spell effects
+  saving_throws?: unknown[] // Saving throw requirements
+  conditions?: unknown[] // Conditions applied by spell
+  tags?: unknown[] // Spell tags
 }
 
 /**
@@ -45,6 +55,23 @@ export interface Item {
   weight?: number
   description?: string
   sources?: Source[]
+  properties?: unknown[] // Item properties (e.g., versatile, finesse)
+  damage_dice?: string
+  damage_type?: { id: number; name: string }
+  versatile_damage?: string
+  armor_class?: { base: number; dex_bonus: boolean; max_bonus?: number }
+  range_normal?: number
+  range_long?: number
+  strength_requirement?: number
+  charges_max?: number
+  recharge_formula?: string
+  recharge_timing?: string
+  modifiers?: Modifier[]
+  spells?: unknown[] // Spells granted by item
+  abilities?: unknown[] // Special abilities
+  saving_throws?: unknown[] // Saving throw requirements
+  random_tables?: unknown[] // Random tables for item effects
+  tags?: unknown[] // Item tags
 }
 
 /**
@@ -77,8 +104,12 @@ export interface Race {
   }>
   modifiers?: Modifier[]
   traits?: unknown[] // Complex nested structure, varies by race
+  proficiencies?: unknown[] // Proficiency structure
+  languages?: unknown[] // Language structure
+  abilities?: unknown[] // Special abilities
   description?: string
   sources?: Source[]
+  tags?: unknown[] // Race tags
 }
 
 /**
@@ -108,8 +139,13 @@ export interface CharacterClass {
   } | null
   subclasses?: unknown[] // Complex nested structure with features
   proficiencies?: unknown[] // Complex proficiency structure
+  features?: unknown[] // Class features
+  spells?: unknown[] // Spells for spellcasting classes
+  abilities?: unknown[] // Special abilities
+  starting_equipment?: unknown[] // Starting equipment
   description?: string
   sources?: Source[]
+  tags?: unknown[] // Class tags
 }
 
 /**
@@ -124,10 +160,14 @@ export interface Background {
   slug: string
   skill_proficiencies?: unknown[] // Complex proficiency structure
   tool_proficiencies?: unknown[] // Complex proficiency structure
+  proficiencies?: unknown[] // Combined proficiency structure
   languages?: unknown[] // Complex language structure
+  traits?: unknown[] // Background traits and features
+  starting_equipment?: unknown[] // Starting equipment
   feature_name?: string
   description?: string
   sources?: Source[]
+  tags?: unknown[] // Background tags
 }
 
 /**
@@ -142,6 +182,10 @@ export interface Feat {
   slug: string
   prerequisites?: unknown[] // Complex prerequisite structure
   modifiers?: Modifier[]
+  abilities?: unknown[] // Special abilities granted
+  proficiencies?: unknown[] // Proficiencies granted
+  spells?: unknown[] // Spells granted
   description?: string
   sources?: Source[]
+  tags?: unknown[] // Feat tags
 }

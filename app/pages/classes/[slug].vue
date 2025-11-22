@@ -1,6 +1,10 @@
 <script setup lang="ts">
 import type { CharacterClass } from '~/types'
 
+type BadgeColor = 'primary' | 'secondary' | 'success' | 'info' | 'warning' | 'error' | 'neutral'
+type BadgeVariant = 'solid' | 'outline' | 'soft' | 'subtle'
+type BadgeSize = 'xs' | 'sm' | 'md' | 'lg' | 'xl'
+
 const { apiFetch } = useApi()
 const route = useRoute()
 const slug = route.params.slug as string
@@ -45,8 +49,8 @@ useSeoMeta({
       <UiDetailPageHeader
         :title="entity.name"
         :badges="[
-          { label: entity.is_base_class ? 'Base Class' : 'Subclass', color: entity.is_base_class ? 'error' : 'warning', variant: 'subtle', size: 'lg' },
-          ...(entity.spellcasting_ability ? [{ label: `✨ ${entity.spellcasting_ability.name}`, color: 'primary', variant: 'soft', size: 'sm' }] : [])
+          { label: entity.is_base_class ? 'Base Class' : 'Subclass', color: (entity.is_base_class ? 'error' : 'warning') as BadgeColor, variant: 'subtle' as BadgeVariant, size: 'lg' as BadgeSize },
+          ...(entity.spellcasting_ability ? [{ label: `✨ ${entity.spellcasting_ability.name}`, color: 'primary' as BadgeColor, variant: 'soft' as BadgeVariant, size: 'sm' as BadgeSize }] : [])
         ]"
       />
 

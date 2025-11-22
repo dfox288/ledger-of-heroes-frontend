@@ -162,7 +162,7 @@ export function useEntityList(config: UseEntityListConfig): UseEntityListReturn 
 
   // URL sync: State → Route (bidirectional)
   watch([currentPage, searchQuery, config.queryBuilder], () => {
-    const query: Record<string, unknown> = {}
+    const query: Record<string, string | number> = {}
 
     // Only include page if > 1
     if (currentPage.value > 1) {

@@ -4,10 +4,13 @@ interface Item {
   name: string
 }
 
+type BadgeColor = 'primary' | 'secondary' | 'success' | 'info' | 'warning' | 'error' | 'neutral'
+type BadgeVariant = 'solid' | 'outline' | 'soft' | 'subtle'
+
 interface Props {
   items: Item[]
-  color?: string
-  variant?: string
+  color?: BadgeColor
+  variant?: BadgeVariant
 }
 
 withDefaults(defineProps<Props>(), {
