@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted, onBeforeUnmount, watchEffect } from 'vue'
+import { ref, onMounted, onBeforeUnmount, watch } from 'vue'
 import { useColorMode } from '#imports'
 
 const canvasRef = ref<HTMLCanvasElement | null>(null)
@@ -36,13 +36,13 @@ onMounted(() => {
   cleanup = cleanupFn
 
   // Watch for color mode changes
-  watchEffect(() => {
+  watch(() => colorMode.value, (newMode) => {
     if (!canvasRef.value) return
 
     // Reinitialize with new color mode
     if (cleanup) cleanup()
 
-    const isDark = colorMode.value === 'dark'
+    const isDark = newMode === 'dark'
     const { initialize, start, cleanup: cleanupFn } = useAnimatedBackground(canvasRef.value, isDark)
 
     initialize()

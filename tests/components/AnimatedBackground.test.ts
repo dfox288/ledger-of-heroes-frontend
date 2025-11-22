@@ -47,7 +47,8 @@ describe('AnimatedBackground', () => {
   })
 
   it('skips rendering when prefers-reduced-motion is true', async () => {
-    // Mock matchMedia to indicate reduced motion is preferred
+    // Mock matchMedia BEFORE mounting to indicate reduced motion is preferred
+    const originalMatchMedia = window.matchMedia
     window.matchMedia = vi.fn().mockImplementation((query) => ({
       matches: true, // prefers-reduced-motion IS enabled
       media: query,
@@ -64,5 +65,8 @@ describe('AnimatedBackground', () => {
     // Canvas should not be rendered
     const canvas = wrapper.find('canvas')
     expect(canvas.exists()).toBe(false)
+
+    // Restore original matchMedia
+    window.matchMedia = originalMatchMedia
   })
 })
