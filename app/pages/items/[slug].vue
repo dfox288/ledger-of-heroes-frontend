@@ -53,6 +53,14 @@ const itemTypeColor = computed(() => {
   if (!item.value?.item_type) return 'neutral'
   return getItemTypeColor(item.value.item_type.name)
 })
+
+/**
+ * Get entity image path (512px variant)
+ */
+const imagePath = computed(() => {
+  if (!item.value) return null
+  return useEntityImage(item.value.slug, 'items', '512')
+})
 </script>
 
 <template>
@@ -80,8 +88,8 @@ const itemTypeColor = computed(() => {
         label="Back to Items"
       />
 
-      <!-- Header -->
-      <UiDetailPageHeader
+      <!-- Header with Image -->
+      <UiEntityHeaderWithImage
         :title="item.name"
         :badges="[
           { label: item.item_type?.name || 'Unknown', color: itemTypeColor, variant: 'subtle' as const, size: 'lg' as const },
@@ -89,6 +97,8 @@ const itemTypeColor = computed(() => {
           ...(item.is_magic ? [{ label: '✨ Magic', color: 'primary' as const, variant: 'soft' as const, size: 'sm' as const }] : []),
           ...(item.requires_attunement ? [{ label: '🔮 Attunement', color: 'info' as const, variant: 'soft' as const, size: 'sm' as const }] : [])
         ]"
+        :image-path="imagePath"
+        :image-alt="`${item.name} item illustration`"
       />
 
       <!-- Quick Stats -->
