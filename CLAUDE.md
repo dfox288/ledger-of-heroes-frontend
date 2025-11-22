@@ -54,6 +54,127 @@ Both Nuxt and NuxtUI provide official documentation in LLM-friendly format:
 - Rich nested data (traits, modifiers, proficiencies, etc.)
 - Pagination (default: 15 per page)
 
+## 🎨 NuxtUI Color System (CRITICAL - Read This!)
+
+**⚠️ IMPORTANT:** NuxtUI v4 has a specific three-step process for custom colors that MUST be followed exactly.
+
+### Step 1: Define Semantic Color Names (nuxt.config.ts)
+
+Register your semantic color aliases in `nuxt.config.ts`:
+
+```typescript
+ui: {
+  theme: {
+    colors: ['primary', 'secondary', 'tertiary', 'info', 'success', 'warning', 'error']
+  }
+}
+```
+
+These are the **names** you'll use in components (`color="primary"`).
+
+### Step 2: Define Custom Color Palettes (app/assets/css/main.css)
+
+If using **custom colors** (not Tailwind defaults), define them with the `@theme static` directive:
+
+```css
+@theme static {
+  /* Custom color with 11 intensity levels (50-950) */
+  --color-dndtest-50: #fef2f2;
+  --color-dndtest-100: #fee2e2;
+  --color-dndtest-200: #fecaca;
+  --color-dndtest-300: #fca5a5;
+  --color-dndtest-400: #f87171;
+  --color-dndtest-500: #ef4444;
+  --color-dndtest-600: #dc2626;
+  --color-dndtest-700: #b91c1c;
+  --color-dndtest-800: #991b1b;
+  --color-dndtest-900: #7f1d1d;
+  --color-dndtest-950: #450a0a;
+}
+```
+
+**Requirements:**
+- Naming: `--color-{NAME}-{INTENSITY}`
+- Must have **exactly 11 levels**: 50, 100, 200, 300, 400, 500, 600, 700, 800, 900, 950
+- 500 is the base color, 50 is lightest, 950 is darkest
+
+### Step 3: Map Semantic Names to Colors (app/app.config.ts)
+
+**⚠️ CRITICAL:** In Nuxt 4, `app.config.ts` goes in the `app/` directory, NOT the root!
+
+```typescript
+// app/app.config.ts (NOT root!)
+export default defineAppConfig({
+  ui: {
+    colors: {
+      primary: 'dndtest',    // Custom color from @theme
+      secondary: 'emerald',  // Tailwind default color
+      tertiary: 'stone'      // Tailwind default color
+    }
+  }
+})
+```
+
+You can use:
+- **Custom colors** defined in `@theme` (e.g., `dndtest`)
+- **Tailwind defaults** (amber, emerald, stone, blue, red, etc.)
+
+### Complete Example
+
+**1. nuxt.config.ts:**
+```typescript
+ui: {
+  theme: {
+    colors: ['primary', 'secondary', 'tertiary']
+  }
+}
+```
+
+**2. app/assets/css/main.css:**
+```css
+@theme static {
+  --color-mycolor-50: #...;
+  --color-mycolor-100: #...;
+  /* ... all 11 levels ... */
+  --color-mycolor-950: #...;
+}
+```
+
+**3. app/app.config.ts:**
+```typescript
+export default defineAppConfig({
+  ui: {
+    colors: {
+      primary: 'mycolor',    // Uses @theme color
+      secondary: 'emerald',  // Uses Tailwind default
+      tertiary: 'blue'       // Uses Tailwind default
+    }
+  }
+})
+```
+
+**4. Use in components:**
+```vue
+<UButton color="primary">Uses mycolor</UButton>
+<UButton color="secondary">Uses emerald</UButton>
+```
+
+### Common Pitfalls
+
+❌ **DON'T:**
+- Put `app.config.ts` in project root (Nuxt 3 location)
+- Define only some intensity levels (need all 11)
+- Skip registering in `nuxt.config.ts` theme.colors
+- Use color names not defined in @theme or Tailwind
+
+✅ **DO:**
+- Put `app.config.ts` in `app/` directory (Nuxt 4 location)
+- Define all 11 intensity levels (50-950)
+- Register all semantic names in `nuxt.config.ts`
+- Use either custom (@theme) or Tailwind default colors
+
+---
+
 ## Tech Stack
 
 **⚠️ CRITICAL:** This project uses specific framework versions. Do NOT use older versions.

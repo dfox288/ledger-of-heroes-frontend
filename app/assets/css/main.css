@@ -23,3 +23,18 @@ body {
 .dark body {
   background-color: #0c0a09 !important; /* Dark mode: matches gradient */
 }
+
+@theme static {
+    /* Define new custom color */
+    --color-dndtest-50: #fef2f2;
+    --color-dndtest-100: #fee2e2;
+    --color-dndtest-200: #fecaca;
+    --color-dndtest-300: #fca5a5;
+    --color-dndtest-400: #f87171;
+    --color-dndtest-500: #ef4444;
+    --color-dndtest-600: #dc2626;
+    --color-dndtest-700: #b91c1c;
+    --color-dndtest-800: #991b1b;
+    --color-dndtest-900: #7f1d1d;
+    --color-dndtest-950: #450a0a;
+}

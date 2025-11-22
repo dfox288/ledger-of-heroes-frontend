@@ -1,63 +1,72 @@
 // https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
-  modules: [
-    '@nuxt/eslint',
-    '@nuxt/ui',
-    '@nuxt/test-utils',
-    '@nuxt/image',
-    '@nuxt/fonts'
-  ],
+    modules: [
+        '@nuxt/eslint',
+        '@nuxt/ui',
+        '@nuxt/test-utils',
+        '@nuxt/image',
+        '@nuxt/fonts'
+    ],
 
-  devtools: {
-    enabled: true
-  },
+    devtools: {
+        enabled: true
+    },
 
-  css: ['./app/assets/css/main.css'],
+    css: ['./app/assets/css/main.css'],
 
-  colorMode: {
-    preference: 'system',
-    fallback: 'light',
-    classSuffix: ''
-  },
+    colorMode: {
+        preference: 'system',
+        fallback: 'light',
+        classSuffix: ''
+    },
 
-  runtimeConfig: {
-    // Server-side only (NEVER exposed to client)
-    // This is used by Nitro API routes to proxy to Laravel backend
-    apiBaseServer: process.env.NUXT_API_BASE_SERVER || 'http://localhost:8080/api/v1',
+    runtimeConfig: {
+        // Server-side only (NEVER exposed to client)
+        // This is used by Nitro API routes to proxy to Laravel backend
+        apiBaseServer: process.env.NUXT_API_BASE_SERVER || 'http://localhost:8080/api/v1',
 
-    // Public keys (exposed to client)
-    public: {
-      // apiBase no longer needed - frontend uses /api/* (Nitro routes)
-      apiDocsUrl: process.env.NUXT_PUBLIC_API_DOCS_URL || 'http://localhost:8080/docs/api',
-      imageProvider: process.env.NUXT_PUBLIC_IMAGE_PROVIDER || 'stability-ai'
+        // Public keys (exposed to client)
+        public: {
+            // apiBase no longer needed - frontend uses /api/* (Nitro routes)
+            apiDocsUrl: process.env.NUXT_PUBLIC_API_DOCS_URL || 'http://localhost:8080/docs/api',
+            imageProvider: process.env.NUXT_PUBLIC_IMAGE_PROVIDER || 'stability-ai'
+        }
+    },
+
+    compatibilityDate: '2025-01-15',
+
+    eslint: {
+        config: {
+            stylistic: {
+                commaDangle: 'never',
+                braceStyle: '1tbs'
+            }
+        }
+    },
+
+    fonts: {
+        families: [
+            {
+                name: 'Crimson Pro',
+                provider: 'google',
+                weights: ['200..900'], // Variable font - all weights
+                styles: ['normal', 'italic']
+            }
+        ]
+    },
+
+    ui: {
+        theme: {
+            colors:
+                [
+                    'primary',
+                    'secondary',
+                    'tertiary',
+                    'info',
+                    'success',
+                    'warning',
+                    'error'
+                ]
+        }
     }
-  },
-
-  compatibilityDate: '2025-01-15',
-
-  eslint: {
-    config: {
-      stylistic: {
-        commaDangle: 'never',
-        braceStyle: '1tbs'
-      }
-    }
-  },
-
-  fonts: {
-    families: [
-      {
-        name: 'Crimson Pro',
-        provider: 'google',
-        weights: ['200..900'], // Variable font - all weights
-        styles: ['normal', 'italic']
-      }
-    ]
-  },
-
-  ui: {
-    theme: {
-      colors: ['primary', 'success', 'warning', 'error', 'info', 'neutral']
-    }
-  }
 })

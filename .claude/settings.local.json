@@ -150,7 +150,9 @@
       "Bash(docs/HANDOVER-2025-11-22-TEST-SUITE-REFACTORING.md )",
       "Bash(docs/HANDOVER-2025-11-22-TYPESCRIPT-TEST-CLEANUP.md )",
       "Bash(docs/archive/2025-11-22-session-complete/)",
-      "WebFetch(domain:fonts.nuxt.com)"
+      "WebFetch(domain:fonts.nuxt.com)",
+      "Bash(npm install)",
+      "Bash(git rm:*)"
     ],
     "deny": [],
     "ask": []
