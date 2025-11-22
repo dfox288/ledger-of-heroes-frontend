@@ -72,4 +72,43 @@ describe('SourceCard', () => {
 
     expect(wrapper.text()).toContain('Eberron')
   })
+
+  describe('background images', () => {
+    it('computes background image URL correctly', async () => {
+      const wrapper = await mountSuspended(SourceCard, {
+        props: {
+          source: {
+            id: 1,
+            code: 'PHB',
+            name: 'Player\'s Handbook',
+            publisher: 'Wizards of the Coast',
+            publication_year: 2014,
+            edition: '5e'
+          }
+        }
+      })
+
+      const url = wrapper.vm.backgroundImageUrl
+      expect(url).toBe('/images/generated/conversions/256/sources/stability-ai/phb.png')
+    })
+
+    it('applies background image styles when URL exists', async () => {
+      const wrapper = await mountSuspended(SourceCard, {
+        props: {
+          source: {
+            id: 1,
+            code: 'PHB',
+            name: 'Player\'s Handbook',
+            publisher: 'Wizards of the Coast',
+            publication_year: 2014,
+            edition: '5e'
+          }
+        }
+      })
+
+      const card = wrapper.find('.group')
+      const style = card.attributes('style')
+      expect(style).toContain('background-image')
+    })
+  })
 })
