@@ -2767,7 +2767,9 @@ export interface components {
       proficiency_name: string | null
       grants: boolean
       is_choice: boolean
-      quantity: number
+      choice_group: string | null
+      choice_option: number | null
+      quantity: number | null
     }
     /** ProficiencyTypeResource */
     ProficiencyTypeResource: {

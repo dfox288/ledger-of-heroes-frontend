@@ -167,7 +167,8 @@
       "WebFetch(domain:storybook.js.org)",
       "Bash(timeout 5 curl:*)",
       "WebFetch(domain:storybook.nuxtjs.org)",
-      "Bash(timeout 15 curl -s 'http://localhost:3000/races')"
+      "Bash(timeout 15 curl -s 'http://localhost:3000/races')",
+      "Bash(/tmp/monster_1.json)"
     ],
     "deny": [],
     "ask": []
