@@ -494,4 +494,151 @@ describe('UiAccordionEquipmentList', () => {
     expect(text).toMatch(/\(a\).*longsword/)
     expect(text).toMatch(/\(b\).*greatsword/)
   })
+
+  it('links items with item_id and slug to their detail pages', async () => {
+    const equipment: Equipment[] = [
+      {
+        id: 1,
+        item_id: 729,
+        quantity: 1,
+        is_choice: false,
+        choice_group: null,
+        choice_option: null,
+        choice_description: null,
+        proficiency_subcategory: null,
+        description: null,
+        item: {
+          id: 729,
+          name: 'Rapier',
+          slug: 'rapier',
+          description: 'A finesse weapon',
+          item_type: { id: 1, name: 'Weapon' },
+          sources: [],
+        } as any,
+      },
+    ]
+
+    const wrapper = await mountSuspended(UiAccordionEquipmentList, {
+      props: { equipment },
+    })
+
+    const link = wrapper.find('a[href="/items/rapier"]')
+    expect(link.exists()).toBe(true)
+    expect(link.text()).toBe('Rapier')
+  })
+
+  it('does not link items without item_id or slug', async () => {
+    const equipment: Equipment[] = [
+      {
+        id: 1,
+        item_id: null,
+        quantity: 1,
+        is_choice: false,
+        choice_group: null,
+        choice_option: null,
+        choice_description: null,
+        proficiency_subcategory: null,
+        description: 'a backpack',
+      },
+    ]
+
+    const wrapper = await mountSuspended(UiAccordionEquipmentList, {
+      props: { equipment },
+    })
+
+    const links = wrapper.findAll('a')
+    expect(links.length).toBe(0)
+    expect(wrapper.text()).toContain('a backpack')
+  })
+
+  it('links items in choice groups', async () => {
+    const equipment: Equipment[] = [
+      {
+        id: 11,
+        item_id: 729,
+        quantity: 1,
+        is_choice: true,
+        choice_group: 'choice_1',
+        choice_option: 1,
+        choice_description: 'Starting equipment choice',
+        proficiency_subcategory: null,
+        description: null,
+        item: {
+          id: 729,
+          name: 'Rapier',
+          slug: 'rapier',
+          description: 'A finesse weapon',
+          item_type: { id: 1, name: 'Weapon' },
+          sources: [],
+        } as any,
+      },
+      {
+        id: 12,
+        item_id: 732,
+        quantity: 1,
+        is_choice: true,
+        choice_group: 'choice_1',
+        choice_option: 2,
+        choice_description: 'Starting equipment choice',
+        proficiency_subcategory: null,
+        description: null,
+        item: {
+          id: 732,
+          name: 'Shortsword',
+          slug: 'shortsword',
+          description: 'A versatile weapon',
+          item_type: { id: 1, name: 'Weapon' },
+          sources: [],
+        } as any,
+      },
+    ]
+
+    const wrapper = await mountSuspended(UiAccordionEquipmentList, {
+      props: { equipment },
+    })
+
+    const rapierLink = wrapper.find('a[href="/items/rapier"]')
+    const shortswordLink = wrapper.find('a[href="/items/shortsword"]')
+
+    expect(rapierLink.exists()).toBe(true)
+    expect(rapierLink.text()).toBe('Rapier')
+    expect(shortswordLink.exists()).toBe(true)
+    expect(shortswordLink.text()).toBe('Shortsword')
+  })
+
+  it('uses choice_description for headline even with choice_group', async () => {
+    const equipment: Equipment[] = [
+      {
+        id: 11,
+        item_id: 729,
+        quantity: 1,
+        is_choice: true,
+        choice_group: 'choice_1',
+        choice_option: 1,
+        choice_description: 'Starting equipment choice',
+        proficiency_subcategory: null,
+        description: 'a rapier',
+      },
+      {
+        id: 12,
+        item_id: 732,
+        quantity: 1,
+        is_choice: true,
+        choice_group: 'choice_1',
+        choice_option: 2,
+        choice_description: 'Starting equipment choice',
+        proficiency_subcategory: null,
+        description: 'a shortsword',
+      },
+    ]
+
+    const wrapper = await mountSuspended(UiAccordionEquipmentList, {
+      props: { equipment },
+    })
+
+    const text = wrapper.text()
+    // Should display choice_description as headline, not choice_group
+    expect(text).toContain('Starting equipment choice')
+    expect(text).not.toContain('choice_1')
+  })
 })

@@ -64,7 +64,8 @@ const equipmentGroups = computed(() => {
       })
 
       return {
-        choiceDescription: key,
+        // Use choice_description from first item for the headline (more descriptive than choice_group)
+        choiceDescription: sortedItems[0]?.choice_description || key,
         items: sortedItems,
       }
     })
@@ -91,6 +92,14 @@ const getItemDisplay = (item: Equipment): string => {
 const getChoiceLetter = (item: Equipment, index: number): string => {
   const optionNum = item.choice_option != null ? item.choice_option - 1 : index
   return String.fromCharCode(97 + optionNum) // 97 is 'a' in ASCII
+}
+
+// Helper to get item link URL
+const getItemLink = (item: Equipment): string | null => {
+  if (item.item_id && item.item?.slug) {
+    return `/items/${item.item.slug}`
+  }
+  return null
 }
 </script>
 
@@ -132,7 +141,15 @@ const getChoiceLetter = (item: Equipment, index: number): string => {
             :key="item.id"
             class="text-gray-700 dark:text-gray-300 ml-2"
           >
-            ({{ getChoiceLetter(item, itemIndex) }}) {{ getItemDisplay(item) }}
+            ({{ getChoiceLetter(item, itemIndex) }})
+            <NuxtLink
+              v-if="getItemLink(item)"
+              :to="getItemLink(item)!"
+              class="hover:text-primary-600 dark:hover:text-primary-400 underline decoration-dotted underline-offset-2"
+            >
+              {{ getItemDisplay(item) }}
+            </NuxtLink>
+            <span v-else>{{ getItemDisplay(item) }}</span>
           </div>
         </div>
 
@@ -142,7 +159,14 @@ const getChoiceLetter = (item: Equipment, index: number): string => {
             {{ group.choiceDescription }}
           </div>
           <div class="text-gray-700 dark:text-gray-300 ml-2">
-            {{ getItemDisplay(group.items[0]) }}
+            <NuxtLink
+              v-if="getItemLink(group.items[0])"
+              :to="getItemLink(group.items[0])!"
+              class="hover:text-primary-600 dark:hover:text-primary-400 underline decoration-dotted underline-offset-2"
+            >
+              {{ getItemDisplay(group.items[0]) }}
+            </NuxtLink>
+            <span v-else>{{ getItemDisplay(group.items[0]) }}</span>
           </div>
         </div>
 
@@ -153,7 +177,14 @@ const getChoiceLetter = (item: Equipment, index: number): string => {
             :key="item.id"
             class="text-gray-700 dark:text-gray-300"
           >
-            {{ getItemDisplay(item) }}
+            <NuxtLink
+              v-if="getItemLink(item)"
+              :to="getItemLink(item)!"
+              class="hover:text-primary-600 dark:hover:text-primary-400 underline decoration-dotted underline-offset-2"
+            >
+              {{ getItemDisplay(item) }}
+            </NuxtLink>
+            <span v-else>{{ getItemDisplay(item) }}</span>
           </div>
         </div>
       </div>

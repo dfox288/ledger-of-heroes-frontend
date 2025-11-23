@@ -46,6 +46,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Equipment list now properly handles structured choice data with `choice_group` and `choice_option` fields (2025-11-23) - Rogue class equipment choices display correctly in separate groups with proper sorting
 
 ### Changed
+- Equipment items in class/background detail pages now link to their item detail pages when available (2025-11-23) - Clickable links for all equipment with `item_id` and `slug`
+- Equipment group headlines now use descriptive `choice_description` text instead of technical `choice_group` names (2025-11-23) - Shows "Starting equipment choice" instead of "choice_1"
+
+### Changed
 - Parchment background now covers full viewport instead of tiling (2025-11-23) - Creates cleaner, more cohesive look with subtle parallax scroll effect
 - Parchment background opacity adjusted to 6-8% for subtle visibility (2025-11-23)
 

@@ -2509,6 +2509,8 @@ export interface components {
       item?: components['schemas']['ItemResource']
       quantity: number
       is_choice: boolean
+      choice_group: string | null
+      choice_option: number | null
       choice_description: string | null
       proficiency_subcategory: string | null
       description: string | null
