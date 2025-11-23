@@ -99,7 +99,7 @@ const backgroundImage = computed(() => {
             <UBadge
               v-if="hasPrerequisites"
               color="feat"
-              variant="soft"
+              variant="subtle"
               size="md"
             >
               Prerequisites
@@ -143,7 +143,7 @@ const backgroundImage = computed(() => {
             <UBadge
               color="feat"
               variant="soft"
-              size="xs"
+              size="sm"
             >
               ✅ No Prerequisites
             </UBadge>

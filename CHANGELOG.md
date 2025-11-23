@@ -10,6 +10,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Changed
+- **FeatCard Badge Standardization (2025-11-23)** - Standardized badge sizes and variants to match 2-tier badge system
+  - Changed Prerequisites badge (top-row) from `variant="soft"` to `variant="subtle"` for prominence
+  - Changed "No Prerequisites" badge (inline) from `size="xs"` to `size="sm"` for better readability
+  - Top-row badges now use `size="md"` + `variant="subtle"` for primary information
+  - Inline badges now use `size="sm"` + `variant="soft"` for secondary information
+  - All 31 FeatCard tests passing
 - **ClassCard Badge Size Standardization (2025-11-23)** - Updated Base Class/Subclass badge to match 2-tier hierarchy
   - Changed type badge (Base Class/Subclass) from size="sm" to size="md" for prominence
   - Aligns with SpellCard, ItemCard, MonsterCard, and RaceCard badge hierarchy pattern
