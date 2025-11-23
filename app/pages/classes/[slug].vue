@@ -93,6 +93,16 @@ const imagePath = computed(() => {
       <!-- Additional Details (Accordion) -->
       <UAccordion
         :items="[
+          ...(entity.level_progression && entity.level_progression.length > 0 ? [{
+            label: 'Spell Slot Progression',
+            slot: 'level-progression',
+            defaultOpen: false
+          }] : []),
+          ...(entity.equipment && entity.equipment.length > 0 ? [{
+            label: 'Starting Equipment & Proficiencies',
+            slot: 'equipment',
+            defaultOpen: false
+          }] : []),
           ...(entity.proficiencies && entity.proficiencies.length > 0 ? [{
             label: `Proficiencies (${entity.proficiencies.length})`,
             slot: 'proficiencies',
@@ -121,6 +131,22 @@ const imagePath = computed(() => {
         ]"
         type="multiple"
       >
+        <!-- Level Progression Slot -->
+        <template
+          v-if="entity.level_progression && entity.level_progression.length > 0"
+          #level-progression
+        >
+          <UiAccordionLevelProgression :level-progression="entity.level_progression" />
+        </template>
+
+        <!-- Equipment Slot -->
+        <template
+          v-if="entity.equipment && entity.equipment.length > 0"
+          #equipment
+        >
+          <UiAccordionEquipmentList :equipment="entity.equipment" type="class" />
+        </template>
+
         <!-- Proficiencies Slot -->
         <template
           v-if="entity.proficiencies && entity.proficiencies.length > 0"

@@ -2476,6 +2476,7 @@ export interface components {
       traits?: components['schemas']['TraitResource'][]
       features?: components['schemas']['ClassFeatureResource'][]
       level_progression?: components['schemas']['ClassLevelProgressionResource'][]
+      equipment?: components['schemas']['EntityItemResource'][]
       counters?: components['schemas']['ClassCounterResource'][]
       spells?: components['schemas']['SpellResource'][]
       sources?: components['schemas']['EntitySourceResource'][]
