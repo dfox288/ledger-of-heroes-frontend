@@ -12,6 +12,7 @@ services:
     ports:
       - "3000:3000"    # Nuxt dev server
       - "24678:24678"  # Nuxt HMR WebSocket
+      - "6006:6006"    # Storybook dev server
     volumes:
       - .:/app
       - ./docker/node/entrypoint-dev.sh:/usr/local/bin/docker-entrypoint-dev.sh

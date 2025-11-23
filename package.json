@@ -15,7 +15,7 @@
     "lint:fix": "eslint . --fix",
     "typecheck": "nuxt typecheck",
     "types:sync": "node scripts/sync-api-types.js",
-    "storybook": "storybook dev -p 6006",
+    "storybook": "storybook dev -p 6006 --no-open",
     "build-storybook": "storybook build"
   },
   "dependencies": {
