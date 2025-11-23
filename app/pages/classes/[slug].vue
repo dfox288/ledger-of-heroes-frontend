@@ -93,6 +93,11 @@ const imagePath = computed(() => {
       <!-- Additional Details (Accordion) -->
       <UAccordion
         :items="[
+          ...(entity.traits && entity.traits.length > 0 ? [{
+            label: `Class Traits (${entity.traits.length})`,
+            slot: 'traits',
+            defaultOpen: false
+          }] : []),
           ...(entity.level_progression && entity.level_progression.length > 0 ? [{
             label: 'Spell Slot Progression',
             slot: 'level-progression',
@@ -131,6 +136,17 @@ const imagePath = computed(() => {
         ]"
         type="multiple"
       >
+        <!-- Traits Slot -->
+        <template
+          v-if="entity.traits && entity.traits.length > 0"
+          #traits
+        >
+          <UiAccordionTraitsList
+            :traits="entity.traits"
+            border-color="primary-500"
+          />
+        </template>
+
         <!-- Level Progression Slot -->
         <template
           v-if="entity.level_progression && entity.level_progression.length > 0"
