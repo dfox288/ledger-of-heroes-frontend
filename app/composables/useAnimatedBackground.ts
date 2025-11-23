@@ -450,9 +450,13 @@ function createDieGeometry(type: DieType): THREE.BufferGeometry {
 function createDie(type: DieType, colorIndex: number, position: THREE.Vector3): THREE.Mesh {
   const geometry = createDieGeometry(type)
 
+  // Get texture for this die type
+  const texture = createDiceTexture(type)
+
   // Glass-like material matching dice-test page
   const material = new THREE.MeshPhysicalMaterial({
     color: DICE_COLORS[colorIndex]!.color,
+    map: texture, // Add texture map
     transparent: true,
     opacity: 0.25,
     transmission: 0.5,
