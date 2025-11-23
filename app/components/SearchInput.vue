@@ -4,6 +4,7 @@ import type { SearchResult } from '~/types/search'
 
 const router = useRouter()
 const { search, results, loading, clearResults } = useSearch()
+const { getImagePath } = useEntityImage()
 
 const query = ref('')
 const showDropdown = ref(false)
@@ -74,6 +75,11 @@ const flatResults = computed(() => {
   if (results.value.data.feats) {
     results.value.data.feats.forEach((feat) => {
       flattened.push({ type: 'feats', slug: feat.slug, name: feat.name, entityType: 'Feat' })
+    })
+  }
+  if (results.value.data.monsters) {
+    results.value.data.monsters.forEach((monster) => {
+      flattened.push({ type: 'monsters', slug: monster.slug, name: monster.name, entityType: 'Monster' })
     })
   }
 
@@ -205,7 +211,7 @@ const resetGlobalIndex = () => {
           v-if="results.data.spells && results.data.spells.length > 0"
           class="mb-3"
         >
-          <div class="px-3 py-1 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase">
+          <div class="px-3 py-1 text-xs font-semibold text-spell-600 dark:text-spell-400 uppercase">
             Spells
           </div>
           <button
@@ -213,18 +219,26 @@ const resetGlobalIndex = () => {
             :key="spell.id"
             type="button"
             :class="[
-              'w-full text-left px-3 py-2 rounded transition-colors',
+              'w-full text-left px-3 py-2 rounded transition-colors flex items-center gap-3',
               isSelected(getGlobalIndex())
                 ? 'bg-primary-100 dark:bg-primary-900'
                 : 'hover:bg-gray-100 dark:hover:bg-gray-800'
             ]"
             @click="selectResult('spells', spell.slug)"
           >
-            <div class="font-medium text-gray-900 dark:text-gray-100">
-              {{ spell.name }}
-            </div>
-            <div class="text-sm text-gray-500 dark:text-gray-400">
-              Level {{ spell.level }} • {{ spell.casting_time }}
+            <img
+              v-if="getImagePath('spells', spell.slug, 256)"
+              :src="getImagePath('spells', spell.slug, 256) || ''"
+              :alt="spell.name"
+              class="w-12 h-12 rounded object-cover flex-shrink-0"
+            />
+            <div class="flex-1 min-w-0">
+              <div class="font-medium text-gray-900 dark:text-gray-100 truncate">
+                {{ spell.name }}
+              </div>
+              <div class="text-sm text-gray-500 dark:text-gray-400 truncate">
+                Level {{ spell.level }} • {{ spell.casting_time }}
+              </div>
             </div>
           </button>
         </div>
@@ -234,7 +248,7 @@ const resetGlobalIndex = () => {
           v-if="results.data.items && results.data.items.length > 0"
           class="mb-3"
         >
-          <div class="px-3 py-1 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase">
+          <div class="px-3 py-1 text-xs font-semibold text-item-600 dark:text-item-400 uppercase">
             Items
           </div>
           <button
@@ -242,18 +256,26 @@ const resetGlobalIndex = () => {
             :key="item.id"
             type="button"
             :class="[
-              'w-full text-left px-3 py-2 rounded transition-colors',
+              'w-full text-left px-3 py-2 rounded transition-colors flex items-center gap-3',
               isSelected(getGlobalIndex())
                 ? 'bg-primary-100 dark:bg-primary-900'
                 : 'hover:bg-gray-100 dark:hover:bg-gray-800'
             ]"
             @click="selectResult('items', item.slug)"
           >
-            <div class="font-medium text-gray-900 dark:text-gray-100">
-              {{ item.name }}
-            </div>
-            <div class="text-sm text-gray-500 dark:text-gray-400">
-              {{ item.rarity }}{{ item.is_magic ? ' • Magic' : '' }}
+            <img
+              v-if="getImagePath('items', item.slug, 256)"
+              :src="getImagePath('items', item.slug, 256) || ''"
+              :alt="item.name"
+              class="w-12 h-12 rounded object-cover flex-shrink-0"
+            />
+            <div class="flex-1 min-w-0">
+              <div class="font-medium text-gray-900 dark:text-gray-100 truncate">
+                {{ item.name }}
+              </div>
+              <div class="text-sm text-gray-500 dark:text-gray-400 truncate">
+                {{ item.rarity }}{{ item.is_magic ? ' • Magic' : '' }}
+              </div>
             </div>
           </button>
         </div>
@@ -263,7 +285,7 @@ const resetGlobalIndex = () => {
           v-if="results.data.races && results.data.races.length > 0"
           class="mb-3"
         >
-          <div class="px-3 py-1 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase">
+          <div class="px-3 py-1 text-xs font-semibold text-race-600 dark:text-race-400 uppercase">
             Races
           </div>
           <button
@@ -271,15 +293,23 @@ const resetGlobalIndex = () => {
             :key="race.id"
             type="button"
             :class="[
-              'w-full text-left px-3 py-2 rounded transition-colors',
+              'w-full text-left px-3 py-2 rounded transition-colors flex items-center gap-3',
               isSelected(getGlobalIndex())
                 ? 'bg-primary-100 dark:bg-primary-900'
                 : 'hover:bg-gray-100 dark:hover:bg-gray-800'
             ]"
             @click="selectResult('races', race.slug)"
           >
-            <div class="font-medium text-gray-900 dark:text-gray-100">
-              {{ race.name }}
+            <img
+              v-if="getImagePath('races', race.slug, 256)"
+              :src="getImagePath('races', race.slug, 256) || ''"
+              :alt="race.name"
+              class="w-12 h-12 rounded object-cover flex-shrink-0"
+            />
+            <div class="flex-1 min-w-0">
+              <div class="font-medium text-gray-900 dark:text-gray-100 truncate">
+                {{ race.name }}
+              </div>
             </div>
           </button>
         </div>
@@ -289,7 +319,7 @@ const resetGlobalIndex = () => {
           v-if="results.data.classes && results.data.classes.length > 0"
           class="mb-3"
         >
-          <div class="px-3 py-1 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase">
+          <div class="px-3 py-1 text-xs font-semibold text-class-600 dark:text-class-400 uppercase">
             Classes
           </div>
           <button
@@ -297,15 +327,23 @@ const resetGlobalIndex = () => {
             :key="charClass.id"
             type="button"
             :class="[
-              'w-full text-left px-3 py-2 rounded transition-colors',
+              'w-full text-left px-3 py-2 rounded transition-colors flex items-center gap-3',
               isSelected(getGlobalIndex())
                 ? 'bg-primary-100 dark:bg-primary-900'
                 : 'hover:bg-gray-100 dark:hover:bg-gray-800'
             ]"
             @click="selectResult('classes', charClass.slug)"
           >
-            <div class="font-medium text-gray-900 dark:text-gray-100">
-              {{ charClass.name }}
+            <img
+              v-if="getImagePath('classes', charClass.slug, 256)"
+              :src="getImagePath('classes', charClass.slug, 256) || ''"
+              :alt="charClass.name"
+              class="w-12 h-12 rounded object-cover flex-shrink-0"
+            />
+            <div class="flex-1 min-w-0">
+              <div class="font-medium text-gray-900 dark:text-gray-100 truncate">
+                {{ charClass.name }}
+              </div>
             </div>
           </button>
         </div>
@@ -315,7 +353,7 @@ const resetGlobalIndex = () => {
           v-if="results.data.backgrounds && results.data.backgrounds.length > 0"
           class="mb-3"
         >
-          <div class="px-3 py-1 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase">
+          <div class="px-3 py-1 text-xs font-semibold text-background-600 dark:text-background-400 uppercase">
             Backgrounds
           </div>
           <button
@@ -323,15 +361,23 @@ const resetGlobalIndex = () => {
             :key="background.id"
             type="button"
             :class="[
-              'w-full text-left px-3 py-2 rounded transition-colors',
+              'w-full text-left px-3 py-2 rounded transition-colors flex items-center gap-3',
               isSelected(getGlobalIndex())
                 ? 'bg-primary-100 dark:bg-primary-900'
                 : 'hover:bg-gray-100 dark:hover:bg-gray-800'
             ]"
             @click="selectResult('backgrounds', background.slug)"
           >
-            <div class="font-medium text-gray-900 dark:text-gray-100">
-              {{ background.name }}
+            <img
+              v-if="getImagePath('backgrounds', background.slug, 256)"
+              :src="getImagePath('backgrounds', background.slug, 256) || ''"
+              :alt="background.name"
+              class="w-12 h-12 rounded object-cover flex-shrink-0"
+            />
+            <div class="flex-1 min-w-0">
+              <div class="font-medium text-gray-900 dark:text-gray-100 truncate">
+                {{ background.name }}
+              </div>
             </div>
           </button>
         </div>
@@ -341,7 +387,7 @@ const resetGlobalIndex = () => {
           v-if="results.data.feats && results.data.feats.length > 0"
           class="mb-3"
         >
-          <div class="px-3 py-1 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase">
+          <div class="px-3 py-1 text-xs font-semibold text-feat-600 dark:text-feat-400 uppercase">
             Feats
           </div>
           <button
@@ -349,15 +395,60 @@ const resetGlobalIndex = () => {
             :key="feat.id"
             type="button"
             :class="[
-              'w-full text-left px-3 py-2 rounded transition-colors',
+              'w-full text-left px-3 py-2 rounded transition-colors flex items-center gap-3',
               isSelected(getGlobalIndex())
                 ? 'bg-primary-100 dark:bg-primary-900'
                 : 'hover:bg-gray-100 dark:hover:bg-gray-800'
             ]"
             @click="selectResult('feats', feat.slug)"
           >
-            <div class="font-medium text-gray-900 dark:text-gray-100">
-              {{ feat.name }}
+            <img
+              v-if="getImagePath('feats', feat.slug, 256)"
+              :src="getImagePath('feats', feat.slug, 256) || ''"
+              :alt="feat.name"
+              class="w-12 h-12 rounded object-cover flex-shrink-0"
+            />
+            <div class="flex-1 min-w-0">
+              <div class="font-medium text-gray-900 dark:text-gray-100 truncate">
+                {{ feat.name }}
+              </div>
+            </div>
+          </button>
+        </div>
+
+        <!-- Monsters -->
+        <div
+          v-if="results.data.monsters && results.data.monsters.length > 0"
+          class="mb-3"
+        >
+          <div class="px-3 py-1 text-xs font-semibold text-monster-600 dark:text-monster-400 uppercase">
+            Monsters
+          </div>
+          <button
+            v-for="monster in results.data.monsters"
+            :key="monster.id"
+            type="button"
+            :class="[
+              'w-full text-left px-3 py-2 rounded transition-colors flex items-center gap-3',
+              isSelected(getGlobalIndex())
+                ? 'bg-primary-100 dark:bg-primary-900'
+                : 'hover:bg-gray-100 dark:hover:bg-gray-800'
+            ]"
+            @click="selectResult('monsters', monster.slug)"
+          >
+            <img
+              v-if="getImagePath('monsters', monster.slug, 256)"
+              :src="getImagePath('monsters', monster.slug, 256) || ''"
+              :alt="monster.name"
+              class="w-12 h-12 rounded object-cover flex-shrink-0"
+            />
+            <div class="flex-1 min-w-0">
+              <div class="font-medium text-gray-900 dark:text-gray-100 truncate">
+                {{ monster.name }}
+              </div>
+              <div class="text-sm text-gray-500 dark:text-gray-400 truncate">
+                CR {{ monster.challenge_rating }} • {{ monster.type }}
+              </div>
             </div>
           </button>
         </div>
