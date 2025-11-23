@@ -8,8 +8,14 @@ useHead({
 
 const colorMode = useColorMode()
 
+// Define color palette type
+type ColorIntensity = 50 | 100 | 200 | 300 | 400 | 500 | 600 | 700 | 800 | 900 | 950
+type ColorPalette = Record<ColorIntensity, string>
+type ColorName = 'arcane' | 'treasure' | 'danger' | 'lore' | 'glory' | 'emerald' | 'red' |
+  'indigo' | 'rose' | 'slate' | 'teal' | 'cyan' | 'lime' | 'zinc' | 'yellow' | 'fuchsia' | 'neutral'
+
 // Proposed entity color mappings
-const mainEntities = [
+const mainEntities: Array<{ name: string; alias: string; color: ColorName; colorName: string; description: string }> = [
   { name: 'Spells', alias: 'spell', color: 'arcane', colorName: 'Arcane Purple', description: 'Mystical energy, magic' },
   { name: 'Items', alias: 'item', color: 'treasure', colorName: 'Treasure Gold', description: 'Valuable treasures' },
   { name: 'Races', alias: 'race', color: 'emerald', colorName: 'Emerald (Tailwind)', description: 'Natural diversity' },
@@ -19,7 +25,7 @@ const mainEntities = [
   { name: 'Monsters', alias: 'monster', color: 'danger', colorName: 'Danger Orange', description: 'Combat, threat' }
 ]
 
-const referenceEntities = [
+const referenceEntities: Array<{ name: string; alias: string; color: ColorName; colorName: string; description: string }> = [
   { name: 'Ability Scores', alias: 'ability', color: 'indigo', colorName: 'Indigo (Tailwind)', description: 'Core stats' },
   { name: 'Conditions', alias: 'condition', color: 'rose', colorName: 'Rose (Tailwind)', description: 'Status effects' },
   { name: 'Damage Types', alias: 'damage', color: 'slate', colorName: 'Slate (Tailwind)', description: 'Mechanical data' },
@@ -34,7 +40,7 @@ const referenceEntities = [
 
 // Define color palettes with actual hex values for preview
 // Note: Tailwind uses 50, 100-900 (by 100s), 950 = 11 total levels
-const colorPalettes = {
+const colorPalettes: Record<ColorName, ColorPalette> = {
   arcane: {
     50: '#faf5ff', 100: '#f3e8ff', 200: '#e9d5ff', 300: '#d8b4fe', 400: '#c084fc',
     500: '#a855f7', 600: '#9333ea', 700: '#7e22ce', 800: '#6b21a8', 900: '#581c87', 950: '#3b0764'
@@ -105,6 +111,15 @@ const colorPalettes = {
     500: '#737373', 600: '#525252', 700: '#404040', 800: '#262626', 900: '#171717', 950: '#0a0a0a'
   }
 }
+
+// List of custom D&D themed palettes (non-Tailwind defaults)
+const customPalettes = [
+  { name: 'Arcane' },
+  { name: 'Treasure' },
+  { name: 'Danger' },
+  { name: 'Lore' },
+  { name: 'Glory' }
+]
 </script>
 
 <template>
