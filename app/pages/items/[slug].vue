@@ -100,24 +100,38 @@ const imagePath = computed(() => {
         ]"
       />
 
-      <!-- Quick Stats -->
-      <UiDetailQuickStatsCard
-        :stats="[
-          ...(costInGold ? [{ icon: 'i-heroicons-currency-dollar', label: 'Cost', value: costInGold }] : []),
-          ...(item.weight ? [{ icon: 'i-heroicons-scale', label: 'Weight', value: `${item.weight} lb` }] : []),
-          ...(item.damage_dice ? [{ icon: 'i-heroicons-bolt', label: 'Damage', value: item.damage_dice + (item.damage_type ? ` ${item.damage_type.name}` : ''), subtext: item.versatile_damage ? `Versatile: ${item.versatile_damage}` : undefined }] : []),
-          ...(item.armor_class !== null ? [{ icon: 'i-heroicons-shield-check', label: 'Armor Class', value: String(item.armor_class) }] : []),
-          ...(item.range_normal ? [{ icon: 'i-heroicons-arrow-trending-up', label: 'Range', value: `${item.range_normal}${item.range_long ? `/${item.range_long}` : ''} ft.` }] : []),
-          ...(item.strength_requirement ? [{ icon: 'i-heroicons-hand-raised', label: 'Strength Required', value: String(item.strength_requirement) }] : []),
-          ...(item.charges_max ? [{ icon: 'i-heroicons-bolt-slash', label: 'Charges', value: String(item.charges_max), subtext: item.recharge_formula && item.recharge_timing ? `Recharge: ${item.recharge_formula} at ${item.recharge_timing}` : undefined }] : [])
-        ]"
-      />
+      <!-- Quick Stats (2/3) + Image (1/3) Side-by-Side -->
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <!-- Quick Stats - 2/3 width on large screens -->
+        <div class="lg:col-span-2">
+          <UiDetailQuickStatsCard
+            :columns="2"
+            :stats="[
+              ...(costInGold ? [{ icon: 'i-heroicons-currency-dollar', label: 'Cost', value: costInGold }] : []),
+              ...(item.weight ? [{ icon: 'i-heroicons-scale', label: 'Weight', value: `${item.weight} lb` }] : []),
+              ...(item.damage_dice ? [{ icon: 'i-heroicons-bolt', label: 'Damage', value: item.damage_dice + (item.damage_type ? ` ${item.damage_type.name}` : ''), subtext: item.versatile_damage ? `Versatile: ${item.versatile_damage}` : undefined }] : []),
+              ...(item.armor_class !== null ? [{ icon: 'i-heroicons-shield-check', label: 'Armor Class', value: String(item.armor_class) }] : []),
+              ...(item.range_normal ? [{ icon: 'i-heroicons-arrow-trending-up', label: 'Range', value: `${item.range_normal}${item.range_long ? `/${item.range_long}` : ''} ft.` }] : []),
+              ...(item.strength_requirement ? [{ icon: 'i-heroicons-hand-raised', label: 'Strength Required', value: String(item.strength_requirement) }] : []),
+              ...(item.charges_max ? [{ icon: 'i-heroicons-bolt-slash', label: 'Charges', value: String(item.charges_max), subtext: item.recharge_formula && item.recharge_timing ? `Recharge: ${item.recharge_formula} at ${item.recharge_timing}` : undefined }] : [])
+            ]"
+          />
+        </div>
 
-      <!-- Description + Image (integrated) -->
-      <UiDetailDescriptionWithImage
+        <!-- Standalone Image - 1/3 width on large screens -->
+        <div class="lg:col-span-1">
+          <UiDetailStandaloneImage
+            v-if="imagePath"
+            :image-path="imagePath"
+            :image-alt="`${item.name} item illustration`"
+          />
+        </div>
+      </div>
+
+      <!-- Description -->
+      <UiDetailDescriptionCard
+        v-if="item.description"
         :description="item.description"
-        :image-path="imagePath"
-        :image-alt="`${item.name} item illustration`"
       />
 
       <!-- Additional Details (Accordion) -->
