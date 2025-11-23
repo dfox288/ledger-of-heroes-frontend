@@ -28,42 +28,88 @@ function getDisplayName(item: ProficiencyResource): string {
   return 'Unknown'
 }
 
-// Separate proficiencies into regular and choice-based
-const regularProficiencies = computed(() => {
-  return props.items.filter(item => !item.choice_group)
-})
+/**
+ * Format proficiency type for display
+ * Converts snake_case to Title Case
+ */
+function formatProficiencyType(type: string): string {
+  return type
+    .split('_')
+    .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(' ')
+}
 
-// Group proficiencies by choice_group
-const proficiencyGroups = computed(() => {
-  const groups = new Map<string, ProficiencyResource[]>()
+// Define type order for consistent display
+const TYPE_ORDER = ['armor', 'weapon', 'tool', 'saving_throw', 'skill']
 
+// Group all proficiencies by type, then by regular/choice within each type
+const proficienciesByType = computed(() => {
+  const typeMap = new Map<string, { regular: ProficiencyResource[], choiceGroups: Map<string, ProficiencyResource[]> }>()
+
+  // Group by type first
   for (const item of props.items) {
-    if (!item.choice_group) continue // Skip regular proficiencies
+    const type = item.proficiency_type
 
-    if (!groups.has(item.choice_group)) {
-      groups.set(item.choice_group, [])
+    if (!typeMap.has(type)) {
+      typeMap.set(type, { regular: [], choiceGroups: new Map() })
     }
-    groups.get(item.choice_group)!.push(item)
+
+    const typeGroup = typeMap.get(type)!
+
+    if (!item.choice_group) {
+      // Regular proficiency
+      typeGroup.regular.push(item)
+    }
+    else {
+      // Choice-based proficiency
+      if (!typeGroup.choiceGroups.has(item.choice_group)) {
+        typeGroup.choiceGroups.set(item.choice_group, [])
+      }
+      typeGroup.choiceGroups.get(item.choice_group)!.push(item)
+    }
   }
 
-  return Array.from(groups.entries())
-    .map(([key, items]) => {
-      // Sort items by choice_option if present
-      const sortedItems = [...items].sort((a, b) => {
-        if (a.choice_option != null && b.choice_option != null) {
-          return a.choice_option - b.choice_option
-        }
-        return 0
-      })
+  // Convert to sorted array with formatted choice groups
+  const result = Array.from(typeMap.entries())
+    .map(([type, { regular, choiceGroups }]) => {
+      const formattedChoiceGroups = Array.from(choiceGroups.entries())
+        .map(([key, items]) => {
+          // Sort items by choice_option if present
+          const sortedItems = [...items].sort((a, b) => {
+            if (a.choice_option != null && b.choice_option != null) {
+              return a.choice_option - b.choice_option
+            }
+            return 0
+          })
+
+          return {
+            choiceGroup: key,
+            quantity: sortedItems[0]?.quantity || null,
+            items: sortedItems,
+          }
+        })
 
       return {
-        choiceGroup: key,
-        // Get quantity from first item (only first one should have it)
-        quantity: sortedItems[0]?.quantity || null,
-        items: sortedItems,
+        type,
+        typeName: formatProficiencyType(type),
+        regular,
+        choiceGroups: formattedChoiceGroups,
       }
     })
-    .filter(group => group.items.length > 0)
+
+  // Sort by defined order, then alphabetically
+  return result.sort((a, b) => {
+    const aIndex = TYPE_ORDER.indexOf(a.type)
+    const bIndex = TYPE_ORDER.indexOf(b.type)
+
+    if (aIndex !== -1 && bIndex !== -1) {
+      return aIndex - bIndex
+    }
+    if (aIndex !== -1) return -1
+    if (bIndex !== -1) return 1
+
+    return a.type.localeCompare(b.type)
+  })
 })
 
 // Helper to format choice letters (a, b, c, etc.)
@@ -86,29 +132,37 @@ const getChoiceDescription = (group: { quantity: number | null, items: Proficien
   <div v-if="items.length === 0" class="p-4 text-center text-gray-500 dark:text-gray-400">
     No proficiencies
   </div>
-  <div v-else class="p-4 space-y-3">
-    <!-- Regular proficiencies (no choice) -->
-    <div v-if="regularProficiencies.length > 0" class="space-y-1">
-      <div
-        v-for="item in regularProficiencies"
-        :key="item.id"
-        class="text-gray-700 dark:text-gray-300"
-      >
-        • {{ getDisplayName(item) }}
-      </div>
-    </div>
+  <div v-else class="p-4 space-y-4">
+    <!-- Group by proficiency type -->
+    <div v-for="typeGroup in proficienciesByType" :key="typeGroup.type" class="space-y-2">
+      <!-- Type headline -->
+      <h4 class="text-sm font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wide">
+        {{ typeGroup.typeName }}
+      </h4>
 
-    <!-- Choice-based proficiencies -->
-    <div v-for="(group, groupIndex) in proficiencyGroups" :key="groupIndex" class="space-y-1">
-      <div class="text-xs text-gray-500 dark:text-gray-400 mb-1">
-        {{ getChoiceDescription(group) }}
+      <!-- Regular proficiencies within this type -->
+      <div v-if="typeGroup.regular.length > 0" class="space-y-1">
+        <div
+          v-for="item in typeGroup.regular"
+          :key="item.id"
+          class="text-gray-700 dark:text-gray-300"
+        >
+          • {{ getDisplayName(item) }}
+        </div>
       </div>
-      <div
-        v-for="(item, itemIndex) in group.items"
-        :key="item.id"
-        class="text-gray-700 dark:text-gray-300 ml-2"
-      >
-        ({{ getChoiceLetter(item, itemIndex) }}) {{ getDisplayName(item) }}
+
+      <!-- Choice-based proficiencies within this type -->
+      <div v-for="(group, groupIndex) in typeGroup.choiceGroups" :key="groupIndex" class="space-y-1">
+        <div class="text-xs text-gray-500 dark:text-gray-400 mb-1">
+          {{ getChoiceDescription(group) }}
+        </div>
+        <div
+          v-for="(item, itemIndex) in group.items"
+          :key="item.id"
+          class="text-gray-700 dark:text-gray-300 ml-2"
+        >
+          ({{ getChoiceLetter(item, itemIndex) }}) {{ getDisplayName(item) }}
+        </div>
       </div>
     </div>
   </div>
