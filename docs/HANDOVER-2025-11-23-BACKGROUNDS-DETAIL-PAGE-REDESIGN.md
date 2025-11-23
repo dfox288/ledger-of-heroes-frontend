@@ -2,7 +2,7 @@
 
 **Date**: 2025-11-23
 **Context**: After accordion table normalization
-**Status**: Planning - Needs Implementation
+**Status**: ✅ COMPLETED - 2025-11-23
 
 ---
 
@@ -387,3 +387,57 @@ Move `<UiDetailEntityImage>` to appear after header, before description (like ot
 ---
 
 **Next Agent**: Read this handover, use superpowers:brainstorming to refine approach, then create implementation plan with superpowers:writing-plans.
+
+## ✅ COMPLETION SUMMARY (2025-11-23)
+
+### What Was Changed
+
+**Phase 1: Border Removal**
+- **UiAccordionRandomTablesList** - Removed `border-l-4` and `pl-4` from table wrapper
+- Eliminated double-border visual bug when random tables nested in traits
+- Simplified component, prevents future nesting conflicts
+
+**Phase 2: Page Restructure**
+- **Backgrounds Detail Page** - Complete structural refactoring:
+  - Single `UAccordion type="multiple"` with 6 sections (traits, proficiencies, languages, equipment, source, tags)
+  - Image placement standardized (dedicated section before description)
+  - Description always visible (outside accordion)
+  - Traits, proficiencies, languages moved from standalone UCards to accordion slots
+
+### Results
+
+- ✅ All 6 success criteria met from original handover
+- ✅ Random tables display cleanly without double borders
+- ✅ No horizontal scrollbars on background pages
+- ✅ Consistent with classes/feats/races pages
+- ✅ Accordion component tests passing (143/143 tests)
+- ✅ Page loads successfully (HTTP 200)
+- ✅ Mobile responsive (accordion naturally stacks)
+
+### Files Modified
+
+**Components:**
+- `app/components/ui/accordion/UiAccordionRandomTablesList.vue` - Border removal
+
+**Pages:**
+- `app/pages/backgrounds/[slug].vue` - Complete template restructure
+
+**Tests:**
+- `tests/components/ui/accordion/UiAccordionRandomTablesList.test.ts` - Added 3 border removal tests
+- `tests/pages/backgrounds/slug.test.ts` - Created 8 page structure tests
+
+**Documentation:**
+- `CHANGELOG.md` - Added Changed and Fixed sections
+- `docs/HANDOVER-2025-11-23-BACKGROUNDS-DETAIL-PAGE-REDESIGN.md` - Marked completed
+- `docs/plans/2025-11-23-backgrounds-page-redesign.md` - Design document
+- `docs/plans/2025-11-23-backgrounds-page-implementation.md` - Implementation plan
+
+### Commits Made
+
+1. `test: Add failing tests for UiAccordionRandomTablesList border removal` (RED phase)
+2. `refactor: Remove border-l-4 from UiAccordionRandomTablesList for clean nesting` (GREEN phase)
+3. `test: Add failing tests for backgrounds page accordion structure` (RED phase)
+4. `refactor: Standardize backgrounds detail page to match entity pattern` (GREEN phase)
+5. `docs: Update CHANGELOG and mark backgrounds redesign complete`
+
+**Status**: ✅ Production-ready. Backgrounds page now matches standard entity pattern.
