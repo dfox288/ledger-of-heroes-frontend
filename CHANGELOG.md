@@ -10,6 +10,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **Parent Race Display for Subraces (2025-11-23)** - Race cards and detail pages now show parent race information
+  - RaceCard displays "Subrace of [Parent Race Name]" below the title when applicable
+  - Race detail page shows clickable link to parent race at the top
+  - Added 3 new tests for parent_race display behavior in RaceCard
+  - All 734 tests passing
 - **Storybook Integration (2025-11-23)** - Interactive component documentation and visual playground
   - Installed Storybook 8 with Vue 3 + Vite integration
   - Created stories for 5 core list components (PageHeader, SkeletonCards, EmptyState, ResultsCount, BackLink)

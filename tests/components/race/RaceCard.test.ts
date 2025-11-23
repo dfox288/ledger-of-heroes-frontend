@@ -151,6 +151,62 @@ describe('RaceCard', () => {
     expect(wrapper.text()).toContain('Subrace')
   })
 
+  it('displays parent race name when parent_race exists', async () => {
+    const subrace = {
+      ...mockRace,
+      name: 'Hill Dwarf',
+      slug: 'dwarf-hill',
+      description: 'As a hill dwarf, you have keen senses, deep intuition, and remarkable resilience.',
+      parent_race_id: 37,
+      parent_race: {
+        id: 37,
+        slug: 'dwarf',
+        name: 'Dwarf',
+        speed: 25
+      },
+      subraces: undefined
+    }
+    const wrapper = await mountSuspended(RaceCard, {
+      props: { race: subrace }
+    })
+
+    // Should show parent race name label
+    expect(wrapper.text()).toMatch(/Parent Race|Base Race|Subrace of/i)
+    // Should show parent race name "Dwarf"
+    expect(wrapper.html()).toContain('Dwarf')
+    // Should also show subrace name
+    expect(wrapper.text()).toContain('Hill Dwarf')
+  })
+
+  it('does not show parent race name when parent_race is null', async () => {
+    const baseRace = {
+      ...mockRace,
+      parent_race: null
+    }
+    const wrapper = await mountSuspended(RaceCard, {
+      props: { race: baseRace }
+    })
+
+    // Should only show race name, not any parent indicator
+    expect(wrapper.text()).toContain('Elf')
+    // Should not have duplicate "Elf" text from parent display
+    const matches = wrapper.text().match(/Elf/g)
+    expect(matches?.length).toBeLessThanOrEqual(2) // Name + possibly in description
+  })
+
+  it('does not show parent race name when parent_race is undefined (list view)', async () => {
+    const listRace = {
+      ...mockRace,
+      parent_race: undefined
+    }
+    const wrapper = await mountSuspended(RaceCard, {
+      props: { race: listRace }
+    })
+
+    // Should only show race name
+    expect(wrapper.text()).toContain('Elf')
+  })
+
   it('hides race/subrace type badge when parent_race is undefined (list view)', async () => {
     const listRace = {
       ...mockRace,

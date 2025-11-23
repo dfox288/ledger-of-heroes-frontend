@@ -113,6 +113,14 @@ const backgroundImage = computed(() => {
             {{ race.name }}
           </h3>
 
+          <!-- Parent Race Name (for subraces) -->
+          <div
+            v-if="race.parent_race"
+            class="text-sm text-gray-600 dark:text-gray-400"
+          >
+            Subrace of <span class="font-medium text-gray-900 dark:text-gray-100">{{ race.parent_race.name }}</span>
+          </div>
+
           <!-- Quick Stats (with badges) -->
           <div class="flex items-center gap-4 flex-wrap text-sm text-gray-600 dark:text-gray-400">
             <div class="flex items-center gap-1">

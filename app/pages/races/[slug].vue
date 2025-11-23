@@ -80,6 +80,20 @@ const abilityScoreIncreases = computed(() => {
         ]"
       />
 
+      <!-- Parent Race Information (for subraces) -->
+      <div
+        v-if="race.parent_race"
+        class="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400"
+      >
+        <span>Subrace of</span>
+        <NuxtLink
+          :to="`/races/${race.parent_race.slug}`"
+          class="font-medium text-race-600 dark:text-race-400 hover:text-race-700 dark:hover:text-race-300 underline"
+        >
+          {{ race.parent_race.name }}
+        </NuxtLink>
+      </div>
+
       <!-- Quick Stats (2/3) + Image (1/3) Side-by-Side -->
       <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <!-- Quick Stats - 2/3 width on large screens -->
