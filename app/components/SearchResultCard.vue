@@ -1,9 +1,9 @@
 <script setup lang="ts">
-import type { Spell, Item, Race, CharacterClass, Background, Feat } from '~/types/search'
+import type { Spell, Item, Race, CharacterClass, Background, Feat, Monster } from '~/types/search'
 
 interface Props {
-  result: Spell | Item | Race | CharacterClass | Background | Feat
-  type: 'spell' | 'item' | 'race' | 'class' | 'background' | 'feat'
+  result: Spell | Item | Race | CharacterClass | Background | Feat | Monster
+  type: 'spell' | 'item' | 'race' | 'class' | 'background' | 'feat' | 'monster'
 }
 
 const props = defineProps<Props>()
@@ -18,7 +18,8 @@ const getUrl = () => {
     race: 'races',
     class: 'classes',
     background: 'backgrounds',
-    feat: 'feats'
+    feat: 'feats',
+    monster: 'monsters'
   }
   return `/${pluralTypes[props.type]}/${props.result.slug}`
 }

@@ -299,6 +299,21 @@ useHead({
             />
           </div>
         </div>
+
+        <!-- Monsters -->
+        <div v-if="filteredResults.monsters && filteredResults.monsters.length > 0">
+          <h2 class="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-4">
+            Monsters ({{ filteredResults.monsters.length }})
+          </h2>
+          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <SearchResultCard
+              v-for="monster in filteredResults.monsters"
+              :key="monster.id"
+              :result="monster"
+              type="monster"
+            />
+          </div>
+        </div>
       </div>
     </div>
   </div>
