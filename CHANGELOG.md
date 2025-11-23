@@ -10,6 +10,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Changed
+- **RaceCard Ability Modifiers Display Enhancement (2025-11-23)** - Improved clarity for races with more than 3 ability modifiers
+  - Shows "+X more" suffix when truncating (e.g., "STR +2, DEX +1, CON +1 +1 more" for 4 modifiers)
+  - Displays all modifiers when 3 or fewer exist
+  - Added 4 new tests covering edge cases (1, 3, 4, and 5 modifiers)
+  - All 42 RaceCard tests passing
 - **FeatCard Prerequisites Display Enhancement (2025-11-23)** - Improved clarity for feats with multiple prerequisites
   - Changed from generic "2 prerequisites" to specific "STR 13+ +1 more" format
   - Shows first prerequisite detail (ability score or description) plus count of remaining

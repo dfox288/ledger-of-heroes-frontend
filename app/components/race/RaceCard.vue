@@ -32,14 +32,26 @@ const getSizeColor = (sizeCode: string): 'primary' | 'secondary' | 'success' | '
 
 /**
  * Get ability score modifiers summary
+ * Shows up to 3 modifiers, with "+X more" suffix if there are additional ones
  */
 const abilityModifiers = computed(() => {
   if (!props.race.modifiers || props.race.modifiers.length === 0) return null
-  const mods = props.race.modifiers
+
+  const abilityScoreMods = props.race.modifiers
     .filter(m => m.modifier_category === 'ability_score' && m.ability_score)
+
+  if (abilityScoreMods.length === 0) return null
+
+  const displayMods = abilityScoreMods
     .slice(0, 3)
     .map(m => `${m.ability_score?.code} +${m.value}`)
-  return mods.length > 0 ? mods.join(', ') : null
+
+  const remaining = abilityScoreMods.length - 3
+  if (remaining > 0) {
+    displayMods.push(`+${remaining} more`)
+  }
+
+  return displayMods.join(', ')
 })
 
 /**

@@ -273,9 +273,88 @@ describe('RaceCard', () => {
     })
 
     const text = wrapper.text()
-    const modifierMatches = text.match(/\+1/g)
-    expect(modifierMatches).toBeTruthy()
-    expect(modifierMatches!.length).toBeLessThanOrEqual(3)
+    // Should show first 3 modifiers
+    expect(text).toContain('STR +1')
+    expect(text).toContain('DEX +1')
+    expect(text).toContain('CON +1')
+    // Should not show the 4th modifier
+    expect(text).not.toContain('INT +1')
+  })
+
+  it('shows "+1 more" suffix when more than 3 ability modifiers exist', async () => {
+    const fourModsRace = {
+      ...mockRace,
+      modifiers: [
+        { modifier_category: 'ability_score', ability_score: { id: 1, code: 'STR', name: 'Strength' }, value: 2 },
+        { modifier_category: 'ability_score', ability_score: { id: 2, code: 'DEX', name: 'Dexterity' }, value: 1 },
+        { modifier_category: 'ability_score', ability_score: { id: 3, code: 'CON', name: 'Constitution' }, value: 1 },
+        { modifier_category: 'ability_score', ability_score: { id: 4, code: 'INT', name: 'Intelligence' }, value: 1 }
+      ]
+    }
+    const wrapper = await mountSuspended(RaceCard, {
+      props: { race: fourModsRace }
+    })
+
+    const text = wrapper.text()
+    expect(text).toContain('STR +2')
+    expect(text).toContain('DEX +1')
+    expect(text).toContain('CON +1')
+    expect(text).toContain('+1 more')
+  })
+
+  it('shows "+2 more" suffix when 5 ability modifiers exist', async () => {
+    const fiveModsRace = {
+      ...mockRace,
+      modifiers: [
+        { modifier_category: 'ability_score', ability_score: { id: 1, code: 'STR', name: 'Strength' }, value: 1 },
+        { modifier_category: 'ability_score', ability_score: { id: 2, code: 'DEX', name: 'Dexterity' }, value: 1 },
+        { modifier_category: 'ability_score', ability_score: { id: 3, code: 'CON', name: 'Constitution' }, value: 1 },
+        { modifier_category: 'ability_score', ability_score: { id: 4, code: 'INT', name: 'Intelligence' }, value: 1 },
+        { modifier_category: 'ability_score', ability_score: { id: 5, code: 'WIS', name: 'Wisdom' }, value: 1 }
+      ]
+    }
+    const wrapper = await mountSuspended(RaceCard, {
+      props: { race: fiveModsRace }
+    })
+
+    const text = wrapper.text()
+    expect(text).toContain('+2 more')
+  })
+
+  it('shows all ability modifiers when exactly 3 exist', async () => {
+    const threeModsRace = {
+      ...mockRace,
+      modifiers: [
+        { modifier_category: 'ability_score', ability_score: { id: 1, code: 'STR', name: 'Strength' }, value: 2 },
+        { modifier_category: 'ability_score', ability_score: { id: 2, code: 'DEX', name: 'Dexterity' }, value: 1 },
+        { modifier_category: 'ability_score', ability_score: { id: 3, code: 'CON', name: 'Constitution' }, value: 1 }
+      ]
+    }
+    const wrapper = await mountSuspended(RaceCard, {
+      props: { race: threeModsRace }
+    })
+
+    const text = wrapper.text()
+    expect(text).toContain('STR +2')
+    expect(text).toContain('DEX +1')
+    expect(text).toContain('CON +1')
+    expect(text).not.toContain('more')
+  })
+
+  it('shows single ability modifier without "more" suffix', async () => {
+    const oneModRace = {
+      ...mockRace,
+      modifiers: [
+        { modifier_category: 'ability_score', ability_score: { id: 1, code: 'STR', name: 'Strength' }, value: 2 }
+      ]
+    }
+    const wrapper = await mountSuspended(RaceCard, {
+      props: { race: oneModRace }
+    })
+
+    const text = wrapper.text()
+    expect(text).toContain('STR +2')
+    expect(text).not.toContain('more')
   })
 
   it('filters out non-ability-score modifiers', async () => {
