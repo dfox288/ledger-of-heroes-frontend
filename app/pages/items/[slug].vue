@@ -137,6 +137,16 @@ const imagePath = computed(() => {
       <!-- Additional Details (Accordion) -->
       <UAccordion
         :items="[
+          ...(item.detail ? [{
+            label: 'Additional Details',
+            slot: 'detail',
+            defaultOpen: false
+          }] : []),
+          ...(item.prerequisites && item.prerequisites.length > 0 ? [{
+            label: 'Prerequisites',
+            slot: 'prerequisites',
+            defaultOpen: false
+          }] : []),
           ...(item.properties && item.properties.length > 0 ? [{
             label: 'Properties',
             slot: 'properties',
@@ -185,6 +195,22 @@ const imagePath = computed(() => {
         ]"
         type="multiple"
       >
+        <!-- Detail Slot -->
+        <template
+          v-if="item.detail"
+          #detail
+        >
+          <UiAccordionItemDetail :detail="item.detail" />
+        </template>
+
+        <!-- Prerequisites Slot -->
+        <template
+          v-if="item.prerequisites && item.prerequisites.length > 0"
+          #prerequisites
+        >
+          <UiAccordionPrerequisites :prerequisites="item.prerequisites" />
+        </template>
+
         <!-- Properties Slot -->
         <template
           v-if="item.properties && item.properties.length > 0"
