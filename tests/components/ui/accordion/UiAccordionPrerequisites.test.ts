@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import { mountSuspended } from '@nuxt/test-utils/runtime'
-import UiAccordionPrerequisites from '~/components/ui/UiAccordionPrerequisites.vue'
+import UiAccordionPrerequisites from '~/components/ui/accordion/UiAccordionPrerequisites.vue'
 import type { EntityPrerequisiteResource } from '~/types/api/entities'
 
 describe('UiAccordionPrerequisites', () => {

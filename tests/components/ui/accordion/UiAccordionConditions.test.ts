@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import { mountSuspended } from '@nuxt/test-utils/runtime'
-import UiAccordionConditions from '~/components/ui/UiAccordionConditions.vue'
+import UiAccordionConditions from '~/components/ui/accordion/UiAccordionConditions.vue'
 import type { EntityConditionResource } from '~/types/api/entities'
 
 describe('UiAccordionConditions', () => {

@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import { mountSuspended } from '@nuxt/test-utils/runtime'
-import UiAccordionItemDetail from '~/components/ui/UiAccordionItemDetail.vue'
+import UiAccordionItemDetail from '~/components/ui/accordion/UiAccordionItemDetail.vue'
 
 describe('UiAccordionItemDetail', () => {
   it('renders detail text', async () => {
