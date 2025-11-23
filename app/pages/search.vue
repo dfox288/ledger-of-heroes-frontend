@@ -33,7 +33,8 @@ const filterOptions = computed(() => [
   { label: `Races (${getCount('races')})`, value: 'races', disabled: getCount('races') === 0 },
   { label: `Classes (${getCount('classes')})`, value: 'classes', disabled: getCount('classes') === 0 },
   { label: `Backgrounds (${getCount('backgrounds')})`, value: 'backgrounds', disabled: getCount('backgrounds') === 0 },
-  { label: `Feats (${getCount('feats')})`, value: 'feats', disabled: getCount('feats') === 0 }
+  { label: `Feats (${getCount('feats')})`, value: 'feats', disabled: getCount('feats') === 0 },
+  { label: `Monsters (${getCount('monsters')})`, value: 'monsters', disabled: getCount('monsters') === 0 }
 ])
 
 /**
@@ -65,7 +66,8 @@ const getFilterColor = (value: string): BadgeColor => {
     races: 'race',
     classes: 'class',
     backgrounds: 'background',
-    feats: 'feat'
+    feats: 'feat',
+    monsters: 'monster'
   }
   return entityColors[value] || 'neutral'
 }
