@@ -93,8 +93,8 @@ const referenceItems = [
         Streamlined toolkit for managing your characters, inventories, spells, and campaigns — all preserved in a single ledger
       </p>
 
-      <!-- Featured Search - Wider -->
-      <div class="max-w-4xl mx-auto">
+      <!-- Featured Search - Full Width -->
+      <div class="max-w-5xl mx-auto">
         <SearchInput />
       </div>
     </div>
