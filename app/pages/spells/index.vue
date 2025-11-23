@@ -23,10 +23,9 @@ const { data: spellSchools } = await useAsyncData<SpellSchool[]>('spell-schools'
 
 // Fetch classes for filter options (base classes only)
 const { data: classes } = await useAsyncData<CharacterClass[]>('classes-base', async () => {
-  const response = await apiFetch<{ data: CharacterClass[] }>('/classes?per_page=200&is_base_class=true')
-  // Filter client-side as well to ensure we only get base classes
-  // Backend might not support the filter parameter yet
-  return response.data.filter(c => c.is_base_class === true)
+  const response = await apiFetch<{ data: CharacterClass[] }>('/classes?filter[is_subclass]=false')
+  // Sort alphabetically for better UX
+  return response.data.sort((a, b) => a.name.localeCompare(b.name))
 })
 
 // Spell level options (0 = Cantrip, 1-9 = Spell levels)
