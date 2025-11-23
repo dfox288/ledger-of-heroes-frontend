@@ -166,7 +166,7 @@ const cardStyle = computed(() => {
               <UBadge
                 color="monster"
                 variant="soft"
-                size="sm"
+                size="md"
               >
                 ⭐ Legendary
               </UBadge>

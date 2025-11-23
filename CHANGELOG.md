@@ -10,6 +10,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Changed
+- **MonsterCard Inline Badge Size Upgrade (2025-11-23)** - Upgraded Legendary badge from size="sm" to size="md" for improved readability
+  - Changed Legendary badge from `size="sm"` to `size="md"`
+  - Top-row badges (CR, Type) remain at `size="md"` as designed
+  - All 27 MonsterCard tests passing
 - **SpellCard Inline Badge Size Enhancement (2025-11-23)** - Upgraded Concentration and Ritual badges to medium size
   - Changed inline badges (Concentration, Ritual) from `size="sm"` to `size="md"` for better readability
   - Top-row badges (Level, School) remain `size="md"` as established
