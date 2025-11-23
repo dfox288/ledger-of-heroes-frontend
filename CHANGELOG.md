@@ -10,6 +10,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Changed
+- **ItemCard Inline Badge Size Upgrade (2025-11-23)** - Enhanced readability of secondary information badges
+  - Changed Magic and Attunement badges from `size="sm"` to `size="md"` for improved visibility
+  - Top-row badges (Type, Rarity) remain at `size="md"` for consistency
+  - All 37 ItemCard tests passing
 - **BackgroundCard Badge Standardization (2025-11-23)** - Aligned badge sizes and variants with project 2-tier badge system
   - Feature name badge (top-row): Changed from `size="sm" variant="soft"` to `size="md" variant="subtle"` for prominence
   - Tools badge (inline): Changed from `size="xs"` to `size="sm"` to maintain visual hierarchy

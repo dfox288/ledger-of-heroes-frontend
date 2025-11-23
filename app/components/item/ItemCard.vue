@@ -132,7 +132,7 @@ const backgroundImage = computed(() => {
               v-if="item.is_magic"
               color="item"
               variant="soft"
-              size="sm"
+              size="md"
             >
               ✨ Magic
             </UBadge>
@@ -140,7 +140,7 @@ const backgroundImage = computed(() => {
               v-if="item.requires_attunement"
               color="item"
               variant="soft"
-              size="sm"
+              size="md"
             >
               🔮 Attunement
             </UBadge>
