@@ -10,6 +10,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- Monster support in search results (2025-11-23)
+- Specialized entity cards in search (SpellCard, ItemCard, MonsterCard, etc.) (2025-11-23)
 - **Subclass Features Display (2025-11-23)** - Classes detail page now shows rich nested features for each subclass
   - Created `UiAccordionSubclassesList` component to display subclass features grouped by level
   - Features show level badges, optional status, and full descriptions
@@ -32,6 +34,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Comprehensive handover document with technical details and future enhancement ideas
 
 ### Changed
+- Search results now use entity-specific card components instead of generic SearchResultCard (2025-11-23)
+- Search page visual consistency now matches list pages with semantic colors and background images (2025-11-23)
 - **Detail Page Layout Refactor - Complete for All 7 Pages (2025-11-23)** - New side-by-side layout pattern with standalone images
   - Created 3 new reusable components: `UiDetailEntityImage`, `UiDetailStandaloneImage`, `UiDetailDescriptionCard` (20 tests)
   - Refactored all 7 detail pages to use side-by-side layout (first container 2/3 + image 1/3)
@@ -56,6 +60,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Added background images to MonsterCard component (10% opacity, 20% on hover)
   - Monsters now display images on both list and detail pages
 - **ItemType export added to types/index.ts (2025-11-22)** - Resolves TypeScript import error for item-types page
+
+### Removed
+- SearchResultCard component (replaced by specialized entity cards) (2025-11-23)
 
 ### Added
 - **Entity Images Feature - Complete for All 16 Entity Types (2025-11-22)** - AI-generated images across main + reference entities
