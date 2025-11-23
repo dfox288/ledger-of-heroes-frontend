@@ -10,6 +10,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **Proficiencies Component with Type Grouping (2025-11-23)** - Enhanced proficiency display with structured organization
+  - Proficiencies grouped by type with category headlines (ARMOR, WEAPON, TOOL, SAVING THROW, SKILL)
+  - Choice-based proficiencies with alphabetical letters (a, b, c) and "Choose N:" descriptions
+  - Support for `choice_group`, `choice_option`, and `quantity` fields from API
+  - Consistent with equipment component pattern
+- **Class Traits Display (2025-11-23)** - Added lore and creation information for classes
+  - First trait displayed prominently in description box (main class overview)
+  - Additional traits shown in "Additional Class Traits" accordion
+  - Eliminates duplication between description field and traits
 - Starting Equipment accordion on backgrounds detail page (2025-11-23)
 - Spell Slot Progression accordion on classes detail page showing level-by-level spell slots for spellcasting classes (2025-11-23)
 - Starting Equipment & Proficiencies accordion on classes detail page showing hit points, proficiencies, and starting gear (2025-11-23)
