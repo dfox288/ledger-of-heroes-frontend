@@ -1,5 +1,17 @@
 <!-- app/components/ui/detail/UiDetailDescriptionWithImage.vue -->
 <script setup lang="ts">
+/**
+ * @deprecated This component is deprecated as of 2025-11-23.
+ * Use side-by-side layout with UiDetailEntityImage instead.
+ *
+ * New pattern:
+ * - Wrap first container (Quick Stats/Traits) + UiDetailEntityImage in flex layout
+ * - First container: lg:w-2/3
+ * - UiDetailEntityImage: lg:w-1/3
+ * - Description: Separate UCard below
+ *
+ * This component will be removed in a future version.
+ */
 interface Props {
   description?: string
   imagePath?: string | null
