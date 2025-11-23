@@ -109,6 +109,11 @@ const remainingTraits = computed(() => {
       <!-- Additional Details (Accordion) -->
       <UAccordion
         :items="[
+          ...(entity.counters && entity.counters.length > 0 ? [{
+            label: 'Class Counters',
+            slot: 'counters',
+            defaultOpen: false
+          }] : []),
           ...(remainingTraits.length > 0 ? [{
             label: `Additional Class Traits (${remainingTraits.length})`,
             slot: 'traits',
@@ -152,6 +157,14 @@ const remainingTraits = computed(() => {
         ]"
         type="multiple"
       >
+        <!-- Counters Slot -->
+        <template
+          v-if="entity.counters && entity.counters.length > 0"
+          #counters
+        >
+          <UiAccordionClassCounters :counters="entity.counters" />
+        </template>
+
         <!-- Additional Traits Slot (excluding first trait shown in description) -->
         <template
           v-if="remainingTraits.length > 0"
