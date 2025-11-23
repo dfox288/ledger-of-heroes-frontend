@@ -184,7 +184,7 @@ const resetGlobalIndex = () => {
         autocomplete="off"
         variant="outline"
         :ui="{
-          base: 'text-lg px-4 py-3'
+          base: 'w-full text-lg px-4 py-3'
         }"
         @blur="closeDropdown"
         @keydown="handleKeydown"
