@@ -10,6 +10,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- Decorative face numbers on 3D dice (2025-11-23)
+  - Canvas-based texture generation for all die types (d4-d20)
+  - Subtle white numbers (35% opacity) with Georgia serif font
+  - Numbers rotate naturally with dice tumbling
+  - Textures cached for performance
 - **3D Dice Background Animation (2025-11-23)** - Integrated Three.js polyhedral dice into animated background
   - 8 dice (d4, d6, d8, d10, d12, 3× d20) with glass-like materials and wireframe edges
   - Dual-canvas architecture: 2D canvas (parchment + particles) + WebGL canvas (3D dice)
