@@ -108,8 +108,9 @@ const referenceItems = [
         class="block group"
       >
         <UCard class="relative overflow-hidden hover:shadow-lg transition-all h-full border-2 border-gray-200 dark:border-gray-700 hover:border-blue-500 dark:hover:border-blue-400">
-          <!-- Background Image -->
+          <!-- Background Image (only for entities with images) -->
           <div
+            v-if="getImagePath(entity.type, entity.slug, 256)"
             class="absolute inset-0 bg-cover bg-center opacity-15 transition-all duration-300 group-hover:opacity-25 group-hover:scale-110"
             :style="{ backgroundImage: `url(${getImagePath(entity.type, entity.slug, 256)})` }"
           />
