@@ -50,7 +50,7 @@ const imagePath = computed(() => {
         label="Back to Backgrounds"
       />
 
-      <!-- Header - UPDATED -->
+      <!-- Header -->
       <UiDetailPageHeader
         :title="entity.name"
         :badges="[
@@ -58,39 +58,22 @@ const imagePath = computed(() => {
         ]"
       />
 
-      <!-- Traits Section + Image - Side-by-side layout (2/3 + 1/3) -->
-      <UCard v-if="entity.traits && entity.traits.length > 0">
-        <template #header>
-          <h2 class="text-xl font-semibold text-gray-900 dark:text-gray-100">
-            Background Traits
-          </h2>
-        </template>
+      <!-- Entity Image (dedicated section, before description) -->
+      <div
+        v-if="imagePath"
+        class="rounded-lg overflow-hidden"
+      >
+        <UiDetailEntityImage
+          :image-path="imagePath"
+          :image-alt="`${entity.name} background illustration`"
+        />
+      </div>
 
-        <div class="flex flex-col lg:flex-row gap-6">
-          <!-- Traits Content: 2/3 width when image present, full width otherwise -->
-          <div :class="imagePath ? 'lg:w-2/3' : 'w-full'">
-            <UiAccordionTraitsList
-              :traits="entity.traits"
-              :show-category="true"
-              border-color="purple-500"
-            />
-          </div>
-
-          <!-- Image: 1/3 width on large screens, stacks below on mobile -->
-          <div
-            v-if="imagePath"
-            class="lg:w-1/3 flex-shrink-0"
-          >
-            <UiDetailEntityImage
-              :image-path="imagePath"
-              :image-alt="`${entity.name} background illustration`"
-            />
-          </div>
-        </div>
-      </UCard>
-
-      <!-- Description (full width, below traits) -->
-      <UCard v-if="entity.description">
+      <!-- Description (always visible, outside accordion) -->
+      <UCard
+        v-if="entity.description"
+        data-testid="description-card"
+      >
         <template #header>
           <h2 class="text-lg font-semibold text-gray-900 dark:text-gray-100">
             Description
@@ -103,32 +86,24 @@ const imagePath = computed(() => {
         </div>
       </UCard>
 
-      <!-- Proficiencies - KEEP AS-IS (always visible) -->
-      <UCard v-if="entity.proficiencies && entity.proficiencies.length > 0">
-        <template #header>
-          <h2 class="text-xl font-semibold text-gray-900 dark:text-gray-100">
-            Skill Proficiencies
-          </h2>
-        </template>
-        <UiAccordionBulletList :items="entity.proficiencies" />
-      </UCard>
-
-      <!-- Languages - KEEP AS-IS (always visible) -->
-      <UCard v-if="entity.languages && entity.languages.length > 0">
-        <template #header>
-          <h2 class="text-xl font-semibold text-gray-900 dark:text-gray-100">
-            Languages
-          </h2>
-        </template>
-        <UiAccordionBadgeList
-          :items="entity.languages"
-          color="neutral"
-        />
-      </UCard>
-
-      <!-- Additional Details (Accordion) -->
+      <!-- Single Unified Accordion - ALL expandable sections -->
       <UAccordion
         :items="[
+          ...(entity.traits && entity.traits.length > 0 ? [{
+            label: 'Background Traits',
+            slot: 'traits',
+            defaultOpen: false
+          }] : []),
+          ...(entity.proficiencies && entity.proficiencies.length > 0 ? [{
+            label: 'Skill Proficiencies',
+            slot: 'proficiencies',
+            defaultOpen: false
+          }] : []),
+          ...(entity.languages && entity.languages.length > 0 ? [{
+            label: 'Languages',
+            slot: 'languages',
+            defaultOpen: false
+          }] : []),
           ...(entity.equipment && entity.equipment.length > 0 ? [{
             label: 'Starting Equipment',
             slot: 'equipment',
@@ -147,6 +122,37 @@ const imagePath = computed(() => {
         ]"
         type="multiple"
       >
+        <!-- Traits Slot -->
+        <template
+          v-if="entity.traits && entity.traits.length > 0"
+          #traits
+        >
+          <UiAccordionTraitsList
+            :traits="entity.traits"
+            :show-category="true"
+            border-color="purple-500"
+          />
+        </template>
+
+        <!-- Proficiencies Slot -->
+        <template
+          v-if="entity.proficiencies && entity.proficiencies.length > 0"
+          #proficiencies
+        >
+          <UiAccordionBulletList :items="entity.proficiencies" />
+        </template>
+
+        <!-- Languages Slot -->
+        <template
+          v-if="entity.languages && entity.languages.length > 0"
+          #languages
+        >
+          <UiAccordionBadgeList
+            :items="entity.languages"
+            color="neutral"
+          />
+        </template>
+
         <!-- Equipment Slot -->
         <template
           v-if="entity.equipment && entity.equipment.length > 0"
