@@ -111,16 +111,37 @@ const imagePath = computed(() => {
         ]"
       />
 
-      <!-- Quick Stats -->
-      <UiDetailQuickStatsCard :stats="quickStats" />
+      <!-- Quick Stats + Image Side-by-Side -->
+      <div class="flex flex-col lg:flex-row gap-6">
+        <!-- Quick Stats: 2/3 width -->
+        <div class="lg:w-2/3">
+          <UiDetailQuickStatsCard :stats="quickStats" />
+        </div>
 
-      <!-- Description + Image -->
-      <UiDetailDescriptionWithImage
-        v-if="monster.description"
-        :description="monster.description"
-        :image-path="imagePath"
-        :image-alt="`${monster.name} monster illustration`"
-      />
+        <!-- Image: 1/3 width -->
+        <div class="lg:w-1/3 flex-shrink-0">
+          <UCard>
+            <UiDetailEntityImage
+              :image-path="imagePath"
+              :image-alt="`${monster.name} monster illustration`"
+            />
+          </UCard>
+        </div>
+      </div>
+
+      <!-- Description (full width) -->
+      <UCard v-if="monster.description">
+        <template #header>
+          <h2 class="text-lg font-semibold text-gray-900 dark:text-gray-100">
+            Description
+          </h2>
+        </template>
+        <div class="prose dark:prose-invert max-w-none">
+          <p class="whitespace-pre-line text-base text-gray-700 dark:text-gray-300 leading-relaxed">
+            {{ monster.description }}
+          </p>
+        </div>
+      </UCard>
 
       <!-- Traits -->
       <UiAccordionTraits
