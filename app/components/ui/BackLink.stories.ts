@@ -8,20 +8,15 @@ const NuxtLinkStub = {
   template: '<a :href="to" class="inline-block"><slot /></a>'
 }
 
-// Mock UButton from NuxtUI
+// Mock UButton from NuxtUI with proper Tailwind styling
 const UButtonStub = {
   name: 'UButton',
   props: ['color', 'variant', 'icon'],
   template: `
-    <button 
-      :class="[
-        'inline-flex items-center gap-2 px-4 py-2 rounded-md font-medium transition-colors',
-        'text-neutral-700 dark:text-neutral-200',
-        'bg-neutral-100 dark:bg-neutral-800',
-        'hover:bg-neutral-200 dark:hover:bg-neutral-700'
-      ]"
+    <button
+      class="inline-flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-all duration-200 text-sm text-gray-700 dark:text-gray-200 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 border border-gray-300 dark:border-gray-600"
     >
-      <span v-if="icon" :class="icon" class="w-5 h-5"></span>
+      <span v-if="icon" class="w-4 h-4 opacity-70">←</span>
       <slot />
     </button>
   `

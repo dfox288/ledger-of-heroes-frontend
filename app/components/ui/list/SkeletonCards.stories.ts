@@ -1,11 +1,11 @@
 import type { Meta, StoryObj } from '@storybook/vue3'
 import UiListSkeletonCards from './SkeletonCards.vue'
 
-// Mock UCard from NuxtUI
+// Mock UCard from NuxtUI with proper Tailwind styling
 const UCardStub = {
   name: 'UCard',
   template: `
-    <div class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4">
+    <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm p-6 hover:shadow-md transition-shadow">
       <slot />
     </div>
   `

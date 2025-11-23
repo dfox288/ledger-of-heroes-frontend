@@ -1,26 +1,26 @@
 import type { Meta, StoryObj } from '@storybook/vue3'
 import UiListEmptyState from './EmptyState.vue'
 
-// Mock UCard from NuxtUI
+// Mock UCard from NuxtUI with proper Tailwind styling
 const UCardStub = {
   name: 'UCard',
-  template: '<div class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4"><slot /></div>'
+  template: '<div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm p-6"><slot /></div>'
 }
 
-// Mock UIcon from NuxtUI
+// Mock UIcon from NuxtUI with proper styling
 const UIconStub = {
   name: 'UIcon',
   props: ['name'],
-  template: '<div class="inline-block" :class="$attrs.class">🔍</div>'
+  template: '<div class="inline-flex items-center justify-center" :class="$attrs.class"><svg class="w-full h-full" fill="none" viewBox="0 0 24 24" stroke="currentColor"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg></div>'
 }
 
-// Mock UButton from NuxtUI
+// Mock UButton from NuxtUI with proper Tailwind styling
 const UButtonStub = {
   name: 'UButton',
   props: ['color'],
   template: `
-    <button 
-      class="px-4 py-2 rounded-md font-medium transition-colors bg-rose-600 hover:bg-rose-700 text-white"
+    <button
+      class="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg font-semibold text-sm transition-all duration-200 bg-rose-600 hover:bg-rose-700 text-white shadow-sm hover:shadow-md"
       @click="$emit('click')"
     >
       <slot />
