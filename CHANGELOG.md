@@ -10,6 +10,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Changed
+- **MonsterCard Combat Information Enhancement (2025-11-23)** - Replaced emojis with icons and added combat stats
+  - Replaced emoji icons with UIcon components (shield-check for AC, heart for HP, bolt for speed, shield-exclamation for saves)
+  - Removed emoji from size display (now plain text)
+  - Added speed display with support for walk, fly, climb, swim, and burrow speeds
+  - Added saving throw proficiencies display (e.g., "Saves: DEX +5, WIS +4")
+  - Added 10 comprehensive tests covering icon display, speed variations, and saving throw filtering
+  - All 27 MonsterCard tests passing
 - **RaceCard Ability Modifiers Display Enhancement (2025-11-23)** - Improved clarity for races with more than 3 ability modifiers
   - Shows "+X more" suffix when truncating (e.g., "STR +2, DEX +1, CON +1 +1 more" for 4 modifiers)
   - Displays all modifiers when 3 or fewer exist
