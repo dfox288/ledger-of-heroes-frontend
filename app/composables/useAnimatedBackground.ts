@@ -356,6 +356,8 @@ export class MagicParticle {
   applyScrollMomentum(scrollDelta: number): void {
     // Add upward/downward momentum based on scroll (moderate reaction)
     this.vy += scrollDelta * 0.6
+    // Cap velocity to prevent excessive inertia from rapid scrolling
+    this.vy = Math.max(-150, Math.min(150, this.vy))
   }
 
   update(deltaTime: number): void {
@@ -541,6 +543,8 @@ export function useAnimatedBackground(canvas: HTMLCanvasElement, isDark: boolean
       const velocity = die.userData.velocity as THREE.Vector3
       const individualFactor = 0.8 + Math.random() * 0.4
       velocity.y += scrollDelta * 0.003 * individualFactor
+      // Cap velocity to prevent excessive inertia from rapid scrolling
+      velocity.y = Math.max(-0.15, Math.min(0.15, velocity.y))
     })
   }
 

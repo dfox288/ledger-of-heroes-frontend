@@ -191,6 +191,8 @@ function handleScroll() {
     // Each die gets slightly different momentum for independent movement
     const individualFactor = 0.8 + Math.random() * 0.4 // 0.8 to 1.2
     velocity.y += scrollDelta * 0.003 * individualFactor
+    // Cap velocity to prevent excessive inertia from rapid scrolling
+    velocity.y = Math.max(-0.15, Math.min(0.15, velocity.y))
   })
 }
 
