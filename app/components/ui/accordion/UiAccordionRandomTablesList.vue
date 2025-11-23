@@ -97,8 +97,7 @@ const buildRows = (table: RandomTableResource) => {
     <div
       v-for="table in tables"
       :key="table.id"
-      class="space-y-2 border-l-4 pl-4"
-      :class="`border-${borderColor}`"
+      class="space-y-2"
     >
       <!-- Table Name and Dice Type -->
       <h4 class="text-base font-semibold text-gray-900 dark:text-gray-100">
