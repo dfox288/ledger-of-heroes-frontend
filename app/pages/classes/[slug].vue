@@ -27,6 +27,22 @@ const imagePath = computed(() => {
   if (!entity.value) return null
   return getImagePath('classes', entity.value.slug, 512)
 })
+
+/**
+ * Get the first trait to display in the description box
+ */
+const firstTrait = computed(() => {
+  if (!entity.value?.traits || entity.value.traits.length === 0) return null
+  return entity.value.traits[0]
+})
+
+/**
+ * Get remaining traits (excluding the first one) for the accordion
+ */
+const remainingTraits = computed(() => {
+  if (!entity.value?.traits || entity.value.traits.length <= 1) return []
+  return entity.value.traits.slice(1)
+})
 </script>
 
 <template>
@@ -84,17 +100,17 @@ const imagePath = computed(() => {
         </div>
       </div>
 
-      <!-- Description -->
+      <!-- Description (from first trait or fallback to description) -->
       <UiDetailDescriptionCard
-        v-if="entity.description"
-        :description="entity.description"
+        v-if="firstTrait?.description || entity.description"
+        :description="firstTrait?.description || entity.description || ''"
       />
 
       <!-- Additional Details (Accordion) -->
       <UAccordion
         :items="[
-          ...(entity.traits && entity.traits.length > 0 ? [{
-            label: `Class Traits (${entity.traits.length})`,
+          ...(remainingTraits.length > 0 ? [{
+            label: `Additional Class Traits (${remainingTraits.length})`,
             slot: 'traits',
             defaultOpen: false
           }] : []),
@@ -136,13 +152,13 @@ const imagePath = computed(() => {
         ]"
         type="multiple"
       >
-        <!-- Traits Slot -->
+        <!-- Additional Traits Slot (excluding first trait shown in description) -->
         <template
-          v-if="entity.traits && entity.traits.length > 0"
+          v-if="remainingTraits.length > 0"
           #traits
         >
           <UiAccordionTraitsList
-            :traits="entity.traits"
+            :traits="remainingTraits"
             border-color="primary-500"
           />
         </template>
