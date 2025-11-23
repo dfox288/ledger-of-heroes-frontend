@@ -9,6 +9,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- **Storybook Integration (2025-11-23)** - Interactive component documentation and visual playground
+  - Installed Storybook 8 with Vue 3 + Vite integration
+  - Created stories for 5 core list components (PageHeader, SkeletonCards, EmptyState, ResultsCount, BackLink)
+  - Configured path aliases (`~/components`, `~/types`) for seamless imports
+  - Added Tailwind CSS integration for consistent styling
+  - Storybook runs at `http://localhost:6006` with dark mode support
+  - Component documentation with interactive controls and auto-generated prop tables
+  - Created comprehensive component library documentation (`docs/components/README.md`)
+  - Design document with implementation strategy (`docs/plans/2025-11-23-storybook-setup-design.md`)
+  - 27 story variants across 5 components demonstrating different states and use cases
+
 ### Performance
 - **Major Background Animation Optimization (2025-11-23)** - Reduced CPU usage by ~70% through multiple performance improvements
   - Particle count reduced from 80-120 to 40-50 for lighter load

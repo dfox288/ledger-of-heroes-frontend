@@ -163,7 +163,9 @@
       "Bash(do echo '=== $(basename $file) ===')",
       "Bash(do sed -i '' \"s/opacity-10/opacity-15/g\" \"$file\" sed -i '' \"s/group-hover:opacity-20/group-hover:opacity-30/g\" \"$file\" sed -i '' \"s/transition-opacity/transition-all/g\" \"$file\" done)",
       "Bash(npm run types:sync:*)",
-      "Bash(timeout 60 docker compose exec:*)"
+      "Bash(timeout 60 docker compose exec:*)",
+      "WebFetch(domain:storybook.js.org)",
+      "Bash(timeout 5 curl:*)"
     ],
     "deny": [],
     "ask": []
