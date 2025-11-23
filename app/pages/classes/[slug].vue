@@ -51,7 +51,7 @@ const imagePath = computed(() => {
         label="Back to Classes"
       />
 
-      <!-- Header - UPDATED -->
+      <!-- Header -->
       <UiDetailPageHeader
         :title="entity.name"
         :badges="[
@@ -60,22 +60,34 @@ const imagePath = computed(() => {
         ]"
       />
 
-      <!-- Quick Stats -->
-      <UiDetailQuickStatsCard
-        :columns="3"
-        :stats="[
-          ...(entity.hit_die ? [{ icon: 'i-heroicons-heart', label: 'Hit Die', value: `1d${entity.hit_die}` }] : []),
-          ...(entity.primary_ability ? [{ icon: 'i-heroicons-star', label: 'Primary Ability', value: entity.primary_ability }] : []),
-          ...(entity.spellcasting_ability ? [{ icon: 'i-heroicons-sparkles', label: 'Spellcasting Ability', value: `${entity.spellcasting_ability.name} (${entity.spellcasting_ability.code})` }] : [])
-        ]"
-      />
+      <!-- Quick Stats (2/3) + Image (1/3) Side-by-Side -->
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <!-- Quick Stats - 2/3 width on large screens -->
+        <div class="lg:col-span-2">
+          <UiDetailQuickStatsCard
+            :columns="2"
+            :stats="[
+              ...(entity.hit_die ? [{ icon: 'i-heroicons-heart', label: 'Hit Die', value: `1d${entity.hit_die}` }] : []),
+              ...(entity.primary_ability ? [{ icon: 'i-heroicons-star', label: 'Primary Ability', value: entity.primary_ability }] : []),
+              ...(entity.spellcasting_ability ? [{ icon: 'i-heroicons-sparkles', label: 'Spellcasting Ability', value: `${entity.spellcasting_ability.name} (${entity.spellcasting_ability.code})` }] : [])
+            ]"
+          />
+        </div>
 
-      <!-- Description + Image - NEW -->
-      <UiDetailDescriptionWithImage
+        <!-- Standalone Image - 1/3 width on large screens -->
+        <div class="lg:col-span-1">
+          <UiDetailStandaloneImage
+            v-if="imagePath"
+            :image-path="imagePath"
+            :image-alt="`${entity.name} class illustration`"
+          />
+        </div>
+      </div>
+
+      <!-- Description -->
+      <UiDetailDescriptionCard
         v-if="entity.description"
         :description="entity.description"
-        :image-path="imagePath"
-        :image-alt="`${entity.name} class illustration`"
       />
 
       <!-- Additional Details (Accordion) -->
