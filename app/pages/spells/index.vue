@@ -5,6 +5,9 @@ import type { SpellSchool, Spell } from '~/types'
 const route = useRoute()
 const { apiFetch } = useApi()
 
+// Filter collapse state
+const filtersOpen = ref(false)
+
 // Custom filter state (entity-specific)
 const selectedLevel = ref(route.query.level ? Number(route.query.level) : null)
 const selectedSchool = ref(route.query.school ? Number(route.query.school) : null)
@@ -140,70 +143,75 @@ const activeFilterCount = computed(() => {
         </UInput>
 
         <!-- Filter Toggle Button -->
-        <UiFilterCollapse
+        <UiFilterToggleButton
+          :is-open="filtersOpen"
           label="Filters"
           :badge-count="activeFilterCount"
-        >
-          <!-- Basic Filters -->
-          <div class="flex flex-wrap gap-2 mb-4">
+          @toggle="filtersOpen = !filtersOpen"
+        />
+      </div>
+
+      <!-- Collapsible Filter Content -->
+      <div v-if="filtersOpen" class="space-y-4">
+        <!-- Basic Filters -->
+        <div class="flex flex-wrap gap-2 mb-4">
             <!-- Level filter -->
-          <USelectMenu
-            v-model="selectedLevel"
-            :items="levelOptions"
-            value-key="value"
-            placeholder="All Levels"
-            size="md"
-            class="w-48"
-          />
+            <USelectMenu
+              v-model="selectedLevel"
+              :items="levelOptions"
+              value-key="value"
+              placeholder="All Levels"
+              size="md"
+              class="w-48"
+            />
 
-          <!-- School filter -->
-          <USelectMenu
-            v-model="selectedSchool"
-            :items="schoolOptions"
-            value-key="value"
-            placeholder="All Schools"
-            size="md"
-            class="w-48"
-          />
+            <!-- School filter -->
+            <USelectMenu
+              v-model="selectedSchool"
+              :items="schoolOptions"
+              value-key="value"
+              placeholder="All Schools"
+              size="md"
+              class="w-48"
+            />
 
-          <!-- Clear filters button -->
-          <UButton
-            v-if="searchQuery || selectedLevel !== null || selectedSchool !== null || concentrationFilter !== null || ritualFilter !== null"
-            color="neutral"
-            variant="soft"
-            @click="clearFilters"
-          >
-            Clear Filters
-          </UButton>
-        </div>
-
-        <!-- Quick Toggles -->
-        <div class="flex flex-wrap gap-4">
-          <!-- Concentration filter -->
-          <UiFilterToggle
-            v-model="concentrationFilter"
-            label="Concentration"
-            color="primary"
-            :options="[
-              { value: null, label: 'All' },
-              { value: '1', label: 'Yes' },
-              { value: '0', label: 'No' }
-            ]"
-          />
-
-          <!-- Ritual filter -->
-          <UiFilterToggle
-            v-model="ritualFilter"
-            label="Ritual"
-            color="primary"
-            :options="[
-              { value: null, label: 'All' },
-              { value: '1', label: 'Yes' },
-              { value: '0', label: 'No' }
-            ]"
-          />
+            <!-- Clear filters button -->
+            <UButton
+              v-if="searchQuery || selectedLevel !== null || selectedSchool !== null || concentrationFilter !== null || ritualFilter !== null"
+              color="neutral"
+              variant="soft"
+              @click="clearFilters"
+            >
+              Clear Filters
+            </UButton>
           </div>
-        </UiFilterCollapse>
+
+          <!-- Quick Toggles -->
+          <div class="flex flex-wrap gap-4">
+            <!-- Concentration filter -->
+            <UiFilterToggle
+              v-model="concentrationFilter"
+              label="Concentration"
+              color="primary"
+              :options="[
+                { value: null, label: 'All' },
+                { value: '1', label: 'Yes' },
+                { value: '0', label: 'No' }
+              ]"
+            />
+
+            <!-- Ritual filter -->
+            <UiFilterToggle
+              v-model="ritualFilter"
+              label="Ritual"
+              color="primary"
+              :options="[
+                { value: null, label: 'All' },
+                { value: '1', label: 'Yes' },
+                { value: '0', label: 'No' }
+              ]"
+            />
+        </div>
       </div>
 
       <!-- Active Filter Chips -->

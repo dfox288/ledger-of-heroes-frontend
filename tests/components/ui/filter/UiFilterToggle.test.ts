@@ -344,7 +344,7 @@ describe('UiFilterToggle', () => {
       })
 
       const buttons = wrapper.findAll('button')
-      buttons.forEach(button => {
+      buttons.forEach((button) => {
         expect(button.attributes('disabled')).toBeDefined()
       })
     })
