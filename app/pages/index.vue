@@ -83,7 +83,7 @@ const referenceItems = [
 </script>
 
 <template>
-  <div class="container mx-auto px-4 py-12 max-w-7xl">
+  <div class="px-4 py-12">
     <!-- Hero Section -->
     <div class="text-center mb-12">
       <h1 class="text-5xl font-bold text-gray-900 dark:text-gray-100 mb-4">
@@ -93,8 +93,8 @@ const referenceItems = [
         Streamlined toolkit for managing your characters, inventories, spells, and campaigns — all preserved in a single ledger
       </p>
 
-      <!-- Featured Search - Full Width -->
-      <div class="max-w-5xl mx-auto">
+      <!-- Featured Search - Extra Wide -->
+      <div class="w-full max-w-4xl mx-auto">
         <SearchInput />
       </div>
     </div>
