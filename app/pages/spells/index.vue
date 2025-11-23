@@ -94,6 +94,16 @@ const getSchoolName = (schoolId: number) => {
 
 // Pagination settings
 const perPage = 24
+
+// Count active filters (excluding search) for collapse badge
+const activeFilterCount = computed(() => {
+  let count = 0
+  if (selectedLevel.value !== null) count++
+  if (selectedSchool.value !== null) count++
+  if (concentrationFilter.value !== null) count++
+  if (ritualFilter.value !== null) count++
+  return count
+})
 </script>
 
 <template>
@@ -107,9 +117,9 @@ const perPage = 24
       :has-active-filters="hasActiveFilters"
     />
 
-    <!-- Filters -->
+    <!-- Search and Filters -->
     <div class="mb-6 space-y-4">
-      <!-- Search input -->
+      <!-- Search input (always visible) -->
       <UInput
         v-model="searchQuery"
         placeholder="Search spells..."
@@ -127,65 +137,71 @@ const perPage = 24
         </template>
       </UInput>
 
-      <!-- Basic Filters -->
-      <div class="flex flex-wrap gap-2">
-        <!-- Level filter -->
-        <USelectMenu
-          v-model="selectedLevel"
-          :items="levelOptions"
-          value-key="value"
-          placeholder="All Levels"
-          size="md"
-          class="w-48"
-        />
+      <!-- Collapsible Filters -->
+      <UiFilterCollapse
+        label="Filters"
+        :badge-count="activeFilterCount"
+      >
+        <!-- Basic Filters -->
+        <div class="flex flex-wrap gap-2 mb-4">
+          <!-- Level filter -->
+          <USelectMenu
+            v-model="selectedLevel"
+            :items="levelOptions"
+            value-key="value"
+            placeholder="All Levels"
+            size="md"
+            class="w-48"
+          />
 
-        <!-- School filter -->
-        <USelectMenu
-          v-model="selectedSchool"
-          :items="schoolOptions"
-          value-key="value"
-          placeholder="All Schools"
-          size="md"
-          class="w-48"
-        />
+          <!-- School filter -->
+          <USelectMenu
+            v-model="selectedSchool"
+            :items="schoolOptions"
+            value-key="value"
+            placeholder="All Schools"
+            size="md"
+            class="w-48"
+          />
 
-        <!-- Clear filters button -->
-        <UButton
-          v-if="searchQuery || selectedLevel !== null || selectedSchool !== null || concentrationFilter !== null || ritualFilter !== null"
-          color="neutral"
-          variant="soft"
-          @click="clearFilters"
-        >
-          Clear Filters
-        </UButton>
-      </div>
+          <!-- Clear filters button -->
+          <UButton
+            v-if="searchQuery || selectedLevel !== null || selectedSchool !== null || concentrationFilter !== null || ritualFilter !== null"
+            color="neutral"
+            variant="soft"
+            @click="clearFilters"
+          >
+            Clear Filters
+          </UButton>
+        </div>
 
-      <!-- Quick Toggles -->
-      <div class="flex flex-wrap gap-4">
-        <!-- Concentration filter -->
-        <UiFilterToggle
-          v-model="concentrationFilter"
-          label="Concentration"
-          color="primary"
-          :options="[
-            { value: null, label: 'All' },
-            { value: '1', label: 'Yes' },
-            { value: '0', label: 'No' }
-          ]"
-        />
+        <!-- Quick Toggles -->
+        <div class="flex flex-wrap gap-4">
+          <!-- Concentration filter -->
+          <UiFilterToggle
+            v-model="concentrationFilter"
+            label="Concentration"
+            color="primary"
+            :options="[
+              { value: null, label: 'All' },
+              { value: '1', label: 'Yes' },
+              { value: '0', label: 'No' }
+            ]"
+          />
 
-        <!-- Ritual filter -->
-        <UiFilterToggle
-          v-model="ritualFilter"
-          label="Ritual"
-          color="primary"
-          :options="[
-            { value: null, label: 'All' },
-            { value: '1', label: 'Yes' },
-            { value: '0', label: 'No' }
-          ]"
-        />
-      </div>
+          <!-- Ritual filter -->
+          <UiFilterToggle
+            v-model="ritualFilter"
+            label="Ritual"
+            color="primary"
+            :options="[
+              { value: null, label: 'All' },
+              { value: '1', label: 'Yes' },
+              { value: '0', label: 'No' }
+            ]"
+          />
+        </div>
+      </UiFilterCollapse>
 
       <!-- Active Filter Chips -->
       <div

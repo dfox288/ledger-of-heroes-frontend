@@ -10,9 +10,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **UiFilterCollapse component** - Collapsible filter section with badge count for active filters (2025-11-23)
 - **UiFilterToggle component** - Reusable tri-state toggle filter component (All/Yes/No) with improved styling (2025-11-23)
 - **Concentration filter on Spells page** - Filter spells by concentration requirement (218 concentration spells) (2025-11-23)
 - **Ritual filter on Spells page** - Filter spells by ritual casting capability (33 ritual spells) (2025-11-23)
+- **Collapsible filters on Spells page** - Search-first design with filters hidden by default, expandable with badge showing active count (2025-11-23)
+
+### Changed
+- UiFilterToggle buttons now use smaller sizing (px-2 py-1 text-xs) for more compact filter UI (2025-11-23)
+- Spells page filters now collapse by default, improving mobile experience and reducing visual clutter (2025-11-23)
 
 ### Fixed
 - UiFilterToggle now uses correct API values ('1'/'0' instead of 'true'/'false') for boolean filters (2025-11-23)

@@ -119,7 +119,7 @@ const getButtonClasses = (optionValue: string | number | boolean | null) => {
         :key="index"
         type="button"
         :class="[
-          'relative px-3 py-1.5 text-sm font-medium transition-colors',
+          'relative px-2 py-1 text-xs font-medium transition-colors',
           'focus:z-10 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-0',
           {
             // Border radius
