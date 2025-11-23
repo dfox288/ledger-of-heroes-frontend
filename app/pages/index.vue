@@ -83,7 +83,7 @@ const referenceItems = [
 </script>
 
 <template>
-  <div class="container mx-auto px-4 py-12 max-w-6xl">
+  <div class="container mx-auto px-4 py-12 max-w-7xl">
     <!-- Hero Section -->
     <div class="text-center mb-12">
       <h1 class="text-5xl font-bold text-gray-900 dark:text-gray-100 mb-4">
