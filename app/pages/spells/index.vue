@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue'
-import type { SpellSchool, Spell, CharacterClass } from '~/types'
+import type { SpellSchool, Spell } from '~/types'
 
 const route = useRoute()
 const { apiFetch } = useApi()
@@ -11,7 +11,6 @@ const filtersOpen = ref(false)
 // Custom filter state (entity-specific)
 const selectedLevel = ref(route.query.level ? Number(route.query.level) : null)
 const selectedSchool = ref(route.query.school ? Number(route.query.school) : null)
-const selectedClass = ref(route.query.class ? Number(route.query.class) : null)
 const concentrationFilter = ref<string | null>((route.query.concentration as string) || null)
 const ritualFilter = ref<string | null>((route.query.ritual as string) || null)
 
@@ -19,13 +18,6 @@ const ritualFilter = ref<string | null>((route.query.ritual as string) || null)
 const { data: spellSchools } = await useAsyncData<SpellSchool[]>('spell-schools', async () => {
   const response = await apiFetch<{ data: SpellSchool[] }>('/spell-schools')
   return response.data
-})
-
-// Fetch classes for filter options (base classes only)
-const { data: classes } = await useAsyncData<CharacterClass[]>('classes-base', async () => {
-  const response = await apiFetch<{ data: CharacterClass[] }>('/classes?filter[is_subclass]=false')
-  // Sort alphabetically for better UX
-  return response.data.sort((a, b) => a.name.localeCompare(b.name))
 })
 
 // Spell level options (0 = Cantrip, 1-9 = Spell levels)
@@ -55,24 +47,11 @@ const schoolOptions = computed(() => {
   return options
 })
 
-// Class filter options
-const classOptions = computed(() => {
-  const options: Array<{ label: string, value: number | null }> = [{ label: 'All Classes', value: null }]
-  if (classes.value) {
-    options.push(...classes.value.map(cls => ({
-      label: cls.name,
-      value: cls.id
-    })))
-  }
-  return options
-})
-
 // Query builder for custom filters
 const queryBuilder = computed(() => {
   const params: Record<string, unknown> = {}
   if (selectedLevel.value !== null) params.level = selectedLevel.value
   if (selectedSchool.value !== null) params.school = selectedSchool.value
-  if (selectedClass.value !== null) params.class = selectedClass.value
   if (concentrationFilter.value !== null) params.concentration = concentrationFilter.value
   if (ritualFilter.value !== null) params.ritual = ritualFilter.value
   return params
@@ -107,7 +86,6 @@ const clearFilters = () => {
   clearBaseFilters()
   selectedLevel.value = null
   selectedSchool.value = null
-  selectedClass.value = null
   concentrationFilter.value = null
   ritualFilter.value = null
 }
@@ -115,11 +93,6 @@ const clearFilters = () => {
 // Get school name by ID for filter chips
 const getSchoolName = (schoolId: number) => {
   return spellSchools.value?.find(s => s.id === schoolId)?.name || 'Unknown'
-}
-
-// Get class name by ID for filter chips
-const getClassName = (classId: number) => {
-  return classes.value?.find(c => c.id === classId)?.name || 'Unknown'
 }
 
 // Pagination settings
@@ -130,7 +103,6 @@ const activeFilterCount = computed(() => {
   let count = 0
   if (selectedLevel.value !== null) count++
   if (selectedSchool.value !== null) count++
-  if (selectedClass.value !== null) count++
   if (concentrationFilter.value !== null) count++
   if (ritualFilter.value !== null) count++
   return count
@@ -211,19 +183,9 @@ const activeFilterCount = computed(() => {
               class="w-48"
             />
 
-            <!-- Class filter -->
-            <USelectMenu
-              v-model="selectedClass"
-              :items="classOptions"
-              value-key="value"
-              placeholder="All Classes"
-              size="md"
-              class="w-48"
-            />
-
             <!-- Clear filters button -->
             <UButton
-              v-if="searchQuery || selectedLevel !== null || selectedSchool !== null || selectedClass !== null || concentrationFilter !== null || ritualFilter !== null"
+              v-if="searchQuery || selectedLevel !== null || selectedSchool !== null || concentrationFilter !== null || ritualFilter !== null"
               color="neutral"
               variant="soft"
               @click="clearFilters"
@@ -284,15 +246,6 @@ const activeFilterCount = computed(() => {
           @click="selectedSchool = null"
         >
           {{ getSchoolName(selectedSchool) }} ✕
-        </UButton>
-        <UButton
-          v-if="selectedClass !== null"
-          size="xs"
-          color="success"
-          variant="soft"
-          @click="selectedClass = null"
-        >
-          {{ getClassName(selectedClass) }} ✕
         </UButton>
         <UButton
           v-if="searchQuery"
