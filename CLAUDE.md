@@ -4,998 +4,435 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Overview
 
-This is the **frontend application** for the D&D 5e Compendium project. It consumes the RESTful API provided by the Laravel backend located at `../importer`.
+**Frontend** for D&D 5e Compendium. Consumes REST API from `../importer` (Laravel backend).
 
-**Current Status:** ✅ **PRODUCTION-READY** - All 6 entity types (Spells, Items, Races, Classes, Backgrounds, Feats) complete with working pagination, semantic colors, consistent UI, and reusable components.
+**Status:** ✅ **PRODUCTION-READY** - 6 entity types, pagination, semantic colors, consistent UI, reusable components.
 
-**⚠️ CRITICAL:** Read `docs/CURRENT_STATUS.md` first for complete project overview
+**⚠️ CRITICAL:** Read `docs/CURRENT_STATUS.md` first for complete project overview.
 
-## 🚨 SUPERPOWERS SKILLS - IMPORTANT
+---
 
-**This is a JavaScript/TypeScript/Nuxt.js frontend project, NOT a Laravel project.**
+## 🚨 Superpowers Skills
 
-- ✅ **USE:** `superpowers:*` skills (e.g., `superpowers:brainstorming`, `superpowers:test-driven-development`)
-- ❌ **DO NOT USE:** `superpowers-laravel:*` skills (these are for the backend Laravel project at `../importer`)
+**This is a JavaScript/TypeScript/Nuxt.js frontend project, NOT Laravel.**
+
+- ✅ **USE:** `superpowers:*` skills
+- ❌ **DO NOT USE:** `superpowers-laravel:*` skills (backend only)
+
+---
 
 ## 🤖 AI Assistant Context (llms.txt)
 
-**For AI-Assisted Development:**
+**Before starting ANY work, fetch these:**
 
-Both Nuxt and NuxtUI provide official documentation in LLM-friendly format:
+- **Nuxt:** `https://nuxt.com/llms.txt` (~5K tokens) or `https://nuxt.com/llms-full.txt` (1M+ tokens)
+- **NuxtUI:** `https://ui.nuxt.com/llms.txt` (~5K tokens) or `https://ui.nuxt.com/llms-full.txt` (800K+ tokens)
+- **Nuxt Image:** `https://image.nuxt.com/llms.txt`
 
-**Nuxt Framework:**
-- **Quick Reference:** `https://nuxt.com/llms.txt` (~5K tokens) - Overview and links
-- **Full Documentation:** `https://nuxt.com/llms-full.txt` (1M+ tokens) - Complete guides
-
-**NuxtUI Library:**
-- **Quick Reference:** `https://ui.nuxt.com/llms.txt` (~5K tokens) - Component API and patterns
-- **Full Documentation:** `https://ui.nuxt.com/llms-full.txt` (800K+ tokens) - Complete component docs
-
-**Nuxt Image:**
-- **Quick Reference:** `https://image.nuxt.com/llms.txt` - Image optimization and component API
-
-**⚠️ IMPORTANT:** Before starting ANY work on this frontend project, ALWAYS fetch BOTH llms.txt files to ensure AI assistance aligns with official Nuxt 4 and NuxtUI 4 patterns and best practices.
+---
 
 ## Backend API
 
 **Location:** `/Users/dfox/Development/dnd/importer`
 **Base URL:** `http://localhost:8080/api/v1`
-**OpenAPI Docs:** `http://localhost:8080/docs/api`
-**OpenAPI Spec:** `http://localhost:8080/docs/api.json`
+**Docs:** `http://localhost:8080/docs/api`
+**Spec:** `http://localhost:8080/docs/api.json`
 
 **Key Endpoints:**
-- `GET /api/v1/{entity}` - List (spells, items, races, classes, backgrounds, feats)
-- `GET /api/v1/{entity}/{id|slug}` - Get single entity (supports ID or slug)
-- `GET /api/v1/search` - Global search across all entities
+- `GET /api/v1/{entity}` - List (spells, items, races, classes, backgrounds, feats, monsters)
+- `GET /api/v1/{entity}/{id|slug}` - Single entity (ID or slug)
+- `GET /api/v1/search` - Global search
 
-**Features:**
-- Dual ID/Slug routing (e.g., `/api/v1/spells/123` or `/api/v1/spells/fireball`)
-- Search & filtering with Meilisearch (<50ms response time)
-- Rich nested data (traits, modifiers, proficiencies, etc.)
-- Pagination (default: 15 per page)
-
-## 🎨 NuxtUI Color System (CRITICAL - Read This!)
-
-**⚠️ IMPORTANT:** NuxtUI v4 has a specific three-step process for custom colors that MUST be followed exactly.
-
-### Step 1: Define Semantic Color Names (nuxt.config.ts)
-
-Register your semantic color aliases in `nuxt.config.ts`:
-
-```typescript
-ui: {
-  theme: {
-    colors: ['primary', 'secondary', 'tertiary', 'info', 'success', 'warning', 'error']
-  }
-}
-```
-
-These are the **names** you'll use in components (`color="primary"`).
-
-### Step 2: Define Custom Color Palettes (app/assets/css/main.css)
-
-If using **custom colors** (not Tailwind defaults), define them with the `@theme static` directive:
-
-```css
-@theme static {
-  /* Custom color with 11 intensity levels (50-950) */
-  --color-dndtest-50: #fef2f2;
-  --color-dndtest-100: #fee2e2;
-  --color-dndtest-200: #fecaca;
-  --color-dndtest-300: #fca5a5;
-  --color-dndtest-400: #f87171;
-  --color-dndtest-500: #ef4444;
-  --color-dndtest-600: #dc2626;
-  --color-dndtest-700: #b91c1c;
-  --color-dndtest-800: #991b1b;
-  --color-dndtest-900: #7f1d1d;
-  --color-dndtest-950: #450a0a;
-}
-```
-
-**Requirements:**
-- Naming: `--color-{NAME}-{INTENSITY}`
-- Must have **exactly 11 levels**: 50, 100, 200, 300, 400, 500, 600, 700, 800, 900, 950
-- 500 is the base color, 50 is lightest, 950 is darkest
-
-### Step 3: Map Semantic Names to Colors (app/app.config.ts)
-
-**⚠️ CRITICAL:** In Nuxt 4, `app.config.ts` goes in the `app/` directory, NOT the root!
-
-```typescript
-// app/app.config.ts (NOT root!)
-export default defineAppConfig({
-  ui: {
-    colors: {
-      primary: 'dndtest',    // Custom color from @theme
-      secondary: 'emerald',  // Tailwind default color
-      tertiary: 'stone'      // Tailwind default color
-    }
-  }
-})
-```
-
-You can use:
-- **Custom colors** defined in `@theme` (e.g., `dndtest`)
-- **Tailwind defaults** (amber, emerald, stone, blue, red, etc.)
-
-### Complete Example
-
-**1. nuxt.config.ts:**
-```typescript
-ui: {
-  theme: {
-    colors: ['primary', 'secondary', 'tertiary']
-  }
-}
-```
-
-**2. app/assets/css/main.css:**
-```css
-@theme static {
-  --color-mycolor-50: #...;
-  --color-mycolor-100: #...;
-  /* ... all 11 levels ... */
-  --color-mycolor-950: #...;
-}
-```
-
-**3. app/app.config.ts:**
-```typescript
-export default defineAppConfig({
-  ui: {
-    colors: {
-      primary: 'mycolor',    // Uses @theme color
-      secondary: 'emerald',  // Uses Tailwind default
-      tertiary: 'blue'       // Uses Tailwind default
-    }
-  }
-})
-```
-
-**4. Use in components:**
-```vue
-<UButton color="primary">Uses mycolor</UButton>
-<UButton color="secondary">Uses emerald</UButton>
-```
-
-### Common Pitfalls
-
-❌ **DON'T:**
-- Put `app.config.ts` in project root (Nuxt 3 location)
-- Define only some intensity levels (need all 11)
-- Skip registering in `nuxt.config.ts` theme.colors
-- Use color names not defined in @theme or Tailwind
-
-✅ **DO:**
-- Put `app.config.ts` in `app/` directory (Nuxt 4 location)
-- Define all 11 intensity levels (50-950)
-- Register all semantic names in `nuxt.config.ts`
-- Use either custom (@theme) or Tailwind default colors
+**Features:** Dual ID/Slug routing, Meilisearch (<50ms), pagination (default: 15/page)
 
 ---
 
 ## Tech Stack
 
-**⚠️ CRITICAL:** This project uses specific framework versions. Do NOT use older versions.
+**⚠️ CRITICAL:** Use specific versions below. Do NOT use older versions.
 
-**Framework & UI:**
-- **Framework:** Nuxt.js 4.x - https://nuxt.com/docs/4.x/getting-started/introduction
-- **UI Library:** NuxtUI 4.x - https://ui.nuxt.com/docs/getting-started
+- **Framework:** Nuxt 4.x - https://nuxt.com/docs/4.x
+- **UI Library:** NuxtUI 4.x - https://ui.nuxt.com/docs
 - **Language:** TypeScript (strict mode)
 - **Package Manager:** npm or pnpm
-
-**Why Nuxt 4.x + NuxtUI 4.x?**
-- Built-in SSR/SSG for SEO-friendly pages
-- File-based routing with auto-imports
-- Pre-built accessible components with dark mode
-- Full TypeScript support with auto-generated types
-- Automatic code-splitting and optimized builds
-
-**Key Dependencies:**
-- **API Client:** `$fetch` (Nuxt's built-in fetch with SSR support)
-- **State Management:** Nuxt's built-in `useState` + Pinia (if needed)
-- **Validation:** Zod for schema validation
-- **Testing:** Vitest + @nuxt/test-utils + @vue/test-utils
-- **E2E Testing:** Playwright
-
-## OpenAPI Type Generation
-
-**Type System:** Hybrid generated + manual extensions
-
-**Generate Types:**
-```bash
-npm run types:sync
-```
-
-**Architecture:**
-1. **Generated Layer** (`app/types/api/generated.ts`) - Auto-generated from backend OpenAPI spec, never manually edit
-2. **Application Layer** (`app/types/api/entities.ts`, `common.ts`) - Extends generated types with custom logic
-3. **Components** - Import and use application types
-
-**When to Sync:**
-- After backend API changes (new fields, endpoints, schema changes)
-- Weekly/monthly proactive check
-- Before major features that depend on API structure
-
-**Sync Workflow:**
-```bash
-# 1. Ensure backend is running
-cd ../importer && docker compose up -d
-
-# 2. Sync types
-cd ../frontend
-npm run types:sync
-
-# 3. Verify compatibility
-npm run typecheck
-npm run test
-
-# 4. Commit changes
-git add app/types/api/generated.ts
-git commit -m "chore: Sync API types from backend"
-```
-
-**Design Document:** `docs/plans/2025-11-22-openapi-type-generation-design.md`
-
----
-
-## 📋 List Page Standard Pattern
-
-**Status:** ✅ All 17 entity list pages standardized (2025-11-22)
-
-All list pages in this project follow a consistent pattern using the `useEntityList` composable. This ensures maintainability, reduces boilerplate, and provides a uniform user experience.
-
-### The useEntityList Composable
-
-**Location:** `app/composables/useEntityList.ts`
-
-**Purpose:** Single source of truth for all list page functionality including data fetching, pagination, search, URL sync, and SEO.
-
-**Configuration Options:**
-```typescript
-interface UseEntityListConfig {
-  endpoint: string                      // API endpoint (e.g., '/spells')
-  cacheKey: string                      // Cache key (e.g., 'spells-list')
-  queryBuilder: ComputedRef<Record<string, unknown>>  // Custom filters
-  perPage?: number                      // Items per page (default: 24)
-  noPagination?: boolean                // Disable pagination for small datasets
-  seo: {
-    title: string                       // Page title
-    description: string                 // Meta description
-  }
-  initialRoute?: boolean                // Sync from initial route params
-}
-```
-
-**Returns:**
-```typescript
-{
-  searchQuery: Ref<string>              // Search query (URL-synced)
-  currentPage: Ref<number>              // Current page number
-  data: Ref<T[]>                        // Entity data array
-  meta: ComputedRef<PaginationMeta>     // Pagination metadata
-  totalResults: ComputedRef<number>     // Total result count
-  loading: Ref<boolean>                 // Loading state
-  error: Ref<Error | null>              // Error state
-  refresh: () => Promise<void>          // Manual refresh function
-  clearFilters: () => void              // Clear all filters
-  hasActiveFilters: ComputedRef<boolean> // Whether any filters are active
-}
-```
-
-### Two Patterns: Paginated vs Non-Paginated
-
-#### Pattern 1: Paginated Main Entities
-Used for: Spells, Items, Races, Classes, Backgrounds, Feats, Monsters
-
-```typescript
-const {
-  searchQuery,
-  currentPage,
-  data,
-  meta,
-  totalResults,
-  loading,
-  error,
-  refresh,
-  clearFilters,
-  hasActiveFilters
-} = useEntityList({
-  endpoint: '/spells',
-  cacheKey: 'spells-list',
-  queryBuilder,  // Custom filters (level, school, etc.)
-  perPage: 24,
-  seo: {
-    title: 'Spells - D&D 5e Compendium',
-    description: 'Browse D&D 5e spells'
-  }
-})
-```
-
-#### Pattern 2: Non-Paginated Reference Entities
-Used for: Ability Scores, Conditions, Damage Types, Item Types, Languages, Proficiency Types, Sizes, Skills, Spell Schools, Sources
-
-```typescript
-const {
-  searchQuery,
-  data,
-  totalResults,
-  loading,
-  error,
-  refresh,
-  clearFilters,
-  hasActiveFilters
-} = useEntityList({
-  endpoint: '/sizes',
-  cacheKey: 'sizes-list',
-  queryBuilder: computed(() => ({})),  // No custom filters
-  noPagination: true,  // <-- Key difference!
-  seo: {
-    title: 'Sizes - D&D 5e Compendium',
-    description: 'Browse D&D 5e creature sizes'
-  }
-})
-```
-
-**Key Difference:** `noPagination: true` sets `per_page: 9999` and fixes page to 1, effectively returning all results. Search still works via URL sync.
-
-### Required UI Components
-
-All list pages MUST use these standard components:
-
-1. **`<UiListPageHeader>`** - Page title, description, count, loading state
-   - Props: `title`, `total`, `description`, `loading`, `has-active-filters`
-
-2. **`<UiListSkeletonCards>`** - Loading state (6 animated skeleton cards)
-
-3. **`<UiListErrorState>`** - Error state with retry button
-   - Props: `error`, `entity-name`
-   - Events: `@retry`
-
-4. **`<UiListEmptyState>`** - Empty results state
-   - Props: `entity-name`, `has-filters`
-   - Events: `@clear-filters`
-
-5. **`<UiListResultsCount>`** - Results range display (e.g., "1-24 of 150")
-   - Props: `from`, `to`, `total`, `entity-name`
-
-6. **`<UiListPagination>`** - Pagination controls (paginated pages only)
-   - Props: `v-model` (page number), `total`, `items-per-page`
-
-7. **`<UiBackLink>`** - Breadcrumb navigation back to home
-
-8. **`<JsonDebugPanel>`** - Debug panel (development only, optional)
-
-### Active Filter Chips Pattern
-
-**When to use:** Pages with dropdown/button filters (level, school, CR, type, etc.)
-
-**Implementation:**
-```vue
-<!-- Filter chips section -->
-<div v-if="hasActiveFilters" class="flex flex-wrap items-center gap-2 pt-2">
-  <span class="text-sm font-medium text-gray-600 dark:text-gray-400">Active:</span>
-
-  <!-- Custom filter chips -->
-  <UButton
-    v-if="selectedLevel !== null"
-    size="xs"
-    color="spell"
-    variant="soft"
-    @click="selectedLevel = null"
-  >
-    Level {{ selectedLevel }} ✕
-  </UButton>
-
-  <!-- Search query chip -->
-  <UButton
-    v-if="searchQuery"
-    size="xs"
-    color="neutral"
-    variant="soft"
-    @click="searchQuery = ''"
-  >
-    "{{ searchQuery }}" ✕
-  </UButton>
-</div>
-```
-
-**Benefits:**
-- Users can see active filters at a glance
-- One-click removal of individual filters
-- Improves discoverability and UX
-
-### Template Structure (Standard Order)
-
-```vue
-<template>
-  <div class="container mx-auto px-4 py-8 max-w-7xl">
-    <!-- 1. Page Header -->
-    <UiListPageHeader ... />
-
-    <!-- 2. Filters Section (if applicable) -->
-    <div class="mb-6 space-y-4">
-      <!-- Search input -->
-      <UInput v-model="searchQuery" ... />
-
-      <!-- Filter dropdowns/buttons + Clear button -->
-      <div class="flex flex-wrap gap-2">...</div>
-
-      <!-- Active filter chips (if has filters) -->
-      <div v-if="hasActiveFilters" ...>...</div>
-    </div>
-
-    <!-- 3. Loading State -->
-    <UiListSkeletonCards v-if="loading" />
-
-    <!-- 4. Error State -->
-    <UiListErrorState v-else-if="error" ... />
-
-    <!-- 5. Empty State -->
-    <UiListEmptyState v-else-if="data.length === 0" ... />
-
-    <!-- 6. Results -->
-    <div v-else>
-      <UiListResultsCount ... />
-      <div class="grid ...">
-        <EntityCard v-for="item in data" :key="item.id" :entity="item" />
-      </div>
-      <UiListPagination v-if="!noPagination" ... />
-    </div>
-
-    <!-- 7. Back Link -->
-    <UiBackLink />
-
-    <!-- 8. Debug Panel (optional) -->
-    <JsonDebugPanel ... />
-  </div>
-</template>
-```
-
-### Custom Filters (Optional)
-
-If your page has custom filters (level, school, CR, type, etc.):
-
-```typescript
-// Define filter state
-const selectedLevel = ref(route.query.level ? Number(route.query.level) : null)
-
-// Build query params
-const queryBuilder = computed(() => {
-  const params: Record<string, unknown> = {}
-  if (selectedLevel.value !== null) params.level = selectedLevel.value
-  return params
-})
-
-// Clear all filters (base + custom)
-const clearFilters = () => {
-  clearBaseFilters()  // From composable
-  selectedLevel.value = null
-}
-```
-
-### Gold Standard References
-
-**Best examples to copy:**
-- `app/pages/spells/index.vue` - Paginated with complex filters
-- `app/pages/items/index.vue` - Paginated with multiple filters
-- `app/pages/sizes/index.vue` - Non-paginated reference page
-
-**Design Documents:**
-- `docs/plans/2025-11-22-list-page-standardization-design.md`
-- `docs/plans/2025-11-22-list-page-standardization-implementation.md`
-
-### Key Benefits
-
-1. **Consistency:** All 17 pages follow same pattern
-2. **Maintainability:** Change once, affect all pages
-3. **DRY:** Eliminated ~400-500 lines of duplicate code
-4. **URL Sync:** Search queries persist in URL (shareable!)
-5. **Type Safety:** Full TypeScript support
-6. **SEO:** Automatic meta tag management
-7. **Testing:** Composable is fully tested
-
----
-
-## 🔴 ABSOLUTE MANDATE: Test-Driven Development (TDD)
-
-**THIS IS NOT A SUGGESTION. THIS IS NOT OPTIONAL. THIS IS MANDATORY.**
-
-### ⛔ STOP: Read This Before Writing ANY Code
-
-If you are about to write component code, composable code, or any application logic **WITHOUT writing tests first**, you are violating the core development principle of this project.
-
-### 🚨 TDD is NON-NEGOTIABLE
-
-1. **Tests are documentation** - They show HOW the code should work
-2. **Tests prevent regressions** - Future changes won't break existing features
-3. **Tests enable refactoring** - You can improve code with confidence
-4. **Tests force good design** - Testable code is well-structured code
-5. **Tests save time** - Catching bugs early is cheaper than fixing them in production
-
-### ✋ REJECTION CRITERIA - Your Work Will Be Rejected If:
-
-- ❌ You write implementation code before tests
-- ❌ You skip tests because "it's a simple component"
-- ❌ You promise to "write tests later" (they never get written)
-- ❌ You claim "the feature is working" without test evidence
-- ❌ You write tests AFTER implementation to "check the box"
-- ❌ You rationalize that "manual testing is enough"
-
-**If any of the above apply, the work is INCOMPLETE and must be redone.**
-
-### ✅ MANDATORY TDD Process (Follow Exactly)
-
-#### Step 1: Write Test FIRST (RED Phase)
-```typescript
-// tests/components/SpellCard.test.ts
-import { describe, it, expect } from 'vitest'
-import { mountSuspended } from '@nuxt/test-utils/runtime'
-import SpellCard from '~/components/spell/SpellCard.vue'
-
-describe('SpellCard', () => {
-  it('displays spell name and level', async () => {
-    const wrapper = await mountSuspended(SpellCard, {
-      props: {
-        spell: {
-          id: 1,
-          name: 'Fireball',
-          level: 3,
-          school: { id: 1, name: 'Evocation' }
-        }
-      }
-    })
-
-    expect(wrapper.text()).toContain('Fireball')
-    expect(wrapper.text()).toContain('3rd Level')
-  })
-})
-```
-
-#### Step 2: Run Test - Watch It FAIL
-```bash
-npm run test -- SpellCard.test.ts
-# Expected: Test fails because SpellCard doesn't exist yet
-```
-
-#### Step 3: Write MINIMAL Implementation (GREEN Phase)
-```typescript
-// app/components/spell/SpellCard.vue
-<script setup lang="ts">
-interface Props {
-  spell: {
-    name: string
-    level: number
-  }
-}
-
-const props = defineProps<Props>()
-const levelText = computed(() =>
-  props.spell.level === 0 ? 'Cantrip' : `${props.spell.level}${['th','st','nd','rd'][props.spell.level] || 'th'} Level`
-)
-</script>
-
-<template>
-  <div>
-    <h3>{{ spell.name }}</h3>
-    <span>{{ levelText }}</span>
-  </div>
-</template>
-```
-
-#### Step 4: Run Test - Verify It PASSES
-```bash
-npm run test -- SpellCard.test.ts
-# Expected: Test passes - GREEN!
-```
-
-#### Step 5: Refactor (Keep Tests GREEN)
-Add styling, icons, etc. Run tests after each change.
-
-#### Step 6: Add More Tests, Repeat
-```typescript
-it('shows school badge when school is provided', async () => { ... })
-it('handles missing school gracefully', async () => { ... })
-it('displays ritual badge when is_ritual is true', async () => { ... })
-```
-
-### 📋 TDD Checklist for EVERY Feature
-
-Before marking work complete, verify:
-
-- [ ] ✅ Tests were written BEFORE implementation
-- [ ] ✅ Tests failed initially (RED phase verified)
-- [ ] ✅ Minimal code was written to pass tests (GREEN phase)
-- [ ] ✅ Code was refactored while keeping tests green
-- [ ] ✅ All new tests pass
-- [ ] ✅ Full test suite passes (no regressions)
-- [ ] ✅ Coverage includes happy path AND edge cases
-- [ ] ✅ Tests are readable and maintainable
-- [ ] ✅ Manual browser verification completed
-- [ ] ✅ Tests are committed with implementation
-
-**If ANY checkbox is unchecked, the feature is NOT complete.**
-
-### 🎯 What Must Be Tested
-
-**Components:**
-- ✅ Props render correctly
-- ✅ Computed properties calculate right values
-- ✅ User interactions trigger expected behavior
-- ✅ Conditional rendering works (v-if, v-show)
-- ✅ Event emissions fire with correct data
-- ✅ Edge cases (null, undefined, empty arrays)
-- ✅ Error states display appropriately
-
-**Composables:**
-- ✅ Functions return expected data types
-- ✅ Reactive state updates correctly
-- ✅ API calls are made with correct parameters
-- ✅ Error handling works as expected
-- ✅ Side effects are properly managed
-
-**Pages:**
-- ✅ SSR renders without hydration errors
-- ✅ Client-side navigation works
-- ✅ Query parameters are parsed correctly
-- ✅ Data fetching succeeds and fails gracefully
-- ✅ Meta tags are set correctly
-
-### 🚫 Forbidden Phrases (Auto-Reject)
-
-If you say ANY of these, you are violating TDD:
-
-- ❌ "I'll write tests after implementing the feature"
-- ❌ "The component is simple, so tests aren't needed"
-- ❌ "I tested it manually in the browser"
-- ❌ "We can add tests in a future PR"
-- ❌ "The code is self-documenting, tests would be redundant"
-
-**Correct responses:**
-- ✅ "Let me write the test first to define expected behavior"
-- ✅ "I've written tests that currently fail, now I'll implement"
-- ✅ "Tests pass, now I can refactor with confidence"
-
-### 💪 Mandatory Development Flow
-
-```
-User Request → Understand Requirements → 🔴 WRITE TEST FIRST
-    → Watch Test FAIL → Write Minimal Code → Watch Test PASS
-    → Refactor (keep tests green) → More Tests? (loop back)
-    → Manual Browser Check → Commit (tests + code together) → Done!
-```
-
-**Any deviation from this flow is unacceptable.**
-
-**Remember: Tests are not optional. Tests are the foundation of maintainable software. Write tests first, always.**
-
-### 🔧 Test Helpers (For Card Components)
-
-The project includes reusable test helpers for card components to reduce redundancy:
-
-**Location:** `tests/helpers/`
-
-**Available Helpers:**
-- `cardBehavior.ts` - Link routing, hover effects, border styling tests
-- `descriptionBehavior.ts` - Description truncation and fallback tests
-- `sourceBehavior.ts` - Source footer display tests
-
-**Usage Example:**
-```typescript
-import { testCardHoverEffects, testCardBorderStyling } from '../../helpers/cardBehavior'
-
-describe('MyNewCard', () => {
-  const mountCard = () => mountSuspended(MyNewCard, { props: mockData })
-
-  // Shared behavior tests (1 line each)
-  testCardHoverEffects(mountCard)
-  testCardBorderStyling(mountCard)
-
-  // Domain-specific tests (focus here)
-  it('displays my unique field', ...)
-})
-```
-
-**When to use helpers:**
-- ✅ Creating new card components
-- ✅ Testing shared UI behavior (hover, links, borders)
-- ❌ Don't use for unique domain logic (test directly)
-
----
-
-## 📝 CHANGELOG UPDATES
-
-**⚠️ MANDATORY:** After completing ANY user-facing feature or fix, update `CHANGELOG.md`:
-
-1. Add entry to the `[Unreleased]` section
-2. Use appropriate category: `Added`, `Changed`, `Fixed`, `Deprecated`, `Removed`, `Security`
-3. Include date in format `(YYYY-MM-DD)`
-4. Be concise but descriptive
-
-**Example:**
-```markdown
-### Added
-- Random tables display for spells (2025-11-21)
-
-### Fixed
-- Query parameter forwarding in item-types API endpoint (2025-11-21)
-```
-
----
-
-## 🔴 CRITICAL: Always Commit When Task Complete
-
-**⚠️ MANDATORY WORKFLOW:**
-
-When you complete ANY task (feature, refactoring, bug fix, etc.), you MUST:
-1. ✅ Verify all tests pass
-2. ✅ Verify pages work in browser (HTTP 200)
-3. ✅ **UPDATE CHANGELOG.md** (if user-facing change)
-4. ✅ **COMMIT THE WORK IMMEDIATELY**
-
-**Why This Matters:**
-- Prevents work from being lost
-- Creates clear history of changes
-- Allows easy rollback if needed
-- Maintains clean development flow
-- Enables collaboration with proper context
-
-**When to Commit:**
-- ✅ After completing a feature
-- ✅ After refactoring work
-- ✅ After fixing a bug
-- ✅ After creating/updating tests
-- ✅ After ANY meaningful unit of work
-
-**Example Workflow:**
-```bash
-# 1. Complete the work
-npm test              # All tests pass ✅
-curl http://localhost:3000/spells  # Page works ✅
-
-# 2. Stage changes
-git add <files>
-
-# 3. Commit with descriptive message
-git commit -m "feat: Add new component with tests
-
-- Created <ComponentName> following TDD
-- Added 15 tests (all passing)
-- Integrated into 6 pages
-- Verified all pages work
-
-🤖 Generated with [Claude Code](https://claude.com/claude-code)
-
-Co-Authored-By: Claude <noreply@anthropic.com>"
-
-# 4. Continue to next task
-```
-
-**DO NOT:**
-- ❌ Wait until "everything is perfect" to commit
-- ❌ Batch multiple unrelated changes into one commit
-- ❌ Leave uncommitted work at end of session
-- ❌ Skip commits for "small changes"
-
-**Commit messages should:**
-- Start with type: `feat:`, `refactor:`, `fix:`, `test:`, `docs:`
-- Be descriptive (what and why)
-- Include impact metrics (tests added, lines saved, etc.)
-- End with Claude Code attribution
+- **Testing:** Vitest + @nuxt/test-utils + Playwright (E2E)
+- **API Client:** `$fetch` (Nuxt's built-in)
+- **State:** Nuxt's `useState` + Pinia (if needed)
+- **Validation:** Zod
 
 ---
 
 ## Docker Setup
 
-**Prerequisites:**
-1. Backend API running at `localhost:8080`
-2. Docker and Docker Compose installed
+**Prerequisites:** Backend running at `localhost:8080`, Docker installed.
 
-**Quick Start:**
 ```bash
-# 1. Start backend (from ../importer)
+# 1. Start backend
 cd ../importer && docker compose up -d
-cd ../frontend
 
-# 2. Create environment file
+# 2. Create .env
 cp .env.example .env
 
-# 3. Start frontend containers
+# 3. Start frontend
 docker compose up -d
 
-# 4. Install dependencies (first time only)
+# 4. Install dependencies (first time)
 docker compose exec nuxt npm install
 
-# 5. Access application
+# 5. Access
 # Frontend: http://localhost:3000
-# Backend API: http://localhost:8080/api/v1
-# API Docs: http://localhost:8080/docs/api
+# Backend: http://localhost:8080/api/v1
 ```
 
-**⚠️ CRITICAL TESTING PROTOCOL:**
-- **ALWAYS use Docker containers for development and testing**
-- **NEVER start the dev server locally outside Docker**
-- All development commands must be run via `docker compose exec nuxt <command>`
-- Testing in the browser MUST be done against Docker container URLs
+**⚠️ CRITICAL:** Always use Docker for development/testing. Never start dev server locally outside Docker.
 
-**Common Docker Commands:**
+**Common Commands:**
 ```bash
-# Container management
-docker compose up -d          # Start containers
-docker compose down           # Stop containers
-docker compose restart nuxt   # Restart Nuxt
-docker compose logs -f nuxt   # Follow logs
-
-# Running commands
-docker compose exec nuxt npm run dev       # Start dev server
-docker compose exec nuxt npm install       # Install dependencies
-docker compose exec nuxt npm run test      # Run tests
-docker compose exec nuxt npm run lint      # Lint code
-
-# Debugging
-docker compose exec nuxt sh               # Shell into container
-docker compose logs --tail=100 nuxt       # View last 100 lines
+docker compose exec nuxt npm run dev       # Dev server
+docker compose exec nuxt npm run test      # Tests
+docker compose exec nuxt npm run typecheck # Type checking
+docker compose exec nuxt npm run lint      # Linting
 ```
 
 ---
 
-## Project Structure (Key Directories)
+## 🎨 NuxtUI Color System
 
+**3-Step Process (MUST follow exactly):**
+
+### 1. Define Semantic Names (`nuxt.config.ts`)
+
+```typescript
+ui: {
+  theme: {
+    colors: ['primary', 'secondary', 'spell', 'item', 'race', 'class', 'background', 'feat', 'monster']
+  }
+}
 ```
-frontend/
-├── app/
-│   ├── components/          # Vue components (auto-imported)
-│   │   ├── spell/          # Entity-specific components
-│   │   ├── item/
-│   │   ├── race/
-│   │   └── ui/             # Reusable UI components
-│   ├── composables/        # Composables (auto-imported)
-│   ├── pages/              # File-based routing
-│   ├── layouts/            # Page layouts
-│   └── types/              # TypeScript types
-├── tests/
-│   ├── components/
-│   ├── composables/
-│   └── e2e/
-├── docs/                   # Project documentation
-├── docker/                 # Docker configuration
-├── nuxt.config.ts          # Nuxt configuration
-├── tailwind.config.ts      # Tailwind CSS config
-└── package.json
+
+### 2. Define Custom Palettes (`app/assets/css/main.css`)
+
+```css
+@theme static {
+  /* Must have exactly 11 levels: 50-950 */
+  --color-arcane-50: #f5f3ff;
+  --color-arcane-100: #ede9fe;
+  /* ... */
+  --color-arcane-950: #2e1065;
+}
+```
+
+### 3. Map Names to Colors (`app/app.config.ts`)
+
+```typescript
+export default defineAppConfig({
+  ui: {
+    colors: {
+      spell: 'arcane',      // Custom from @theme
+      item: 'treasure',     // Custom from @theme
+      secondary: 'emerald'  // Tailwind default
+    }
+  }
+})
+```
+
+**⚠️ Common Pitfalls:**
+- `app.config.ts` goes in `app/` directory (Nuxt 4), NOT root!
+- Must define all 11 intensity levels (50-950)
+- Must register in `nuxt.config.ts` theme.colors
+
+---
+
+## OpenAPI Type Generation
+
+**Generate types from backend API:**
+
+```bash
+npm run types:sync
+```
+
+**Architecture:**
+1. **Generated:** `app/types/api/generated.ts` (never edit manually)
+2. **Application:** `app/types/api/entities.ts`, `common.ts` (extends generated)
+3. **Components:** Import application types
+
+**When to sync:** After backend API changes, weekly/monthly, before major features.
+
+**Workflow:**
+```bash
+# 1. Ensure backend running
+cd ../importer && docker compose up -d
+
+# 2. Sync types
+cd ../frontend && npm run types:sync
+
+# 3. Verify
+npm run typecheck
+npm run test
+
+# 4. Commit
+git add app/types/api/generated.ts
+git commit -m "chore: Sync API types"
 ```
 
 ---
 
-## Component Auto-Import Rules
+## 📋 List Page Pattern
 
-**⚠️ CRITICAL:** Nuxt 4 auto-imports components with specific naming based on folder structure.
+**All 17 entity list pages use `useEntityList` composable.**
 
-**Component Naming Patterns:**
-- **Root level** (`components/Foo.vue`) → Use as `<Foo>`
-- **Nested folders** (`components/ui/Bar.vue`) → Use as `<UiBar>`
-- **Deep nesting** (`components/foo/bar/Baz.vue`) → Use as `<FooBarBaz>`
+### Paginated Pages (Spells, Items, Races, Classes, Backgrounds, Feats, Monsters)
 
-**When Multiple Components Share the Same Name:**
-- Components in nested directories MUST use the folder prefix
-- Example:
-  - `components/ui/SourceDisplay.vue` → `<UiSourceDisplay>` (CORRECT)
-  - `components/ui/SourceDisplay.vue` → `<SourceDisplay>` (WRONG - will fail silently)
+```typescript
+const { searchQuery, currentPage, data, meta, totalResults, loading, error, refresh } =
+  useEntityList({
+    endpoint: '/spells',
+    cacheKey: 'spells-list',
+    queryBuilder,  // Custom filters
+    perPage: 24,
+    seo: { title: 'Spells', description: '...' }
+  })
+```
 
-**Debugging Component Issues:**
-1. Check if the component exists: `ls -la app/components/ui/`
-2. Verify correct naming: `<UiComponentName>` for `components/ui/ComponentName.vue`
-3. Check dev server output for compilation errors
-4. Test in Docker container, not locally
+### Non-Paginated Pages (Reference entities: sizes, skills, etc.)
+
+```typescript
+const { searchQuery, data, totalResults, loading, error } =
+  useEntityList({
+    endpoint: '/sizes',
+    cacheKey: 'sizes-list',
+    queryBuilder: computed(() => ({})),
+    noPagination: true,  // Sets per_page: 9999
+    seo: { title: 'Sizes', description: '...' }
+  })
+```
+
+**Required UI Components:**
+- `<UiListPageHeader>` - Title, count, loading
+- `<UiListSkeletonCards>` - Loading state
+- `<UiListErrorState>` - Error state
+- `<UiListEmptyState>` - Empty state
+- `<UiListResultsCount>` - "1-24 of 150"
+- `<UiListPagination>` - Pagination controls (paginated only)
+- `<UiBackLink>` - Breadcrumb
+- `<JsonDebugPanel>` - Debug (optional)
+
+**Gold Standard:** `app/pages/spells/index.vue`, `app/pages/sizes/index.vue`
+
+---
+
+## 🔴 TDD MANDATE
+
+**THIS IS NON-NEGOTIABLE.**
+
+### Process (Follow Exactly)
+
+1. **Write test FIRST** (RED phase)
+2. **Run test - watch it FAIL**
+3. **Write MINIMAL implementation** (GREEN phase)
+4. **Run test - verify it PASSES**
+5. **Refactor** (keep tests green)
+6. **Repeat**
+
+### Example
+
+```typescript
+// 1. Write test FIRST
+describe('SpellCard', () => {
+  it('displays spell name', async () => {
+    const wrapper = await mountSuspended(SpellCard, {
+      props: { spell: { id: 1, name: 'Fireball', level: 3 } }
+    })
+    expect(wrapper.text()).toContain('Fireball')
+  })
+})
+
+// 2. Run test - FAILS (component doesn't exist)
+// 3. Write minimal implementation
+// 4. Run test - PASSES
+// 5. Refactor, add styling
+```
+
+### Rejection Criteria
+
+Your work will be **REJECTED** if:
+- ❌ Implementation code written before tests
+- ❌ Tests skipped ("it's simple")
+- ❌ Tests promised "later"
+- ❌ Tests written after implementation
+- ❌ "Manual testing is enough"
+
+### Test Helpers
+
+**For card components:** `tests/helpers/`
+- `cardBehavior.ts` - Link routing, hover, borders
+- `descriptionBehavior.ts` - Truncation, fallbacks
+- `sourceBehavior.ts` - Source footer display
+
+---
+
+## 📝 CHANGELOG Updates
+
+**⚠️ MANDATORY:** After ANY user-facing feature/fix, update `CHANGELOG.md`:
+
+```markdown
+### Added
+- 3D dice background animation (2025-11-23)
+
+### Fixed
+- Query parameter forwarding in item-types API (2025-11-21)
+```
+
+---
+
+## 🔴 Always Commit When Task Complete
+
+**⚠️ MANDATORY:** When you complete ANY task:
+
+1. ✅ Verify tests pass
+2. ✅ Verify pages work (HTTP 200)
+3. ✅ Update CHANGELOG.md (if user-facing)
+4. ✅ **COMMIT IMMEDIATELY**
+
+```bash
+git add <files>
+git commit -m "feat: Add feature with tests
+
+- Created ComponentName following TDD
+- Added 15 tests (all passing)
+- Integrated into 6 pages
+
+🤖 Generated with [Claude Code](https://claude.com/claude-code)
+
+Co-Authored-By: Claude <noreply@anthropic.com>"
+```
+
+**DO NOT:**
+- ❌ Wait for "perfection"
+- ❌ Batch unrelated changes
+- ❌ Leave uncommitted work
+- ❌ Skip commits for "small changes"
+
+---
+
+## Component Auto-Import
+
+**Naming based on folder structure:**
+
+- `components/Foo.vue` → `<Foo>`
+- `components/ui/Bar.vue` → `<UiBar>` (NOT `<Bar>`)
+- `components/foo/bar/Baz.vue` → `<FooBarBaz>`
+
+**⚠️ Critical:** Nested components MUST use folder prefix!
 
 ---
 
 ## Development Commands
 
-**Development:**
 ```bash
-npm install                  # Install dependencies
-npm run dev                  # Start Nuxt dev server
-npm run build                # Production build
-npm run preview              # Preview production build
+npm run dev         # Dev server
+npm run build       # Production build
+npm run test        # Vitest tests
+npm run test:watch  # Watch mode
+npm run test:e2e    # Playwright E2E
+npm run typecheck   # TypeScript check
+npm run lint        # ESLint
+npm run lint:fix    # Auto-fix
 ```
 
-**Testing:**
-```bash
-npm run test                 # Run all tests (Vitest)
-npm run test:watch           # Run tests in watch mode
-npm run test:ui              # Open Vitest UI
-npm run test:coverage        # Generate coverage report
-npm run test:e2e             # Run Playwright E2E tests
+---
+
+## Project Structure
+
+```
+app/
+├── components/       # Vue components (auto-import)
+│   ├── spell/       # Entity-specific
+│   ├── item/
+│   └── ui/          # Reusable UI
+├── composables/     # Composables (auto-import)
+├── pages/           # File-based routing
+├── layouts/         # Page layouts
+└── types/           # TypeScript types
+tests/
+├── components/
+├── composables/
+└── e2e/
+docs/                # Documentation
 ```
 
-**Code Quality:**
-```bash
-npm run lint                 # Lint code (ESLint)
-npm run lint:fix             # Auto-fix linting issues
-npm run typecheck            # TypeScript type checking
-```
+---
+
+## Best Practices
+
+**Code Style:**
+- `<script setup lang="ts">` (Composition API)
+- `ref` over `reactive` (better types)
+- Extract reusable composables
+- Tailwind via NuxtUI components
+- Components <150 lines
+
+**File Naming:**
+- Components: `PascalCase.vue`
+- Composables: `camelCase.ts`
+- Pages: `lowercase/kebab-case`
+- Types: `camelCase.d.ts`
+
+**Component Design:**
+- Single responsibility
+- Clear props API with TypeScript
+- Emit events (don't call parent methods)
+- Handle empty/undefined gracefully
+- Support dark mode
+- **Write tests first (TDD)**
+
+**Performance:**
+- `useAsyncData` for caching
+- Lazy load heavy components (`<LazySpellCard>`)
+- `<NuxtImg>` for images
+- Leverage Nuxt's code-splitting
+
+---
+
+## Success Checklist
+
+Before marking features complete:
+
+- [ ] Tests written FIRST (TDD mandate)
+- [ ] All new tests pass
+- [ ] Full test suite passes
+- [ ] TypeScript compiles (no errors)
+- [ ] ESLint passes
+- [ ] Browser verification (light/dark mode)
+- [ ] SSR works (no hydration errors)
+- [ ] Mobile-responsive (375px, 768px, 1440px)
+- [ ] Accessible (keyboard, screen reader)
+- [ ] **Work committed immediately**
+
+**If ANY checkbox is unchecked, feature is NOT done.**
 
 ---
 
 ## Key Documentation
 
-**Current Status:** `docs/CURRENT_STATUS.md` - Complete project overview
-**Refactoring Details:** `docs/REFACTORING-COMPLETE.md` - Component extraction details
-**Latest Handover:** `docs/HANDOVER-2025-01-21-UI-CONSISTENCY-COMPLETE.md`
-**Setup Guide:** `CLAUDE.md` (this file)
-
----
-
-## Best Practices Summary
-
-**Code Style:**
-- Use `<script setup lang="ts">` (Composition API)
-- Prefer `ref` over `reactive` for better type inference
-- Extract reusable composables (`useSpells`, `useApi`)
-- Use Tailwind CSS via NuxtUI components
-- Keep components small and focused (<150 lines)
-
-**File Naming:**
-- Components: PascalCase.vue (`SpellCard.vue`)
-- Composables: camelCase.ts (`useSpells.ts`)
-- Pages: lowercase/kebab-case (`spells/index.vue`)
-- Types: camelCase.d.ts (`api.d.ts`)
-
-**Component Design:**
-- Single responsibility
-- Clear props API with TypeScript interfaces
-- Event-based communication (emit, don't call parent methods)
-- Handle empty/undefined states gracefully
-- Support dark mode
-- Write tests first (TDD)
-
-**Performance:**
-- Use `useAsyncData` for automatic caching
-- Lazy load heavy components (`<LazySpellCard>`)
-- Use `<NuxtImg>` for optimized images
-- Leverage Nuxt's automatic code-splitting
-
----
-
-## Success Criteria (Before Marking Features Complete)
-
-- [ ] New feature has dedicated tests (unit + component)
-- [ ] All new tests pass
-- [ ] Full test suite passes (no regressions)
-- [ ] TypeScript compiles with no errors
-- [ ] ESLint passes with no warnings
-- [ ] Manually verified in browser (both light/dark mode)
-- [ ] SSR works correctly (no hydration errors)
-- [ ] Mobile-responsive (tested at 375px, 768px, 1440px)
-- [ ] Accessible (keyboard navigation, screen reader)
-- [ ] **Tests written FIRST (TDD mandate)**
-- [ ] **Work committed immediately after completion**
-
-**If any checkbox is unchecked, the feature ISN'T done.**
+- **Status:** `docs/CURRENT_STATUS.md`
+- **Latest Handover:** `docs/HANDOVER-2025-11-23-3D-DICE-INTEGRATION.md`
+- **3D Dice Guide:** `docs/3D-DICE-IMPLEMENTATION.md`
+- **List Page Pattern:** `docs/HANDOVER-2025-11-22-LIST-PAGE-STANDARDIZATION-COMPLETE.md`
 
 ---
 
 ## Resources
 
-**Framework Documentation:**
-- Nuxt 4.x: https://nuxt.com/docs/4.x/getting-started/introduction
-- NuxtUI 4.x: https://ui.nuxt.com/docs/getting-started
-- Vue 3 Composition API: https://vuejs.org/guide/extras/composition-api-faq.html
-
-**Testing:**
-- Vitest: https://vitest.dev/
-- @nuxt/test-utils: https://nuxt.com/docs/getting-started/testing
-- @vue/test-utils: https://test-utils.vuejs.org/
-- Playwright: https://playwright.dev/
-
-**Backend Documentation:**
-- API Docs (Interactive): `http://localhost:8080/docs/api`
-- API Spec (JSON): `http://localhost:8080/docs/api.json`
-- Backend CLAUDE.md: `../importer/CLAUDE.md`
+- **Nuxt 4:** https://nuxt.com/docs/4.x
+- **NuxtUI 4:** https://ui.nuxt.com/docs
+- **Vue 3:** https://vuejs.org/guide/extras/composition-api-faq.html
+- **Vitest:** https://vitest.dev/
+- **Playwright:** https://playwright.dev/
+- **Backend API Docs:** http://localhost:8080/docs/api
 
 ---
 
-**Project Status:** 🚧 Production-ready with 6 entity types, 8 reusable components, 87 tests, and comprehensive documentation. Ready for advanced features, performance optimization, or deployment.
+**Project Status:** Production-ready. 6 entity types, 8 reusable components, 87 tests, comprehensive docs. Ready for advanced features or deployment.
 
-**Next Agent: Read `docs/CURRENT_STATUS.md` first, then this file for setup and patterns.**
+**Next Agent:** Read `docs/CURRENT_STATUS.md` first, then this file for patterns and setup.

@@ -1,3 +1,5 @@
+import * as THREE from 'three'
+
 /**
  * Parchment background using image
  * Subtle parallax scroll effect
@@ -129,6 +131,100 @@ const PARTICLE_SHAPES: Array<{ type: ParticleShape; weight: number }> = [
   { type: 'hexagon', weight: 1 },  // Spell grid cell
   { type: 'cross', weight: 1 }     // Runic symbol
 ]
+
+/**
+ * 3D Dice Types and Colors
+ */
+type DieType = 'd4' | 'd6' | 'd8' | 'd10' | 'd12' | 'd20'
+
+// D&D themed colors (from NuxtUI palette - 500 shades)
+const DICE_COLORS = [
+  { name: 'Arcane', color: 0x8b5cf6 },     // arcane-500
+  { name: 'Treasure', color: 0xf59e0b },   // treasure-500
+  { name: 'Emerald', color: 0x10b981 },    // emerald-500
+  { name: 'Glory', color: 0x3b82f6 },      // glory-500
+  { name: 'Danger', color: 0xf97316 },     // danger-500
+  { name: 'Lore', color: 0xeab308 }        // lore-500
+]
+
+/**
+ * Create geometry for each die type
+ */
+function createDieGeometry(type: DieType): THREE.BufferGeometry {
+  const size = 1
+  switch (type) {
+    case 'd4':
+      return new THREE.TetrahedronGeometry(size)
+    case 'd6':
+      return new THREE.BoxGeometry(size, size, size)
+    case 'd8':
+      return new THREE.OctahedronGeometry(size)
+    case 'd12':
+      return new THREE.DodecahedronGeometry(size)
+    case 'd20':
+      return new THREE.IcosahedronGeometry(size)
+    case 'd10':
+      // d10 uses pentagonal trapezohedron (simplified as d12 for now)
+      return new THREE.DodecahedronGeometry(size * 0.9)
+    default:
+      return new THREE.IcosahedronGeometry(size)
+  }
+}
+
+/**
+ * Create a single die mesh
+ */
+function createDie(type: DieType, colorIndex: number, position: THREE.Vector3): THREE.Mesh {
+  const geometry = createDieGeometry(type)
+
+  // Glass-like material matching dice-test page
+  const material = new THREE.MeshPhysicalMaterial({
+    color: DICE_COLORS[colorIndex]!.color,
+    transparent: true,
+    opacity: 0.25,
+    transmission: 0.5,
+    thickness: 0.5,
+    roughness: 0.2,
+    metalness: 0.1,
+    clearcoat: 1.0,
+    clearcoatRoughness: 0.1,
+    side: THREE.DoubleSide
+  })
+
+  const mesh = new THREE.Mesh(geometry, material)
+  mesh.position.copy(position)
+
+  // Slow random rotation speeds
+  mesh.userData.rotationSpeed = new THREE.Vector3(
+    (Math.random() - 0.5) * 0.02,
+    (Math.random() - 0.5) * 0.02,
+    (Math.random() - 0.5) * 0.02
+  )
+
+  // Store original position for spring-back
+  mesh.userData.originalPosition = position.clone()
+  mesh.userData.velocity = new THREE.Vector3(0, 0, 0)
+
+  // Individual drift path (like particles)
+  mesh.userData.driftSpeed = new THREE.Vector3(
+    (Math.random() - 0.5) * 0.003,
+    (Math.random() - 0.5) * 0.003,
+    0
+  )
+  mesh.userData.driftPhase = Math.random() * Math.PI * 2
+
+  // Add wireframe for definition
+  const edges = new THREE.EdgesGeometry(geometry)
+  const lineMaterial = new THREE.LineBasicMaterial({
+    color: 0xffffff,
+    opacity: 0.3,
+    transparent: true
+  })
+  const wireframe = new THREE.LineSegments(edges, lineMaterial)
+  mesh.add(wireframe)
+
+  return mesh
+}
 
 /**
  * Magical sparkle particle with mouse interaction
@@ -367,7 +463,7 @@ export function shouldAnimate(): boolean {
   return !mediaQuery.matches
 }
 
-export function useAnimatedBackground(canvas: HTMLCanvasElement, isDark: boolean) {
+export function useAnimatedBackground(canvas: HTMLCanvasElement, isDark: boolean, canvas3d?: HTMLCanvasElement) {
   const context = canvas.getContext('2d')
   if (!context) throw new Error('Canvas context not available')
 
@@ -378,15 +474,31 @@ export function useAnimatedBackground(canvas: HTMLCanvasElement, isDark: boolean
   let animationFrameId: number | null = null
   let lastTime = 0
 
-  // Mouse tracking
+  // Mouse tracking (shared between 2D and 3D)
   let mouseX = -1000
   let mouseY = -1000
   let lastScrollY = 0
+
+  // 3D Scene variables (optional)
+  let scene: THREE.Scene | null = null
+  let camera: THREE.PerspectiveCamera | null = null
+  let renderer: THREE.WebGLRenderer | null = null
+  let dice: THREE.Mesh[] = []
+  let targetRotationX = 0
+  let targetRotationY = 0
 
   // Mouse move handler
   function handleMouseMove(event: MouseEvent) {
     mouseX = event.clientX
     mouseY = event.clientY
+
+    // Update 3D camera rotation targets if 3D scene exists
+    if (camera) {
+      const normalizedX = (event.clientX / window.innerWidth) * 2 - 1
+      const normalizedY = -(event.clientY / window.innerHeight) * 2 + 1
+      targetRotationY = normalizedX * 0.1
+      targetRotationX = normalizedY * 0.05
+    }
   }
 
   // Scroll handler
@@ -404,6 +516,13 @@ export function useAnimatedBackground(canvas: HTMLCanvasElement, isDark: boolean
     for (const particle of particles) {
       particle.applyScrollMomentum(scrollDelta)
     }
+
+    // Apply scroll momentum to dice (individually)
+    dice.forEach((die) => {
+      const velocity = die.userData.velocity as THREE.Vector3
+      const individualFactor = 0.8 + Math.random() * 0.4
+      velocity.y += scrollDelta * 0.003 * individualFactor
+    })
   }
 
   // Visibility change handler
@@ -426,6 +545,11 @@ export function useAnimatedBackground(canvas: HTMLCanvasElement, isDark: boolean
     const particleCount = 80 + Math.floor(Math.random() * 41)
     particles = Array.from({ length: particleCount }, () => new MagicParticle(width, height))
 
+    // Initialize 3D scene if canvas3d is provided
+    if (canvas3d) {
+      initThreeJS()
+    }
+
     // Listen for events
     if (typeof window !== 'undefined') {
       window.addEventListener('mousemove', handleMouseMove, { passive: true })
@@ -435,6 +559,62 @@ export function useAnimatedBackground(canvas: HTMLCanvasElement, isDark: boolean
     if (typeof document !== 'undefined') {
       document.addEventListener('visibilitychange', handleVisibilityChange)
     }
+  }
+
+  function initThreeJS() {
+    if (!canvas3d) return
+
+    // Scene
+    scene = new THREE.Scene()
+    scene.background = null // Transparent
+
+    // Camera
+    camera = new THREE.PerspectiveCamera(
+      60,
+      window.innerWidth / window.innerHeight,
+      0.1,
+      1000
+    )
+    camera.position.z = 15
+
+    // Renderer
+    renderer = new THREE.WebGLRenderer({
+      canvas: canvas3d,
+      antialias: true,
+      alpha: true
+    })
+    renderer.setSize(window.innerWidth, window.innerHeight)
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
+
+    // Lighting
+    const ambientLight = new THREE.AmbientLight(0xffffff, 0.6)
+    scene.add(ambientLight)
+
+    const directionalLight1 = new THREE.DirectionalLight(0xffffff, 0.8)
+    directionalLight1.position.set(5, 10, 7)
+    scene.add(directionalLight1)
+
+    const directionalLight2 = new THREE.DirectionalLight(0x8b5cf6, 0.4)
+    directionalLight2.position.set(-5, -5, -7)
+    scene.add(directionalLight2)
+
+    // Create dice - one of each type plus extra d20s
+    const diceConfig: Array<{ type: DieType; position: THREE.Vector3; colorIndex: number }> = [
+      { type: 'd4', position: new THREE.Vector3(-8, 3, -2), colorIndex: 0 },      // Arcane
+      { type: 'd6', position: new THREE.Vector3(-3, -2, 1), colorIndex: 1 },      // Treasure
+      { type: 'd8', position: new THREE.Vector3(2, 4, -1), colorIndex: 2 },       // Emerald
+      { type: 'd10', position: new THREE.Vector3(7, -1, 0), colorIndex: 3 },      // Glory
+      { type: 'd12', position: new THREE.Vector3(-5, -4, 2), colorIndex: 4 },     // Danger
+      { type: 'd20', position: new THREE.Vector3(4, 1, -2), colorIndex: 5 },      // Lore
+      { type: 'd20', position: new THREE.Vector3(-2, 5, 1), colorIndex: 0 },      // Arcane (extra)
+      { type: 'd20', position: new THREE.Vector3(8, -4, -1), colorIndex: 4 }      // Danger (extra)
+    ]
+
+    diceConfig.forEach(({ type, position, colorIndex }) => {
+      const die = createDie(type, colorIndex, position)
+      dice.push(die)
+      scene!.add(die)
+    })
   }
 
   function animate(currentTime: number) {
@@ -472,6 +652,69 @@ export function useAnimatedBackground(canvas: HTMLCanvasElement, isDark: boolean
       particle.update(deltaTime)
       particle.draw(ctx)
     }
+
+    // Layer 4: 3D Dice animation (if initialized)
+    if (camera && renderer && scene) {
+      animateDice()
+      renderer.render(scene, camera)
+    }
+  }
+
+  function animateDice() {
+    if (!camera) return
+
+    // Very smooth camera rotation based on mouse
+    camera.rotation.y += (targetRotationY - camera.rotation.y) * 0.02
+    camera.rotation.x += (targetRotationX - camera.rotation.x) * 0.02
+
+    // Update all dice independently
+    dice.forEach((die) => {
+      const speed = die.userData.rotationSpeed as THREE.Vector3
+      const velocity = die.userData.velocity as THREE.Vector3
+      const originalPos = die.userData.originalPosition as THREE.Vector3
+      const driftSpeed = die.userData.driftSpeed as THREE.Vector3
+      die.userData.driftPhase += 0.01
+
+      // Base rotation
+      die.rotation.x += speed.x
+      die.rotation.y += speed.y
+      die.rotation.z += speed.z
+
+      // Gentle ambient drift (like particles)
+      const driftX = Math.sin(die.userData.driftPhase) * 0.01
+      const driftY = Math.cos(die.userData.driftPhase) * 0.01
+
+      die.position.x += driftSpeed.x + driftX
+      die.position.y += driftSpeed.y + driftY
+
+      // Apply velocity (from scroll)
+      die.position.y += velocity.y
+
+      // Dampen velocity
+      velocity.y *= 0.95
+      velocity.x *= 0.95
+
+      // Gentle spring back to original position
+      const diff = originalPos.clone().sub(die.position)
+      die.position.add(diff.multiplyScalar(0.01))
+
+      // Very subtle mouse repulsion effect (each die independently)
+      if (mouseX !== -1000) {
+        const mouseWorldX = ((mouseX / window.innerWidth) * 2 - 1) * 8
+        const mouseWorldY = -((mouseY / window.innerHeight) * 2 - 1) * 5
+
+        const dx = die.position.x - mouseWorldX
+        const dy = die.position.y - mouseWorldY
+        const distance = Math.sqrt(dx * dx + dy * dy)
+
+        // Smaller radius, gentler force
+        if (distance < 3) {
+          const force = (3 - distance) / 3
+          velocity.x += dx * force * 0.01
+          velocity.y += dy * force * 0.01
+        }
+      }
+    })
   }
 
   /**
@@ -545,6 +788,17 @@ export function useAnimatedBackground(canvas: HTMLCanvasElement, isDark: boolean
 
     if (typeof document !== 'undefined') {
       document.removeEventListener('visibilitychange', handleVisibilityChange)
+    }
+
+    // Clean up Three.js resources
+    dice.forEach((die) => {
+      die.geometry.dispose()
+      if (die.material instanceof THREE.Material) {
+        die.material.dispose()
+      }
+    })
+    if (renderer) {
+      renderer.dispose()
     }
   }
 

@@ -84,22 +84,40 @@ const imagePath = computed(() => {
         ]"
       />
 
-      <!-- Quick Stats -->
-      <UiDetailQuickStatsCard
-        :stats="[
-          { icon: 'i-heroicons-clock', label: 'Casting Time', value: spell.casting_time },
-          { icon: 'i-heroicons-arrow-trending-up', label: 'Range', value: spell.range },
-          { icon: 'i-heroicons-sparkles', label: 'Components', value: spell.components, subtext: spell.material_components },
-          { icon: 'i-heroicons-clock', label: 'Duration', value: spell.duration }
-        ]"
-      />
+      <!-- Quick Stats + Image (side-by-side) -->
+      <div class="flex flex-col lg:flex-row gap-6">
+        <!-- Quick Stats (2/3 width) -->
+        <div class="lg:w-2/3">
+          <UiDetailQuickStatsCard
+            :stats="[
+              { icon: 'i-heroicons-clock', label: 'Casting Time', value: spell.casting_time },
+              { icon: 'i-heroicons-arrow-trending-up', label: 'Range', value: spell.range },
+              { icon: 'i-heroicons-sparkles', label: 'Components', value: spell.components, subtext: spell.material_components },
+              { icon: 'i-heroicons-clock', label: 'Duration', value: spell.duration }
+            ]"
+          />
+        </div>
 
-      <!-- Description + Image (integrated) -->
-      <UiDetailDescriptionWithImage
-        :description="spell.description"
-        :image-path="imagePath"
-        :image-alt="`${spell.name} spell illustration`"
-      />
+        <!-- Image (1/3 width) -->
+        <div class="lg:w-1/3">
+          <UiDetailEntityImage
+            :image-path="imagePath"
+            :image-alt="`${spell.name} spell illustration`"
+          />
+        </div>
+      </div>
+
+      <!-- Description (full width) -->
+      <UCard>
+        <template #header>
+          <h2 class="text-xl font-semibold">
+            Description
+          </h2>
+        </template>
+        <p class="text-gray-700 dark:text-gray-300 whitespace-pre-line">
+          {{ spell.description }}
+        </p>
+      </UCard>
 
       <!-- Additional Details (Accordion) -->
       <UAccordion

@@ -9,6 +9,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- **3D Dice Background Animation (2025-11-23)** - Integrated Three.js polyhedral dice into animated background
+  - 8 dice (d4, d6, d8, d10, d12, 3× d20) with glass-like materials and wireframe edges
+  - Dual-canvas architecture: 2D canvas (parchment + particles) + WebGL canvas (3D dice)
+  - Physics: slow tumbling, ambient drift, mouse repulsion, scroll momentum, spring-back
+  - Each die moves independently with unique drift paths and reactions
+  - NuxtUI theme colors (arcane, treasure, emerald, glory, danger, lore)
+  - Comprehensive handover document with technical details and future enhancement ideas
+
 ### Changed
 - **Detail Page Layout Refactor - Complete for All 7 Pages (2025-11-23)** - New side-by-side layout pattern with standalone images
   - Created 3 new reusable components: `UiDetailEntityImage`, `UiDetailStandaloneImage`, `UiDetailDescriptionCard` (20 tests)

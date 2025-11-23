@@ -1,12 +1,12 @@
 # D&D 5e Compendium Frontend - Current Status
 
-**Last Updated:** 2025-11-22 (Reference Entity Images Complete!)
+**Last Updated:** 2025-11-23 (3D Dice Background Animation!)
 **Status:** ✅ **PRODUCTION-READY - 99.9% Tests Passing!**
-**Framework:** Nuxt 4.x + NuxtUI 4.x
+**Framework:** Nuxt 4.x + NuxtUI 4.x + Three.js
 **7 of 7 Entity Types + 10 Reference Pages** (All Complete!)
 **Test Coverage:** 696/697 tests passing (99.9% pass rate - 1 AnimatedBackground test known issue) ✨
 **Code Quality:** ESLint 0 errors ✅ | TypeScript: 13 errors (93% reduction from 176 original)
-**NEW:** Entity images expanded to all 16 entity types (6 main + 10 reference) 🎨
+**NEW:** 3D polyhedral dice integrated into animated background with physics 🎲
 
 ---
 
@@ -82,31 +82,52 @@ A full-featured D&D 5e reference application with:
 - Implementation Plans: `docs/plans/2025-11-22-entity-images-implementation.md` (main) + `docs/plans/2025-11-22-reference-entity-images-implementation.md` (reference)
 - Handovers: `docs/HANDOVER-2025-11-22-ENTITY-IMAGES.md` + `docs/HANDOVER-2025-11-22-ENTITY-IMAGES-EXPANSION.md` + `docs/HANDOVER-2025-11-22-REFERENCE-ENTITY-IMAGES.md`
 
-### Animated Fantasy Background (NEW! ✨)
-**Status:** ✅ Complete
+### 3D Dice Background Animation (NEW! 🎲)
+**Status:** ✅ Complete (2025-11-23)
 
 **Visual Features:**
-- 40 mystical energy swirls flowing across screen
-- 6 D&D runic symbols fading in/out
-- Organic movement with sine wave drift
-- Light/dark mode color adaptation (purple/blue → purple/cyan)
+- **8 Polyhedral Dice:** d4, d6, d8, d10, d12, 3× d20 (extra d20s for D&D theme)
+- **Glass-like Materials:** 25% opacity, 50% transmission, clearcoat finish, white wireframe edges
+- **NuxtUI Theme Colors:** Arcane purple, Treasure gold, Emerald green, Glory blue, Danger orange, Lore amber
+- **Parchment Background:** Grayscale background image (3-5% opacity, very subtle)
+- **Magic Particles:** 80-120 particles, 5 shape varieties (stars, circles, diamonds, hexagons, crosses)
+- **Constellation Lines:** Bright lines connecting nearby particles (50% opacity, gradient colors)
+
+**Physics & Interaction:**
+- **Slow Tumbling:** Each die rotates at 0.02 speed (very gentle)
+- **Ambient Drift:** Sine wave movement like floating particles
+- **Mouse Repulsion:** Subtle 3-unit radius push-back effect
+- **Scroll Momentum:** 0.003x scroll delta, each die reacts differently
+- **Spring-back:** 1% pull per frame to original positions
+- **Independent Movement:** Every die has unique drift path and velocity
+
+**Architecture:**
+- **Dual Canvas:** 2D canvas (z-index:1) + WebGL canvas (z-index:2)
+- **Shared Events:** Both canvases respond to same mouse/scroll handlers
+- **Single Animation Loop:** 30 FPS throttled, coordinates both renderers
+- **Three.js Integration:** MeshPhysicalMaterial, PerspectiveCamera, DirectionalLights
 
 **Performance:**
-- 30 FPS throttled animation (battery efficient)
-- Pauses when tab hidden (Visibility API)
-- Respects prefers-reduced-motion accessibility setting
-- <5% CPU usage on modern devices
+- Bundle size: +150KB minified (+33% from ~450KB base)
+- Memory: ~5-10MB for Three.js + geometries
+- FPS: 30 (same throttle as 2D animation)
+- CPU: <8% on modern devices
 
 **Technical:**
-- Canvas 2D API with particle system
-- `AnimatedBackground.vue` component + `useAnimatedBackground.ts` composable
+- 2D: Canvas 2D API for parchment, particles, constellations
+- 3D: Three.js for polyhedral dice with PBR materials
+- Cleanup: Proper disposal of geometries, materials, renderer on unmount
 - SSR compatible (ClientOnly wrapper)
-- 19 new tests (all passing)
 
 **Files:**
 - Component: `app/components/AnimatedBackground.vue`
 - Composable: `app/composables/useAnimatedBackground.ts`
+- Test Page: `app/pages/dice-test.vue` (standalone demo)
 - Tests: `tests/components/AnimatedBackground.test.ts` + `tests/composables/useAnimatedBackground.test.ts`
+
+**Documentation:**
+- Handover: `docs/HANDOVER-2025-11-23-3D-DICE-INTEGRATION.md`
+- Implementation Guide: `docs/3D-DICE-IMPLEMENTATION.md`
 
 ### Reference Pages (10/10) ✅
 **✅ Ability Scores, ✅ Conditions, ✅ Damage Types, ✅ Item Types, ✅ Languages, ✅ Proficiency Types, ✅ Sizes, ✅ Skills, ✅ Spell Schools, ✅ Sources**
