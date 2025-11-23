@@ -5,7 +5,7 @@
 
 export type EntityType
   // Main entities
-  = | 'races' | 'classes' | 'backgrounds' | 'feats' | 'spells' | 'items'
+  = | 'races' | 'classes' | 'backgrounds' | 'feats' | 'spells' | 'items' | 'monsters'
   // Reference entities
     | 'ability-scores' | 'conditions' | 'damage-types' | 'item-types'
     | 'languages' | 'proficiency-types' | 'sizes' | 'skills'
@@ -25,6 +25,7 @@ const ENTITY_FOLDER_MAP: Record<EntityType, string> = {
   'feats': 'feats',
   'spells': 'spells',
   'items': 'items',
+  'monsters': 'monsters',
 
   // Reference entities (conversion needed)
   'ability-scores': 'ability_scores',
