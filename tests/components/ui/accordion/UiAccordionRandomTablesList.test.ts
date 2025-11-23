@@ -68,4 +68,45 @@ describe('UiAccordionRandomTablesList', () => {
 
     expect(wrapper.text()).toBe('')
   })
+
+  it('should NOT render border-l-4 class on table wrapper', async () => {
+    const wrapper = await mountSuspended(UiAccordionRandomTablesList, {
+      props: { tables: mockTables }
+    })
+
+    // Find the wrapper div for each table
+    const html = wrapper.html()
+
+    // Should not contain border-l-4 class
+    expect(html).not.toContain('border-l-4')
+    expect(html).not.toContain('pl-4')
+  })
+
+  it('should NOT render border color classes', async () => {
+    const wrapper = await mountSuspended(UiAccordionRandomTablesList, {
+      props: {
+        tables: mockTables,
+        borderColor: 'purple-500'
+      }
+    })
+
+    const html = wrapper.html()
+    expect(html).not.toContain('border-purple-500')
+    expect(html).not.toContain('border-primary-500')
+  })
+
+  it('should still render spacing classes', async () => {
+    const wrapper = await mountSuspended(UiAccordionRandomTablesList, {
+      props: { tables: mockTables }
+    })
+
+    const html = wrapper.html()
+
+    // Outer wrapper should have p-4 and space-y-6
+    expect(html).toContain('p-4')
+    expect(html).toContain('space-y-6')
+
+    // Inner wrappers should have space-y-2
+    expect(html).toContain('space-y-2')
+  })
 })
