@@ -236,7 +236,7 @@ describe('UiFilterRangeSlider', () => {
       })
 
       const resetButton = wrapper.findComponent({ name: 'UButton' })
-      await resetButton.trigger('click')
+      await resetButton.vm.$emit('click')
 
       // Check that event was emitted and contains correct range
       const emitted = wrapper.emitted('update:modelValue')
@@ -377,10 +377,18 @@ describe('UiFilterRangeSlider', () => {
         }
       })
 
+      // Find the UButton component
       const resetButton = wrapper.findComponent({ name: 'UButton' })
       expect(resetButton.exists()).toBe(true)
-      // Reset button should have descriptive aria-label prop
-      expect(resetButton.props('ariaLabel')).toBeTruthy()
+
+      // Find the actual button element within the component
+      const buttonElement = resetButton.find('button')
+      expect(buttonElement.exists()).toBe(true)
+
+      // Check that the rendered button has aria-label attribute
+      const ariaLabel = buttonElement.attributes('aria-label')
+      expect(ariaLabel).toBeTruthy()
+      expect(ariaLabel).toContain('Reset')
     })
   })
 

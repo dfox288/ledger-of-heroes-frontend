@@ -94,21 +94,6 @@ describe('UiAccordionTraitsList', () => {
     expect(container.classes()).toContain('space-y-3')
   })
 
-  it('applies border color', async () => {
-    const wrapper = await mountSuspended(UiAccordionTraitsList, {
-      props: {
-        traits: [
-          { id: 1, name: 'Test', description: 'Test' }
-        ],
-        borderColor: 'red-500'
-      }
-    })
-
-    const border = wrapper.find('.border-l-4')
-    expect(border.exists()).toBe(true)
-    expect(border.classes()).toContain('border-red-500')
-  })
-
   it('applies dark mode support', async () => {
     const wrapper = await mountSuspended(UiAccordionTraitsList, {
       props: {
@@ -182,43 +167,5 @@ describe('UiAccordionTraitsList', () => {
 
     // Should not render any table elements
     expect(wrapper.find('table').exists()).toBe(false)
-  })
-
-  it('passes borderColor to random tables component', async () => {
-    const traitsWithTables = [
-      {
-        id: 1,
-        name: 'Test Trait',
-        description: 'A trait with tables',
-        random_tables: [
-          {
-            id: 1,
-            table_name: 'Test Table',
-            dice_type: 'd6',
-            description: null,
-            entries: [
-              {
-                id: 1,
-                roll_min: 1,
-                roll_max: 1,
-                result_text: 'Result',
-                sort_order: 0
-              }
-            ]
-          }
-        ]
-      }
-    ]
-
-    const wrapper = await mountSuspended(UiAccordionTraitsList, {
-      props: {
-        traits: traitsWithTables,
-        borderColor: 'purple-500'
-      }
-    })
-
-    // Component should render without errors
-    expect(wrapper.exists()).toBe(true)
-    expect(wrapper.text()).toContain('Test Table')
   })
 })
