@@ -2,6 +2,18 @@
 import { ref, computed } from 'vue'
 import type { SpellSchool, Spell, CharacterClass } from '~/types'
 
+interface DamageType {
+  id: number
+  code: string
+  name: string
+}
+
+interface AbilityScore {
+  id: number
+  code: string
+  name: string
+}
+
 const route = useRoute()
 const { apiFetch } = useApi()
 
@@ -15,6 +27,14 @@ const selectedClass = ref<string | null>((route.query.class as string) || null)
 const concentrationFilter = ref<string | null>((route.query.concentration as string) || null)
 const ritualFilter = ref<string | null>((route.query.ritual as string) || null)
 
+// Phase 1: Multi-select filters
+const selectedDamageTypes = ref<string[]>(
+  route.query.damage_type ? (Array.isArray(route.query.damage_type) ? route.query.damage_type : [route.query.damage_type]) as string[] : []
+)
+const selectedSavingThrows = ref<string[]>(
+  route.query.saving_throw ? (Array.isArray(route.query.saving_throw) ? route.query.saving_throw : [route.query.saving_throw]) as string[] : []
+)
+
 // Fetch spell schools for filter options
 const { data: spellSchools } = await useAsyncData<SpellSchool[]>('spell-schools', async () => {
   const response = await apiFetch<{ data: SpellSchool[] }>('/spell-schools')
@@ -24,6 +44,18 @@ const { data: spellSchools } = await useAsyncData<SpellSchool[]>('spell-schools'
 // Fetch classes for filter options
 const { data: classes } = await useAsyncData<CharacterClass[]>('classes-filter', async () => {
   const response = await apiFetch<{ data: CharacterClass[] }>('/classes?per_page=200')
+  return response.data
+})
+
+// Phase 1: Fetch damage types for filter options
+const { data: damageTypes } = await useAsyncData<DamageType[]>('damage-types', async () => {
+  const response = await apiFetch<{ data: DamageType[] }>('/damage-types')
+  return response.data
+})
+
+// Phase 1: Fetch ability scores (for saving throw filter options)
+const { data: abilityScores } = await useAsyncData<AbilityScore[]>('ability-scores', async () => {
+  const response = await apiFetch<{ data: AbilityScore[] }>('/ability-scores')
   return response.data
 })
 
@@ -70,6 +102,24 @@ const classOptions = computed(() => {
   return options
 })
 
+// Phase 1: Damage type filter options
+const damageTypeOptions = computed(() => {
+  if (!damageTypes.value) return []
+  return damageTypes.value.map(dt => ({
+    label: dt.name,
+    value: dt.code
+  }))
+})
+
+// Phase 1: Saving throw filter options (use ability score codes)
+const savingThrowOptions = computed(() => {
+  if (!abilityScores.value) return []
+  return abilityScores.value.map(ab => ({
+    label: ab.code, // Display just "STR", "DEX", etc.
+    value: ab.code
+  }))
+})
+
 // Query builder for custom filters
 const queryBuilder = computed(() => {
   const params: Record<string, unknown> = {}
@@ -78,6 +128,11 @@ const queryBuilder = computed(() => {
   if (selectedClass.value !== null) params.classes = selectedClass.value
   if (concentrationFilter.value !== null) params.concentration = concentrationFilter.value
   if (ritualFilter.value !== null) params.ritual = ritualFilter.value
+
+  // Phase 1: Multi-select filters (comma-separated)
+  if (selectedDamageTypes.value.length > 0) params.damage_type = selectedDamageTypes.value.join(',')
+  if (selectedSavingThrows.value.length > 0) params.saving_throw = selectedSavingThrows.value.join(',')
+
   return params
 })
 
@@ -113,6 +168,9 @@ const clearFilters = () => {
   selectedClass.value = null
   concentrationFilter.value = null
   ritualFilter.value = null
+  // Phase 1: Clear multi-select filters
+  selectedDamageTypes.value = []
+  selectedSavingThrows.value = []
 }
 
 // Get school name by ID for filter chips
@@ -123,6 +181,16 @@ const getSchoolName = (schoolId: number) => {
 // Get class name by slug for filter chips
 const getClassName = (classSlug: string) => {
   return classes.value?.find(c => c.slug === classSlug)?.name || 'Unknown'
+}
+
+// Phase 1: Get damage type name by code for filter chips
+const getDamageTypeName = (code: string) => {
+  return damageTypes.value?.find(dt => dt.code === code)?.name || code
+}
+
+// Phase 1: Get ability score name by code for filter chips (just return code for compactness)
+const getSavingThrowName = (code: string) => {
+  return code // Display "STR", "DEX", etc.
 }
 
 // Pagination settings
@@ -136,6 +204,9 @@ const activeFilterCount = computed(() => {
   if (selectedClass.value !== null) count++
   if (concentrationFilter.value !== null) count++
   if (ritualFilter.value !== null) count++
+  // Phase 1: Count multi-select filters
+  if (selectedDamageTypes.value.length > 0) count++
+  if (selectedSavingThrows.value.length > 0) count++
   return count
 })
 </script>
@@ -214,7 +285,7 @@ const activeFilterCount = computed(() => {
 
             <!-- Clear filters button -->
             <UButton
-              v-if="searchQuery || selectedLevel !== null || selectedSchool !== null || selectedClass !== null || concentrationFilter !== null || ritualFilter !== null"
+              v-if="searchQuery || selectedLevel !== null || selectedSchool !== null || selectedClass !== null || concentrationFilter !== null || ritualFilter !== null || selectedDamageTypes.length > 0 || selectedSavingThrows.length > 0"
               color="neutral"
               variant="soft"
               @click="clearFilters"
@@ -248,7 +319,30 @@ const activeFilterCount = computed(() => {
                 { value: '0', label: 'No' }
               ]"
             />
-        </div>
+          </div>
+
+          <!-- Phase 1: Multi-select Filters -->
+          <div class="flex flex-wrap gap-2">
+            <!-- Damage Types filter -->
+            <UiFilterMultiSelect
+              v-model="selectedDamageTypes"
+              :options="damageTypeOptions"
+              label="Damage Types"
+              placeholder="Select damage types"
+              color="primary"
+              class="w-64"
+            />
+
+            <!-- Saving Throws filter -->
+            <UiFilterMultiSelect
+              v-model="selectedSavingThrows"
+              :options="savingThrowOptions"
+              label="Saving Throws"
+              placeholder="Select saving throws"
+              color="primary"
+              class="w-64"
+            />
+          </div>
         </div>
       </UiFilterCollapse>
 
@@ -311,6 +405,28 @@ const activeFilterCount = computed(() => {
           @click="ritualFilter = null"
         >
           Ritual: {{ ritualFilter === '1' ? 'Yes' : 'No' }} ✕
+        </UButton>
+        <!-- Phase 1: Damage type chips -->
+        <UButton
+          v-for="damageType in selectedDamageTypes"
+          :key="damageType"
+          size="xs"
+          color="error"
+          variant="soft"
+          @click="selectedDamageTypes = selectedDamageTypes.filter(dt => dt !== damageType)"
+        >
+          {{ getDamageTypeName(damageType) }} ✕
+        </UButton>
+        <!-- Phase 1: Saving throw chips -->
+        <UButton
+          v-for="savingThrow in selectedSavingThrows"
+          :key="savingThrow"
+          size="xs"
+          color="info"
+          variant="soft"
+          @click="selectedSavingThrows = selectedSavingThrows.filter(st => st !== savingThrow)"
+        >
+          {{ getSavingThrowName(savingThrow) }} Save ✕
         </UButton>
       </div>
     </div>

@@ -9,6 +9,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added - Spells Filter Enhancement Phase 1 (2025-11-24)
+
+**Phase 1 Implementation:**
+- **Damage Types multi-select filter on Spells page** - Filter spells by damage type (Fire, Cold, Lightning, Thunder, Acid, Poison, Necrotic, Radiant, Psychic, Force, Bludgeoning, Piercing, Slashing) using UiFilterMultiSelect component - 13 options available (2025-11-24)
+- **Saving Throws multi-select filter on Spells page** - Filter spells by saving throw type (STR, DEX, CON, INT, WIS, CHA) using UiFilterMultiSelect component - 6 options available (2025-11-24)
+- **API utilization increase on Spells page** - From 17% (5 filters) to 24% (7 filters) - +7 percentage points improvement (2025-11-24)
+
+### Documentation
+- **Spells Filter Enhancement Master Plan** - Comprehensive 14,000-word implementation plan for adding 12 new filters (damage types, saving throws, tags, component flags, direct fields, sorting) to Spells page, increasing API utilization from 17% to 59% (+42 points) over 4 phases - Serves as template for 6 other entity pages (Items, Monsters, Races, Classes, Backgrounds, Feats) (2025-11-24)
+- **Spells Filter Enhancement Executive Summary** - Quick reference guide covering phased roadmap, component requirements, data sources, and cross-entity reusability strategy for filter enhancement project (2025-11-24)
+
 ### Added - Phase 1C & 2 Complete (2025-11-24)
 
 #### Filter Components
