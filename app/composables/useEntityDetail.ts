@@ -71,7 +71,7 @@ export function useEntityDetail<T = unknown>(config: UseEntityDetailConfig): Use
     `${config.cacheKey}-${config.slug}`,
     async () => {
       const result = await apiFetch(`${config.endpoint}/${config.slug}`)
-      return result.data
+      return result?.data || null
     }
   )
 
