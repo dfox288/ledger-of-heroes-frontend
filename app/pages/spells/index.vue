@@ -37,25 +37,25 @@ const durationFilter = ref<string | null>((route.query.duration as string) || nu
 // Fetch spell schools for filter options
 const { data: spellSchools } = await useAsyncData<SpellSchool[]>('spell-schools', async () => {
   const response = await apiFetch<{ data: SpellSchool[] }>('/spell-schools')
-  return response.data
+  return response?.data || []
 })
 
 // Fetch classes for filter options
 const { data: classes } = await useAsyncData<CharacterClass[]>('classes-filter', async () => {
   const response = await apiFetch<{ data: CharacterClass[] }>('/classes?per_page=200')
-  return response.data
+  return response?.data || []
 })
 
 // Phase 1: Fetch damage types for filter options
 const { data: damageTypes } = await useAsyncData<DamageType[]>('damage-types', async () => {
   const response = await apiFetch<{ data: DamageType[] }>('/damage-types')
-  return response.data
+  return response?.data || []
 })
 
 // Phase 1: Fetch ability scores (for saving throw filter options)
 const { data: abilityScores } = await useAsyncData<AbilityScore[]>('ability-scores', async () => {
   const response = await apiFetch<{ data: AbilityScore[] }>('/ability-scores')
-  return response.data
+  return response?.data || []
 })
 
 // Spell level options (0 = Cantrip, 1-9 = Spell levels)
