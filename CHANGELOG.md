@@ -10,6 +10,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **Class filter on Spells page** - Filter spells by character class (Wizard, Cleric, etc.) with base classes sorted alphabetically (2025-11-24)
+- **Quick stats panel on backgrounds detail page** - Shows actual proficiency/language/equipment data at a glance (2/3 layout) (2025-11-24)
+- **useBackgroundStats composable** - Extracts skill/tool proficiency names, language names, equipment count, and starting gold from Background entities (2025-11-24)
 - **UiFilterCollapse component** - Collapsible filter section with badge count for active filters (2025-11-23)
 - **UiFilterToggle component** - Reusable tri-state toggle filter component (All/Yes/No) with improved styling (2025-11-23)
 - **Concentration filter on Spells page** - Filter spells by concentration requirement (218 concentration spells) (2025-11-23)
@@ -17,6 +20,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Collapsible filters on Spells page** - Search-first design with filters hidden by default, expandable with badge showing active count (2025-11-23)
 
 ### Changed
+- **Background detail page image resized** from full-width to 1/3 width for consistency with classes/races pages (2025-11-24)
+- **BackgroundCard refactored** to use useBackgroundStats composable (reduces code duplication) (2025-11-24)
 - Normalized accordion table components with consistent styling (2025-11-23)
   - Created reusable UiAccordionDataTable base component
   - Refactored UiAccordionClassCounters, UiAccordionLevelProgression, UiAccordionRandomTablesList
