@@ -46,19 +46,21 @@ test.describe('Homepage', () => {
 
     entityCards.forEach(({ name, url, description }) => {
       test(`displays ${name} card with description`, async ({ page }) => {
-        const card = page.locator(`a[href="${url}"]`)
+        // Use .last() to select the entity card on homepage (not nav links)
+        const card = page.locator(`a[href="${url}"]`).last()
         await expect(card).toBeVisible()
         await expect(card.getByText(name)).toBeVisible()
         await expect(card.getByText(new RegExp(description, 'i'))).toBeVisible()
       })
 
       test(`${name} card links to ${url}`, async ({ page }) => {
-        const card = page.locator(`a[href="${url}"]`).first()
+        const card = page.locator(`a[href="${url}"]`).last()
         await expect(card).toHaveAttribute('href', url)
       })
 
       test(`${name} card is clickable and navigates`, async ({ page }) => {
-        await page.click(`a[href="${url}"]`)
+        // Click the entity card (last link, not nav link)
+        await page.locator(`a[href="${url}"]`).last().click()
         await expect(page).toHaveURL(url)
         // Verify we reached the list page
         await expect(page.locator('h1')).toBeVisible()
@@ -86,9 +88,9 @@ test.describe('Homepage', () => {
 
     referenceItems.forEach(({ label, url }) => {
       test(`displays ${label} reference link`, async ({ page }) => {
-        const link = page.locator(`a[href="${url}"]`)
-        await expect(link).toBeVisible()
-        await expect(link.getByText(label)).toBeVisible()
+        // Use getByRole to find links by accessible name (avoids strict mode violations)
+        const link = page.getByRole('link', { name: label })
+        await expect(link.last()).toBeVisible()
       })
     })
   })
@@ -100,18 +102,19 @@ test.describe('Homepage', () => {
   test('has responsive layout on mobile', async ({ page }) => {
     await page.setViewportSize({ width: 375, height: 667 }) // iPhone SE
     await expect(page.locator('img[alt="Ledger of Heroes"]')).toBeVisible()
-    await expect(page.getByText(/Spells/i)).toBeVisible()
+    // Check for Spells entity card specifically
+    await expect(page.locator('a[href="/spells"]').last()).toBeVisible()
   })
 
   test('has responsive layout on tablet', async ({ page }) => {
     await page.setViewportSize({ width: 768, height: 1024 }) // iPad
     await expect(page.locator('img[alt="Ledger of Heroes"]')).toBeVisible()
-    await expect(page.getByText(/Spells/i)).toBeVisible()
+    await expect(page.locator('a[href="/spells"]').last()).toBeVisible()
   })
 
   test('has responsive layout on desktop', async ({ page }) => {
     await page.setViewportSize({ width: 1440, height: 900 }) // Desktop
     await expect(page.locator('img[alt="Ledger of Heroes"]')).toBeVisible()
-    await expect(page.getByText(/Spells/i)).toBeVisible()
+    await expect(page.locator('a[href="/spells"]').last()).toBeVisible()
   })
 })

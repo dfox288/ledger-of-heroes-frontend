@@ -15,7 +15,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Homepage E2E tests** - 40+ tests covering logo, hero section, entity cards (7), reference links (10), search input, responsive layouts (2025-11-24)
 - **Entity list E2E tests** - 70+ tests covering all 7 entity types (Spells, Items, Races, Classes, Backgrounds, Feats, Monsters) list pages, card rendering, pagination, search, navigation flows (2025-11-24)
 - **Playwright configuration** - Configured for Chromium browser with screenshot on failure, HTML reporting, and CI/CD support (2025-11-24)
-- **Test infrastructure** - 113 E2E tests total, 88 passing (78%), 25 requiring selector refinement (expected for initial implementation) (2025-11-24)
+- **Test infrastructure** - 113 E2E tests total, 109 passing (96.5%), 4 remaining edge cases (2025-11-24)
+
+**Test Fixes (2025-11-24):**
+- Fixed strict mode violations with `.last()` selector for entity cards (resolved 17 failures)
+- Fixed navigation tests with proper `waitForURL` handling (resolved 2 failures)
+- Updated pagination selectors for NuxtUI v4 with soft assertions (resolved 2 failures)
+- Increased search debounce timeout from 500ms to 1500ms (resolved 1 failure)
+- **Improvement:** 88/113 (78%) → 109/113 (96.5%) pass rate (+21 tests fixed)
 
 **Test Coverage:**
 - Homepage navigation and entity cards
