@@ -16,10 +16,9 @@ import { join } from 'path'
  */
 describe('Feats Page - has_prerequisites Filter', () => {
   const featsPagePath = join(process.cwd(), 'app/pages/feats/index.vue')
-  let featsPageContent: string
 
   // Read file once for all tests
-  featsPageContent = readFileSync(featsPagePath, 'utf-8')
+  const featsPageContent = readFileSync(featsPagePath, 'utf-8')
 
   describe('Filter State Management', () => {
     it('should import ref from vue', () => {
@@ -89,10 +88,10 @@ describe('Feats Page - has_prerequisites Filter', () => {
       expect(hasPrerequisitesLabel).toBe(true)
     })
 
-    it('should configure has_prerequisites toggle with warning color', () => {
-      // Look for color="warning" (feat color)
+    it('should configure has_prerequisites toggle with primary color', () => {
+      // Look for color="primary" (unified filter color)
       const hasPrerequisitesColor = featsPageContent.includes('hasPrerequisites')
-        && featsPageContent.includes('color="warning"')
+        && featsPageContent.includes('color="primary"')
 
       expect(hasPrerequisitesColor).toBe(true)
     })
@@ -142,10 +141,10 @@ describe('Feats Page - has_prerequisites Filter', () => {
       expect(hasPrerequisitesChipRemove).toBe(true)
     })
 
-    it('should use warning color for hasPrerequisites chip', () => {
-      // Look for color="warning" in chip
+    it('should use primary color for hasPrerequisites chip', () => {
+      // Look for color="primary" in chip (unified filter color)
       const hasPrerequisitesChipColor = featsPageContent.includes('hasPrerequisites')
-        && featsPageContent.includes('color="warning"')
+        && featsPageContent.includes('color="primary"')
 
       expect(hasPrerequisitesChipColor).toBe(true)
     })

@@ -16,10 +16,9 @@ import { join } from 'path'
  */
 describe('Races Page - has_darkvision Filter', () => {
   const racesPagePath = join(process.cwd(), 'app/pages/races/index.vue')
-  let racesPageContent: string
 
   // Read file once for all tests
-  racesPageContent = readFileSync(racesPagePath, 'utf-8')
+  const racesPageContent = readFileSync(racesPagePath, 'utf-8')
 
   describe('Filter State Management', () => {
     it('should initialize hasDarkvision from route query', () => {
@@ -61,9 +60,9 @@ describe('Races Page - has_darkvision Filter', () => {
       expect(hasDarkvisionLabel).toBe(true)
     })
 
-    it('should configure has_darkvision toggle with info color (race semantic)', () => {
+    it('should configure has_darkvision toggle with primary color (unified filter color)', () => {
       const hasDarkvisionColor = racesPageContent.includes('hasDarkvision')
-        && racesPageContent.includes('color="info"')
+        && racesPageContent.includes('color="primary"')
 
       expect(hasDarkvisionColor).toBe(true)
     })
@@ -100,9 +99,9 @@ describe('Races Page - has_darkvision Filter', () => {
       expect(hasDarkvisionChipRemove).toBe(true)
     })
 
-    it('should use info color for hasDarkvision chip', () => {
+    it('should use primary color for hasDarkvision chip', () => {
       const hasDarkvisionChipColor = racesPageContent.includes('hasDarkvision')
-        && racesPageContent.includes('color="info"')
+        && racesPageContent.includes('color="primary"')
 
       expect(hasDarkvisionChipColor).toBe(true)
     })

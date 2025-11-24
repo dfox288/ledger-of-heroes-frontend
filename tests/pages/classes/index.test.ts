@@ -18,10 +18,9 @@ import { join } from 'path'
  */
 describe('Classes Page - Filter Integration', () => {
   const classesPagePath = join(process.cwd(), 'app/pages/classes/index.vue')
-  let classesPageContent: string
 
   // Read file once for all tests
-  classesPageContent = readFileSync(classesPagePath, 'utf-8')
+  const classesPageContent = readFileSync(classesPagePath, 'utf-8')
 
   describe('is_base_class filter', () => {
     it('should initialize isBaseClass from route query', () => {
@@ -47,9 +46,9 @@ describe('Classes Page - Filter Integration', () => {
       expect(hasIsBaseClassToggle).toBe(true)
     })
 
-    it('should use error color (class semantic)', () => {
+    it('should use primary color (unified filter color)', () => {
       const hasIsBaseClassColor = classesPageContent.includes('isBaseClass')
-        && classesPageContent.includes('color="error"')
+        && classesPageContent.includes('color="primary"')
 
       expect(hasIsBaseClassColor).toBe(true)
     })
@@ -108,9 +107,9 @@ describe('Classes Page - Filter Integration', () => {
       expect(hasIsSpellcasterToggle).toBe(true)
     })
 
-    it('should use error color (class semantic)', () => {
+    it('should use primary color (unified filter color)', () => {
       const hasIsSpellcasterColor = classesPageContent.includes('isSpellcaster')
-        && classesPageContent.includes('color="error"')
+        && classesPageContent.includes('color="primary"')
 
       expect(hasIsSpellcasterColor).toBe(true)
     })
