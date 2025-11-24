@@ -96,12 +96,11 @@ const clearAll = () => {
       <div class="flex-1 relative">
         <USelectMenu
           :model-value="normalizedValue"
-          :options="options"
+          :items="options"
           multiple
           searchable
           :aria-label="`${label} filter`"
-          value-attribute="value"
-          option-attribute="label"
+          value-key="value"
           @update:model-value="handleChange"
         />
         <div
