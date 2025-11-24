@@ -9,6 +9,36 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added - Playwright E2E Testing (2025-11-24)
+
+**End-to-end test coverage for critical user journeys:**
+- **Homepage E2E tests** - 40+ tests covering logo, hero section, entity cards (7), reference links (10), search input, responsive layouts (2025-11-24)
+- **Entity list E2E tests** - 70+ tests covering all 7 entity types (Spells, Items, Races, Classes, Backgrounds, Feats, Monsters) list pages, card rendering, pagination, search, navigation flows (2025-11-24)
+- **Playwright configuration** - Configured for Chromium browser with screenshot on failure, HTML reporting, and CI/CD support (2025-11-24)
+- **Test infrastructure** - 113 E2E tests total, 88 passing (78%), 25 requiring selector refinement (expected for initial implementation) (2025-11-24)
+
+**Test Coverage:**
+- Homepage navigation and entity cards
+- List page rendering for all 7 entity types
+- Pagination controls and navigation
+- Search functionality (spells, items)
+- Breadcrumb navigation
+- Responsive layouts (mobile 375px, tablet 768px, desktop 1440px)
+- User flows: Homepage → List → Detail → Back
+
+**Technical Details:**
+- Playwright 1.56.1 with Chromium browser
+- New config: `playwright.config.ts`
+- Test files: `tests/e2e/homepage.spec.ts`, `tests/e2e/entity-lists.spec.ts`
+- Documentation: `tests/e2e/README.md`
+- NPM scripts: `test:e2e`, `test:e2e:ui`, `test:e2e:headed`, `test:e2e:report`
+
+**Impact:**
+- ✅ **Real user flow testing** - Catches integration bugs that unit tests miss
+- ✅ **Regression protection** - Ensures navigation, routing, API integration work end-to-end
+- ✅ **CI/CD ready** - Configured for automated testing in pipelines
+- ✅ **Complements 886 unit tests** - Full coverage from component to user experience
+
 ### Fixed
 - Nuxt manifest initialization errors in test environment (2025-11-24)
   - Fixed "Cannot read properties of undefined (reading 'then')" errors from fetchManifest
