@@ -128,127 +128,217 @@ const imagePath = computed(() => {
       </div>
 
       <!-- Description (full width) -->
-      <UCard v-if="monster.description">
-        <template #header>
-          <h2 class="text-lg font-semibold text-gray-900 dark:text-gray-100">
-            Description
-          </h2>
+      <UiDetailDescriptionCard
+        v-if="monster.description"
+        :description="monster.description"
+      />
+
+      <!-- Additional Details (Accordion) -->
+      <UAccordion
+        :items="[
+          ...(monster.traits && monster.traits.length > 0 ? [{
+            label: 'Traits',
+            slot: 'traits',
+            defaultOpen: false
+          }] : []),
+          ...(regularActions.length > 0 ? [{
+            label: 'Actions',
+            slot: 'actions',
+            defaultOpen: false
+          }] : []),
+          ...(monster.legendary_actions && monster.legendary_actions.length > 0 ? [{
+            label: 'Legendary Actions',
+            slot: 'legendary',
+            defaultOpen: false
+          }] : []),
+          ...(monster.spellcasting ? [{
+            label: 'Spellcasting',
+            slot: 'spellcasting',
+            defaultOpen: false
+          }] : []),
+          ...(monster.modifiers && monster.modifiers.length > 0 ? [{
+            label: 'Modifiers',
+            slot: 'modifiers',
+            defaultOpen: false
+          }] : []),
+          ...(monster.conditions && monster.conditions.length > 0 ? [{
+            label: 'Conditions',
+            slot: 'conditions',
+            defaultOpen: false
+          }] : []),
+          ...(monster.sources && monster.sources.length > 0 ? [{
+            label: 'Source',
+            slot: 'source',
+            defaultOpen: false
+          }] : [])
+        ]"
+        type="multiple"
+      >
+        <!-- Traits Slot -->
+        <template
+          v-if="monster.traits && monster.traits.length > 0"
+          #traits
+        >
+          <div class="p-4 space-y-4">
+            <div
+              v-for="trait in monster.traits"
+              :key="trait.id || trait.name"
+              class="space-y-1"
+            >
+              <h4 class="font-semibold text-primary-600 dark:text-primary-400">
+                {{ trait.name }}
+              </h4>
+              <p class="text-sm text-gray-700 dark:text-gray-300">
+                {{ trait.description }}
+              </p>
+            </div>
+          </div>
         </template>
-        <div class="prose dark:prose-invert max-w-none">
-          <p class="whitespace-pre-line text-base text-gray-700 dark:text-gray-300 leading-relaxed">
-            {{ monster.description }}
-          </p>
-        </div>
-      </UCard>
 
-      <!-- Traits -->
-      <UiAccordionTraits
-        v-if="monster.traits && monster.traits.length > 0"
-        :traits="monster.traits"
-      />
-
-      <!-- Actions -->
-      <UiAccordionActions
-        v-if="regularActions.length > 0"
-        :actions="regularActions"
-        title="Actions"
-      />
-
-      <!-- Legendary Actions -->
-      <UiAccordionActions
-        v-if="monster.legendary_actions && monster.legendary_actions.length > 0"
-        :actions="monster.legendary_actions"
-        title="Legendary Actions"
-        :show-cost="true"
-      />
-
-      <!-- Spellcasting -->
-      <UCard v-if="monster.spellcasting">
-        <template #header>
-          <h2 class="text-lg font-semibold text-gray-900 dark:text-gray-100">
-            Spellcasting
-          </h2>
+        <!-- Actions Slot -->
+        <template
+          v-if="regularActions.length > 0"
+          #actions
+        >
+          <div class="p-4 space-y-4">
+            <div
+              v-for="action in regularActions"
+              :key="action.id || action.name"
+              class="space-y-2"
+            >
+              <!-- Action name -->
+              <h4 class="font-semibold text-primary-600 dark:text-primary-400">
+                {{ action.name }}
+              </h4>
+              <!-- Action description -->
+              <p class="text-sm text-gray-700 dark:text-gray-300">
+                {{ action.description }}
+              </p>
+            </div>
+          </div>
         </template>
-        <div class="space-y-4">
-          <!-- Description -->
-          <p class="text-gray-700 dark:text-gray-300 whitespace-pre-line">
-            {{ monster.spellcasting.description }}
-          </p>
 
-          <!-- Spellcasting Stats -->
-          <div class="grid grid-cols-2 md:grid-cols-4 gap-4 pt-4 border-t border-gray-200 dark:border-gray-700">
+        <!-- Legendary Actions Slot -->
+        <template
+          v-if="monster.legendary_actions && monster.legendary_actions.length > 0"
+          #legendary
+        >
+          <div class="p-4 space-y-4">
             <div
-              v-if="monster.spellcasting.spellcasting_ability"
-              class="text-center"
+              v-for="action in monster.legendary_actions"
+              :key="action.id || action.name"
+              class="space-y-2"
             >
-              <div class="text-sm text-gray-600 dark:text-gray-400">
-                Ability
+              <!-- Action name with cost badge -->
+              <div class="flex items-center gap-2 flex-wrap">
+                <h4 class="font-semibold text-primary-600 dark:text-primary-400">
+                  {{ action.name }}
+                </h4>
+                <UBadge
+                  v-if="action.action_cost"
+                  color="info"
+                  variant="soft"
+                  size="sm"
+                >
+                  {{ action.action_cost === 1 ? 'Costs 1 Action' : `Costs ${action.action_cost} Actions` }}
+                </UBadge>
               </div>
-              <div class="text-lg font-semibold text-gray-900 dark:text-gray-100">
-                {{ monster.spellcasting.spellcasting_ability }}
-              </div>
+              <!-- Action description -->
+              <p class="text-sm text-gray-700 dark:text-gray-300">
+                {{ action.description }}
+              </p>
             </div>
-            <div
-              v-if="monster.spellcasting.spell_save_dc"
-              class="text-center"
-            >
-              <div class="text-sm text-gray-600 dark:text-gray-400">
-                Spell Save DC
+          </div>
+        </template>
+
+        <!-- Spellcasting Slot -->
+        <template
+          v-if="monster.spellcasting"
+          #spellcasting
+        >
+          <div class="p-4 space-y-4">
+            <!-- Description -->
+            <p class="text-gray-700 dark:text-gray-300 whitespace-pre-line">
+              {{ monster.spellcasting.description }}
+            </p>
+
+            <!-- Spellcasting Stats -->
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4 pt-4 border-t border-gray-200 dark:border-gray-700">
+              <div
+                v-if="monster.spellcasting.spellcasting_ability"
+                class="text-center"
+              >
+                <div class="text-sm text-gray-600 dark:text-gray-400">
+                  Ability
+                </div>
+                <div class="text-lg font-semibold text-gray-900 dark:text-gray-100">
+                  {{ monster.spellcasting.spellcasting_ability }}
+                </div>
               </div>
-              <div class="text-lg font-semibold text-gray-900 dark:text-gray-100">
-                {{ monster.spellcasting.spell_save_dc }}
+              <div
+                v-if="monster.spellcasting.spell_save_dc"
+                class="text-center"
+              >
+                <div class="text-sm text-gray-600 dark:text-gray-400">
+                  Spell Save DC
+                </div>
+                <div class="text-lg font-semibold text-gray-900 dark:text-gray-100">
+                  {{ monster.spellcasting.spell_save_dc }}
+                </div>
               </div>
-            </div>
-            <div
-              v-if="monster.spellcasting.spell_attack_bonus"
-              class="text-center"
-            >
-              <div class="text-sm text-gray-600 dark:text-gray-400">
-                Spell Attack
+              <div
+                v-if="monster.spellcasting.spell_attack_bonus"
+                class="text-center"
+              >
+                <div class="text-sm text-gray-600 dark:text-gray-400">
+                  Spell Attack
+                </div>
+                <div class="text-lg font-semibold text-gray-900 dark:text-gray-100">
+                  +{{ monster.spellcasting.spell_attack_bonus }}
+                </div>
               </div>
-              <div class="text-lg font-semibold text-gray-900 dark:text-gray-100">
-                +{{ monster.spellcasting.spell_attack_bonus }}
-              </div>
-            </div>
-            <div
-              v-if="monster.spellcasting.spell_slots"
-              class="text-center"
-            >
-              <div class="text-sm text-gray-600 dark:text-gray-400">
-                Spell Slots
-              </div>
-              <div class="text-sm font-medium text-gray-900 dark:text-gray-100">
-                {{ monster.spellcasting.spell_slots }}
+              <div
+                v-if="monster.spellcasting.spell_slots"
+                class="text-center"
+              >
+                <div class="text-sm text-gray-600 dark:text-gray-400">
+                  Spell Slots
+                </div>
+                <div class="text-sm font-medium text-gray-900 dark:text-gray-100">
+                  {{ monster.spellcasting.spell_slots }}
+                </div>
               </div>
             </div>
           </div>
-        </div>
-      </UCard>
-
-      <!-- Modifiers -->
-      <UiModifiersDisplay
-        v-if="monster.modifiers && monster.modifiers.length > 0"
-        :modifiers="monster.modifiers"
-      />
-
-      <!-- Conditions -->
-      <UCard v-if="monster.conditions && monster.conditions.length > 0">
-        <template #header>
-          <h2 class="text-lg font-semibold text-gray-900 dark:text-gray-100">
-            Conditions
-          </h2>
         </template>
-        <UiAccordionConditions
-          :conditions="monster.conditions"
-          entity-type="monster"
-        />
-      </UCard>
 
-      <!-- Sources -->
-      <UiSourceDisplay
-        v-if="monster.sources && monster.sources.length > 0"
-        :sources="monster.sources"
-      />
+        <!-- Modifiers Slot -->
+        <template
+          v-if="monster.modifiers && monster.modifiers.length > 0"
+          #modifiers
+        >
+          <UiModifiersDisplay :modifiers="monster.modifiers" />
+        </template>
+
+        <!-- Conditions Slot -->
+        <template
+          v-if="monster.conditions && monster.conditions.length > 0"
+          #conditions
+        >
+          <UiAccordionConditions
+            :conditions="monster.conditions"
+            entity-type="monster"
+          />
+        </template>
+
+        <!-- Source Slot -->
+        <template
+          v-if="monster.sources && monster.sources.length > 0"
+          #source
+        >
+          <UiSourceDisplay :sources="monster.sources" />
+        </template>
+      </UAccordion>
 
       <!-- Back to Monsters -->
       <div class="text-center">

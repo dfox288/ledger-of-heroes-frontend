@@ -174,12 +174,12 @@ const imagePath = computed(() => {
           }] : []),
           ...(item.random_tables && item.random_tables.length > 0 ? [{
             label: 'Random Tables',
-            slot: 'random_tables',
+            slot: 'random-tables',
             defaultOpen: false
           }] : []),
           ...(item.saving_throws && item.saving_throws.length > 0 ? [{
             label: 'Saving Throws',
-            slot: 'saving_throws',
+            slot: 'saving-throws',
             defaultOpen: false
           }] : []),
           ...(item.sources && item.sources.length > 0 ? [{
@@ -254,7 +254,7 @@ const imagePath = computed(() => {
         <!-- Random Tables Slot -->
         <template
           v-if="item.random_tables && item.random_tables.length > 0"
-          #random_tables
+          #random-tables
         >
           <UiAccordionRandomTablesList :tables="item.random_tables" />
         </template>
@@ -262,7 +262,7 @@ const imagePath = computed(() => {
         <!-- Saving Throws Slot -->
         <template
           v-if="item.saving_throws && item.saving_throws.length > 0"
-          #saving_throws
+          #saving-throws
         >
           <UiAccordionSavingThrows :saving-throws="item.saving_throws" />
         </template>

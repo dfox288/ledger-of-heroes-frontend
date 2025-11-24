@@ -283,39 +283,10 @@ const abilityScoreIncreases = computed(() => {
           v-if="race.conditions && race.conditions.length > 0"
           #conditions
         >
-          <div class="p-4 space-y-3">
-            <div
-              v-for="conditionRelation in race.conditions"
-              :key="conditionRelation.id"
-              class="p-3 rounded-lg bg-gray-50 dark:bg-gray-800"
-            >
-              <div class="flex items-start gap-3">
-                <UBadge
-                  color="warning"
-                  variant="soft"
-                >
-                  {{ conditionRelation.condition?.name }}
-                </UBadge>
-                <div class="flex-1">
-                  <div
-                    v-if="conditionRelation.effect_type"
-                    class="text-sm font-medium text-gray-900 dark:text-gray-100 mb-1"
-                  >
-                    Effect: {{ conditionRelation.effect_type.charAt(0).toUpperCase() + conditionRelation.effect_type.slice(1) }}
-                  </div>
-                  <div class="text-sm text-gray-700 dark:text-gray-300">
-                    {{ conditionRelation.condition?.description }}
-                  </div>
-                  <div
-                    v-if="conditionRelation.description"
-                    class="text-sm text-gray-600 dark:text-gray-400 mt-2 italic"
-                  >
-                    {{ conditionRelation.description }}
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
+          <UiAccordionConditions
+            :conditions="race.conditions"
+            entity-type="race"
+          />
         </template>
 
         <!-- Source Slot -->

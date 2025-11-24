@@ -129,18 +129,10 @@ const quickStatsForDisplay = computed(() => {
       />
 
       <!-- Description Card -->
-      <UCard v-if="entity.description">
-        <template #header>
-          <h2 class="text-xl font-semibold text-gray-900 dark:text-gray-100">
-            Description
-          </h2>
-        </template>
-        <div class="prose prose-gray dark:prose-invert max-w-none">
-          <p class="text-gray-700 dark:text-gray-300 whitespace-pre-line">
-            {{ entity.description }}
-          </p>
-        </div>
-      </UCard>
+      <UiDetailDescriptionCard
+        v-if="entity.description"
+        :description="entity.description"
+      />
 
       <!-- Additional Details (Accordion) -->
       <UAccordion

@@ -108,16 +108,10 @@ const imagePath = computed(() => {
       </div>
 
       <!-- Description (full width) -->
-      <UCard>
-        <template #header>
-          <h2 class="text-xl font-semibold">
-            Description
-          </h2>
-        </template>
-        <p class="text-gray-700 dark:text-gray-300 whitespace-pre-line">
-          {{ spell.description }}
-        </p>
-      </UCard>
+      <UiDetailDescriptionCard
+        v-if="spell.description"
+        :description="spell.description"
+      />
 
       <!-- Additional Details (Accordion) -->
       <UAccordion
