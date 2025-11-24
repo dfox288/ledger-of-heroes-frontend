@@ -25,47 +25,47 @@ describe('Classes Page - Filter Integration', () => {
 
   describe('is_base_class filter', () => {
     it('should initialize isBaseClass from route query', () => {
-      const hasIsBaseClassRef = classesPageContent.includes('isBaseClass') &&
-        classesPageContent.includes('route.query.is_base_class')
+      const hasIsBaseClassRef = classesPageContent.includes('isBaseClass')
+        && classesPageContent.includes('route.query.is_base_class')
 
       expect(hasIsBaseClassRef).toBe(true)
     })
 
     it('should include is_base_class in queryBuilder', () => {
-      const hasIsBaseClassInQueryBuilder = classesPageContent.includes('queryBuilder') &&
-        classesPageContent.includes('isBaseClass') &&
-        (classesPageContent.includes('params.is_base_class') || classesPageContent.includes('params[\'is_base_class\']'))
+      const hasIsBaseClassInQueryBuilder = classesPageContent.includes('queryBuilder')
+        && classesPageContent.includes('isBaseClass')
+        && (classesPageContent.includes('params.is_base_class') || classesPageContent.includes('params[\'is_base_class\']'))
 
       expect(hasIsBaseClassInQueryBuilder).toBe(true)
     })
 
     it('should render UiFilterToggle with correct label', () => {
-      const hasIsBaseClassToggle = classesPageContent.includes('UiFilterToggle') &&
-        classesPageContent.includes('v-model="isBaseClass"') &&
-        classesPageContent.includes('label="Base Class Only"')
+      const hasIsBaseClassToggle = classesPageContent.includes('UiFilterToggle')
+        && classesPageContent.includes('v-model="isBaseClass"')
+        && classesPageContent.includes('label="Base Class Only"')
 
       expect(hasIsBaseClassToggle).toBe(true)
     })
 
     it('should use error color (class semantic)', () => {
-      const hasIsBaseClassColor = classesPageContent.includes('isBaseClass') &&
-        classesPageContent.includes('color="error"')
+      const hasIsBaseClassColor = classesPageContent.includes('isBaseClass')
+        && classesPageContent.includes('color="error"')
 
       expect(hasIsBaseClassColor).toBe(true)
     })
 
     it('should have tri-state options', () => {
-      const hasIsBaseClassOptions = classesPageContent.includes('isBaseClass') &&
-        classesPageContent.includes('value: null') &&
-        classesPageContent.includes('value: \'1\'') &&
-        classesPageContent.includes('value: \'0\'')
+      const hasIsBaseClassOptions = classesPageContent.includes('isBaseClass')
+        && classesPageContent.includes('value: null')
+        && classesPageContent.includes('value: \'1\'')
+        && classesPageContent.includes('value: \'0\'')
 
       expect(hasIsBaseClassOptions).toBe(true)
     })
 
     it('should display filter chip when active', () => {
-      const hasIsBaseClassChip = classesPageContent.includes('v-if="isBaseClass !== null"') &&
-        classesPageContent.includes('Base Class Only')
+      const hasIsBaseClassChip = classesPageContent.includes('v-if="isBaseClass !== null"')
+        && classesPageContent.includes('Base Class Only')
 
       expect(hasIsBaseClassChip).toBe(true)
     })
@@ -77,8 +77,8 @@ describe('Classes Page - Filter Integration', () => {
     })
 
     it('should be cleared by clearFilters', () => {
-      const hasClearIsBaseClass = classesPageContent.includes('clearFilters') &&
-        classesPageContent.includes('isBaseClass.value = null')
+      const hasClearIsBaseClass = classesPageContent.includes('clearFilters')
+        && classesPageContent.includes('isBaseClass.value = null')
 
       expect(hasClearIsBaseClass).toBe(true)
     })
@@ -86,47 +86,47 @@ describe('Classes Page - Filter Integration', () => {
 
   describe('is_spellcaster filter', () => {
     it('should initialize isSpellcaster from route query', () => {
-      const hasIsSpellcasterRef = classesPageContent.includes('isSpellcaster') &&
-        classesPageContent.includes('route.query.is_spellcaster')
+      const hasIsSpellcasterRef = classesPageContent.includes('isSpellcaster')
+        && classesPageContent.includes('route.query.is_spellcaster')
 
       expect(hasIsSpellcasterRef).toBe(true)
     })
 
     it('should include is_spellcaster in queryBuilder', () => {
-      const hasIsSpellcasterInQueryBuilder = classesPageContent.includes('queryBuilder') &&
-        classesPageContent.includes('isSpellcaster') &&
-        (classesPageContent.includes('params.is_spellcaster') || classesPageContent.includes('params[\'is_spellcaster\']'))
+      const hasIsSpellcasterInQueryBuilder = classesPageContent.includes('queryBuilder')
+        && classesPageContent.includes('isSpellcaster')
+        && (classesPageContent.includes('params.is_spellcaster') || classesPageContent.includes('params[\'is_spellcaster\']'))
 
       expect(hasIsSpellcasterInQueryBuilder).toBe(true)
     })
 
     it('should render UiFilterToggle with correct label', () => {
-      const hasIsSpellcasterToggle = classesPageContent.includes('UiFilterToggle') &&
-        classesPageContent.includes('v-model="isSpellcaster"') &&
-        classesPageContent.includes('label="Spellcaster"')
+      const hasIsSpellcasterToggle = classesPageContent.includes('UiFilterToggle')
+        && classesPageContent.includes('v-model="isSpellcaster"')
+        && classesPageContent.includes('label="Spellcaster"')
 
       expect(hasIsSpellcasterToggle).toBe(true)
     })
 
     it('should use error color (class semantic)', () => {
-      const hasIsSpellcasterColor = classesPageContent.includes('isSpellcaster') &&
-        classesPageContent.includes('color="error"')
+      const hasIsSpellcasterColor = classesPageContent.includes('isSpellcaster')
+        && classesPageContent.includes('color="error"')
 
       expect(hasIsSpellcasterColor).toBe(true)
     })
 
     it('should have tri-state options', () => {
-      const hasIsSpellcasterOptions = classesPageContent.includes('isSpellcaster') &&
-        classesPageContent.includes('value: null') &&
-        classesPageContent.includes('value: \'1\'') &&
-        classesPageContent.includes('value: \'0\'')
+      const hasIsSpellcasterOptions = classesPageContent.includes('isSpellcaster')
+        && classesPageContent.includes('value: null')
+        && classesPageContent.includes('value: \'1\'')
+        && classesPageContent.includes('value: \'0\'')
 
       expect(hasIsSpellcasterOptions).toBe(true)
     })
 
     it('should display filter chip when active', () => {
-      const hasIsSpellcasterChip = classesPageContent.includes('v-if="isSpellcaster !== null"') &&
-        classesPageContent.includes('Spellcaster')
+      const hasIsSpellcasterChip = classesPageContent.includes('v-if="isSpellcaster !== null"')
+        && classesPageContent.includes('Spellcaster')
 
       expect(hasIsSpellcasterChip).toBe(true)
     })
@@ -138,8 +138,8 @@ describe('Classes Page - Filter Integration', () => {
     })
 
     it('should be cleared by clearFilters', () => {
-      const hasClearIsSpellcaster = classesPageContent.includes('clearFilters') &&
-        classesPageContent.includes('isSpellcaster.value = null')
+      const hasClearIsSpellcaster = classesPageContent.includes('clearFilters')
+        && classesPageContent.includes('isSpellcaster.value = null')
 
       expect(hasClearIsSpellcaster).toBe(true)
     })
@@ -147,22 +147,22 @@ describe('Classes Page - Filter Integration', () => {
 
   describe('Filter UI Structure', () => {
     it('should have Clear Filters button', () => {
-      const hasClearFiltersButton = classesPageContent.includes('Clear Filters') &&
-        classesPageContent.includes('UButton')
+      const hasClearFiltersButton = classesPageContent.includes('Clear Filters')
+        && classesPageContent.includes('UButton')
 
       expect(hasClearFiltersButton).toBe(true)
     })
 
     it('should have Active Filter Chips section', () => {
-      const hasActiveChipsSection = classesPageContent.includes('Active:') &&
-        classesPageContent.includes('hasActiveFilters')
+      const hasActiveChipsSection = classesPageContent.includes('Active:')
+        && classesPageContent.includes('hasActiveFilters')
 
       expect(hasActiveChipsSection).toBe(true)
     })
 
     it('should show search query chip when search is active', () => {
-      const hasSearchChip = classesPageContent.includes('v-if="searchQuery"') &&
-        classesPageContent.includes('searchQuery = \'\'')
+      const hasSearchChip = classesPageContent.includes('v-if="searchQuery"')
+        && classesPageContent.includes('searchQuery = \'\'')
 
       expect(hasSearchChip).toBe(true)
     })

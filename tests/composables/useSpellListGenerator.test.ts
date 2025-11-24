@@ -51,7 +51,7 @@ describe('useSpellListGenerator', () => {
     characterLevel.value = 3
 
     expect(spellSlots.value).toEqual({
-      cantrips: 3,
+      'cantrips': 3,
       '1st': 4,
       '2nd': 2,
       '3rd': 0

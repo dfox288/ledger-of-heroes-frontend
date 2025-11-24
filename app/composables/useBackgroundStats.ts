@@ -30,14 +30,14 @@ export function useBackgroundStats(background: Ref<Background | null>) {
 
   /**
    * Extract tool proficiency names
-   * Filters by proficiency_type='tool' and extracts tool.name
+   * Filters by proficiency_type='tool' and extracts item.name (tools are stored as items)
    */
   const toolProficiencies = computed(() => {
     if (!background.value?.proficiencies) return []
 
     return background.value.proficiencies
       .filter(p => p.proficiency_type === 'tool')
-      .map(p => p.tool?.name)
+      .map(p => p.item?.name)
       .filter(Boolean) as string[]
   })
 
@@ -48,7 +48,7 @@ export function useBackgroundStats(background: Ref<Background | null>) {
     if (!background.value?.languages) return []
 
     return background.value.languages
-      .map(l => l.name)
+      .map(l => l.language?.name)
       .filter(Boolean) as string[]
   })
 

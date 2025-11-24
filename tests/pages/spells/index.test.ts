@@ -25,16 +25,16 @@ describe('Spells Page - Class Filter Feature', () => {
   describe('Data Fetching', () => {
     it('should fetch classes data from API endpoint', () => {
       // Look for useAsyncData call with 'classes' key and /classes endpoint
-      const hasClassesFetch = spellsPageContent.includes('useAsyncData') &&
-        spellsPageContent.includes('/classes')
+      const hasClassesFetch = spellsPageContent.includes('useAsyncData')
+        && spellsPageContent.includes('/classes')
 
       expect(hasClassesFetch).toBe(true)
     })
 
     it('should request up to 200 classes (per_page=200)', () => {
       // Look for per_page parameter in classes fetch
-      const hasPerPageParam = spellsPageContent.includes('per_page') &&
-        spellsPageContent.includes('200')
+      const hasPerPageParam = spellsPageContent.includes('per_page')
+        && spellsPageContent.includes('200')
 
       expect(hasPerPageParam).toBe(true)
     })
@@ -52,32 +52,32 @@ describe('Spells Page - Class Filter Feature', () => {
   describe('Filter State Management', () => {
     it('should initialize selectedClass from route query', () => {
       // Look for selectedClass ref initialization
-      const hasSelectedClassRef = spellsPageContent.includes('selectedClass') &&
-        spellsPageContent.includes('route.query.class')
+      const hasSelectedClassRef = spellsPageContent.includes('selectedClass')
+        && spellsPageContent.includes('route.query.class')
 
       expect(hasSelectedClassRef).toBe(true)
     })
 
     it('should create classOptions computed with base classes only', () => {
       // Look for computed classOptions with filter for base classes
-      const hasClassOptions = spellsPageContent.includes('classOptions') &&
-        spellsPageContent.includes('is_base_class')
+      const hasClassOptions = spellsPageContent.includes('classOptions')
+        && spellsPageContent.includes('is_base_class')
 
       expect(hasClassOptions).toBe(true)
     })
 
     it('should filter base classes using is_base_class === "1"', () => {
       // Look for filter checking is_base_class === '1'
-      const hasBaseClassFilter = spellsPageContent.includes('is_base_class') &&
-        (spellsPageContent.includes('=== \'1\'') || spellsPageContent.includes('== \'1\''))
+      const hasBaseClassFilter = spellsPageContent.includes('is_base_class')
+        && (spellsPageContent.includes('=== \'1\'') || spellsPageContent.includes('== \'1\''))
 
       expect(hasBaseClassFilter).toBe(true)
     })
 
     it('should sort classes alphabetically by name', () => {
       // Look for sort by name
-      const hasSortByName = spellsPageContent.includes('sort') &&
-        spellsPageContent.includes('name')
+      const hasSortByName = spellsPageContent.includes('sort')
+        && spellsPageContent.includes('name')
 
       expect(hasSortByName).toBe(true)
     })
@@ -93,16 +93,16 @@ describe('Spells Page - Class Filter Feature', () => {
   describe('Query Builder Integration', () => {
     it('should include class filter in queryBuilder', () => {
       // Look for selectedClass in queryBuilder params
-      const hasClassInQueryBuilder = spellsPageContent.includes('queryBuilder') &&
-        spellsPageContent.includes('selectedClass')
+      const hasClassInQueryBuilder = spellsPageContent.includes('queryBuilder')
+        && spellsPageContent.includes('selectedClass')
 
       expect(hasClassInQueryBuilder).toBe(true)
     })
 
     it('should send classes parameter to API when class is selected', () => {
       // Look for 'classes' or 'class' parameter being set
-      const hasClassesParam = spellsPageContent.includes('params.classes') ||
-        spellsPageContent.includes('params.class')
+      const hasClassesParam = spellsPageContent.includes('params.classes')
+        || spellsPageContent.includes('params.class')
 
       expect(hasClassesParam).toBe(true)
     })
@@ -111,9 +111,9 @@ describe('Spells Page - Class Filter Feature', () => {
   describe('Filter UI Components', () => {
     it('should add USelectMenu for class filter', () => {
       // Look for USelectMenu with classOptions
-      const hasClassSelectMenu = spellsPageContent.includes('USelectMenu') &&
-        spellsPageContent.includes('classOptions') &&
-        spellsPageContent.includes('selectedClass')
+      const hasClassSelectMenu = spellsPageContent.includes('USelectMenu')
+        && spellsPageContent.includes('classOptions')
+        && spellsPageContent.includes('selectedClass')
 
       expect(hasClassSelectMenu).toBe(true)
     })
@@ -127,8 +127,8 @@ describe('Spells Page - Class Filter Feature', () => {
 
     it('should use same styling as school filter (size="md", class="w-48")', () => {
       // Look for consistent styling with school filter
-      const hasConsistentStyling = spellsPageContent.includes('size="md"') &&
-        spellsPageContent.includes('class="w-48"')
+      const hasConsistentStyling = spellsPageContent.includes('size="md"')
+        && spellsPageContent.includes('class="w-48"')
 
       expect(hasConsistentStyling).toBe(true)
     })
@@ -137,16 +137,16 @@ describe('Spells Page - Class Filter Feature', () => {
   describe('Filter Chips', () => {
     it('should display active class filter chip', () => {
       // Look for v-if="selectedClass" chip
-      const hasClassChip = spellsPageContent.includes('v-if="selectedClass') &&
-        spellsPageContent.includes('UButton')
+      const hasClassChip = spellsPageContent.includes('v-if="selectedClass')
+        && spellsPageContent.includes('UButton')
 
       expect(hasClassChip).toBe(true)
     })
 
     it('should show class name in filter chip', () => {
       // Look for function or method to get class name
-      const hasGetClassName = spellsPageContent.includes('getClassName') ||
-        (spellsPageContent.includes('classes') && spellsPageContent.includes('find'))
+      const hasGetClassName = spellsPageContent.includes('getClassName')
+        || (spellsPageContent.includes('classes') && spellsPageContent.includes('find'))
 
       expect(hasGetClassName).toBe(true)
     })
@@ -162,16 +162,16 @@ describe('Spells Page - Class Filter Feature', () => {
   describe('Clear Filters Integration', () => {
     it('should reset selectedClass in clearFilters function', () => {
       // Look for selectedClass.value = null in clearFilters
-      const hasClearClass = spellsPageContent.includes('clearFilters') &&
-        spellsPageContent.includes('selectedClass.value = null')
+      const hasClearClass = spellsPageContent.includes('clearFilters')
+        && spellsPageContent.includes('selectedClass.value = null')
 
       expect(hasClearClass).toBe(true)
     })
 
     it('should include class filter in Clear Filters button condition', () => {
       // Look for selectedClass in v-if condition for Clear Filters button
-      const hasClassInClearCondition = spellsPageContent.includes('selectedClass') &&
-        spellsPageContent.includes('Clear Filters')
+      const hasClassInClearCondition = spellsPageContent.includes('selectedClass')
+        && spellsPageContent.includes('Clear Filters')
 
       expect(hasClassInClearCondition).toBe(true)
     })
@@ -180,8 +180,8 @@ describe('Spells Page - Class Filter Feature', () => {
   describe('Active Filter Count', () => {
     it('should include selectedClass in activeFilterCount', () => {
       // Look for selectedClass !== null check in activeFilterCount
-      const hasClassInCount = spellsPageContent.includes('activeFilterCount') &&
-        spellsPageContent.includes('selectedClass')
+      const hasClassInCount = spellsPageContent.includes('activeFilterCount')
+        && spellsPageContent.includes('selectedClass')
 
       expect(hasClassInCount).toBe(true)
     })

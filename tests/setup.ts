@@ -9,8 +9,14 @@ global.useRuntimeConfig = vi.fn(() => ({
   }
 }))
 
-// Mock $fetch globally
-global.$fetch = vi.fn()
+// Mock $fetch globally - must return a Promise to prevent "Cannot read properties of undefined (reading 'then')" errors
+// Also needs .create() method for useApi composable
+global.$fetch = Object.assign(
+  vi.fn(() => Promise.resolve({})),
+  {
+    create: vi.fn(() => vi.fn(() => Promise.resolve({})))
+  }
+)
 
 // Mock Nuxt's app manifest fetching to prevent "Cannot read properties of undefined (reading 'then')" errors
 global.fetch = vi.fn((url) => {

@@ -27,8 +27,8 @@ describe('Backgrounds [slug] Page', () => {
 
     // Look for the old pattern: UCard with "Background Traits" header
     // This should NOT exist outside the accordion
-    const hasStandaloneTraitsCard = html.includes('Background Traits') &&
-                                     !html.includes('<UAccordion')
+    const hasStandaloneTraitsCard = html.includes('Background Traits')
+      && !html.includes('<UAccordion')
 
     // Traits should be in accordion, not standalone card
     expect(hasStandaloneTraitsCard).toBe(false)
@@ -113,9 +113,9 @@ describe('Backgrounds [slug] Page', () => {
 
     // Check that image is NOT in a flex layout with traits
     // (old pattern had lg:flex-row with image and traits side-by-side)
-    const hasOldSideBySideLayout = html.includes('lg:flex-row') &&
-                                    html.includes('lg:w-2/3') &&
-                                    html.includes('lg:w-1/3')
+    const hasOldSideBySideLayout = html.includes('lg:flex-row')
+      && html.includes('lg:w-2/3')
+      && html.includes('lg:w-1/3')
 
     expect(hasOldSideBySideLayout).toBe(false)
   })

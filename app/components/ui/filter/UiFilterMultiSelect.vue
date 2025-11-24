@@ -63,8 +63,15 @@ const buttonText = computed(() => {
 const showClearButton = computed(() => normalizedValue.value.length > 0)
 
 // Handle selection change from USelectMenu
-const handleChange = (newSelection: string[]) => {
-  emit('update:modelValue', newSelection || [])
+const handleChange = (newSelection: any) => {
+  if (!newSelection) {
+    emit('update:modelValue', [])
+    return
+  }
+  const values = Array.isArray(newSelection)
+    ? newSelection.map(item => typeof item === 'string' ? item : item?.value).filter(Boolean)
+    : []
+  emit('update:modelValue', values)
 }
 
 // Clear all selections
@@ -86,38 +93,36 @@ const clearAll = () => {
     <!-- Select Menu Container -->
     <div class="relative flex items-center gap-2">
       <!-- Multi-Select Dropdown -->
-      <USelectMenu
-        :model-value="normalizedValue"
-        :options="options"
-        multiple
-        searchable
-        :aria-label="`${label} filter`"
-        value-attribute="value"
-        option-attribute="label"
-        class="flex-1"
-        @update:model-value="handleChange"
-      >
-        <template #label>
-          <div class="flex items-center gap-2">
-            <span v-if="normalizedValue.length === 0">{{ placeholder }}</span>
-            <span v-else>{{ buttonText }}</span>
-            <UBadge
-              v-if="normalizedValue.length > 0"
-              :color="color"
-              size="xs"
-              variant="soft"
-            >
-              {{ normalizedValue.length }}
-            </UBadge>
-          </div>
-        </template>
-      </USelectMenu>
+      <div class="flex-1 relative">
+        <USelectMenu
+          :model-value="normalizedValue"
+          :options="options"
+          multiple
+          searchable
+          :aria-label="`${label} filter`"
+          value-attribute="value"
+          option-attribute="label"
+          @update:model-value="handleChange"
+        />
+        <div
+          v-if="normalizedValue.length > 0"
+          class="absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none"
+        >
+          <UBadge
+            :color="color as any"
+            size="xs"
+            variant="soft"
+          >
+            {{ normalizedValue.length }}
+          </UBadge>
+        </div>
+      </div>
 
       <!-- Clear Button -->
       <UButton
         v-if="showClearButton"
         icon="i-heroicons-x-mark"
-        color="gray"
+        color="neutral"
         variant="ghost"
         size="xs"
         :aria-label="`Clear ${label} filter`"

@@ -9,6 +9,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+- Nuxt manifest initialization errors in test environment (2025-11-24)
+  - Fixed "Cannot read properties of undefined (reading 'then')" errors from fetchManifest
+  - Added $fetch.create() mock support for useApi composable
+  - Disabled experimental.appManifest in test environment to prevent route rules errors
+
 ### Added - Spell List Generator (2025-11-24)
 
 **MVP Feature - Complete:**

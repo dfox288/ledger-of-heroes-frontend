@@ -356,8 +356,8 @@ const activeFilterCount = computed(() => {
 
         <!-- Filter Content -->
         <div class="space-y-4">
-        <!-- Basic Filters -->
-        <div class="flex flex-wrap gap-2 mb-4">
+          <!-- Basic Filters -->
+          <div class="flex flex-wrap gap-2 mb-4">
             <!-- Level filter -->
             <USelectMenu
               v-model="selectedLevel"

@@ -184,7 +184,7 @@ const trackFillStyle = computed(() => {
       <UButton
         v-if="showResetButton"
         icon="i-heroicons-arrow-path"
-        color="gray"
+        color="neutral"
         variant="ghost"
         size="xs"
         :aria-label="`Reset ${label} range`"

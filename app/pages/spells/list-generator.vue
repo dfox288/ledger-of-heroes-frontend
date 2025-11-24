@@ -47,8 +47,7 @@ const classOptions = computed(() => {
   if (!classes.value) return []
   return classes.value.map(c => ({
     label: c.name,
-    value: c.slug,
-    class: c
+    value: c.slug
   }))
 })
 
@@ -59,12 +58,15 @@ const levelOptions = Array.from({ length: 20 }, (_, i) => ({
 }))
 
 // Selected class option (for USelectMenu v-model)
-const selectedClassOption = ref<{ label: string; value: string; class: CharacterClass } | null>(null)
+const selectedClassOption = ref<string | undefined>(undefined)
 
 // Watch for class selection
-watch(selectedClassOption, (option) => {
-  if (option) {
-    setClassData(option.class)
+watch(selectedClassOption, (selectedSlug) => {
+  if (selectedSlug && classes.value) {
+    const selectedClass = classes.value.find(c => c.slug === selectedSlug)
+    if (selectedClass) {
+      setClassData(selectedClass)
+    }
   }
 })
 
@@ -192,7 +194,9 @@ const handleClearAll = () => {
     <div class="mb-8">
       <div class="flex items-center justify-between">
         <div>
-          <h1 class="text-3xl font-bold mb-2">🪄 Spell List Generator</h1>
+          <h1 class="text-3xl font-bold mb-2">
+            🪄 Spell List Generator
+          </h1>
           <p class="text-gray-600 dark:text-gray-400">
             Choose spells for your character based on class and level.
           </p>
@@ -202,7 +206,9 @@ const handleClearAll = () => {
 
     <!-- Character Setup -->
     <div class="mb-8 p-6 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
-      <h2 class="text-xl font-semibold mb-4">Character Setup</h2>
+      <h2 class="text-xl font-semibold mb-4">
+        Character Setup
+      </h2>
 
       <div class="flex flex-wrap gap-4 mb-6">
         <!-- Class Dropdown -->
@@ -230,7 +236,10 @@ const handleClearAll = () => {
       </div>
 
       <!-- Spell Info Display (show when class selected) -->
-      <div v-if="selectedClass" class="space-y-2">
+      <div
+        v-if="selectedClass"
+        class="space-y-2"
+      >
         <div class="flex items-center gap-4 text-sm">
           <span class="font-medium">📊 Spell Slots:</span>
           <span>Cantrips: {{ spellSlots.cantrips }}</span>
@@ -252,23 +261,37 @@ const handleClearAll = () => {
       <!-- Left: Spell selection (flex-1) -->
       <div class="flex-1">
         <!-- Spell Selection Section -->
-        <div v-if="selectedClass" class="mb-8">
-          <h2 class="text-xl font-semibold mb-4">Select Your Spells</h2>
+        <div
+          v-if="selectedClass"
+          class="mb-8"
+        >
+          <h2 class="text-xl font-semibold mb-4">
+            Select Your Spells
+          </h2>
 
           <!-- Loading state -->
-          <div v-if="spellsLoading" class="space-y-4">
+          <div
+            v-if="spellsLoading"
+            class="space-y-4"
+          >
             <UiListSkeletonCards />
           </div>
 
           <!-- No spells available -->
-          <div v-else-if="!spells || spells.length === 0" class="text-center py-8">
+          <div
+            v-else-if="!spells || spells.length === 0"
+            class="text-center py-8"
+          >
             <p class="text-gray-600 dark:text-gray-400">
               No spells available for {{ selectedClass.name }}.
             </p>
           </div>
 
           <!-- Spells grouped by level -->
-          <div v-else class="space-y-4">
+          <div
+            v-else
+            class="space-y-4"
+          >
             <div
               v-for="level in availableSpellLevels"
               :key="level"
@@ -281,7 +304,10 @@ const handleClearAll = () => {
                 </span>
               </h3>
 
-              <div v-if="spellsByLevel.get(level)" class="space-y-2">
+              <div
+                v-if="spellsByLevel.get(level)"
+                class="space-y-2"
+              >
                 <div
                   v-for="spell in spellsByLevel.get(level)"
                   :key="spell.id"
@@ -292,13 +318,27 @@ const handleClearAll = () => {
                     @update:model-value="toggleSpell(spell.id)"
                   />
                   <div class="flex-1">
-                    <div class="font-medium">{{ spell.name }}</div>
+                    <div class="font-medium">
+                      {{ spell.name }}
+                    </div>
                     <div class="text-sm text-gray-600 dark:text-gray-400">
                       {{ spell.school?.name }} • {{ spell.range }}
-                      <UBadge v-if="spell.concentration === '1'" color="primary" variant="soft" size="xs" class="ml-2">
+                      <UBadge
+                        v-if="spell.concentration === '1'"
+                        color="primary"
+                        variant="soft"
+                        size="xs"
+                        class="ml-2"
+                      >
                         Concentration
                       </UBadge>
-                      <UBadge v-if="spell.ritual === '1'" color="info" variant="soft" size="xs" class="ml-1">
+                      <UBadge
+                        v-if="spell.ritual === '1'"
+                        color="info"
+                        variant="soft"
+                        size="xs"
+                        class="ml-1"
+                      >
                         Ritual
                       </UBadge>
                     </div>
@@ -306,7 +346,10 @@ const handleClearAll = () => {
                 </div>
               </div>
 
-              <div v-else class="text-sm text-gray-500 dark:text-gray-500">
+              <div
+                v-else
+                class="text-sm text-gray-500 dark:text-gray-500"
+              >
                 No spells available at this level.
               </div>
             </div>
@@ -314,7 +357,10 @@ const handleClearAll = () => {
         </div>
 
         <!-- Prompt to select class -->
-        <div v-else class="text-center py-12">
+        <div
+          v-else
+          class="text-center py-12"
+        >
           <p class="text-lg text-gray-600 dark:text-gray-400">
             Select a class and level to begin choosing spells.
           </p>
@@ -322,19 +368,29 @@ const handleClearAll = () => {
       </div>
 
       <!-- Right: Summary sidebar (sticky) -->
-      <div v-if="selectedClass" class="lg:w-80">
+      <div
+        v-if="selectedClass"
+        class="lg:w-80"
+      >
         <div class="sticky top-4 p-6 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
-          <h3 class="text-lg font-semibold mb-4">📋 Your Spell List</h3>
+          <h3 class="text-lg font-semibold mb-4">
+            📋 Your Spell List
+          </h3>
 
           <div class="mb-4 text-sm">
-            <div class="font-medium">{{ selectedClass.name }} Level {{ characterLevel }}</div>
+            <div class="font-medium">
+              {{ selectedClass.name }} Level {{ characterLevel }}
+            </div>
             <div class="text-gray-600 dark:text-gray-400">
               Selected: {{ selectionCount }} / {{ maxSpells }} spells
             </div>
           </div>
 
           <!-- Selected spells by level -->
-          <div v-if="selectionCount > 0" class="space-y-3 mb-6 max-h-96 overflow-y-auto">
+          <div
+            v-if="selectionCount > 0"
+            class="space-y-3 mb-6 max-h-96 overflow-y-auto"
+          >
             <div
               v-for="[level, spellsAtLevel] in selectedByLevel"
               :key="level"
@@ -343,14 +399,21 @@ const handleClearAll = () => {
                 {{ getSpellLevelLabel(level) }} ({{ spellsAtLevel.length }})
               </div>
               <ul class="space-y-1 text-sm pl-2">
-                <li v-for="spell in spellsAtLevel" :key="spell.id" class="text-gray-700 dark:text-gray-300">
+                <li
+                  v-for="spell in spellsAtLevel"
+                  :key="spell.id"
+                  class="text-gray-700 dark:text-gray-300"
+                >
                   • {{ spell.name }}
                 </li>
               </ul>
             </div>
           </div>
 
-          <div v-else class="text-sm text-gray-500 dark:text-gray-500 mb-6">
+          <div
+            v-else
+            class="text-sm text-gray-500 dark:text-gray-500 mb-6"
+          >
             No spells selected yet.
           </div>
 
@@ -360,8 +423,8 @@ const handleClearAll = () => {
               color="neutral"
               variant="soft"
               block
-              @click="handleClearAll"
               :disabled="selectionCount === 0"
+              @click="handleClearAll"
             >
               🗑️ Clear All
             </UButton>

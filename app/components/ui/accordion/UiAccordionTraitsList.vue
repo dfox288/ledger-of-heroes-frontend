@@ -64,7 +64,6 @@ withDefaults(defineProps<Props>(), {
       <UiAccordionRandomTablesList
         v-if="'random_tables' in trait && trait.random_tables && trait.random_tables.length > 0"
         :tables="trait.random_tables"
-        :border-color="borderColor"
       />
     </div>
   </div>

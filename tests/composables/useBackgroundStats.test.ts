@@ -128,8 +128,8 @@ describe('useBackgroundStats', () => {
   it('handles null background', () => {
     const background = ref<Background | null>(null)
 
-    const { skillProficiencies, toolProficiencies, languages, equipmentCount, startingGold } =
-      useBackgroundStats(background)
+    const { skillProficiencies, toolProficiencies, languages, equipmentCount, startingGold }
+      = useBackgroundStats(background)
 
     expect(skillProficiencies.value).toEqual([])
     expect(toolProficiencies.value).toEqual([])
