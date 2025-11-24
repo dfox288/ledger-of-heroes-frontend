@@ -4,7 +4,6 @@ import UiAccordionDamageEffects from '~/components/ui/accordion/UiAccordionDamag
 import {
   mockDamageEffect3rdLevel,
   mockDamageEffectsArray,
-  mockCantripDamageLevel1,
   mockCantripDamageLevel5,
   mockCantripEffectsArray,
   mockHealingEffect,

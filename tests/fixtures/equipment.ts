@@ -52,7 +52,7 @@ export const mockEquipmentWithItem: Equipment = {
     description: 'A finesse weapon',
     item_type: { id: 1, name: 'Weapon' },
     sources: []
-  } as any
+  } as Partial<Item>
 }
 
 /**
@@ -75,7 +75,7 @@ export const mockEquipmentMultiple: Equipment = {
     description: 'Ammunition for a bow',
     item_type: { id: 1, name: 'Ammunition' },
     sources: []
-  } as any
+  } as Partial<Item>
 }
 
 /**

@@ -176,7 +176,9 @@
       "Bash(docker --version:*)",
       "Bash(docker ps:*)",
       "Bash(do echo -n \"Testing $entity: \")",
-      "Bash(git -C /Users/dfox/Development/dnd/frontend log -5 --oneline)"
+      "Bash(git -C /Users/dfox/Development/dnd/frontend log -5 --oneline)",
+      "Bash(paste:*)",
+      "Bash(do echo \"=== $file ===\" grep -n \"opacity-15\\|group-hover:opacity-30\\|transition-all\" \"/Users/dfox/Development/dnd/frontend/$file\")"
     ],
     "deny": [],
     "ask": []

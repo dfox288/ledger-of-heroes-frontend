@@ -366,7 +366,7 @@ describe('UiAccordionEquipmentList', () => {
             description: 'A finesse weapon',
             item_type: { id: 1, name: 'Weapon' },
             sources: []
-          } as any
+          } as Partial<Item>
         },
         {
           id: 12,
@@ -385,7 +385,7 @@ describe('UiAccordionEquipmentList', () => {
             description: 'A versatile weapon',
             item_type: { id: 1, name: 'Weapon' },
             sources: []
-          } as any
+          } as Partial<Item>
         }
       ]
 
@@ -438,7 +438,7 @@ describe('UiAccordionEquipmentList', () => {
             description: 'Expensive clothing',
             item_type: { id: 2, name: 'Adventuring Gear' },
             sources: []
-          } as any
+          } as Partial<Item>
         },
         {
           id: 2,

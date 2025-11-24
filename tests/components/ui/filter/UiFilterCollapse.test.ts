@@ -206,7 +206,6 @@ describe('UiFilterCollapse', () => {
     })
   })
 
-
   describe('Search Input Integration', () => {
     it('renders search input before toggle button', async () => {
       const wrapper = await mountSuspended(UiFilterCollapse, {
@@ -258,7 +257,6 @@ describe('UiFilterCollapse', () => {
       expect(button.attributes('aria-expanded')).toBe('true')
     })
   })
-
 
   describe('Edge Cases', () => {
     it('handles undefined badgeCount', async () => {

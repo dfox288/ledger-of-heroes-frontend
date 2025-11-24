@@ -38,7 +38,6 @@ describe('UiFilterMultiSelect', () => {
     })
   })
 
-
   describe('User Interactions', () => {
     it('emits update:modelValue when USelectMenu changes', async () => {
       const wrapper = await mountSuspended(UiFilterMultiSelect, {

@@ -44,7 +44,6 @@ describe('UiListSkeletonCards', () => {
   })
 
   describe('skeleton structure', () => {
-
     it('applies consistent skeleton structure to all cards', () => {
       const wrapper = mount(SkeletonCards, {
         props: { count: 3 }

@@ -210,7 +210,6 @@ describe('UiFilterToggle', () => {
     })
   })
 
-
   describe('Accessibility', () => {
     it('renders buttons with proper ARIA attributes', async () => {
       const wrapper = await mountSuspended(UiFilterToggle, {

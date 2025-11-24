@@ -4,7 +4,6 @@ import UiAccordionItemSpells from '~/components/ui/accordion/UiAccordionItemSpel
 import {
   mockSpellFixedCost,
   mockSpellVariableCost,
-  mockSpellHighLevel,
   mockSpellWithUsageLimit,
   mockSpellWithLevelReq,
   mockItemSpellsArray
