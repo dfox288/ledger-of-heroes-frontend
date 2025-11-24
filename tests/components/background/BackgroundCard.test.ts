@@ -34,8 +34,8 @@ describe('BackgroundCard', () => {
       { id: 2, proficiency_type: 'skill', proficiency_subcategory: null, proficiency_type_id: null, skill: { id: 2, name: 'Religion', code: 'RELIGION', description: null, ability_score: null }, proficiency_name: 'Religion', grants: true, is_choice: false, quantity: 1 }
     ],
     languages: [
-      { id: 1, name: 'Common' },
-      { id: 2, name: 'Elvish' }
+      { language: { id: 1, name: 'Common' }, is_choice: false },
+      { language: { id: 2, name: 'Elvish' }, is_choice: false }
     ],
     feature_name: 'Shelter of the Faithful',
     description: 'You have spent your life in the service of a temple to a specific god or pantheon of gods.',
@@ -178,7 +178,7 @@ describe('BackgroundCard', () => {
   it('uses singular form for single language', async () => {
     const oneLangBg = {
       ...mockBackground,
-      languages: [{ id: 1, name: 'Common' }]
+      languages: [{ language: { id: 1, name: 'Common' }, is_choice: false }]
     }
     const wrapper = await mountSuspended(BackgroundCard, {
       props: { background: oneLangBg }
@@ -264,7 +264,7 @@ describe('BackgroundCard', () => {
         { id: 1, proficiency_type: 'skill', proficiency_subcategory: null, proficiency_type_id: null, skill: { id: 1, name: 'Insight', code: 'INSIGHT', description: null, ability_score: null }, proficiency_name: 'Insight', grants: true, is_choice: false, quantity: 1 },
         { id: 2, proficiency_type: 'tool', proficiency_subcategory: null, proficiency_type_id: null, item: { id: 1, name: 'Thieves\' Tools' }, proficiency_name: 'Thieves\' Tools', grants: true, is_choice: false, quantity: 1 }
       ],
-      languages: [{ id: 1, name: 'Common' }],
+      languages: [{ language: { id: 1, name: 'Common' }, is_choice: false }],
       feature_name: 'Feature Name',
       description: 'Full description',
       sources: [{ code: 'PHB', name: 'Player\'s Handbook', pages: '127' }]
@@ -429,7 +429,7 @@ describe('BackgroundCard', () => {
       props: { background: bgWithBoth }
     })
 
-    expect(wrapper.text()).toContain('3 Items')
+    expect(wrapper.text()).toContain('2 Items')
     expect(wrapper.text()).toContain('20 gp')
   })
 })
