@@ -42,8 +42,9 @@ const perPage = 24
       :has-active-filters="hasActiveFilters"
     />
 
-    <!-- Search -->
-    <div class="mb-6">
+    <!-- Search and Filters -->
+    <div class="mb-6 space-y-4">
+      <!-- Search input -->
       <UInput
         v-model="searchQuery"
         placeholder="Search backgrounds..."
@@ -60,6 +61,27 @@ const perPage = 24
           />
         </template>
       </UInput>
+
+      <!-- Filter section ready for future filters -->
+      <!-- No specific filters identified in API analysis yet -->
+      <!-- Structure in place for when filters are added -->
+
+      <!-- Active Filter Chips -->
+      <div
+        v-if="hasActiveFilters"
+        class="flex flex-wrap items-center gap-2 pt-2"
+      >
+        <span class="text-sm font-medium text-gray-600 dark:text-gray-400">Active:</span>
+        <UButton
+          v-if="searchQuery"
+          size="xs"
+          color="neutral"
+          variant="soft"
+          @click="searchQuery = ''"
+        >
+          "{{ searchQuery }}" ✕
+        </UButton>
+      </div>
     </div>
 
     <!-- Loading State -->

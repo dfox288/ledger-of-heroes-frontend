@@ -10,6 +10,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **Legendary filter on Monsters page** - Filter monsters by legendary status (All/Yes/No tri-state toggle) to find legendary creatures (2025-11-24)
+- **Base Class Only filter on Classes page** - Filter classes by base class vs subclass (All/Yes/No tri-state toggle) to show only core 13 classes (2025-11-24)
+- **Spellcaster filter on Classes page** - Filter classes by spellcasting capability (All/Yes/No tri-state toggle) to find full/half/third casters (2025-11-24)
+- **Has Darkvision filter on Races page** - Filter races by darkvision trait (All/Yes/No tri-state toggle) for Underdark campaigns (2025-11-24)
+- **Filter UI structure on Backgrounds page** - Added filter section framework ready for future background-specific filters (2025-11-24)
 - **Has Prerequisites filter on Feats page** - Filter feats by prerequisite requirements (All/Yes/No tri-state toggle) to find feats available at level 1 or advanced feats (2025-11-24)
 - **Class filter on Spells page** - Filter spells by character class (Wizard, Cleric, etc.) with base classes sorted alphabetically (2025-11-24)
 - **Quick stats panel on backgrounds detail page** - Shows actual proficiency/language/equipment data at a glance (2/3 layout) (2025-11-24)

@@ -62,6 +62,21 @@
         </UButton>
       </div>
 
+      <!-- Quick Toggles -->
+      <div class="flex flex-wrap gap-4">
+        <!-- Legendary filter -->
+        <UiFilterToggle
+          v-model="isLegendary"
+          label="Legendary"
+          color="error"
+          :options="[
+            { value: null, label: 'All' },
+            { value: '1', label: 'Yes' },
+            { value: '0', label: 'No' }
+          ]"
+        />
+      </div>
+
       <!-- Active Filter Chips -->
       <div
         v-if="hasActiveFilters"
@@ -85,6 +100,15 @@
           @click="selectedType = null"
         >
           {{ getTypeLabel(selectedType) }} ✕
+        </UButton>
+        <UButton
+          v-if="isLegendary !== null"
+          size="xs"
+          color="error"
+          variant="soft"
+          @click="isLegendary = null"
+        >
+          Legendary: {{ isLegendary === '1' ? 'Yes' : 'No' }} ✕
         </UButton>
         <UButton
           v-if="searchQuery"
@@ -158,6 +182,7 @@ const route = useRoute()
 // Custom filter state
 const selectedCR = ref(route.query.cr ? String(route.query.cr) : null)
 const selectedType = ref(route.query.type ? String(route.query.type) : null)
+const isLegendary = ref<string | null>((route.query.is_legendary as string) || null)
 
 // CR range options
 const crOptions = [
@@ -192,6 +217,7 @@ const queryBuilder = computed(() => {
   const params: Record<string, unknown> = {}
   if (selectedCR.value) params.cr = selectedCR.value
   if (selectedType.value) params.type = selectedType.value
+  if (isLegendary.value !== null) params.is_legendary = isLegendary.value
   return params
 })
 
@@ -224,6 +250,7 @@ const clearFilters = () => {
   clearBaseFilters()
   selectedCR.value = null
   selectedType.value = null
+  isLegendary.value = null
 }
 
 // Helper functions for filter chips

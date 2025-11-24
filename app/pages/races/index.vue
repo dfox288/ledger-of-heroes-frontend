@@ -7,6 +7,7 @@ const { apiFetch } = useApi()
 
 // Custom filter state (entity-specific)
 const selectedSize = ref((route.query.size as string) || '')
+const hasDarkvision = ref<string | null>((route.query.has_darkvision as string) || null)
 
 // Fetch available sizes for filter options
 const { data: sizesResponse } = await useAsyncData<{ data: Size[] }>(
@@ -23,6 +24,7 @@ const sizes = computed(() => sizesResponse.value?.data || [])
 const queryBuilder = computed(() => {
   const params: Record<string, unknown> = {}
   if (selectedSize.value) params.size = selectedSize.value
+  if (hasDarkvision.value !== null) params.has_darkvision = hasDarkvision.value
   return params
 })
 
@@ -54,6 +56,7 @@ const races = computed(() => racesData.value as Race[])
 const clearFilters = () => {
   clearBaseFilters()
   selectedSize.value = ''
+  hasDarkvision.value = null
 }
 
 // Helper for filter chips
@@ -130,6 +133,21 @@ const perPage = 24
         </UButton>
       </div>
 
+      <!-- Quick Toggles -->
+      <div class="flex flex-wrap gap-4">
+        <!-- Darkvision filter -->
+        <UiFilterToggle
+          v-model="hasDarkvision"
+          label="Has Darkvision"
+          color="info"
+          :options="[
+            { value: null, label: 'All' },
+            { value: '1', label: 'Yes' },
+            { value: '0', label: 'No' }
+          ]"
+        />
+      </div>
+
       <!-- Active Filter Chips -->
       <div
         v-if="hasActiveFilters"
@@ -144,6 +162,15 @@ const perPage = 24
           @click="selectedSize = ''"
         >
           {{ getSizeName(selectedSize) }} ✕
+        </UButton>
+        <UButton
+          v-if="hasDarkvision !== null"
+          size="xs"
+          color="info"
+          variant="soft"
+          @click="hasDarkvision = null"
+        >
+          Has Darkvision: {{ hasDarkvision === '1' ? 'Yes' : 'No' }} ✕
         </UButton>
         <UButton
           v-if="searchQuery"
