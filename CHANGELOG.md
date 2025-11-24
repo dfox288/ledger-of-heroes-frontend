@@ -9,6 +9,30 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added - Spell List Generator (2025-11-24)
+
+**MVP Feature - Complete:**
+- **Spell List Generator page** - New tool at `/spells/list-generator` for creating character spell lists based on class and level (2025-11-24)
+- **All spellcasting classes supported** - Wizard, Cleric, Druid, Bard, Sorcerer, Warlock, Paladin, Ranger, Artificer, Eldritch Knight, Arcane Trickster (12+ classes) (2025-11-24)
+- **Prepared vs Known caster logic** - Automatically calculates spell limits: prepared casters use level + modifier, known casters use fixed tables (2025-11-24)
+- **Spell slots calculation** - Displays available spell slots per level from class progression data (2025-11-24)
+- **Spell selection with checkboxes** - Browse and select spells grouped by level (Cantrips through 9th level) (2025-11-24)
+- **LocalStorage persistence** - Auto-saves selections per class/level combination, survives page reloads (2025-11-24)
+- **Summary sidebar** - Shows selected spells grouped by level with count tracking (2025-11-24)
+- **useSpellListGenerator composable** - Reusable state management for spell list generation with full test coverage (2025-11-24)
+
+**Technical Details:**
+- New composable: `useSpellListGenerator` with spell slots calculation, max prepared/known logic, LocalStorage persistence
+- Hardcoded known spells tables for 6 classes (Bard, Sorcerer, Warlock, Ranger, Eldritch Knight, Arcane Trickster)
+- Debounced auto-save (500ms) to prevent excessive writes
+- Mobile-responsive layout with sticky sidebar
+- TDD approach: 7 composable tests, page mounting tests
+
+**Impact:**
+- ✅ Unique value proposition - Most D&D sites don't have this tool
+- ✅ Leverages existing data and components
+- ✅ Opens door to more "builder" features (character builder, encounter builder)
+
 ### Refactored - List Pages Consistency Improvements (2025-11-24)
 
 **Standardization across all 7 entity list pages:**
