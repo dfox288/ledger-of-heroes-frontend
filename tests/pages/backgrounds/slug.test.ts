@@ -29,7 +29,7 @@ describe('Backgrounds [slug] Page', () => {
 
     // If "Background Traits" appears, it should be within the accordion items
     const accordionProps = accordion.props()
-    const hasTraitsItem = accordionProps.items?.some((item: any) =>
+    const hasTraitsItem = accordionProps.items?.some((item: Record<string, unknown>) =>
       item.label === 'Background Traits'
     )
     expect(hasTraitsItem).toBe(true)
@@ -43,7 +43,7 @@ describe('Backgrounds [slug] Page', () => {
     // Check that accordion has traits slot defined in items
     const accordion = wrapper.findComponent({ name: 'UAccordion' })
     const items = accordion.props('items')
-    const hasTraitsSlot = items?.some((item: any) => item.slot === 'traits')
+    const hasTraitsSlot = items?.some((item: Record<string, unknown>) => item.slot === 'traits')
     expect(hasTraitsSlot).toBe(true)
 
     // Check that the traits slot exists in the component's slots
@@ -60,7 +60,7 @@ describe('Backgrounds [slug] Page', () => {
     // Check that accordion has proficiencies slot defined in items
     const accordion = wrapper.findComponent({ name: 'UAccordion' })
     const items = accordion.props('items')
-    const hasProficienciesSlot = items?.some((item: any) => item.slot === 'proficiencies')
+    const hasProficienciesSlot = items?.some((item: Record<string, unknown>) => item.slot === 'proficiencies')
     expect(hasProficienciesSlot).toBe(true)
   })
 
@@ -72,7 +72,7 @@ describe('Backgrounds [slug] Page', () => {
     // Check that accordion has languages slot defined in items
     const accordion = wrapper.findComponent({ name: 'UAccordion' })
     const items = accordion.props('items')
-    const hasLanguagesSlot = items?.some((item: any) => item.slot === 'languages')
+    const hasLanguagesSlot = items?.some((item: Record<string, unknown>) => item.slot === 'languages')
     expect(hasLanguagesSlot).toBe(true)
   })
 

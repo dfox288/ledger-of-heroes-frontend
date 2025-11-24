@@ -63,13 +63,13 @@ const _buttonText = computed(() => {
 const showClearButton = computed(() => normalizedValue.value.length > 0)
 
 // Handle selection change from USelectMenu
-const handleChange = (newSelection: string[] | Option[] | string | null | undefined) => {
+const handleChange = (newSelection: unknown) => {
   if (!newSelection) {
     emit('update:modelValue', [])
     return
   }
   const values = Array.isArray(newSelection)
-    ? newSelection.map(item => typeof item === 'string' ? item : item?.value).filter(Boolean)
+    ? newSelection.map(item => typeof item === 'string' ? item : (item as Option)?.value).filter((v): v is string => Boolean(v))
     : []
   emit('update:modelValue', values)
 }
