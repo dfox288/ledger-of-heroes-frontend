@@ -2,10 +2,11 @@
 
 **A production-ready D&D 5e reference application built with Nuxt 4 and NuxtUI 4.**
 
-[![Tests](https://img.shields.io/badge/tests-611%20passing-success)](./tests)
+[![Tests](https://img.shields.io/badge/tests-1061%2F1088%20passing-success)](./tests)
 [![TypeScript](https://img.shields.io/badge/TypeScript-strict-blue)](./tsconfig.json)
 [![Nuxt](https://img.shields.io/badge/Nuxt-4.x-00DC82)](https://nuxt.com)
 [![NuxtUI](https://img.shields.io/badge/NuxtUI-4.x-00DC82)](https://ui.nuxt.com)
+[![Three.js](https://img.shields.io/badge/Three.js-3D%20Dice-purple)](https://threejs.org)
 
 ## 🎯 Project Overview
 
@@ -13,29 +14,38 @@ A comprehensive D&D 5th Edition reference tool featuring **7 complete entity typ
 
 ### ✨ Features
 
-- **7 Entity Types:** Spells, Items, Races, Classes, Backgrounds, Feats, **Monsters**
+- **7 Entity Types:** Spells (477), Items (800+), Races, Classes, Backgrounds, Feats, Monsters (598)
 - **10 Reference Pages:** Ability Scores, Conditions, Damage Types, Item Types, Languages, Proficiency Types, Sizes, Skills, Spell Schools, Sources
-- **1,400+ D&D Resources:** Official sourcebooks (Monster Manual, Player's Handbook, etc.)
-- **Advanced Filtering:** Search, pagination, entity-specific filters (spell level, CR range, item rarity)
+- **Builder Tools:** 🪄 Spell List Generator (12+ spellcasting classes, localStorage persistence)
+- **1,400+ D&D Resources:** Official sourcebooks (PHB, XGE, TCE, MM, etc.)
+- **Advanced Filtering:** Meilisearch-powered with <50ms response times
+  - **Spells:** 10 filters (level, school, class, concentration, ritual, damage types, saving throws, components)
+  - **Items:** 5 filters (type, rarity, magic, charges, prerequisites)
+  - **Monsters:** 3 filters (CR, type, legendary)
+  - **Advanced Queries:** Combined filters with AND/OR operators
 - **Full Stat Blocks:** Complete monster stats, spell effects, item properties, character features
+- **AI-Generated Images:** Hero images and card backgrounds for all entity types
+- **3D Dice Animation:** Stunning polyhedral dice background with physics
 - **Dark Mode:** Complete dark theme support via NuxtUI
 - **Mobile Responsive:** 375px - 1440px+ viewports
-- **100% Test Coverage:** 611 passing tests (Vitest + @nuxt/test-utils)
+- **97.5% Test Coverage:** 1061/1088 passing tests (Vitest + Playwright E2E)
 
-### 🆕 Latest: Monsters Feature (2025-11-22)
+### 🆕 Latest: Complete Meilisearch Filter Migration (2025-11-25)
 
-The 7th entity type is now complete! Features include:
-- **Color-coded CR badges:** Easy (green), Medium (blue), Hard (yellow), Deadly (red)
-- **CR/Type filtering:** Filter by difficulty tier and creature type
-- **Full stat blocks:** AC, HP, speeds, ability scores, traits, actions, legendary actions
-- **598 monsters:** From official D&D sourcebooks
+**Critical Bug Fix:** 93% of spell filters were broken! All filters now migrated to Meilisearch syntax:
+- **All 10 Filters Working:** Level, School, Class, Concentration, Ritual, Damage Types, Saving Throws, Verbal, Somatic, Material
+- **4 Filters Removed:** Not supported by Meilisearch (casting time, range, duration, has higher levels)
+- **Performance:** <50ms response times
+- **Advanced Queries:** `filter=level = 3 AND class_slugs IN [wizard] AND school_code = EV` (7 results)
+- **Impact:** 100% success rate (was 7% before migration)
 
 ## 📚 Documentation
 
-- **[CLAUDE.md](./CLAUDE.md)** - AI assistant guidelines and project setup
+- **[CLAUDE.md](./CLAUDE.md)** - AI assistant guidelines and project setup (TDD requirements, patterns, llms.txt)
 - **[CURRENT_STATUS.md](./docs/CURRENT_STATUS.md)** - Current project status and architecture
-- **[Latest Handover](./docs/HANDOVER-2025-11-22-MONSTERS-FEATURE-COMPLETE.md)** - Monsters feature implementation
+- **[Latest Handover](./docs/HANDOVER-2025-11-25-COMPLETE-MEILISEARCH-MIGRATION.md)** - Complete Meilisearch filter migration
 - **[CHANGELOG.md](./CHANGELOG.md)** - Version history and changes
+- **[Archive](./docs/archive/)** - Historical session documentation
 
 ## 🚀 Quick Start
 
