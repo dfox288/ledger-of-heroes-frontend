@@ -31,6 +31,16 @@ const acRangeOptions = [
   { label: 'High (18+)', value: '18-25' }
 ]
 
+// HP filter
+const selectedHPRange = ref<string | null>(null)
+const hpRangeOptions = [
+  { label: 'All HP', value: null },
+  { label: 'Low (1-50)', value: '1-50' },
+  { label: 'Medium (51-150)', value: '51-150' },
+  { label: 'High (151-300)', value: '151-300' },
+  { label: 'Very High (301+)', value: '301-600' }
+]
+
 // Fetch reference data for filters
 const { data: sizes } = useReferenceData<Size>('/sizes')
 
@@ -168,6 +178,20 @@ const queryBuilder = computed(() => {
     }
   }
 
+  // Add HP range filter manually
+  if (selectedHPRange.value) {
+    const ranges: Record<string, string> = {
+      '1-50': 'hit_points_average >= 1 AND hit_points_average <= 50',
+      '51-150': 'hit_points_average >= 51 AND hit_points_average <= 150',
+      '151-300': 'hit_points_average >= 151 AND hit_points_average <= 300',
+      '301-600': 'hit_points_average >= 301 AND hit_points_average <= 600'
+    }
+    const rangeFilter = ranges[selectedHPRange.value]
+    if (rangeFilter) {
+      meilisearchFilters.push(rangeFilter)
+    }
+  }
+
   // Combine all filters
   if (meilisearchFilters.length > 0) {
     params.filter = meilisearchFilters.join(' AND ')
@@ -213,6 +237,7 @@ const clearFilters = () => {
   hasBurrow.value = null
   hasClimb.value = null
   selectedACRange.value = null
+  selectedHPRange.value = null
 }
 
 // Helper functions for filter chips
@@ -276,7 +301,8 @@ const activeFilterCount = useFilterCount(
   hasSwim,
   hasBurrow,
   hasClimb,
-  selectedACRange
+  selectedACRange,
+  selectedHPRange
 )
 
 const perPage = 24
@@ -442,6 +468,20 @@ const perPage = 24
                 data-testid="ac-filter"
               />
             </div>
+
+            <!-- HP Range Filter -->
+            <div>
+              <label class="text-sm font-medium mb-2 block">Hit Points</label>
+              <USelectMenu
+                v-model="selectedHPRange"
+                :items="hpRangeOptions"
+                value-key="value"
+                placeholder="All HP"
+                size="md"
+                class="w-full sm:w-44"
+                data-testid="hp-filter"
+              />
+            </div>
           </template>
 
           <!-- Actions: Empty (Clear Filters moved to chips row) -->
@@ -508,6 +548,16 @@ const perPage = 24
             @click="selectedACRange = null"
           >
             AC: {{ acRangeOptions.find(o => o.value === selectedACRange)?.label }} ✕
+          </UButton>
+          <!-- HP Range Chip -->
+          <UButton
+            v-if="selectedHPRange"
+            size="xs"
+            color="info"
+            variant="soft"
+            @click="selectedHPRange = null"
+          >
+            HP: {{ hpRangeOptions.find(o => o.value === selectedHPRange)?.label }} ✕
           </UButton>
           <UButton
             v-if="searchQuery"

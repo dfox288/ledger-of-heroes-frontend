@@ -475,4 +475,64 @@ describe('Monsters Page - Filter Layout', () => {
       expect(component.selectedACRange).toBeNull()
     })
   })
+
+  describe('Monsters HP Filter', () => {
+    it('has HP range filter state', async () => {
+      const wrapper = await mountSuspended(MonstersPage)
+
+      const component = wrapper.vm as any
+
+      // Should have selectedHPRange ref
+      expect(component.selectedHPRange).toBeDefined()
+      expect(component.selectedHPRange).toBeNull()
+    })
+
+    it('has correct HP range options', async () => {
+      const wrapper = await mountSuspended(MonstersPage)
+
+      const component = wrapper.vm as any
+
+      // Should have hpRangeOptions
+      expect(component.hpRangeOptions).toBeDefined()
+      expect(Array.isArray(component.hpRangeOptions)).toBe(true)
+      expect(component.hpRangeOptions.length).toBe(5)
+
+      // Verify option labels
+      const labels = component.hpRangeOptions.map((o: any) => o.label)
+      expect(labels).toContain('All HP')
+      expect(labels).toContain('Low (1-50)')
+      expect(labels).toContain('Medium (51-150)')
+      expect(labels).toContain('High (151-300)')
+      expect(labels).toContain('Very High (301+)')
+    })
+
+    it('shows HP range filter chip when HP is selected', async () => {
+      const wrapper = await mountSuspended(MonstersPage)
+
+      const component = wrapper.vm as any
+      component.selectedHPRange = '1-50'
+      await wrapper.vm.$nextTick()
+
+      const chips = wrapper.findAll('button').filter(btn =>
+        btn.text().includes('HP:') && btn.text().includes('Low') && btn.text().includes('✕')
+      )
+      expect(chips.length).toBeGreaterThan(0)
+    })
+
+    it('clicking HP range chip clears the filter', async () => {
+      const wrapper = await mountSuspended(MonstersPage)
+
+      const component = wrapper.vm as any
+      component.selectedHPRange = '1-50'
+      await wrapper.vm.$nextTick()
+
+      const chip = wrapper.findAll('button').find(btn =>
+        btn.text().includes('HP:') && btn.text().includes('Low') && btn.text().includes('✕')
+      )
+      expect(chip).toBeDefined()
+      await chip!.trigger('click')
+
+      expect(component.selectedHPRange).toBeNull()
+    })
+  })
 })
