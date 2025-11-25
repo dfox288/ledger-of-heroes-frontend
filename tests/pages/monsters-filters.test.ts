@@ -222,4 +222,198 @@ describe('Monsters Page - Filter Layout', () => {
       expect(component.activeFilterCount).toBe(2)
     })
   })
+
+  describe('Size Filter - Multiselect', () => {
+    it('displays size filter multiselect', async () => {
+      const wrapper = await mountSuspended(MonstersPage)
+
+      // Open filters first
+      const component = wrapper.vm as any
+      component.filtersOpen = true
+      await wrapper.vm.$nextTick()
+
+      // Look for the multiselect
+      const multiselect = wrapper.find('[data-testid="size-filter-multiselect"]')
+      expect(multiselect.exists()).toBe(true)
+    })
+
+    it('allows selecting multiple sizes', async () => {
+      const wrapper = await mountSuspended(MonstersPage)
+
+      const component = wrapper.vm as any
+
+      // Select multiple sizes (as strings - size IDs)
+      component.selectedSizes = ['1', '3', '6']
+      await wrapper.vm.$nextTick()
+
+      expect(component.selectedSizes).toEqual(['1', '3', '6'])
+    })
+
+    it('initializes as empty array', async () => {
+      const wrapper = await mountSuspended(MonstersPage)
+
+      const component = wrapper.vm as any
+      expect(Array.isArray(component.selectedSizes)).toBe(true)
+      expect(component.selectedSizes.length).toBe(0)
+    })
+  })
+
+  describe('Size Filter chip display', () => {
+    it('shows chip with selected size labels', async () => {
+      const wrapper = await mountSuspended(MonstersPage)
+
+      // Select multiple sizes (as strings)
+      const component = wrapper.vm as any
+      component.selectedSizes = ['1', '3', '6']
+
+      await wrapper.vm.$nextTick()
+
+      // Wait for sizeOptions to load
+      await new Promise(resolve => setTimeout(resolve, 100))
+      await wrapper.vm.$nextTick()
+
+      // Look for chip
+      const chip = wrapper.find('[data-testid="size-filter-chip"]')
+      expect(chip.exists()).toBe(true)
+      expect(chip.text()).toContain('Sizes')
+      // Note: Size labels may show as IDs in tests if reference data hasn't loaded
+      // Check for either names or IDs
+      const chipText = chip.text()
+      expect(chipText).toMatch(/Sizes: (Tiny|1)/)
+    })
+
+    it('shows single size without plural', async () => {
+      const wrapper = await mountSuspended(MonstersPage)
+
+      // Select single size (as string)
+      const component = wrapper.vm as any
+      component.selectedSizes = ['3']
+
+      await wrapper.vm.$nextTick()
+
+      // Wait for sizeOptions to load
+      await new Promise(resolve => setTimeout(resolve, 100))
+      await wrapper.vm.$nextTick()
+
+      // Look for chip
+      const chip = wrapper.find('[data-testid="size-filter-chip"]')
+      expect(chip.exists()).toBe(true)
+      expect(chip.text()).toContain('Size')
+      expect(chip.text()).not.toContain('Sizes')
+      // Note: Size labels may show as IDs in tests if reference data hasn't loaded
+      const chipText = chip.text()
+      expect(chipText).toMatch(/Size: (Medium|3)/)
+    })
+
+    it('clicking chip clears size filter', async () => {
+      const wrapper = await mountSuspended(MonstersPage)
+
+      // Select sizes (as strings)
+      const component = wrapper.vm as any
+      component.selectedSizes = ['1', '3']
+
+      await wrapper.vm.$nextTick()
+
+      // Click chip
+      const chip = wrapper.find('[data-testid="size-filter-chip"]')
+      await chip.trigger('click')
+
+      // Sizes should be cleared
+      expect(component.selectedSizes).toEqual([])
+    })
+
+    it('does not show chip when no sizes selected', async () => {
+      const wrapper = await mountSuspended(MonstersPage)
+
+      const component = wrapper.vm as any
+      component.selectedSizes = []
+
+      await wrapper.vm.$nextTick()
+
+      // Chip should not exist
+      const chip = wrapper.find('[data-testid="size-filter-chip"]')
+      expect(chip.exists()).toBe(false)
+    })
+  })
+
+  describe('Alignment Filter - Multiselect', () => {
+    it('displays alignment filter multiselect', async () => {
+      const wrapper = await mountSuspended(MonstersPage)
+
+      // Open filters first
+      const component = wrapper.vm as any
+      component.filtersOpen = true
+      await wrapper.vm.$nextTick()
+
+      // Look for the multiselect
+      const multiselect = wrapper.find('[data-testid="alignment-filter-multiselect"]')
+      expect(multiselect.exists()).toBe(true)
+    })
+
+    it('allows selecting multiple alignments', async () => {
+      const wrapper = await mountSuspended(MonstersPage)
+
+      const component = wrapper.vm as any
+
+      // Select multiple alignments
+      component.selectedAlignments = ['Lawful Good', 'Chaotic Evil', 'Neutral']
+      await wrapper.vm.$nextTick()
+
+      expect(component.selectedAlignments).toEqual(['Lawful Good', 'Chaotic Evil', 'Neutral'])
+    })
+
+    it('initializes as empty array', async () => {
+      const wrapper = await mountSuspended(MonstersPage)
+
+      const component = wrapper.vm as any
+      expect(Array.isArray(component.selectedAlignments)).toBe(true)
+      expect(component.selectedAlignments.length).toBe(0)
+    })
+  })
+
+  describe('Speed Filter Toggles', () => {
+    it('displays has fly toggle', async () => {
+      const wrapper = await mountSuspended(MonstersPage)
+
+      const component = wrapper.vm as any
+      component.filtersOpen = true
+      await wrapper.vm.$nextTick()
+
+      const toggle = wrapper.find('[data-testid="has-fly-toggle"]')
+      expect(toggle.exists()).toBe(true)
+    })
+
+    it('displays has swim toggle', async () => {
+      const wrapper = await mountSuspended(MonstersPage)
+
+      const component = wrapper.vm as any
+      component.filtersOpen = true
+      await wrapper.vm.$nextTick()
+
+      const toggle = wrapper.find('[data-testid="has-swim-toggle"]')
+      expect(toggle.exists()).toBe(true)
+    })
+
+    it('displays has burrow toggle', async () => {
+      const wrapper = await mountSuspended(MonstersPage)
+
+      const component = wrapper.vm as any
+      component.filtersOpen = true
+      await wrapper.vm.$nextTick()
+
+      const toggle = wrapper.find('[data-testid="has-burrow-toggle"]')
+      expect(toggle.exists()).toBe(true)
+    })
+
+    it('displays has climb toggle', async () => {
+      const wrapper = await mountSuspended(MonstersPage)
+
+      const component = wrapper.vm as any
+      component.filtersOpen = true
+      await wrapper.vm.$nextTick()
+
+      const toggle = wrapper.find('[data-testid="has-climb-toggle"]')
+      expect(toggle.exists()).toBe(true)
+    })
+  })
 })

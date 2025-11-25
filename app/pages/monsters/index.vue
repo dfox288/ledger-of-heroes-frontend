@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue'
-import type { Monster } from '~/types'
+import type { Monster, Size } from '~/types'
 
 const route = useRoute()
 
@@ -11,6 +11,19 @@ const selectedCRs = ref<string[]>(
 )
 const selectedType = ref(route.query.type ? String(route.query.type) : null)
 const isLegendary = ref<string | null>((route.query.is_legendary as string) || null)
+const selectedSizes = ref<string[]>(
+  route.query.size_id ? (Array.isArray(route.query.size_id) ? route.query.size_id.map(String) : [String(route.query.size_id)]) : []
+)
+const selectedAlignments = ref<string[]>(
+  route.query.alignment ? (Array.isArray(route.query.alignment) ? route.query.alignment : [route.query.alignment]) : []
+)
+const hasFly = ref<string | null>((route.query.has_fly as string) || null)
+const hasSwim = ref<string | null>((route.query.has_swim as string) || null)
+const hasBurrow = ref<string | null>((route.query.has_burrow as string) || null)
+const hasClimb = ref<string | null>((route.query.has_climb as string) || null)
+
+// Fetch reference data for filters
+const { data: sizes } = useReferenceData<Size>('/sizes')
 
 // CR multiselect options (common D&D 5e CR values)
 const crOptions = [
@@ -50,6 +63,26 @@ const crOptions = [
   { label: 'CR 30', value: '30' }
 ]
 
+// Size options from reference data
+const sizeOptions = computed(() =>
+  sizes.value?.map(s => ({ label: s.name, value: String(s.id) })) || []
+)
+
+// Alignment options (from API analysis - common D&D alignments)
+const alignmentOptions = [
+  { label: 'Lawful Good', value: 'Lawful Good' },
+  { label: 'Neutral Good', value: 'Neutral Good' },
+  { label: 'Chaotic Good', value: 'Chaotic Good' },
+  { label: 'Lawful Neutral', value: 'Lawful Neutral' },
+  { label: 'Neutral', value: 'Neutral' },
+  { label: 'Chaotic Neutral', value: 'Chaotic Neutral' },
+  { label: 'Lawful Evil', value: 'Lawful Evil' },
+  { label: 'Neutral Evil', value: 'Neutral Evil' },
+  { label: 'Chaotic Evil', value: 'Chaotic Evil' },
+  { label: 'Unaligned', value: 'Unaligned' },
+  { label: 'Any Alignment', value: 'Any alignment' }
+]
+
 // Type options
 const typeOptions = [
   { label: 'All Types', value: null },
@@ -79,7 +112,25 @@ const { queryParams: filterParams } = useMeilisearchFilters([
     transform: (crs) => crs.map(Number)
   },
   { ref: selectedType, field: 'type' },
-  { ref: isLegendary, field: 'is_legendary', type: 'boolean' }
+  { ref: isLegendary, field: 'is_legendary', type: 'boolean' },
+  // Size multiselect filter (convert strings to numbers for API)
+  {
+    ref: selectedSizes,
+    field: 'size_id',
+    type: 'in',
+    transform: (sizes) => sizes.map(Number)
+  },
+  // Alignment multiselect filter
+  {
+    ref: selectedAlignments,
+    field: 'alignment',
+    type: 'in'
+  },
+  // Speed filters - use greaterThan to check if field has a value (> 0)
+  { ref: hasFly, field: 'speed_fly', type: 'greaterThan', transform: () => 0 },
+  { ref: hasSwim, field: 'speed_swim', type: 'greaterThan', transform: () => 0 },
+  { ref: hasBurrow, field: 'speed_burrow', type: 'greaterThan', transform: () => 0 },
+  { ref: hasClimb, field: 'speed_climb', type: 'greaterThan', transform: () => 0 }
 ])
 
 const queryBuilder = computed(() => filterParams.value)
@@ -114,6 +165,12 @@ const clearFilters = () => {
   selectedCRs.value = []
   selectedType.value = null
   isLegendary.value = null
+  selectedSizes.value = []
+  selectedAlignments.value = []
+  hasFly.value = null
+  hasSwim.value = null
+  hasBurrow.value = null
+  hasClimb.value = null
 }
 
 // Helper functions for filter chips
@@ -142,11 +199,42 @@ const getTypeLabel = (type: string) => {
   return typeOptions.find(o => o.value === type)?.label || type
 }
 
+// Helper functions for size filter chips
+const getSizeLabel = (sizeId: string) => {
+  return sizeOptions.value.find(o => o.value === sizeId)?.label || sizeId
+}
+
+// Get Size filter display text for chips
+const getSizeFilterText = computed(() => {
+  if (selectedSizes.value.length === 0) return null
+
+  const labels = selectedSizes.value
+    .map(sizeId => getSizeLabel(sizeId))
+    .sort()
+
+  const prefix = selectedSizes.value.length === 1 ? 'Size' : 'Sizes'
+  return `${prefix}: ${labels.join(', ')}`
+})
+
+const clearSizeFilter = () => {
+  selectedSizes.value = []
+}
+
 // Filter collapse state
 const filtersOpen = ref(false)
 
 // Active filter count for badge
-const activeFilterCount = useFilterCount(selectedCRs, selectedType, isLegendary)
+const activeFilterCount = useFilterCount(
+  selectedCRs,
+  selectedType,
+  isLegendary,
+  selectedSizes,
+  selectedAlignments,
+  hasFly,
+  hasSwim,
+  hasBurrow,
+  hasClimb
+)
 
 const perPage = 24
 </script>
@@ -190,7 +278,7 @@ const perPage = 24
         </template>
 
         <UiFilterLayout>
-          <!-- Primary Filters: Most frequently used (CR, Type) -->
+          <!-- Primary Filters: Most frequently used (CR, Type, Size) -->
           <template #primary>
             <!-- CR Filter Multiselect -->
             <UiFilterMultiSelect
@@ -212,9 +300,29 @@ const perPage = 24
               size="md"
               class="w-full sm:w-48"
             />
+
+            <!-- Size Filter Multiselect -->
+            <UiFilterMultiSelect
+              v-model="selectedSizes"
+              data-testid="size-filter-multiselect"
+              :options="sizeOptions"
+              placeholder="All Sizes"
+              color="primary"
+              class="w-full sm:w-48"
+            />
+
+            <!-- Alignment Filter Multiselect -->
+            <UiFilterMultiSelect
+              v-model="selectedAlignments"
+              data-testid="alignment-filter-multiselect"
+              :options="alignmentOptions"
+              placeholder="All Alignments"
+              color="secondary"
+              class="w-full sm:w-48"
+            />
           </template>
 
-          <!-- Quick Toggles: Binary filters (Legendary) -->
+          <!-- Quick Toggles: Binary filters (Legendary, Speed Types) -->
           <template #quick>
             <UiFilterToggle
               v-model="isLegendary"
@@ -226,9 +334,57 @@ const perPage = 24
                 { value: '0', label: 'No' }
               ]"
             />
+
+            <UiFilterToggle
+              v-model="hasFly"
+              data-testid="has-fly-toggle"
+              label="Has Fly"
+              color="info"
+              :options="[
+                { value: null, label: 'All' },
+                { value: '1', label: 'Yes' },
+                { value: '0', label: 'No' }
+              ]"
+            />
+
+            <UiFilterToggle
+              v-model="hasSwim"
+              data-testid="has-swim-toggle"
+              label="Has Swim"
+              color="info"
+              :options="[
+                { value: null, label: 'All' },
+                { value: '1', label: 'Yes' },
+                { value: '0', label: 'No' }
+              ]"
+            />
+
+            <UiFilterToggle
+              v-model="hasBurrow"
+              data-testid="has-burrow-toggle"
+              label="Has Burrow"
+              color="info"
+              :options="[
+                { value: null, label: 'All' },
+                { value: '1', label: 'Yes' },
+                { value: '0', label: 'No' }
+              ]"
+            />
+
+            <UiFilterToggle
+              v-model="hasClimb"
+              data-testid="has-climb-toggle"
+              label="Has Climb"
+              color="info"
+              :options="[
+                { value: null, label: 'All' },
+                { value: '1', label: 'Yes' },
+                { value: '0', label: 'No' }
+              ]"
+            />
           </template>
 
-          <!-- Advanced Filters: Empty (no advanced filters yet) -->
+          <!-- Advanced Filters: Empty (could add AC, HP ranges here) -->
           <template #advanced />
 
           <!-- Actions: Empty (Clear Filters moved to chips row) -->
@@ -266,6 +422,16 @@ const perPage = 24
             @click="selectedType = null"
           >
             {{ getTypeLabel(selectedType) }} ✕
+          </UButton>
+          <UButton
+            v-if="getSizeFilterText"
+            data-testid="size-filter-chip"
+            size="xs"
+            color="primary"
+            variant="soft"
+            @click="clearSizeFilter"
+          >
+            {{ getSizeFilterText }} ✕
           </UButton>
           <UButton
             v-if="isLegendary !== null"
