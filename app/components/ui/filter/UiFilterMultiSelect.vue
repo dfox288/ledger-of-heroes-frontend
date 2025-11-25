@@ -92,23 +92,25 @@ const clearAll = () => {
 
     <!-- Select Menu Container -->
     <div class="flex items-center gap-2">
-      <!-- Multi-Select Dropdown -->
-      <USelectMenu
-        :model-value="normalizedValue"
-        :items="options"
-        multiple
-        searchable
-        :placeholder="placeholder"
-        :aria-label="`${label} filter`"
-        value-key="value"
-        @update:model-value="handleChange"
-      />
+      <!-- Multi-Select Dropdown (fixed width to prevent jumping) -->
+      <div class="w-48">
+        <USelectMenu
+          :model-value="normalizedValue"
+          :items="options"
+          multiple
+          searchable
+          :placeholder="placeholder"
+          :aria-label="`${label} filter`"
+          value-key="value"
+          @update:model-value="handleChange"
+        />
+      </div>
 
       <!-- Selection Count Badge -->
       <UBadge
         v-if="normalizedValue.length > 0"
         :color="color as any"
-        size="sm"
+        size="md"
         variant="soft"
       >
         {{ normalizedValue.length }}
