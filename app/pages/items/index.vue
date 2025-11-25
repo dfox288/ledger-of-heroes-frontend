@@ -3,7 +3,7 @@ import { ref, computed } from 'vue'
 import type { Item, ItemType } from '~/types'
 
 const route = useRoute()
-const { apiFetch } = useApi()
+// Note: useApi no longer needed for reference fetches (handled by useReferenceData)
 
 // Filter collapse state
 const filtersOpen = ref(false)
@@ -15,11 +15,8 @@ const selectedMagic = ref((route.query.is_magic as string) || null)
 const hasCharges = ref<string | null>((route.query.has_charges as string) || null)
 const hasPrerequisites = ref<string | null>((route.query.has_prerequisites as string) || null)
 
-// Fetch item types for filter options
-const { data: itemTypes } = await useAsyncData('item-types', async () => {
-  const response = await apiFetch<{ data: ItemType[] }>('/item-types')
-  return response?.data || []
-})
+// Fetch item types for filter options (using composable)
+const { data: itemTypes } = useReferenceData<ItemType>('/item-types')
 
 // Rarity options from D&D rules
 const rarityOptions = [
@@ -51,48 +48,31 @@ const typeOptions = computed(() => {
   return options
 })
 
-// Query builder for custom filters (Meilisearch syntax)
+// Query builder for custom filters (hybrid: composable + manual for special cases)
 const queryBuilder = computed(() => {
   const params: Record<string, unknown> = {}
   const meilisearchFilters: string[] = []
 
-  // Type filter (use item_type_id for Meilisearch)
-  if (selectedType.value !== null) {
-    meilisearchFilters.push(`item_type_id = ${selectedType.value}`)
+  // Standard filters via composable
+  const { queryParams: standardParams } = useMeilisearchFilters([
+    { ref: selectedType, field: 'item_type_id' },
+    { ref: selectedRarity, field: 'rarity' },
+    { ref: selectedMagic, field: 'is_magic', type: 'boolean' },
+    { ref: hasPrerequisites, field: 'prerequisites', type: 'isEmpty' }
+  ])
+
+  // Extract standard filter string
+  if (standardParams.value.filter) {
+    meilisearchFilters.push(standardParams.value.filter as string)
   }
 
-  // Rarity filter (string value)
-  if (selectedRarity.value !== null) {
-    meilisearchFilters.push(`rarity = ${selectedRarity.value}`)
-  }
-
-  // is_magic filter (convert string to boolean)
-  if (selectedMagic.value !== null) {
-    const boolValue = selectedMagic.value === 'true' || selectedMagic.value === '1'
-    meilisearchFilters.push(`is_magic = ${boolValue}`)
-  }
-
-  // has_charges filter (check if charges_max > 0)
+  // Special handling for has_charges (needs both > 0 and = 0 logic)
   if (hasCharges.value !== null) {
     const hasCharge = hasCharges.value === '1' || hasCharges.value === 'true'
-    if (hasCharge) {
-      meilisearchFilters.push('charges_max > 0')
-    } else {
-      meilisearchFilters.push('charges_max = 0')
-    }
+    meilisearchFilters.push(hasCharge ? 'charges_max > 0' : 'charges_max = 0')
   }
 
-  // has_prerequisites filter (check if prerequisites field is not empty)
-  if (hasPrerequisites.value !== null) {
-    const hasPrereq = hasPrerequisites.value === '1' || hasPrerequisites.value === 'true'
-    if (hasPrereq) {
-      meilisearchFilters.push('prerequisites IS NOT EMPTY')
-    } else {
-      meilisearchFilters.push('prerequisites IS EMPTY')
-    }
-  }
-
-  // Combine all filters with AND
+  // Combine all filters
   if (meilisearchFilters.length > 0) {
     params.filter = meilisearchFilters.join(' AND ')
   }
@@ -143,16 +123,14 @@ const getTypeName = (typeId: number) => {
 // Pagination settings
 const perPage = 24
 
-// Count active filters (excluding search) for collapse badge
-const activeFilterCount = computed(() => {
-  let count = 0
-  if (selectedType.value !== null) count++
-  if (selectedRarity.value !== null) count++
-  if (selectedMagic.value !== null) count++
-  if (hasCharges.value !== null) count++
-  if (hasPrerequisites.value !== null) count++
-  return count
-})
+// Count active filters (excluding search) for collapse badge (using composable)
+const activeFilterCount = useFilterCount(
+  selectedType,
+  selectedRarity,
+  selectedMagic,
+  hasCharges,
+  hasPrerequisites
+)
 </script>
 
 <template>
