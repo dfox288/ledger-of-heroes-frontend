@@ -38,6 +38,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Better for D&D aesthetic (dark/mystical theme)
 - Consistent experience across all users
 
+### Changed
+
+- **Filter Composables Refactoring** (2025-11-25) - Extracted 3 reusable composables to eliminate ~560 lines of duplicate Meilisearch filter logic across 6 entity pages
+  - Created `useMeilisearchFilters()` for declarative filter building (6 filter types)
+  - Created `useReferenceData<T>()` for type-safe reference entity fetching
+  - Created `useFilterCount()` for active filter counting
+  - Migrated all entity pages: spells, items, monsters, races, classes, feats
+  - Added 49 comprehensive tests (100% coverage on composables)
+  - Improved maintainability: bug fixes in 1 place instead of 6
+  - Non-breaking change: all filters work identically
+  - See `docs/FILTER-COMPOSABLES-MIGRATION-GUIDE.md` for usage patterns
+
 ### Changed - Navigation Restructure (2025-11-25)
 
 **📚 Compendium Dropdown:**
