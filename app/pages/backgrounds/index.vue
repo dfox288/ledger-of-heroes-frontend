@@ -204,9 +204,8 @@ const perPage = 24
           </div>
         </template>
 
-        <!-- Filters -->
+        <!-- Filters: All in primary row to save space -->
         <UiFilterLayout>
-          <!-- Primary Filters: Quick access filters -->
           <template #primary>
             <UiFilterMultiSelect
               v-model="selectedSkills"
@@ -216,10 +215,16 @@ const perPage = 24
               color="background"
               class="w-full sm:w-48"
             />
-          </template>
 
-          <!-- Quick Toggles: Binary filters -->
-          <template #quick>
+            <UiFilterMultiSelect
+              v-model="selectedToolTypes"
+              :options="toolTypeOptions"
+              placeholder="All Tools"
+              label="Tool Types"
+              color="background"
+              class="w-full sm:w-48"
+            />
+
             <UiFilterToggle
               v-model="languageChoiceFilter"
               label="Language Choice"
@@ -231,21 +236,6 @@ const perPage = 24
               ]"
             />
           </template>
-
-          <!-- Advanced Filters: Less frequently used -->
-          <template #advanced>
-            <UiFilterMultiSelect
-              v-model="selectedToolTypes"
-              :options="toolTypeOptions"
-              placeholder="All Tool Types"
-              label="Tool Types"
-              color="background"
-              class="w-full sm:w-48"
-            />
-          </template>
-
-          <!-- Actions: Empty (Clear Filters moved to chips row) -->
-          <template #actions />
         </UiFilterLayout>
       </UiFilterCollapse>
 

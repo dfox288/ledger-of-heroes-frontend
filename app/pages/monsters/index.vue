@@ -507,19 +507,18 @@ const perPage = 24
         </template>
 
         <UiFilterLayout>
-          <!-- Primary Filters: Most frequently used (CR, Type, Size) -->
+          <!-- Primary Filters: Dropdowns and multiselects -->
           <template #primary>
-            <!-- CR Filter Multiselect -->
             <UiFilterMultiSelect
               v-model="selectedCRs"
               data-testid="cr-filter-multiselect"
               :options="crOptions"
+              label="Challenge Rating"
               placeholder="All CRs"
-              color="primary"
+              color="monster"
               class="w-full sm:w-48"
             />
 
-            <!-- Type Filter -->
             <UiFilterSelect
               v-model="selectedType"
               :options="typeOptions"
@@ -529,28 +528,38 @@ const perPage = 24
               data-testid="type-filter"
             />
 
-            <!-- Size Filter Multiselect -->
             <UiFilterMultiSelect
               v-model="selectedSizes"
               data-testid="size-filter-multiselect"
               :options="sizeOptions"
+              label="Size"
               placeholder="All Sizes"
-              color="primary"
+              color="monster"
               class="w-full sm:w-48"
             />
 
-            <!-- Alignment Filter Multiselect -->
             <UiFilterMultiSelect
               v-model="selectedAlignments"
               data-testid="alignment-filter-multiselect"
               :options="alignmentOptions"
+              label="Alignment"
               placeholder="All Alignments"
-              color="secondary"
+              color="monster"
+              class="w-full sm:w-48"
+            />
+
+            <UiFilterMultiSelect
+              v-model="selectedMovementTypes"
+              data-testid="movement-types-filter"
+              :options="movementTypeOptions"
+              label="Movement"
+              placeholder="All Movement"
+              color="monster"
               class="w-full sm:w-48"
             />
           </template>
 
-          <!-- Quick Toggles: Reduced from 10 to 5 (movement combined into multiselect) -->
+          <!-- Quick Toggles: Boolean yes/no filters only -->
           <template #quick>
             <UiFilterToggle
               v-model="isLegendary"
@@ -563,21 +572,10 @@ const perPage = 24
               ]"
             />
 
-            <!-- Movement Types Multiselect (replaces 5 individual toggles) -->
-            <UiFilterMultiSelect
-              v-model="selectedMovementTypes"
-              data-testid="movement-types-filter"
-              :options="movementTypeOptions"
-              label="Movement Types"
-              placeholder="All Movement"
-              color="info"
-              class="w-full sm:w-48"
-            />
-
             <UiFilterToggle
               v-model="hasLairActions"
               data-testid="has-lair-actions-toggle"
-              label="Has Lair Actions"
+              label="Lair Actions"
               color="warning"
               :options="[
                 { value: null, label: 'All' },
@@ -589,7 +587,7 @@ const perPage = 24
             <UiFilterToggle
               v-model="hasReactions"
               data-testid="has-reactions-toggle"
-              label="Has Reactions"
+              label="Reactions"
               color="secondary"
               :options="[
                 { value: null, label: 'All' },
@@ -601,7 +599,7 @@ const perPage = 24
             <UiFilterToggle
               v-model="isSpellcaster"
               data-testid="is-spellcaster-toggle"
-              label="Is Spellcaster"
+              label="Spellcaster"
               color="primary"
               :options="[
                 { value: null, label: 'All' },
@@ -613,7 +611,7 @@ const perPage = 24
             <UiFilterToggle
               v-model="hasMagicResistance"
               data-testid="has-magic-resistance-toggle"
-              label="Has Magic Resistance"
+              label="Magic Resist"
               color="success"
               :options="[
                 { value: null, label: 'All' },
@@ -623,35 +621,30 @@ const perPage = 24
             />
           </template>
 
-          <!-- Advanced Filters: ONLY 3 stat filters (Armor Type, AC, HP) -->
+          <!-- Advanced Filters: Stat ranges -->
           <template #advanced>
-            <!-- Armor Type Filter Multiselect -->
-            <div>
-              <label class="text-sm font-medium mb-2 block">Armor Type</label>
-              <UiFilterMultiSelect
-                v-model="selectedArmorTypes"
-                data-testid="armor-type-filter-multiselect"
-                :options="armorTypeOptions"
-                placeholder="All Armor Types"
-                color="neutral"
-                class="w-full sm:w-48"
-              />
-            </div>
+            <UiFilterMultiSelect
+              v-model="selectedArmorTypes"
+              data-testid="armor-type-filter-multiselect"
+              :options="armorTypeOptions"
+              label="Armor Type"
+              placeholder="All Armor"
+              color="monster"
+              class="w-full sm:w-48"
+            />
 
-            <!-- AC Range Filter -->
             <UiFilterSelect
               v-model="selectedACRange"
               :options="acRangeOptions"
-              label="Armor Class"
+              label="AC Range"
               placeholder="All AC"
               data-testid="ac-filter"
             />
 
-            <!-- HP Range Filter -->
             <UiFilterSelect
               v-model="selectedHPRange"
               :options="hpRangeOptions"
-              label="Hit Points"
+              label="HP Range"
               placeholder="All HP"
               data-testid="hp-filter"
             />

@@ -13,8 +13,7 @@ const sortDirection = ref<'asc' | 'desc'>((route.query.sort_direction as 'asc' |
 
 // Custom filter state (entity-specific)
 const selectedSize = ref((route.query.size as string) || '')
-const speedMin = ref(Number(route.query.speed_min) || 10)
-const speedMax = ref(Number(route.query.speed_max) || 35)
+const selectedSpeedRange = ref<string | null>((route.query.speed as string) || null)
 const selectedSources = ref<string[]>(
   route.query.source ? (Array.isArray(route.query.source) ? route.query.source : [route.query.source]) as string[] : []
 )
@@ -24,6 +23,14 @@ const hasInnateSpellsFilter = ref<string | null>((route.query.has_innate_spells 
 const selectedAbilityBonuses = ref<string[]>(
   route.query.ability ? (Array.isArray(route.query.ability) ? route.query.ability : [route.query.ability]) as string[] : []
 )
+
+// Speed range options
+const speedRangeOptions = [
+  { label: 'All Speeds', value: null },
+  { label: 'Slow (≤25 ft)', value: 'slow' },
+  { label: '30 ft', value: '30' },
+  { label: 'Fast (≥35 ft)', value: 'fast' }
+]
 
 // Fetch reference data for filter options
 const { data: sizes } = useReferenceData<Size>('/sizes', {
@@ -113,22 +120,40 @@ const sortValue = computed({
 // Query builder for custom filters (using composable)
 const baseFilters = useMeilisearchFilters([
   { ref: selectedSize, field: 'size_code' },
-  { ref: computed(() => null), field: 'speed', type: 'range', min: speedMin, max: speedMax },
   { ref: selectedSources, field: 'source_codes', type: 'in' },
   { ref: selectedParentRace, field: 'parent_race_name' },
   { ref: raceTypeFilter, field: 'is_subrace', type: 'boolean' },
   { ref: hasInnateSpellsFilter, field: 'has_innate_spells', type: 'boolean' }
 ])
 
-// Combine base filters with custom ability bonus filter
+// Combine base filters with custom filters (ability bonuses, speed range)
 const queryParams = computed(() => {
   const params = { ...baseFilters.queryParams.value }
+  const meilisearchFilters: string[] = []
 
+  // Add speed range filter
+  if (selectedSpeedRange.value) {
+    if (selectedSpeedRange.value === 'slow') {
+      meilisearchFilters.push('speed <= 25')
+    } else if (selectedSpeedRange.value === '30') {
+      meilisearchFilters.push('speed = 30')
+    } else if (selectedSpeedRange.value === 'fast') {
+      meilisearchFilters.push('speed >= 35')
+    }
+  }
+
+  // Add ability bonus filter
   if (abilityBonusFilter.value) {
+    meilisearchFilters.push(`(${abilityBonusFilter.value})`)
+  }
+
+  // Combine all filters
+  if (meilisearchFilters.length > 0) {
     const existingFilter = params.filter as string | undefined
+    const combinedFilter = meilisearchFilters.join(' AND ')
     params.filter = existingFilter
-      ? `${existingFilter} AND (${abilityBonusFilter.value})`
-      : abilityBonusFilter.value
+      ? `${existingFilter} AND ${combinedFilter}`
+      : combinedFilter
   }
 
   // Add sorting
@@ -166,13 +191,18 @@ const races = computed(() => racesData.value as Race[])
 const clearFilters = () => {
   clearBaseFilters()
   selectedSize.value = ''
-  speedMin.value = 10
-  speedMax.value = 35
+  selectedSpeedRange.value = null
   selectedSources.value = []
   selectedParentRace.value = ''
   raceTypeFilter.value = null
   hasInnateSpellsFilter.value = null
   selectedAbilityBonuses.value = []
+}
+
+// Helper for speed chip label
+const getSpeedRangeLabel = (value: string | null) => {
+  const option = speedRangeOptions.find(o => o.value === value)
+  return option?.label || value
 }
 
 // Helper for filter chips
@@ -192,7 +222,7 @@ const activeFilterCount = useFilterCount(
   raceTypeFilter,
   hasInnateSpellsFilter,
   selectedAbilityBonuses,
-  computed(() => speedMin.value !== 10 || speedMax.value !== 35 ? 'speed' : null)
+  selectedSpeedRange
 )
 
 // Pagination settings
@@ -270,38 +300,15 @@ const perPage = 24
               data-testid="size-filter"
             />
 
-            <!-- Speed Filter (Compressed Sliders) -->
-            <div>
-              <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                Speed Range
-              </label>
-              <div class="grid grid-cols-2 gap-4">
-                <div>
-                  <label class="block text-xs text-gray-600 dark:text-gray-400 mb-2">
-                    Min: {{ speedMin }} ft
-                  </label>
-                  <USlider
-                    v-model="speedMin"
-                    :min="10"
-                    :max="35"
-                    :step="5"
-                    data-testid="speed-min-slider"
-                  />
-                </div>
-                <div>
-                  <label class="block text-xs text-gray-600 dark:text-gray-400 mb-2">
-                    Max: {{ speedMax }} ft
-                  </label>
-                  <USlider
-                    v-model="speedMax"
-                    :min="10"
-                    :max="35"
-                    :step="5"
-                    data-testid="speed-max-slider"
-                  />
-                </div>
-              </div>
-            </div>
+            <!-- Speed Filter -->
+            <UiFilterSelect
+              v-model="selectedSpeedRange"
+              :options="speedRangeOptions"
+              label="Speed"
+              placeholder="All Speeds"
+              width-class="w-full sm:w-44"
+              data-testid="speed-filter"
+            />
 
             <!-- Ability Score Bonuses Filter -->
             <UiFilterMultiSelect
@@ -396,14 +403,14 @@ const perPage = 24
             Size: {{ getSizeName(selectedSize) }} ✕
           </UButton>
           <UButton
-            v-if="speedMin !== 10 || speedMax !== 35"
+            v-if="selectedSpeedRange"
             data-testid="speed-filter-chip"
             size="xs"
             color="race"
             variant="soft"
-            @click="speedMin = 10; speedMax = 35"
+            @click="selectedSpeedRange = null"
           >
-            Speed: {{ speedMin }}-{{ speedMax }} ft ✕
+            Speed: {{ getSpeedRangeLabel(selectedSpeedRange) }} ✕
           </UButton>
           <UButton
             v-if="selectedParentRace"

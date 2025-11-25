@@ -36,14 +36,13 @@
  *
  * **Layout Behavior:**
  * - Primary: flex row with wrapping, gap-3 (12px)
- * - Quick: responsive grid (2 cols → 3 cols → 5 cols), gap-3
+ * - Quick: flex row with wrapping, gap-3 (aligns with primary)
  * - Advanced: flex row with wrapping, gap-3
  * - Actions: flex row, right-aligned
  *
  * **Responsive:**
  * - Mobile: All filters stack vertically
- * - Tablet (sm): 3 columns for quick toggles
- * - Desktop (lg): 5 columns for quick toggles (all in one row)
+ * - Tablet/Desktop: Toggles flow horizontally, wrapping as needed
  *
  * **Spacing:**
  * - space-y-4 (16px) between tiers
@@ -74,7 +73,7 @@ defineSlots<{
     <div
       v-if="$slots.quick"
       data-section="quick"
-      class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3"
+      class="flex flex-wrap gap-3"
     >
       <slot name="quick" />
     </div>

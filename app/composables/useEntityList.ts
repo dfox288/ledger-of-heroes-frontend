@@ -152,10 +152,23 @@ export function useEntityList(config: UseEntityListConfig): UseEntityListReturn 
   const meta = computed(() => response.value?.meta || null)
   const totalResults = computed(() => meta.value?.total || 0)
 
-  // Check if any filters are active
+  // Check if any filters are active (excludes sort params and per_page)
   const hasActiveFilters = computed(() => {
-    return searchQuery.value.trim() !== ''
-      || Object.keys(config.queryBuilder.value).length > 0
+    if (searchQuery.value.trim() !== '') return true
+
+    // Filter out non-filter params (sort, pagination)
+    const filterKeys = Object.keys(config.queryBuilder.value).filter(
+      key => !['sort_by', 'sort_direction', 'per_page', 'page'].includes(key)
+    )
+
+    // Check if any actual filter params have values
+    return filterKeys.some(key => {
+      const value = config.queryBuilder.value[key]
+      // Empty strings, null, undefined, empty arrays don't count as active
+      if (value === null || value === undefined || value === '') return false
+      if (Array.isArray(value) && value.length === 0) return false
+      return true
+    })
   })
 
   // Clear base filters (search + page)

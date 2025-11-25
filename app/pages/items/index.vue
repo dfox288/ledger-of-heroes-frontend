@@ -447,37 +447,46 @@ const activeFilterCount = useFilterCount(
 
         <!-- Filter Content -->
         <UiFilterLayout>
-          <!-- Primary Filters: Most frequently used (Type, Rarity, Magic) -->
+          <!-- Primary Filters: Dropdowns -->
           <template #primary>
-            <USelectMenu
+            <UiFilterSelect
               v-model="selectedType"
-              :items="typeOptions"
-              value-key="value"
+              :options="typeOptions"
+              label="Item Type"
               placeholder="All Types"
-              size="md"
-              class="w-full sm:w-48"
+              width-class="w-full sm:w-48"
+              data-testid="type-filter"
             />
 
-            <USelectMenu
+            <UiFilterSelect
               v-model="selectedRarity"
-              :items="rarityOptions"
-              value-key="value"
+              :options="rarityOptions"
+              label="Rarity"
               placeholder="All Rarities"
-              size="md"
-              class="w-full sm:w-44"
+              width-class="w-full sm:w-44"
+              data-testid="rarity-filter"
             />
 
-            <USelectMenu
+            <UiFilterSelect
               v-model="selectedMagic"
-              :items="magicOptions"
-              value-key="value"
+              :options="magicOptions"
+              label="Magic"
               placeholder="All Items"
-              size="md"
-              class="w-full sm:w-44"
+              width-class="w-full sm:w-44"
+              data-testid="magic-filter"
+            />
+
+            <UiFilterSelect
+              v-model="selectedStrengthReq"
+              :options="strengthReqOptions"
+              label="STR Required"
+              placeholder="All STR"
+              width-class="w-full sm:w-36"
+              data-testid="strength-req-filter"
             />
           </template>
 
-          <!-- Quick Toggles: Binary filters (Charges, Attunement, Stealth) -->
+          <!-- Quick Toggles: Boolean yes/no filters only -->
           <template #quick>
             <UiFilterToggle
               v-model="hasCharges"
@@ -510,16 +519,6 @@ const activeFilterCount = useFilterCount(
                 { value: '1', label: 'Yes' },
                 { value: '0', label: 'No' }
               ]"
-            />
-
-            <!-- Strength Requirement Filter (TIER 2 HIGH IMPACT) -->
-            <UiFilterSelect
-              v-model="selectedStrengthReq"
-              :options="strengthReqOptions"
-              label="Strength Req"
-              placeholder="All STR"
-              width-class="w-full sm:w-32"
-              data-testid="strength-req-filter"
             />
           </template>
 

@@ -205,27 +205,25 @@ const perPage = 24
 
         <UiFilterLayout>
           <template #primary>
-            <!-- Hit Die Filter -->
             <UiFilterMultiSelect
               v-model="selectedHitDice"
               :options="hitDieOptions"
+              label="Hit Die"
               placeholder="All Hit Dice"
-              color="primary"
+              color="class"
               class="w-full sm:w-48"
               data-testid="hit-die-filter"
             />
 
-            <!-- Spellcasting Ability Filter -->
             <UiFilterSelect
               v-model="selectedSpellcastingAbility"
               :options="spellcastingAbilityOptions"
-              label="Spellcasting Ability"
+              label="Spellcasting"
               placeholder="All Abilities"
               width-class="w-full sm:w-48"
               data-testid="spellcasting-ability-filter"
             />
 
-            <!-- Parent Class Filter -->
             <UiFilterSelect
               v-model="selectedParentClass"
               :options="parentClassOptions"

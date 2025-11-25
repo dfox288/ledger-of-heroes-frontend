@@ -382,6 +382,7 @@ const activeFilterCount = useFilterCount(
               v-model="selectedLevels"
               data-testid="level-filter-multiselect"
               :options="levelOptions"
+              label="Level"
               placeholder="All Levels"
               color="primary"
               class="w-full sm:w-48"
