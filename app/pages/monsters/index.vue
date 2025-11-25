@@ -112,15 +112,19 @@ const { queryParams: filterParams } = useMeilisearchFilters([
     transform: (crs) => crs.map(Number)
   },
   { ref: selectedType, field: 'type' },
-  { ref: isLegendary, field: 'is_legendary', type: 'boolean' },
-  // Size multiselect filter (convert strings to numbers for API)
+  // FIX: Changed from 'is_legendary' to 'has_legendary_actions' (correct Meilisearch field)
+  { ref: isLegendary, field: 'has_legendary_actions', type: 'boolean' },
+  // FIX: Changed from 'size_id' to 'size_code' and transform ID to code
   {
     ref: selectedSizes,
-    field: 'size_id',
+    field: 'size_code',
     type: 'in',
-    transform: (sizes) => sizes.map(Number)
+    transform: (sizeIds) => sizeIds.map((id: string) => {
+      const size = sizes.value?.find(s => String(s.id) === id)
+      return size?.code || null
+    }).filter((code): code is string => code !== null)
   },
-  // Alignment multiselect filter
+  // Alignment multiselect filter - values with spaces are auto-quoted by composable
   {
     ref: selectedAlignments,
     field: 'alignment',
