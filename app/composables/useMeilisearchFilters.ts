@@ -88,7 +88,20 @@ export function useMeilisearchFilters(
         case 'in': {
           const values = Array.isArray(value) ? value : [value]
           if (values.length > 0) {
-            const joined = values.join(', ')
+            // Apply transform if provided (e.g., ID to code lookup)
+            const transformedValues = config.transform
+              ? config.transform(values)
+              : values
+
+            // Quote string values that contain spaces for Meilisearch syntax
+            const quotedValues = transformedValues.map((v: any) => {
+              if (typeof v === 'string' && v.includes(' ')) {
+                return `"${v}"`
+              }
+              return v
+            })
+
+            const joined = quotedValues.join(', ')
             meilisearchFilters.push(`${config.field} IN [${joined}]`)
           }
           break
