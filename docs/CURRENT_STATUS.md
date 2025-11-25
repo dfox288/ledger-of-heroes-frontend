@@ -1,17 +1,62 @@
 # D&D 5e Compendium Frontend - Current Status
 
-**Last Updated:** 2025-11-25 (Latest: ✅ Filter Consistency & UX Standardization Complete!)
+**Last Updated:** 2025-11-26 (Latest: ✅ Component Extraction & Code Deduplication Complete!)
 **Status:** ✅ **PRODUCTION-READY - Perfect Code Quality!**
 **Framework:** Nuxt 4.x + NuxtUI 4.x + Three.js + Storybook 8.x
 **7 of 7 Entity Types + 10 Reference Pages + 🆕 Builder Tools** (All Complete!)
 **Test Coverage:** 1164+ tests (103 new tests added, all passing) ✨
 **Code Quality:** ESLint 0 errors ✅ | TypeScript: Clean ✅
-**NEW TODAY:** ✅ **FILTER CONSISTENCY** - All 7 pages standardized, vertical drift fixed, new UiFilterSelect component!
-**MAJOR ACHIEVEMENT:** Chip ordering/colors/testids standardized, Monsters movement filters redesigned, Items advanced reorganized
+**NEW TODAY:** ✅ **COMPONENT EXTRACTION** - 5 new reusable components/composables, 24% code reduction (4,241 → 3,226 lines)!
+**MAJOR ACHIEVEMENT:** All 7 entity pages now use consistent patterns for search, sort, filters, chips, and list states
 
 ---
 
-## 🎉 Latest Session Summary (2025-11-25)
+## 🎉 Latest Session Summary (2025-11-26)
+
+### Session: ✅ Component Extraction & Code Deduplication (COMPLETE) ✅
+
+**Focus:** Extract reusable components from 7 entity list pages to eliminate code duplication
+
+**What Was Created:**
+
+#### ✅ New Composables (2)
+1. **`useSortValue()`** - Manages sort value as combined "field:direction" string
+2. **`useSourceFilter()`** - Encapsulates source filter state, options, and helpers
+
+#### ✅ New Components (4)
+3. **`UiEntitySearchRow`** - Unified search input + source filter + sort dropdown row
+4. **`UiListStates`** - Handles loading/error/empty/results states with pagination
+5. **`UiFilterChips`** - Container for active filter chips with slots
+6. **`UiFilterChip`** - Individual removable filter chip
+
+#### ✅ Page Refactoring Results
+
+| Page | Before | After | Reduction |
+|------|--------|-------|-----------|
+| Backgrounds | 375 | 263 | **30%** |
+| Feats | 421 | 289 | **31%** |
+| Classes | 420 | 304 | **28%** |
+| Races | 535 | 375 | **30%** |
+| Spells | 723 | 494 | **32%** |
+| Items | 873 | 734 | **16%** |
+| Monsters | 894 | 767 | **14%** |
+| **Total** | **4,241** | **3,226** | **~24%** |
+
+**Why Lower Reduction for Items/Monsters:**
+- Many unique, entity-specific filters (17 for Items, 14 for Monsters)
+- Custom filter logic (cost ranges, AC ranges, movement types)
+- These patterns can't be abstracted without creating overly specific components
+
+**Commits:**
+- `d955c95` - refactor: Major filter UX improvements across all entity pages
+- `0e4b89e` - refactor: Standardize filter sections across all entity pages
+- `97623c2` - refactor: Apply reusable components to Items and Monsters pages
+
+**Handover:** `docs/HANDOVER-2025-11-26-COMPONENT-EXTRACTION.md`
+
+---
+
+## Previous Session Summary (2025-11-25)
 
 ### Session: ✅ Filter Consistency & UX Standardization (COMPLETE) ✅
 
