@@ -3,45 +3,20 @@ import { ref, computed } from 'vue'
 import type { Race, Size } from '~/types'
 
 const route = useRoute()
-const { apiFetch } = useApi()
 
 // Custom filter state (entity-specific)
 const selectedSize = ref((route.query.size as string) || '')
 // NOTE: hasDarkvision removed - not filterable in Meilisearch backend
 
 // Fetch available sizes for filter options
-const { data: sizesResponse } = await useAsyncData<{ data: Size[] }>(
-  'sizes',
-  async () => {
-    const response = await apiFetch<{ data: Size[] }>('/sizes')
-    return response || { data: [] }
-  }
-)
-
-const sizes = computed(() => sizesResponse.value?.data || [])
-
-// Query builder for custom filters (Meilisearch)
-const queryBuilder = computed(() => {
-  const params: Record<string, unknown> = {}
-  const meilisearchFilters: string[] = []
-
-  // Size filter (use size_code, NOT size!)
-  if (selectedSize.value) {
-    meilisearchFilters.push(`size_code = ${selectedSize.value}`)
-  }
-
-  // NOTE: has_darkvision is NOT filterable in Meilisearch
-  // Available filterable attributes: size_code, size_name, ability_*_bonus,
-  // speed, tag_slugs, source_codes, has_innate_spells, is_subrace, etc.
-  // Darkvision filter has been removed until backend adds it to filterable attributes
-
-  // Combine all filters with AND
-  if (meilisearchFilters.length > 0) {
-    params.filter = meilisearchFilters.join(' AND ')
-  }
-
-  return params
+const { data: sizes } = useReferenceData<Size>('/sizes', {
+  cacheKey: 'sizes-for-races'
 })
+
+// Query builder for custom filters (using composable)
+const { queryParams } = useMeilisearchFilters([
+  { ref: selectedSize, field: 'size_code' }
+])
 
 // Use entity list composable for all shared logic
 const {
@@ -58,7 +33,7 @@ const {
 } = useEntityList({
   endpoint: '/races',
   cacheKey: 'races-list',
-  queryBuilder,
+  queryBuilder: queryParams,
   seo: {
     title: 'Races - D&D 5e Compendium',
     description: 'Browse all D&D 5e player races and subraces.'
@@ -82,11 +57,7 @@ const getSizeName = (code: string) => {
 const filtersOpen = ref(false)
 
 // Active filter count for badge
-const activeFilterCount = computed(() => {
-  let count = 0
-  if (selectedSize.value) count++
-  return count
-})
+const activeFilterCount = useFilterCount(selectedSize)
 
 // Pagination settings
 const perPage = 24
