@@ -15,7 +15,6 @@ const selectedMagic = ref((route.query.is_magic as string) || null)
 
 // QUICK section (toggles)
 const hasCharges = ref<string | null>((route.query.has_charges as string) || null)
-const hasPrerequisites = ref<string | null>((route.query.has_prerequisites as string) || null)
 const requiresAttunement = ref<string | null>((route.query.requires_attunement as string) || null)
 const stealthDisadvantage = ref<string | null>((route.query.stealth_disadvantage as string) || null)
 
@@ -28,6 +27,19 @@ const selectedDamageTypes = ref<string[]>(
 )
 const selectedSources = ref<string[]>(
   route.query.source ? (Array.isArray(route.query.source) ? route.query.source : [route.query.source]) as string[] : []
+)
+
+// Weapon/Armor shopping filters (TIER 2 HIGH IMPACT)
+const selectedStrengthReq = ref<string | null>((route.query.strength_req as string) || null)
+const selectedDamageDice = ref<string[]>(
+  route.query.damage_dice ? (Array.isArray(route.query.damage_dice) ? route.query.damage_dice : [route.query.damage_dice]) as string[] : []
+)
+const selectedVersatileDamage = ref<string[]>(
+  route.query.versatile_damage ? (Array.isArray(route.query.versatile_damage) ? route.query.versatile_damage : [route.query.versatile_damage]) as string[] : []
+)
+const selectedRange = ref<string | null>((route.query.range as string) || null)
+const selectedRechargeTiming = ref<string[]>(
+  route.query.recharge_timing ? (Array.isArray(route.query.recharge_timing) ? route.query.recharge_timing : [route.query.recharge_timing]) as string[] : []
 )
 
 // Cost filter
@@ -48,6 +60,41 @@ const acRangeOptions = [
   { label: 'Light (11-14)', value: '11-14' },
   { label: 'Medium (15-16)', value: '15-16' },
   { label: 'Heavy (17+)', value: '17-21' }
+]
+
+// Weapon/Armor shopping filter options
+const strengthReqOptions = [
+  { label: 'Any', value: null },
+  { label: 'STR 13+', value: '13' },
+  { label: 'STR 15+', value: '15' }
+]
+
+const damageDiceOptions = [
+  { label: '1d4', value: '1d4' },
+  { label: '1d6', value: '1d6' },
+  { label: '1d8', value: '1d8' },
+  { label: '1d10', value: '1d10' },
+  { label: '1d12', value: '1d12' },
+  { label: '2d6', value: '2d6' }
+]
+
+const versatileDamageOptions = [
+  { label: '1d8', value: '1d8' },
+  { label: '1d10', value: '1d10' },
+  { label: '1d12', value: '1d12' }
+]
+
+const rangeOptions = [
+  { label: 'Any', value: null },
+  { label: 'Short (<30ft)', value: 'under-30' },
+  { label: 'Medium (30-80ft)', value: '30-80' },
+  { label: 'Long (80-150ft)', value: '80-150' },
+  { label: 'Very Long (>150ft)', value: 'over-150' }
+]
+
+const rechargeTimingOptions = [
+  { label: 'Dawn', value: 'dawn' },
+  { label: 'Dusk', value: 'dusk' }
 ]
 
 // Fetch item types for filter options (using composable)
@@ -151,7 +198,12 @@ const queryBuilder = computed(() => {
       transform: (code) => damageTypes.value?.find(dt => dt.code === code)?.name || null
     },
     { ref: selectedSources, field: 'source_codes', type: 'in' },
-    { ref: selectedProperties, field: 'property_codes', type: 'in' }
+    { ref: selectedProperties, field: 'property_codes', type: 'in' },
+    // Weapon/Armor shopping filters (TIER 2 HIGH IMPACT)
+    { ref: selectedStrengthReq, field: 'strength_requirement', type: 'greaterThan' },
+    { ref: selectedDamageDice, field: 'damage_dice', type: 'in' },
+    { ref: selectedVersatileDamage, field: 'versatile_damage', type: 'in' },
+    { ref: selectedRechargeTiming, field: 'recharge_timing', type: 'in' }
   ])
 
   // Extract standard filter string
@@ -164,15 +216,6 @@ const queryBuilder = computed(() => {
     const hasCharge = hasCharges.value === '1' || hasCharges.value === 'true'
     // Use has_charges field which is filterable in Meilisearch
     meilisearchFilters.push(`has_charges = ${hasCharge}`)
-  }
-
-  // Special handling for has_prerequisites
-  // Note: 'prerequisites' field is NOT filterable in Meilisearch
-  // This filter is temporarily disabled until backend adds filterability
-  if (hasPrerequisites.value !== null) {
-    // Backend limitation: cannot filter on prerequisites field
-    // Silently skip this filter for now
-    // TODO: Remove this filter from UI or add backend support
   }
 
   // Cost range filter
@@ -198,6 +241,20 @@ const queryBuilder = computed(() => {
       '17-21': 'armor_class >= 17 AND armor_class <= 21'
     }
     const rangeFilter = ranges[selectedACRange.value]
+    if (rangeFilter) {
+      meilisearchFilters.push(rangeFilter)
+    }
+  }
+
+  // Weapon range filter (TIER 2 HIGH IMPACT)
+  if (selectedRange.value) {
+    const ranges: Record<string, string> = {
+      'under-30': 'range_normal < 30',
+      '30-80': 'range_normal >= 30 AND range_normal <= 80',
+      '80-150': 'range_normal >= 80 AND range_normal <= 150',
+      'over-150': 'range_normal > 150'
+    }
+    const rangeFilter = ranges[selectedRange.value]
     if (rangeFilter) {
       meilisearchFilters.push(rangeFilter)
     }
@@ -243,7 +300,6 @@ const clearFilters = () => {
   selectedRarity.value = null
   selectedMagic.value = null
   hasCharges.value = null
-  hasPrerequisites.value = null
   requiresAttunement.value = null
   stealthDisadvantage.value = null
   selectedProperties.value = []
@@ -251,6 +307,12 @@ const clearFilters = () => {
   selectedSources.value = []
   selectedCostRange.value = null
   selectedACRange.value = null
+  // Weapon/Armor shopping filters (TIER 2 HIGH IMPACT)
+  selectedStrengthReq.value = null
+  selectedDamageDice.value = []
+  selectedVersatileDamage.value = []
+  selectedRange.value = null
+  selectedRechargeTiming.value = []
 }
 
 // Get type name by ID for filter chips
@@ -282,14 +344,19 @@ const activeFilterCount = useFilterCount(
   selectedRarity,
   selectedMagic,
   hasCharges,
-  hasPrerequisites,
   requiresAttunement,
   stealthDisadvantage,
   selectedProperties,
   selectedDamageTypes,
   selectedSources,
   selectedCostRange,
-  selectedACRange
+  selectedACRange,
+  // Weapon/Armor shopping filters (TIER 2 HIGH IMPACT)
+  selectedStrengthReq,
+  selectedDamageDice,
+  selectedVersatileDamage,
+  selectedRange,
+  selectedRechargeTiming
 )
 </script>
 
@@ -363,22 +430,11 @@ const activeFilterCount = useFilterCount(
             />
           </template>
 
-          <!-- Quick Toggles: Binary filters (Charges, Prerequisites, Attunement, Stealth) -->
+          <!-- Quick Toggles: Binary filters (Charges, Attunement, Stealth) -->
           <template #quick>
             <UiFilterToggle
               v-model="hasCharges"
               label="Has Charges"
-              color="primary"
-              :options="[
-                { value: null, label: 'All' },
-                { value: '1', label: 'Yes' },
-                { value: '0', label: 'No' }
-              ]"
-            />
-
-            <UiFilterToggle
-              v-model="hasPrerequisites"
-              label="Has Prerequisites"
               color="primary"
               :options="[
                 { value: null, label: 'All' },
@@ -408,6 +464,20 @@ const activeFilterCount = useFilterCount(
                 { value: '0', label: 'No' }
               ]"
             />
+
+            <!-- Strength Requirement Filter (TIER 2 HIGH IMPACT) -->
+            <div>
+              <label class="text-sm font-medium mb-2 block">Strength Req</label>
+              <USelectMenu
+                v-model="selectedStrengthReq"
+                :items="strengthReqOptions"
+                value-key="value"
+                placeholder="Any"
+                size="md"
+                class="w-full sm:w-32"
+                data-testid="strength-req-filter"
+              />
+            </div>
           </template>
 
           <!-- Advanced Filters: Multiselects (Properties, Damage Types, Sources) -->
@@ -466,6 +536,50 @@ const activeFilterCount = useFilterCount(
               color="primary"
               class="w-full sm:w-48"
             />
+
+            <!-- Weapon/Armor Shopping Filters (TIER 2 HIGH IMPACT) -->
+            <UiFilterMultiSelect
+              v-model="selectedDamageDice"
+              :options="damageDiceOptions"
+              label="Damage Dice"
+              placeholder="All Damage Dice"
+              color="primary"
+              class="w-full sm:w-48"
+              data-testid="damage-dice-filter"
+            />
+
+            <UiFilterMultiSelect
+              v-model="selectedVersatileDamage"
+              :options="versatileDamageOptions"
+              label="Versatile Damage"
+              placeholder="All Versatile"
+              color="primary"
+              class="w-full sm:w-48"
+              data-testid="versatile-damage-filter"
+            />
+
+            <div>
+              <label class="text-sm font-medium mb-2 block">Range</label>
+              <USelectMenu
+                v-model="selectedRange"
+                :items="rangeOptions"
+                value-key="value"
+                placeholder="Any Range"
+                size="md"
+                class="w-full sm:w-48"
+                data-testid="range-filter"
+              />
+            </div>
+
+            <UiFilterMultiSelect
+              v-model="selectedRechargeTiming"
+              :options="rechargeTimingOptions"
+              label="Recharge Timing"
+              placeholder="All Timings"
+              color="primary"
+              class="w-full sm:w-48"
+              data-testid="recharge-timing-filter"
+            />
           </template>
 
           <!-- Actions: Empty (Clear Filters moved to chips row) -->
@@ -520,15 +634,6 @@ const activeFilterCount = useFilterCount(
             @click="hasCharges = null"
           >
             Has Charges: {{ hasCharges === '1' ? 'Yes' : 'No' }} ✕
-          </UButton>
-          <UButton
-            v-if="hasPrerequisites !== null"
-            size="xs"
-            color="primary"
-            variant="soft"
-            @click="hasPrerequisites = null"
-          >
-            Has Prerequisites: {{ hasPrerequisites === '1' ? 'Yes' : 'No' }} ✕
           </UButton>
           <UButton
             v-if="requiresAttunement !== null"
@@ -600,6 +705,55 @@ const activeFilterCount = useFilterCount(
             @click="selectedSources = selectedSources.filter(s => s !== source)"
           >
             {{ getSourceName(source) }} ✕
+          </UButton>
+          <!-- Weapon/Armor Shopping Filter Chips (TIER 2 HIGH IMPACT) -->
+          <UButton
+            v-if="selectedStrengthReq !== null"
+            size="xs"
+            color="warning"
+            variant="soft"
+            @click="selectedStrengthReq = null"
+          >
+            {{ strengthReqOptions.find(o => o.value === selectedStrengthReq)?.label }} ✕
+          </UButton>
+          <UButton
+            v-for="damageDie in selectedDamageDice"
+            :key="damageDie"
+            size="xs"
+            color="error"
+            variant="soft"
+            @click="selectedDamageDice = selectedDamageDice.filter(d => d !== damageDie)"
+          >
+            {{ damageDie }} ✕
+          </UButton>
+          <UButton
+            v-for="versatileDie in selectedVersatileDamage"
+            :key="versatileDie"
+            size="xs"
+            color="info"
+            variant="soft"
+            @click="selectedVersatileDamage = selectedVersatileDamage.filter(v => v !== versatileDie)"
+          >
+            Versatile: {{ versatileDie }} ✕
+          </UButton>
+          <UButton
+            v-if="selectedRange"
+            size="xs"
+            color="primary"
+            variant="soft"
+            @click="selectedRange = null"
+          >
+            Range: {{ rangeOptions.find(o => o.value === selectedRange)?.label }} ✕
+          </UButton>
+          <UButton
+            v-for="timing in selectedRechargeTiming"
+            :key="timing"
+            size="xs"
+            color="spell"
+            variant="soft"
+            @click="selectedRechargeTiming = selectedRechargeTiming.filter(t => t !== timing)"
+          >
+            {{ timing.charAt(0).toUpperCase() + timing.slice(1) }} ✕
           </UButton>
           <UButton
             v-if="searchQuery"

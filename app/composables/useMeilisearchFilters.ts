@@ -93,8 +93,14 @@ export function useMeilisearchFilters(
               ? config.transform(values)
               : values
 
+            // Filter out null/undefined values (e.g., from failed lookups)
+            const filteredValues = (Array.isArray(transformedValues) ? transformedValues : [transformedValues])
+              .filter(v => v !== null && v !== undefined)
+
+            if (filteredValues.length === 0) break
+
             // Quote string values that contain spaces for Meilisearch syntax
-            const quotedValues = transformedValues.map((v: any) => {
+            const quotedValues = filteredValues.map((v: any) => {
               if (typeof v === 'string' && v.includes(' ')) {
                 return `"${v}"`
               }
