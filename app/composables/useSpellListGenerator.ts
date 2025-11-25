@@ -24,11 +24,17 @@ const DEFAULT_ABILITY_MODIFIER = 3
 export interface UseSpellListGeneratorReturn {
   selectedClass: Ref<CharacterClass | null>
   characterLevel: Ref<number>
-  selectedSpells: Ref<Set<number>>
+  selectedSpells: Ref<Set<number>> // DEPRECATED: Use selectedCantrips + selectedLeveledSpells
+  selectedCantrips: Ref<Set<number>>
+  selectedLeveledSpells: Ref<Set<number>>
   spellSlots: ComputedRef<SpellSlots>
-  maxSpells: ComputedRef<number>
-  toggleSpell: (spellId: number) => void
-  selectionCount: ComputedRef<number>
+  maxSpells: ComputedRef<number> // DEPRECATED: Use maxCantrips + maxLeveledSpells
+  maxCantrips: ComputedRef<number>
+  maxLeveledSpells: ComputedRef<number>
+  toggleSpell: (spellId: number, spellLevel?: number) => boolean
+  selectionCount: ComputedRef<number> // DEPRECATED: Use cantripCount + leveledSpellCount
+  cantripCount: ComputedRef<number>
+  leveledSpellCount: ComputedRef<number>
   setClassData: (classData: CharacterClass) => void
   saveToStorage: () => void
   loadFromStorage: () => void
@@ -38,7 +44,9 @@ export interface UseSpellListGeneratorReturn {
 export function useSpellListGenerator(): UseSpellListGeneratorReturn {
   const selectedClass = ref<CharacterClass | null>(null)
   const characterLevel = ref(1)
-  const selectedSpells = ref<Set<number>>(new Set())
+  const selectedSpells = ref<Set<number>>(new Set()) // DEPRECATED
+  const selectedCantrips = ref<Set<number>>(new Set())
+  const selectedLeveledSpells = ref<Set<number>>(new Set())
 
   const setClassData = (classData: CharacterClass) => {
     selectedClass.value = classData
@@ -71,7 +79,13 @@ export function useSpellListGenerator(): UseSpellListGeneratorReturn {
     return slots
   })
 
-  const maxSpells = computed(() => {
+  const maxCantrips = computed(() => {
+    if (!selectedClass.value?.level_progression) return 0
+    const progression = selectedClass.value.level_progression[characterLevel.value - 1]
+    return progression?.cantrips_known || 0
+  })
+
+  const maxLeveledSpells = computed(() => {
     if (!selectedClass.value) return 0
 
     const classSlug = selectedClass.value.slug
@@ -91,24 +105,56 @@ export function useSpellListGenerator(): UseSpellListGeneratorReturn {
     return level + DEFAULT_ABILITY_MODIFIER
   })
 
-  const toggleSpell = (spellId: number) => {
-    if (selectedSpells.value.has(spellId)) {
-      // Always allow deselection
-      selectedSpells.value.delete(spellId)
-    } else {
-      // Check if already at max spells (but allow cantrips to be unlimited)
-      if (selectedSpells.value.size >= maxSpells.value) {
-        // Don't add if at limit
-        return false
+  const maxSpells = computed(() => maxLeveledSpells.value) // DEPRECATED
+
+  const toggleSpell = (spellId: number, spellLevel = 0) => {
+    const isCantrip = spellLevel === 0
+
+    if (isCantrip) {
+      if (selectedCantrips.value.has(spellId)) {
+        // Deselect cantrip
+        selectedCantrips.value.delete(spellId)
+        selectedCantrips.value = new Set(selectedCantrips.value)
+        // Also remove from deprecated selectedSpells
+        selectedSpells.value.delete(spellId)
+        selectedSpells.value = new Set(selectedSpells.value)
+      } else {
+        // Check cantrip limit
+        if (selectedCantrips.value.size >= maxCantrips.value) {
+          return false
+        }
+        selectedCantrips.value.add(spellId)
+        selectedCantrips.value = new Set(selectedCantrips.value)
+        // Also add to deprecated selectedSpells for backwards compat
+        selectedSpells.value.add(spellId)
+        selectedSpells.value = new Set(selectedSpells.value)
       }
-      selectedSpells.value.add(spellId)
+    } else {
+      if (selectedLeveledSpells.value.has(spellId)) {
+        // Deselect leveled spell
+        selectedLeveledSpells.value.delete(spellId)
+        selectedLeveledSpells.value = new Set(selectedLeveledSpells.value)
+        // Also remove from deprecated selectedSpells
+        selectedSpells.value.delete(spellId)
+        selectedSpells.value = new Set(selectedSpells.value)
+      } else {
+        // Check leveled spell limit
+        if (selectedLeveledSpells.value.size >= maxLeveledSpells.value) {
+          return false
+        }
+        selectedLeveledSpells.value.add(spellId)
+        selectedLeveledSpells.value = new Set(selectedLeveledSpells.value)
+        // Also add to deprecated selectedSpells for backwards compat
+        selectedSpells.value.add(spellId)
+        selectedSpells.value = new Set(selectedSpells.value)
+      }
     }
-    // Trigger reactivity
-    selectedSpells.value = new Set(selectedSpells.value)
     return true
   }
 
-  const selectionCount = computed(() => selectedSpells.value.size)
+  const cantripCount = computed(() => selectedCantrips.value.size)
+  const leveledSpellCount = computed(() => selectedLeveledSpells.value.size)
+  const selectionCount = computed(() => selectedSpells.value.size) // DEPRECATED
 
   // LocalStorage helpers
   const getStorageKey = () => {
@@ -146,6 +192,8 @@ export function useSpellListGenerator(): UseSpellListGeneratorReturn {
 
   const clearAll = () => {
     selectedSpells.value = new Set()
+    selectedCantrips.value = new Set()
+    selectedLeveledSpells.value = new Set()
     characterLevel.value = 1
     const key = getStorageKey()
     if (key) {
@@ -156,11 +204,17 @@ export function useSpellListGenerator(): UseSpellListGeneratorReturn {
   return {
     selectedClass,
     characterLevel,
-    selectedSpells,
+    selectedSpells, // DEPRECATED
+    selectedCantrips,
+    selectedLeveledSpells,
     spellSlots,
-    maxSpells,
+    maxSpells, // DEPRECATED
+    maxCantrips,
+    maxLeveledSpells,
     toggleSpell,
-    selectionCount,
+    selectionCount, // DEPRECATED
+    cantripCount,
+    leveledSpellCount,
     setClassData,
     saveToStorage,
     loadFromStorage,
