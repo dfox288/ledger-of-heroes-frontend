@@ -13,6 +13,40 @@
 
 ## 🎉 Latest Session Summary (2025-11-26)
 
+### Session: ✅ API /lookups Migration (COMPLETE) ✅
+
+**Focus:** Backend API consolidated all reference tables under `/v1/lookups/` prefix
+
+**What Was Done:**
+
+#### ✅ Updated 10 Nitro Server Routes
+All reference entity server routes updated to proxy to new `/lookups/*` endpoints:
+- `sizes`, `spell-schools`, `damage-types`, `item-types`, `languages`
+- `proficiency-types`, `skills`, `conditions`, `ability-scores`, `sources`
+
+#### ✅ Created New Server Route
+- `server/api/item-properties/index.get.ts` - Was missing, now routes to `/lookups/item-properties`
+
+#### ✅ Synced TypeScript Types
+- Updated `app/types/api/generated.ts` (+1,233 lines / -743 lines)
+- New `/v1/lookups/*` type definitions
+- New endpoints: `alignments`, `armor-types`, `monster-types`, `rarities`, `tags`
+
+**Architecture Note:** Frontend components unchanged because Nitro proxy layer abstracts backend URLs.
+
+**Verification:**
+- All 11 frontend proxy routes: HTTP 200 ✅
+- All 17 page routes: HTTP 200 ✅
+- `useReferenceData` tests: 8/8 passing ✅
+
+**Commit:** `c07047e` - refactor: Update API routes to use /lookups endpoints
+
+**Handover:** `docs/HANDOVER-2025-11-26-API-LOOKUPS-MIGRATION.md`
+
+---
+
+## Previous Session Summary (2025-11-26)
+
 ### Session: ✅ Component Extraction & Code Deduplication (COMPLETE) ✅
 
 **Focus:** Extract reusable components from 7 entity list pages to eliminate code duplication
