@@ -1,6 +1,6 @@
 export default defineEventHandler(async (event) => {
   const config = useRuntimeConfig()
   const query = getQuery(event)
-  const data = await $fetch(`${config.apiBaseServer}/lookups/conditions`, { query })
+  const data = await $fetch(`${config.apiBaseServer}/lookups/item-properties`, { query })
   return data
 })
