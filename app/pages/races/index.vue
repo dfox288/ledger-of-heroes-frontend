@@ -14,6 +14,7 @@ const speedMax = ref(Number(route.query.speed_max) || 35)
 const selectedSources = ref<string[]>(
   route.query.source ? (Array.isArray(route.query.source) ? route.query.source : [route.query.source]) as string[] : []
 )
+const selectedParentRace = ref((route.query.parent_race as string) || '')
 const raceTypeFilter = ref<string | null>((route.query.race_type as string) || null)
 const hasInnateSpellsFilter = ref<string | null>((route.query.has_innate_spells as string) || null)
 const selectedAbilityBonuses = ref<string[]>(
@@ -27,12 +28,25 @@ const { data: sizes } = useReferenceData<Size>('/sizes', {
 
 const { data: sources } = useReferenceData<Source>('/sources')
 
+const { data: baseRaces } = useReferenceData<Race>('/races', {
+  transform: (data) => data.filter(r => !r.parent_race)
+})
+
 // Source filter options
 const sourceOptions = computed(() => {
   if (!sources.value) return []
   return sources.value.map(source => ({
     label: source.name,
     value: source.code
+  }))
+})
+
+// Parent race filter options
+const parentRaceOptions = computed(() => {
+  if (!baseRaces.value) return []
+  return baseRaces.value.map(race => ({
+    label: race.name,
+    value: race.name
   }))
 })
 
@@ -63,6 +77,7 @@ const baseFilters = useMeilisearchFilters([
   { ref: selectedSize, field: 'size_code' },
   { ref: computed(() => null), field: 'speed', type: 'range', min: speedMin, max: speedMax },
   { ref: selectedSources, field: 'source_codes', type: 'in' },
+  { ref: selectedParentRace, field: 'parent_race_name' },
   { ref: raceTypeFilter, field: 'is_subrace', type: 'boolean' },
   { ref: hasInnateSpellsFilter, field: 'has_innate_spells', type: 'boolean' }
 ])
@@ -112,6 +127,7 @@ const clearFilters = () => {
   speedMin.value = 10
   speedMax.value = 35
   selectedSources.value = []
+  selectedParentRace.value = ''
   raceTypeFilter.value = null
   hasInnateSpellsFilter.value = null
   selectedAbilityBonuses.value = []
@@ -130,6 +146,7 @@ const getSourceName = (code: string) => {
 const activeFilterCount = useFilterCount(
   selectedSize,
   selectedSources,
+  selectedParentRace,
   raceTypeFilter,
   hasInnateSpellsFilter,
   selectedAbilityBonuses,
@@ -248,6 +265,18 @@ const perPage = 24
               :options="abilityOptions"
               data-testid="ability-filter"
             />
+
+            <!-- Parent Race Filter -->
+            <div>
+              <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                Parent Race
+              </label>
+              <USelect
+                v-model="selectedParentRace"
+                :options="[{ label: 'All Races', value: '' }, ...parentRaceOptions]"
+                data-testid="parent-race-filter"
+              />
+            </div>
           </div>
 
           <!-- QUICK FILTERS -->
@@ -340,6 +369,16 @@ const perPage = 24
             @click="selectedSources = selectedSources.filter(s => s !== source)"
           >
             {{ getSourceName(source) }} ✕
+          </UButton>
+          <UButton
+            v-if="selectedParentRace"
+            data-testid="parent-race-filter-chip"
+            size="xs"
+            color="primary"
+            variant="soft"
+            @click="selectedParentRace = ''"
+          >
+            {{ selectedParentRace }} ✕
           </UButton>
           <UButton
             v-if="raceTypeFilter === 'false'"
