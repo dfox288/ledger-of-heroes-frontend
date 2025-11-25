@@ -34,7 +34,7 @@ defineProps<Props>()
 const getSourceAbbreviation = (subclass: Subclass): string | null => {
   if (!subclass.sources || subclass.sources.length === 0) return null
   const source = subclass.sources[0]
-  return source.abbreviation || null
+  return source?.abbreviation || null
 }
 
 /**
