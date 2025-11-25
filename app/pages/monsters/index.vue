@@ -22,6 +22,16 @@ const hasSwim = ref<string | null>((route.query.has_swim as string) || null)
 const hasBurrow = ref<string | null>((route.query.has_burrow as string) || null)
 const hasClimb = ref<string | null>((route.query.has_climb as string) || null)
 
+// New filters (6 additional filters)
+const selectedArmorTypes = ref<string[]>(
+  route.query.armor_type ? (Array.isArray(route.query.armor_type) ? route.query.armor_type : [route.query.armor_type]) : []
+)
+const canHover = ref<string | null>((route.query.can_hover as string) || null)
+const hasLairActions = ref<string | null>((route.query.has_lair_actions as string) || null)
+const hasReactions = ref<string | null>((route.query.has_reactions as string) || null)
+const isSpellcaster = ref<string | null>((route.query.is_spellcaster as string) || null)
+const hasMagicResistance = ref<string | null>((route.query.has_magic_resistance as string) || null)
+
 // AC filter
 const selectedACRange = ref<string | null>(null)
 const acRangeOptions = [
@@ -121,6 +131,20 @@ const typeOptions = [
   { label: 'Undead', value: 'undead' }
 ]
 
+// Armor Type options (from API analysis - common armor types)
+const armorTypeOptions = [
+  { label: 'Natural Armor', value: 'natural armor' },
+  { label: 'Plate Armor', value: 'plate armor' },
+  { label: 'Leather Armor', value: 'leather armor' },
+  { label: 'Studded Leather Armor', value: 'studded leather armor' },
+  { label: 'Hide Armor', value: 'hide armor' },
+  { label: 'Chain Mail', value: 'chain mail' },
+  { label: 'Scale Mail', value: 'scale mail' },
+  { label: 'Half Plate Armor', value: 'half plate armor' },
+  { label: 'Breastplate', value: 'breastplate' },
+  { label: 'Unarmored Defense', value: 'Unarmored Defense' }
+]
+
 // Query builder (using composable for all filters)
 const { queryParams: filterParams } = useMeilisearchFilters([
   // CR multiselect filter (convert strings to numbers for API)
@@ -153,7 +177,14 @@ const { queryParams: filterParams } = useMeilisearchFilters([
   { ref: hasFly, field: 'speed_fly', type: 'greaterThan', transform: () => 0 },
   { ref: hasSwim, field: 'speed_swim', type: 'greaterThan', transform: () => 0 },
   { ref: hasBurrow, field: 'speed_burrow', type: 'greaterThan', transform: () => 0 },
-  { ref: hasClimb, field: 'speed_climb', type: 'greaterThan', transform: () => 0 }
+  { ref: hasClimb, field: 'speed_climb', type: 'greaterThan', transform: () => 0 },
+  // New filters
+  { ref: selectedArmorTypes, field: 'armor_type', type: 'in' },
+  { ref: canHover, field: 'can_hover', type: 'boolean' },
+  { ref: hasLairActions, field: 'has_lair_actions', type: 'boolean' },
+  { ref: hasReactions, field: 'has_reactions', type: 'boolean' },
+  { ref: isSpellcaster, field: 'is_spellcaster', type: 'boolean' },
+  { ref: hasMagicResistance, field: 'has_magic_resistance', type: 'boolean' }
 ])
 
 const queryBuilder = computed(() => {
@@ -238,6 +269,13 @@ const clearFilters = () => {
   hasClimb.value = null
   selectedACRange.value = null
   selectedHPRange.value = null
+  // New filters
+  selectedArmorTypes.value = []
+  canHover.value = null
+  hasLairActions.value = null
+  hasReactions.value = null
+  isSpellcaster.value = null
+  hasMagicResistance.value = null
 }
 
 // Helper functions for filter chips
@@ -287,6 +325,32 @@ const clearSizeFilter = () => {
   selectedSizes.value = []
 }
 
+// Helper functions for alignment filter chips
+const getAlignmentFilterText = computed(() => {
+  if (selectedAlignments.value.length === 0) return null
+
+  const labels = selectedAlignments.value.sort()
+  const prefix = selectedAlignments.value.length === 1 ? 'Alignment' : 'Alignments'
+  return `${prefix}: ${labels.join(', ')}`
+})
+
+const clearAlignmentFilter = () => {
+  selectedAlignments.value = []
+}
+
+// Helper functions for armor type filter chips
+const getArmorTypeFilterText = computed(() => {
+  if (selectedArmorTypes.value.length === 0) return null
+
+  const labels = selectedArmorTypes.value.sort()
+  const prefix = selectedArmorTypes.value.length === 1 ? 'Armor Type' : 'Armor Types'
+  return `${prefix}: ${labels.join(', ')}`
+})
+
+const clearArmorTypeFilter = () => {
+  selectedArmorTypes.value = []
+}
+
 // Filter collapse state
 const filtersOpen = ref(false)
 
@@ -302,7 +366,14 @@ const activeFilterCount = useFilterCount(
   hasBurrow,
   hasClimb,
   selectedACRange,
-  selectedHPRange
+  selectedHPRange,
+  // New filters
+  selectedArmorTypes,
+  canHover,
+  hasLairActions,
+  hasReactions,
+  isSpellcaster,
+  hasMagicResistance
 )
 
 const perPage = 24
@@ -451,10 +522,83 @@ const perPage = 24
                 { value: '0', label: 'No' }
               ]"
             />
+
+            <UiFilterToggle
+              v-model="canHover"
+              data-testid="can-hover-toggle"
+              label="Can Hover"
+              color="info"
+              :options="[
+                { value: null, label: 'All' },
+                { value: '1', label: 'Yes' },
+                { value: '0', label: 'No' }
+              ]"
+            />
+
+            <UiFilterToggle
+              v-model="hasLairActions"
+              data-testid="has-lair-actions-toggle"
+              label="Has Lair Actions"
+              color="warning"
+              :options="[
+                { value: null, label: 'All' },
+                { value: '1', label: 'Yes' },
+                { value: '0', label: 'No' }
+              ]"
+            />
+
+            <UiFilterToggle
+              v-model="hasReactions"
+              data-testid="has-reactions-toggle"
+              label="Has Reactions"
+              color="secondary"
+              :options="[
+                { value: null, label: 'All' },
+                { value: '1', label: 'Yes' },
+                { value: '0', label: 'No' }
+              ]"
+            />
+
+            <UiFilterToggle
+              v-model="isSpellcaster"
+              data-testid="is-spellcaster-toggle"
+              label="Is Spellcaster"
+              color="primary"
+              :options="[
+                { value: null, label: 'All' },
+                { value: '1', label: 'Yes' },
+                { value: '0', label: 'No' }
+              ]"
+            />
+
+            <UiFilterToggle
+              v-model="hasMagicResistance"
+              data-testid="has-magic-resistance-toggle"
+              label="Has Magic Resistance"
+              color="success"
+              :options="[
+                { value: null, label: 'All' },
+                { value: '1', label: 'Yes' },
+                { value: '0', label: 'No' }
+              ]"
+            />
           </template>
 
-          <!-- Advanced Filters: AC and HP ranges -->
+          <!-- Advanced Filters: AC and HP ranges, Armor Type -->
           <template #advanced>
+            <!-- Armor Type Filter Multiselect -->
+            <div>
+              <label class="text-sm font-medium mb-2 block">Armor Type</label>
+              <UiFilterMultiSelect
+                v-model="selectedArmorTypes"
+                data-testid="armor-type-filter-multiselect"
+                :options="armorTypeOptions"
+                placeholder="All Armor Types"
+                color="neutral"
+                class="w-full sm:w-48"
+              />
+            </div>
+
             <!-- AC Range Filter -->
             <div>
               <label class="text-sm font-medium mb-2 block">Armor Class</label>
@@ -531,6 +675,16 @@ const perPage = 24
             {{ getSizeFilterText }} ✕
           </UButton>
           <UButton
+            v-if="getAlignmentFilterText"
+            data-testid="alignment-filter-chip"
+            size="xs"
+            color="secondary"
+            variant="soft"
+            @click="clearAlignmentFilter"
+          >
+            {{ getAlignmentFilterText }} ✕
+          </UButton>
+          <UButton
             v-if="isLegendary !== null"
             size="xs"
             color="error"
@@ -538,6 +692,46 @@ const perPage = 24
             @click="isLegendary = null"
           >
             Legendary: {{ isLegendary === '1' ? 'Yes' : 'No' }} ✕
+          </UButton>
+          <UButton
+            v-if="hasFly !== null"
+            data-testid="has-fly-chip"
+            size="xs"
+            color="info"
+            variant="soft"
+            @click="hasFly = null"
+          >
+            Has Fly: {{ hasFly === '1' ? 'Yes' : 'No' }} ✕
+          </UButton>
+          <UButton
+            v-if="hasSwim !== null"
+            data-testid="has-swim-chip"
+            size="xs"
+            color="info"
+            variant="soft"
+            @click="hasSwim = null"
+          >
+            Has Swim: {{ hasSwim === '1' ? 'Yes' : 'No' }} ✕
+          </UButton>
+          <UButton
+            v-if="hasBurrow !== null"
+            data-testid="has-burrow-chip"
+            size="xs"
+            color="info"
+            variant="soft"
+            @click="hasBurrow = null"
+          >
+            Has Burrow: {{ hasBurrow === '1' ? 'Yes' : 'No' }} ✕
+          </UButton>
+          <UButton
+            v-if="hasClimb !== null"
+            data-testid="has-climb-chip"
+            size="xs"
+            color="info"
+            variant="soft"
+            @click="hasClimb = null"
+          >
+            Has Climb: {{ hasClimb === '1' ? 'Yes' : 'No' }} ✕
           </UButton>
           <!-- AC Range Chip -->
           <UButton
@@ -558,6 +752,67 @@ const perPage = 24
             @click="selectedHPRange = null"
           >
             HP: {{ hpRangeOptions.find(o => o.value === selectedHPRange)?.label }} ✕
+          </UButton>
+          <!-- Armor Type Chip -->
+          <UButton
+            v-if="getArmorTypeFilterText"
+            data-testid="armor-type-filter-chip"
+            size="xs"
+            color="neutral"
+            variant="soft"
+            @click="clearArmorTypeFilter"
+          >
+            {{ getArmorTypeFilterText }} ✕
+          </UButton>
+          <!-- Can Hover Chip -->
+          <UButton
+            v-if="canHover !== null"
+            size="xs"
+            color="info"
+            variant="soft"
+            @click="canHover = null"
+          >
+            Can Hover: {{ canHover === '1' ? 'Yes' : 'No' }} ✕
+          </UButton>
+          <!-- Has Lair Actions Chip -->
+          <UButton
+            v-if="hasLairActions !== null"
+            size="xs"
+            color="warning"
+            variant="soft"
+            @click="hasLairActions = null"
+          >
+            Has Lair Actions: {{ hasLairActions === '1' ? 'Yes' : 'No' }} ✕
+          </UButton>
+          <!-- Has Reactions Chip -->
+          <UButton
+            v-if="hasReactions !== null"
+            size="xs"
+            color="secondary"
+            variant="soft"
+            @click="hasReactions = null"
+          >
+            Has Reactions: {{ hasReactions === '1' ? 'Yes' : 'No' }} ✕
+          </UButton>
+          <!-- Is Spellcaster Chip -->
+          <UButton
+            v-if="isSpellcaster !== null"
+            size="xs"
+            color="primary"
+            variant="soft"
+            @click="isSpellcaster = null"
+          >
+            Is Spellcaster: {{ isSpellcaster === '1' ? 'Yes' : 'No' }} ✕
+          </UButton>
+          <!-- Has Magic Resistance Chip -->
+          <UButton
+            v-if="hasMagicResistance !== null"
+            size="xs"
+            color="success"
+            variant="soft"
+            @click="hasMagicResistance = null"
+          >
+            Has Magic Resistance: {{ hasMagicResistance === '1' ? 'Yes' : 'No' }} ✕
           </UButton>
           <UButton
             v-if="searchQuery"
