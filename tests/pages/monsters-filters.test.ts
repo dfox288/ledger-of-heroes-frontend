@@ -416,4 +416,63 @@ describe('Monsters Page - Filter Layout', () => {
       expect(toggle.exists()).toBe(true)
     })
   })
+
+  describe('Monsters AC Filter', () => {
+    it('has AC range filter state', async () => {
+      const wrapper = await mountSuspended(MonstersPage)
+
+      const component = wrapper.vm as any
+
+      // Should have selectedACRange ref
+      expect(component.selectedACRange).toBeDefined()
+      expect(component.selectedACRange).toBeNull()
+    })
+
+    it('has correct AC range options', async () => {
+      const wrapper = await mountSuspended(MonstersPage)
+
+      const component = wrapper.vm as any
+
+      // Should have acRangeOptions
+      expect(component.acRangeOptions).toBeDefined()
+      expect(Array.isArray(component.acRangeOptions)).toBe(true)
+      expect(component.acRangeOptions.length).toBe(4)
+
+      // Verify option labels
+      const labels = component.acRangeOptions.map((o: any) => o.label)
+      expect(labels).toContain('All AC')
+      expect(labels).toContain('Low (10-14)')
+      expect(labels).toContain('Medium (15-17)')
+      expect(labels).toContain('High (18+)')
+    })
+
+    it('shows AC range filter chip when AC is selected', async () => {
+      const wrapper = await mountSuspended(MonstersPage)
+
+      const component = wrapper.vm as any
+      component.selectedACRange = '10-14'
+      await wrapper.vm.$nextTick()
+
+      const chips = wrapper.findAll('button').filter(btn =>
+        btn.text().includes('AC:') && btn.text().includes('Low') && btn.text().includes('✕')
+      )
+      expect(chips.length).toBeGreaterThan(0)
+    })
+
+    it('clicking AC range chip clears the filter', async () => {
+      const wrapper = await mountSuspended(MonstersPage)
+
+      const component = wrapper.vm as any
+      component.selectedACRange = '10-14'
+      await wrapper.vm.$nextTick()
+
+      const chip = wrapper.findAll('button').find(btn =>
+        btn.text().includes('AC:') && btn.text().includes('Low') && btn.text().includes('✕')
+      )
+      expect(chip).toBeDefined()
+      await chip!.trigger('click')
+
+      expect(component.selectedACRange).toBeNull()
+    })
+  })
 })

@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Armor Class range filter for Monsters (Low 10-14, Medium 15-17, High 18+) (2025-11-25)
 - Armor Class range filter for Items (Light 11-14, Medium 15-16, Heavy 17+) (2025-11-25)
 - Cost range filter for Items with 5 predefined ranges (Under 1gp to 1000+ gp) (2025-11-25)
 - **Backgrounds Source Filter** (2025-11-25) - Added source book filter to backgrounds page

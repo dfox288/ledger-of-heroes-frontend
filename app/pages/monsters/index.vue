@@ -22,6 +22,15 @@ const hasSwim = ref<string | null>((route.query.has_swim as string) || null)
 const hasBurrow = ref<string | null>((route.query.has_burrow as string) || null)
 const hasClimb = ref<string | null>((route.query.has_climb as string) || null)
 
+// AC filter
+const selectedACRange = ref<string | null>(null)
+const acRangeOptions = [
+  { label: 'All AC', value: null },
+  { label: 'Low (10-14)', value: '10-14' },
+  { label: 'Medium (15-17)', value: '15-17' },
+  { label: 'High (18+)', value: '18-25' }
+]
+
 // Fetch reference data for filters
 const { data: sizes } = useReferenceData<Size>('/sizes')
 
@@ -137,7 +146,35 @@ const { queryParams: filterParams } = useMeilisearchFilters([
   { ref: hasClimb, field: 'speed_climb', type: 'greaterThan', transform: () => 0 }
 ])
 
-const queryBuilder = computed(() => filterParams.value)
+const queryBuilder = computed(() => {
+  const params = { ...filterParams.value }
+  const meilisearchFilters: string[] = []
+
+  // Start with filters from composable
+  if (params.filter) {
+    meilisearchFilters.push(params.filter as string)
+  }
+
+  // Add AC range filter manually
+  if (selectedACRange.value) {
+    const ranges: Record<string, string> = {
+      '10-14': 'armor_class >= 10 AND armor_class <= 14',
+      '15-17': 'armor_class >= 15 AND armor_class <= 17',
+      '18-25': 'armor_class >= 18 AND armor_class <= 25'
+    }
+    const rangeFilter = ranges[selectedACRange.value]
+    if (rangeFilter) {
+      meilisearchFilters.push(rangeFilter)
+    }
+  }
+
+  // Combine all filters
+  if (meilisearchFilters.length > 0) {
+    params.filter = meilisearchFilters.join(' AND ')
+  }
+
+  return params
+})
 
 // Use entity list composable
 const {
@@ -175,6 +212,7 @@ const clearFilters = () => {
   hasSwim.value = null
   hasBurrow.value = null
   hasClimb.value = null
+  selectedACRange.value = null
 }
 
 // Helper functions for filter chips
@@ -237,7 +275,8 @@ const activeFilterCount = useFilterCount(
   hasFly,
   hasSwim,
   hasBurrow,
-  hasClimb
+  hasClimb,
+  selectedACRange
 )
 
 const perPage = 24
@@ -388,8 +427,22 @@ const perPage = 24
             />
           </template>
 
-          <!-- Advanced Filters: Empty (could add AC, HP ranges here) -->
-          <template #advanced />
+          <!-- Advanced Filters: AC and HP ranges -->
+          <template #advanced>
+            <!-- AC Range Filter -->
+            <div>
+              <label class="text-sm font-medium mb-2 block">Armor Class</label>
+              <USelectMenu
+                v-model="selectedACRange"
+                :items="acRangeOptions"
+                value-key="value"
+                placeholder="All AC"
+                size="md"
+                class="w-full sm:w-44"
+                data-testid="ac-filter"
+              />
+            </div>
+          </template>
 
           <!-- Actions: Empty (Clear Filters moved to chips row) -->
           <template #actions />
@@ -445,6 +498,16 @@ const perPage = 24
             @click="isLegendary = null"
           >
             Legendary: {{ isLegendary === '1' ? 'Yes' : 'No' }} ✕
+          </UButton>
+          <!-- AC Range Chip -->
+          <UButton
+            v-if="selectedACRange"
+            size="xs"
+            color="info"
+            variant="soft"
+            @click="selectedACRange = null"
+          >
+            AC: {{ acRangeOptions.find(o => o.value === selectedACRange)?.label }} ✕
           </UButton>
           <UButton
             v-if="searchQuery"
