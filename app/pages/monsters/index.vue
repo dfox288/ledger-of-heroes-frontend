@@ -60,8 +60,9 @@ const queryBuilder = computed(() => {
       '11-16': 'challenge_rating >= 11 AND challenge_rating <= 16',
       '17+': 'challenge_rating >= 17'
     }
-    if (crMap[selectedCR.value]) {
-      meilisearchFilters.push(crMap[selectedCR.value])
+    const crValue = selectedCR.value
+    if (crValue && crMap[crValue]) {
+      meilisearchFilters.push(crMap[crValue])
     }
   }
 
