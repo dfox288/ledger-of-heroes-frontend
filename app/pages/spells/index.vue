@@ -304,18 +304,6 @@ const activeFilterCount = computed(() => {
       :has-active-filters="hasActiveFilters"
     />
 
-    <!-- Add after UiListPageHeader -->
-    <div class="mb-6">
-      <UButton
-        to="/spells/list-generator"
-        color="primary"
-        variant="solid"
-        icon="i-heroicons-sparkles"
-      >
-        🪄 Create Spell List
-      </UButton>
-    </div>
-
     <!-- Search and Filters -->
     <div class="mb-6">
       <UiFilterCollapse

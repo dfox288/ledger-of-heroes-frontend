@@ -44,6 +44,16 @@ const navItems = [
   { label: 'Feats', to: '/feats', color: 'glory' } // feat → glory (blue)
 ]
 
+// Tools dropdown items (utility tools and generators)
+const toolsItems = ref([
+  { label: 'Spell List Creator', to: '/spells/list-generator', icon: 'i-heroicons-sparkles' }
+])
+
+// Check if current route is in tools section
+const isToolsActive = computed(() => {
+  return toolsItems.value.some(item => route.path.startsWith(item.to))
+})
+
 // Reference dropdown items (metadata/reference endpoints)
 const referenceItems = ref([
   { label: 'Ability Scores', to: '/ability-scores', icon: 'i-heroicons-chart-bar' },
@@ -64,6 +74,7 @@ const isReferenceActive = computed(() => {
 })
 
 // Mobile menu state
+const isToolsExpanded = ref(false)
 const isReferenceExpanded = ref(false)
 </script>
 
@@ -121,6 +132,19 @@ const isReferenceExpanded = ref(false)
               >
                 {{ item.label }}
               </NuxtLink>
+              <!-- Tools dropdown -->
+              <UDropdownMenu :items="toolsItems">
+                <UButton
+                  color="neutral"
+                  variant="ghost"
+                  trailing-icon="i-heroicons-chevron-down-20-solid"
+                  :class="isToolsActive
+                    ? 'bg-gray-100 dark:bg-gray-800 text-blue-600 dark:text-blue-400'
+                    : 'text-gray-700 dark:text-gray-300'"
+                >
+                  Tools
+                </UButton>
+              </UDropdownMenu>
               <!-- Reference dropdown -->
               <UDropdownMenu :items="referenceItems">
                 <UButton
@@ -162,6 +186,46 @@ const isReferenceExpanded = ref(false)
             >
               {{ item.label }}
             </NuxtLink>
+
+            <!-- Tools expandable section -->
+            <div>
+              <button
+                class="w-full flex items-center justify-between px-3 py-2 rounded-md text-base font-medium transition-colors"
+                :class="isToolsActive
+                  ? 'bg-gray-100 dark:bg-gray-800 text-blue-600 dark:text-blue-400'
+                  : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800'"
+                @click="isToolsExpanded = !isToolsExpanded"
+              >
+                <span>Tools</span>
+                <UIcon
+                  :name="isToolsExpanded ? 'i-heroicons-chevron-up-20-solid' : 'i-heroicons-chevron-down-20-solid'"
+                  class="w-5 h-5"
+                />
+              </button>
+
+              <!-- Tools submenu -->
+              <div
+                v-show="isToolsExpanded"
+                class="pl-4 space-y-1 mt-1"
+              >
+                <NuxtLink
+                  v-for="item in toolsItems"
+                  :key="item.to"
+                  :to="item.to"
+                  class="flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition-colors"
+                  :class="route.path.startsWith(item.to)
+                    ? 'bg-gray-100 dark:bg-gray-800 text-blue-600 dark:text-blue-400'
+                    : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800'"
+                >
+                  <UIcon
+                    v-if="item.icon"
+                    :name="item.icon"
+                    class="w-4 h-4"
+                  />
+                  {{ item.label }}
+                </NuxtLink>
+              </div>
+            </div>
 
             <!-- Reference expandable section -->
             <div>
