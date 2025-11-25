@@ -13,15 +13,10 @@ const sortBy = ref<string>((route.query.sort_by as string) || 'name')
 const sortDirection = ref<'asc' | 'desc'>((route.query.sort_direction as 'asc' | 'desc') || 'asc')
 
 // Custom filter state (entity-specific)
-const levelFilterMode = ref<'exact' | 'range'>('exact')
-const selectedLevel = ref(route.query.level ? Number(route.query.level) : null)
-const minLevel = ref<number | null>(route.query.min_level ? Number(route.query.min_level) : null)
-const maxLevel = ref<number | null>(route.query.max_level ? Number(route.query.max_level) : null)
-// Slider value for range mode (array of [min, max])
-const sliderRange = ref<[number, number]>([
-  minLevel.value ?? 0,
-  maxLevel.value ?? 9
-])
+// Note: UiFilterMultiSelect works with strings, so we store as strings and convert to numbers for filtering
+const selectedLevels = ref<string[]>(
+  route.query.level ? (Array.isArray(route.query.level) ? route.query.level.map(String) : [String(route.query.level)]) : []
+)
 const selectedSchool = ref(route.query.school ? Number(route.query.school) : null)
 const selectedClass = ref<string | null>((route.query.class as string) || null)
 const concentrationFilter = ref<string | null>((route.query.concentration as string) || null)
@@ -76,19 +71,18 @@ const tagOptions = [
   { label: 'Touch Spells', value: 'touch-spells' }
 ]
 
-// Spell level options (0 = Cantrip, 1-9 = Spell levels)
+// Spell level options for multiselect (values as strings for UiFilterMultiSelect compatibility)
 const levelOptions = [
-  { label: 'All Levels', value: null },
-  { label: 'Cantrip', value: 0 },
-  { label: '1st Level', value: 1 },
-  { label: '2nd Level', value: 2 },
-  { label: '3rd Level', value: 3 },
-  { label: '4th Level', value: 4 },
-  { label: '5th Level', value: 5 },
-  { label: '6th Level', value: 6 },
-  { label: '7th Level', value: 7 },
-  { label: '8th Level', value: 8 },
-  { label: '9th Level', value: 9 }
+  { label: 'Cantrip', value: '0' },
+  { label: '1st Level', value: '1' },
+  { label: '2nd Level', value: '2' },
+  { label: '3rd Level', value: '3' },
+  { label: '4th Level', value: '4' },
+  { label: '5th Level', value: '5' },
+  { label: '6th Level', value: '6' },
+  { label: '7th Level', value: '7' },
+  { label: '8th Level', value: '8' },
+  { label: '9th Level', value: '9' }
 ]
 
 // School filter options
@@ -169,36 +163,15 @@ const sortValue = computed({
 // - durationOptions (80+ unique values: "Instantaneous", "1 round", "Concentration, up to 1 minute", etc.)
 // Users can search for these values using full-text search (?q=1 action) instead of dropdowns
 
-// Mode toggle handlers
-const switchToRangeMode = () => {
-  levelFilterMode.value = 'range'
-  selectedLevel.value = null
-  // Initialize slider to current min/max or full range
-  sliderRange.value = [minLevel.value ?? 0, maxLevel.value ?? 9]
-}
-
-const switchToExactMode = () => {
-  levelFilterMode.value = 'exact'
-  minLevel.value = null
-  maxLevel.value = null
-  sliderRange.value = [0, 9]
-}
-
-// Sync slider changes to min/max refs
-watch(sliderRange, (newRange) => {
-  if (levelFilterMode.value === 'range') {
-    minLevel.value = newRange[0]
-    maxLevel.value = newRange[1]
-  }
-})
-
 // Query builder for custom filters (using composable)
 const { queryParams: filterParams } = useMeilisearchFilters([
-  // Use range filter in range mode, exact filter in exact mode
-  ...(levelFilterMode.value === 'range'
-    ? [{ field: 'level', type: 'range' as const, min: minLevel, max: maxLevel, ref: levelFilterMode }]
-    : [{ ref: selectedLevel, field: 'level' }]
-  ),
+  // Level multiselect filter (convert strings to numbers for API)
+  {
+    ref: selectedLevels,
+    field: 'level',
+    type: 'in',
+    transform: (levels) => levels.map(Number)
+  },
   {
     ref: selectedSchool,
     field: 'school_code',
@@ -250,9 +223,7 @@ const spells = computed(() => spellsData.value as Spell[])
 // Clear all filters (base + custom)
 const clearFilters = () => {
   clearBaseFilters()
-  selectedLevel.value = null
-  minLevel.value = null
-  maxLevel.value = null
+  selectedLevels.value = []
   selectedSchool.value = null
   selectedClass.value = null
   concentrationFilter.value = null
@@ -289,29 +260,28 @@ const getSavingThrowName = (code: string) => {
   return code // Display "STR", "DEX", etc.
 }
 
+// Helper to get level label for display (Cantrip, 1st, 2nd, etc.)
+const getLevelLabel = (levelStr: string): string => {
+  const level = Number(levelStr)
+  if (level === 0) return 'Cantrip'
+  const suffixes = ['th', 'st', 'nd', 'rd', 'th', 'th', 'th', 'th', 'th', 'th']
+  return `${level}${suffixes[level]}`
+}
+
 // Get level filter display text for chips
 const getLevelFilterText = computed(() => {
-  if (levelFilterMode.value === 'exact' && selectedLevel.value !== null) {
-    return `Level ${selectedLevel.value === 0 ? 'Cantrip' : selectedLevel.value}`
-  }
-  if (levelFilterMode.value === 'range') {
-    if (minLevel.value !== null && maxLevel.value !== null) {
-      return `Levels ${minLevel.value}-${maxLevel.value}`
-    }
-    if (minLevel.value !== null) {
-      return `Level ${minLevel.value}+`
-    }
-    if (maxLevel.value !== null) {
-      return `Level ${maxLevel.value} or lower`
-    }
-  }
-  return null
+  if (selectedLevels.value.length === 0) return null
+
+  const labels = selectedLevels.value
+    .sort((a, b) => Number(a) - Number(b))
+    .map(level => getLevelLabel(level))
+
+  const prefix = selectedLevels.value.length === 1 ? 'Level' : 'Levels'
+  return `${prefix}: ${labels.join(', ')}`
 })
 
 const clearLevelFilter = () => {
-  selectedLevel.value = null
-  minLevel.value = null
-  maxLevel.value = null
+  selectedLevels.value = []
 }
 
 // Get source name by code for filter chips (show full name instead of code)
@@ -329,9 +299,7 @@ const perPage = 24
 
 // Count active filters (excluding search) for collapse badge (using composable)
 const activeFilterCount = useFilterCount(
-  selectedLevel,
-  minLevel,
-  maxLevel,
+  selectedLevels,
   selectedSchool,
   selectedClass,
   concentrationFilter,
@@ -398,58 +366,16 @@ const activeFilterCount = useFilterCount(
         <UiFilterLayout>
           <!-- Primary Filters: Most frequently used (Level, School, Class) -->
           <template #primary>
-            <!-- Level Filter Mode Toggle -->
-            <div class="flex flex-col gap-2 w-full">
-              <UiFilterToggle
-                data-testid="level-filter-mode-toggle"
-                :model-value="levelFilterMode"
-                label="Level Filter"
-                color="primary"
-                :options="[
-                  { value: 'exact', label: 'Exact' },
-                  { value: 'range', label: 'Range' }
-                ]"
-                @update:model-value="(value) => {
-                  if (value === 'range') {
-                    switchToRangeMode()
-                  } else {
-                    switchToExactMode()
-                  }
-                }"
-              />
-
-              <!-- Exact Level Mode -->
-              <USelectMenu
-                v-if="levelFilterMode === 'exact'"
-                v-model="selectedLevel"
-                data-testid="level-exact-select"
-                :items="levelOptions"
-                value-key="value"
-                placeholder="All Levels"
-                size="md"
-                class="w-full sm:w-48"
-              />
-
-              <!-- Range Level Mode -->
-              <div
-                v-else
-                class="flex flex-col gap-2 w-full sm:w-64"
-              >
-                <div class="flex justify-between text-sm text-gray-600 dark:text-gray-400">
-                  <span>Level {{ sliderRange[0] === 0 ? 'Cantrip' : sliderRange[0] }}</span>
-                  <span>Level {{ sliderRange[1] }}</span>
-                </div>
-                <USlider
-                  v-model="sliderRange"
-                  data-testid="level-range-slider"
-                  :min="0"
-                  :max="9"
-                  :step="1"
-                  size="md"
-                  class="w-full"
-                />
-              </div>
-            </div>
+            <!-- Level Filter Multiselect -->
+            <UiFilterMultiSelect
+              v-model="selectedLevels"
+              data-testid="level-filter-multiselect"
+              :options="levelOptions"
+              label="Spell Level"
+              placeholder="All Levels"
+              color="primary"
+              class="w-full sm:w-48"
+            />
 
             <USelectMenu
               v-model="selectedSchool"

@@ -9,17 +9,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-### Added
+### Changed
 
-- **Spell Level Range Filtering** (2025-11-25) - Added level range filtering mode for spells page
-  - Toggle between "Exact" and "Range" level filter modes
-  - Range mode provides min/max level dropdowns
-  - Uses Meilisearch `level >= X AND level <= Y` syntax
-  - Smart filter chip display: "Level 3", "Levels 1-3", "Level 5+", "Level 3 or lower"
-  - Mode switching auto-clears opposite filter values
-  - Existing `useMeilisearchFilters` composable already supported `range` type
-  - 19 comprehensive tests (8 composable tests + 11 page integration tests)
-  - All tests passing with TDD workflow (RED-GREEN-REFACTOR)
+- **Spell Level Filter - Multiselect UX** (2025-11-25) - Replaced exact/range toggle with simpler multiselect
+  - Removed complex exact/range mode toggle and slider UI
+  - Replaced with single UiFilterMultiSelect component (like damage types filter)
+  - Users can now select multiple discrete levels (e.g., Cantrip + 3rd + 9th)
+  - More intuitive for common use case: comparing spells at different levels
+  - Filter chip shows "Level: Cantrip" or "Levels: Cantrip, 3rd, 9th"
+  - Uses `level IN [0,3,9]` Meilisearch filter
+  - 10 comprehensive tests (all passing with TDD workflow)
+  - Simplified codebase: removed ~40 lines of mode-switching logic
+
+### Added
 
 - **Spell Source Book Filtering** (2025-11-25) - Added source book filter to spells page with multi-select UI and filter chips
   - Filter by source books: PHB, XGE, TCE, SCAG, EE, and more
