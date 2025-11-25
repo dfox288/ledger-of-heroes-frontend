@@ -49,7 +49,7 @@ test.describe('Homepage', () => {
         // Use .last() to select the entity card on homepage (not nav links)
         const card = page.locator(`a[href="${url}"]`).last()
         await expect(card).toBeVisible()
-        await expect(card.getByText(name)).toBeVisible()
+        await expect(card.getByRole('heading', { name })).toBeVisible()
         await expect(card.getByText(new RegExp(description, 'i'))).toBeVisible()
       })
 
