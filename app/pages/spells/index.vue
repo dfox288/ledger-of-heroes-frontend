@@ -131,11 +131,11 @@ const savingThrowOptions = computed(() => {
   }))
 })
 
-// Source filter options
+// Source filter options (show full names, not codes)
 const sourceOptions = computed(() => {
   if (!sources.value) return []
   return sources.value.map(source => ({
-    label: source.code, // Display "PHB", "XGE", etc.
+    label: source.name, // Display "Player's Handbook", "Xanathar's Guide", etc.
     value: source.code
   }))
 })
@@ -576,7 +576,12 @@ const activeFilterCount = useFilterCount(
         v-if="hasActiveFilters"
         class="flex flex-wrap items-center gap-2 pt-2"
       >
-        <span class="text-sm font-medium text-gray-600 dark:text-gray-400">Active:</span>
+        <span
+          v-if="activeFilterCount > 0 || searchQuery"
+          class="text-sm font-medium text-gray-600 dark:text-gray-400"
+        >
+          Active:
+        </span>
         <UButton
           v-if="getLevelFilterText"
           data-testid="level-filter-chip"
