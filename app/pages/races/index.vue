@@ -261,21 +261,14 @@ const perPage = 24
         <UiFilterLayout>
           <template #primary>
             <!-- Size Filter (Dropdown) -->
-            <div data-testid="size-filter-buttons">
-              <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                Size
-              </label>
-              <USelectMenu
-                v-model="selectedSize"
-                :items="sizeOptions"
-                value-key="value"
-                text-key="label"
-                placeholder="All Sizes"
-                size="md"
-                class="w-full sm:w-48"
-                data-testid="size-filter"
-              />
-            </div>
+            <UiFilterSelect
+              v-model="selectedSize"
+              :options="sizeOptions"
+              label="Size"
+              placeholder="All Sizes"
+              width-class="w-full sm:w-48"
+              data-testid="size-filter"
+            />
 
             <!-- Speed Filter (Compressed Sliders) -->
             <div>
@@ -349,21 +342,14 @@ const perPage = 24
 
           <template #advanced>
             <!-- Parent Race Filter -->
-            <div>
-              <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                Parent Race
-              </label>
-              <USelectMenu
-                v-model="selectedParentRace"
-                :items="parentRaceOptions"
-                value-key="value"
-                text-key="label"
-                placeholder="All Races"
-                size="md"
-                class="w-full sm:w-48"
-                data-testid="parent-race-filter"
-              />
-            </div>
+            <UiFilterSelect
+              v-model="selectedParentRace"
+              :options="parentRaceOptions"
+              label="Parent Race"
+              placeholder="All Races"
+              width-class="w-full sm:w-48"
+              data-testid="parent-race-filter"
+            />
           </template>
 
           <template #actions />

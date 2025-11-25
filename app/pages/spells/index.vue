@@ -387,22 +387,22 @@ const activeFilterCount = useFilterCount(
               class="w-full sm:w-48"
             />
 
-            <USelectMenu
+            <UiFilterSelect
               v-model="selectedSchool"
-              :items="schoolOptions"
-              value-key="value"
+              :options="schoolOptions"
+              label="School"
               placeholder="All Schools"
-              size="md"
-              class="w-full sm:w-48"
+              width-class="w-full sm:w-48"
+              data-testid="school-filter"
             />
 
-            <USelectMenu
+            <UiFilterSelect
               v-model="selectedClass"
-              :items="classOptions"
-              value-key="value"
+              :options="classOptions"
+              label="Class"
               placeholder="All Classes"
-              size="md"
-              class="w-full sm:w-48"
+              width-class="w-full sm:w-48"
+              data-testid="class-filter"
             />
           </template>
 

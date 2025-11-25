@@ -513,13 +513,12 @@ const activeFilterCount = useFilterCount(
             />
 
             <!-- Strength Requirement Filter (TIER 2 HIGH IMPACT) -->
-            <USelectMenu
+            <UiFilterSelect
               v-model="selectedStrengthReq"
-              :items="strengthReqOptions"
-              value-key="value"
-              placeholder="Strength Req"
-              size="md"
-              class="w-full sm:w-32"
+              :options="strengthReqOptions"
+              label="Strength Req"
+              placeholder="All STR"
+              width-class="w-full sm:w-32"
               data-testid="strength-req-filter"
             />
           </template>
@@ -537,13 +536,11 @@ const activeFilterCount = useFilterCount(
               data-testid="properties-filter"
             />
 
-            <USelectMenu
+            <UiFilterSelect
               v-model="selectedCostRange"
-              :items="costRangeOptions"
-              value-key="value"
-              placeholder="Cost Range"
-              size="md"
-              class="w-full sm:w-44"
+              :options="costRangeOptions"
+              label="Cost Range"
+              placeholder="All Costs"
               data-testid="cost-filter"
             />
 
@@ -568,24 +565,20 @@ const activeFilterCount = useFilterCount(
               data-testid="damage-dice-filter"
             />
 
-            <USelectMenu
+            <UiFilterSelect
               v-model="selectedRange"
-              :items="rangeOptions"
-              value-key="value"
-              placeholder="Weapon Range"
-              size="md"
-              class="w-full sm:w-44"
+              :options="rangeOptions"
+              label="Weapon Range"
+              placeholder="All Ranges"
               data-testid="range-filter"
             />
 
             <!-- ARMOR FILTERS -->
-            <USelectMenu
+            <UiFilterSelect
               v-model="selectedACRange"
-              :items="acRangeOptions"
-              value-key="value"
-              placeholder="Armor Class"
-              size="md"
-              class="w-full sm:w-44"
+              :options="acRangeOptions"
+              label="Armor Class"
+              placeholder="All AC"
               data-testid="ac-filter"
             />
 

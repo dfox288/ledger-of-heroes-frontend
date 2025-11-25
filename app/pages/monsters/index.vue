@@ -520,14 +520,13 @@ const perPage = 24
             />
 
             <!-- Type Filter -->
-            <USelectMenu
+            <UiFilterSelect
               v-model="selectedType"
-              :items="typeOptions"
-              value-key="value"
-              text-key="label"
+              :options="typeOptions"
+              label="Creature Type"
               placeholder="All Types"
-              size="md"
-              class="w-full sm:w-48"
+              width-class="w-full sm:w-48"
+              data-testid="type-filter"
             />
 
             <!-- Size Filter Multiselect -->
@@ -640,32 +639,22 @@ const perPage = 24
             </div>
 
             <!-- AC Range Filter -->
-            <div>
-              <label class="text-sm font-medium mb-2 block">Armor Class</label>
-              <USelectMenu
-                v-model="selectedACRange"
-                :items="acRangeOptions"
-                value-key="value"
-                placeholder="All AC"
-                size="md"
-                class="w-full sm:w-44"
-                data-testid="ac-filter"
-              />
-            </div>
+            <UiFilterSelect
+              v-model="selectedACRange"
+              :options="acRangeOptions"
+              label="Armor Class"
+              placeholder="All AC"
+              data-testid="ac-filter"
+            />
 
             <!-- HP Range Filter -->
-            <div>
-              <label class="text-sm font-medium mb-2 block">Hit Points</label>
-              <USelectMenu
-                v-model="selectedHPRange"
-                :items="hpRangeOptions"
-                value-key="value"
-                placeholder="All HP"
-                size="md"
-                class="w-full sm:w-44"
-                data-testid="hp-filter"
-              />
-            </div>
+            <UiFilterSelect
+              v-model="selectedHPRange"
+              :options="hpRangeOptions"
+              label="Hit Points"
+              placeholder="All HP"
+              data-testid="hp-filter"
+            />
           </template>
 
           <!-- Actions: Empty (Clear Filters moved to chips row) -->

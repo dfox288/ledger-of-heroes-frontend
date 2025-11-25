@@ -216,24 +216,22 @@ const perPage = 24
             />
 
             <!-- Spellcasting Ability Filter -->
-            <USelectMenu
+            <UiFilterSelect
               v-model="selectedSpellcastingAbility"
-              :items="spellcastingAbilityOptions"
-              value-key="value"
+              :options="spellcastingAbilityOptions"
+              label="Spellcasting Ability"
               placeholder="All Abilities"
-              size="md"
-              class="w-full sm:w-48"
+              width-class="w-full sm:w-48"
               data-testid="spellcasting-ability-filter"
             />
 
             <!-- Parent Class Filter -->
-            <USelectMenu
+            <UiFilterSelect
               v-model="selectedParentClass"
-              :items="parentClassOptions"
-              value-key="value"
+              :options="parentClassOptions"
+              label="Parent Class"
               placeholder="All Classes"
-              size="md"
-              class="w-full sm:w-48"
+              width-class="w-full sm:w-48"
               data-testid="parent-class-filter"
             />
           </template>
