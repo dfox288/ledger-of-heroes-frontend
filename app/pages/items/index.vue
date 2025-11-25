@@ -625,35 +625,156 @@ const activeFilterCount = useFilterCount(
           >
             Active filters:
           </span>
+          <!-- CHIP ORDER: Source → Entity-specific → Boolean toggles → Search (last) -->
+
+          <!-- 1. Source chips (neutral color) -->
+          <UButton
+            v-for="source in selectedSources"
+            :key="source"
+            data-testid="source-filter-chip"
+            size="xs"
+            color="neutral"
+            variant="soft"
+            @click="selectedSources = selectedSources.filter(s => s !== source)"
+          >
+            {{ getSourceName(source) }} ✕
+          </UButton>
+
+          <!-- 2. Entity-specific: Type, Rarity, Magic -->
           <UButton
             v-if="selectedType !== null"
+            data-testid="type-filter-chip"
             size="xs"
-            color="warning"
+            color="item"
             variant="soft"
             @click="selectedType = null"
           >
-            {{ getTypeName(selectedType) }} ✕
+            Type: {{ getTypeName(selectedType) }} ✕
           </UButton>
           <UButton
             v-if="selectedRarity !== null"
+            data-testid="rarity-filter-chip"
             size="xs"
-            color="primary"
+            color="item"
             variant="soft"
             @click="selectedRarity = null"
           >
-            {{ selectedRarity }} ✕
+            Rarity: {{ selectedRarity }} ✕
           </UButton>
           <UButton
             v-if="selectedMagic !== null"
+            data-testid="magic-filter-chip"
             size="xs"
-            color="info"
+            color="item"
             variant="soft"
             @click="selectedMagic = null"
           >
-            {{ selectedMagic === 'true' ? 'Magic' : 'Non-Magic' }} ✕
+            {{ selectedMagic === 'true' ? 'Magic Items' : 'Non-Magic Items' }} ✕
+          </UButton>
+
+          <!-- 3. Entity-specific: Cost, AC, Strength, Range -->
+          <UButton
+            v-if="selectedCostRange"
+            data-testid="cost-filter-chip"
+            size="xs"
+            color="item"
+            variant="soft"
+            @click="selectedCostRange = null"
+          >
+            Cost: {{ costRangeOptions.find(o => o.value === selectedCostRange)?.label }} ✕
           </UButton>
           <UButton
+            v-if="selectedACRange"
+            data-testid="ac-filter-chip"
+            size="xs"
+            color="item"
+            variant="soft"
+            @click="selectedACRange = null"
+          >
+            AC: {{ acRangeOptions.find(o => o.value === selectedACRange)?.label }} ✕
+          </UButton>
+          <UButton
+            v-if="selectedStrengthReq !== null"
+            data-testid="strength-req-filter-chip"
+            size="xs"
+            color="item"
+            variant="soft"
+            @click="selectedStrengthReq = null"
+          >
+            {{ strengthReqOptions.find(o => o.value === selectedStrengthReq)?.label }} ✕
+          </UButton>
+          <UButton
+            v-if="selectedRange"
+            data-testid="range-filter-chip"
+            size="xs"
+            color="item"
+            variant="soft"
+            @click="selectedRange = null"
+          >
+            Range: {{ rangeOptions.find(o => o.value === selectedRange)?.label }} ✕
+          </UButton>
+
+          <!-- 4. Entity-specific: Properties, Damage Types, Damage Dice, Versatile, Recharge -->
+          <UButton
+            v-for="property in selectedProperties"
+            :key="property"
+            data-testid="property-filter-chip"
+            size="xs"
+            color="warning"
+            variant="soft"
+            @click="selectedProperties = selectedProperties.filter(p => p !== property)"
+          >
+            {{ getPropertyName(property) }} ✕
+          </UButton>
+          <UButton
+            v-for="damageType in selectedDamageTypes"
+            :key="damageType"
+            data-testid="damage-type-filter-chip"
+            size="xs"
+            color="error"
+            variant="soft"
+            @click="selectedDamageTypes = selectedDamageTypes.filter(dt => dt !== damageType)"
+          >
+            {{ getDamageTypeName(damageType) }} ✕
+          </UButton>
+          <UButton
+            v-for="damageDie in selectedDamageDice"
+            :key="damageDie"
+            data-testid="damage-dice-filter-chip"
+            size="xs"
+            color="error"
+            variant="soft"
+            @click="selectedDamageDice = selectedDamageDice.filter(d => d !== damageDie)"
+          >
+            Damage: {{ damageDie }} ✕
+          </UButton>
+          <UButton
+            v-for="versatileDie in selectedVersatileDamage"
+            :key="versatileDie"
+            data-testid="versatile-damage-filter-chip"
+            size="xs"
+            color="info"
+            variant="soft"
+            @click="selectedVersatileDamage = selectedVersatileDamage.filter(v => v !== versatileDie)"
+          >
+            Versatile: {{ versatileDie }} ✕
+          </UButton>
+          <UButton
+            v-for="timing in selectedRechargeTiming"
+            :key="timing"
+            data-testid="recharge-timing-filter-chip"
+            size="xs"
+            color="spell"
+            variant="soft"
+            @click="selectedRechargeTiming = selectedRechargeTiming.filter(t => t !== timing)"
+          >
+            Recharge: {{ timing.charAt(0).toUpperCase() + timing.slice(1) }} ✕
+          </UButton>
+
+          <!-- 5. Boolean toggles (primary color, "Label: Yes/No" format) -->
+          <UButton
             v-if="hasCharges !== null"
+            data-testid="has-charges-filter-chip"
             size="xs"
             color="primary"
             variant="soft"
@@ -663,6 +784,7 @@ const activeFilterCount = useFilterCount(
           </UButton>
           <UButton
             v-if="requiresAttunement !== null"
+            data-testid="attunement-filter-chip"
             size="xs"
             color="primary"
             variant="soft"
@@ -672,6 +794,7 @@ const activeFilterCount = useFilterCount(
           </UButton>
           <UButton
             v-if="stealthDisadvantage !== null"
+            data-testid="stealth-filter-chip"
             size="xs"
             color="primary"
             variant="soft"
@@ -679,110 +802,11 @@ const activeFilterCount = useFilterCount(
           >
             Stealth Disadv.: {{ stealthDisadvantage === '1' ? 'Yes' : 'No' }} ✕
           </UButton>
-          <!-- Cost Range Chip -->
-          <UButton
-            v-if="selectedCostRange"
-            size="xs"
-            color="primary"
-            variant="soft"
-            @click="selectedCostRange = null"
-          >
-            {{ costRangeOptions.find(o => o.value === selectedCostRange)?.label }} ✕
-          </UButton>
-          <!-- AC Range Chip -->
-          <UButton
-            v-if="selectedACRange"
-            size="xs"
-            color="primary"
-            variant="soft"
-            @click="selectedACRange = null"
-          >
-            AC: {{ acRangeOptions.find(o => o.value === selectedACRange)?.label }} ✕
-          </UButton>
-          <!-- Property chips -->
-          <UButton
-            v-for="property in selectedProperties"
-            :key="property"
-            size="xs"
-            color="warning"
-            variant="soft"
-            @click="selectedProperties = selectedProperties.filter(p => p !== property)"
-          >
-            {{ getPropertyName(property) }} ✕
-          </UButton>
-          <!-- Damage type chips -->
-          <UButton
-            v-for="damageType in selectedDamageTypes"
-            :key="damageType"
-            size="xs"
-            color="error"
-            variant="soft"
-            @click="selectedDamageTypes = selectedDamageTypes.filter(dt => dt !== damageType)"
-          >
-            {{ getDamageTypeName(damageType) }} ✕
-          </UButton>
-          <!-- Source chips -->
-          <UButton
-            v-for="source in selectedSources"
-            :key="source"
-            size="xs"
-            color="neutral"
-            variant="soft"
-            @click="selectedSources = selectedSources.filter(s => s !== source)"
-          >
-            {{ getSourceName(source) }} ✕
-          </UButton>
-          <!-- Weapon/Armor Shopping Filter Chips (TIER 2 HIGH IMPACT) -->
-          <UButton
-            v-if="selectedStrengthReq !== null"
-            size="xs"
-            color="warning"
-            variant="soft"
-            @click="selectedStrengthReq = null"
-          >
-            {{ strengthReqOptions.find(o => o.value === selectedStrengthReq)?.label }} ✕
-          </UButton>
-          <UButton
-            v-for="damageDie in selectedDamageDice"
-            :key="damageDie"
-            size="xs"
-            color="error"
-            variant="soft"
-            @click="selectedDamageDice = selectedDamageDice.filter(d => d !== damageDie)"
-          >
-            {{ damageDie }} ✕
-          </UButton>
-          <UButton
-            v-for="versatileDie in selectedVersatileDamage"
-            :key="versatileDie"
-            size="xs"
-            color="info"
-            variant="soft"
-            @click="selectedVersatileDamage = selectedVersatileDamage.filter(v => v !== versatileDie)"
-          >
-            Versatile: {{ versatileDie }} ✕
-          </UButton>
-          <UButton
-            v-if="selectedRange"
-            size="xs"
-            color="primary"
-            variant="soft"
-            @click="selectedRange = null"
-          >
-            Range: {{ rangeOptions.find(o => o.value === selectedRange)?.label }} ✕
-          </UButton>
-          <UButton
-            v-for="timing in selectedRechargeTiming"
-            :key="timing"
-            size="xs"
-            color="spell"
-            variant="soft"
-            @click="selectedRechargeTiming = selectedRechargeTiming.filter(t => t !== timing)"
-          >
-            {{ timing.charAt(0).toUpperCase() + timing.slice(1) }} ✕
-          </UButton>
+
+          <!-- 6. Search query (always last, neutral color) -->
           <UButton
             v-if="searchQuery"
+            data-testid="search-filter-chip"
             size="xs"
             color="neutral"
             variant="soft"

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue'
-import type { Monster, Size } from '~/types'
+import type { Monster, Size, Source } from '~/types'
 
 const route = useRoute()
 
@@ -21,10 +21,11 @@ const selectedSizes = ref<string[]>(
 const selectedAlignments = ref<string[]>(
   route.query.alignment ? (Array.isArray(route.query.alignment) ? route.query.alignment : [route.query.alignment]) : []
 )
-const hasFly = ref<string | null>((route.query.has_fly as string) || null)
-const hasSwim = ref<string | null>((route.query.has_swim as string) || null)
-const hasBurrow = ref<string | null>((route.query.has_burrow as string) || null)
-const hasClimb = ref<string | null>((route.query.has_climb as string) || null)
+
+// Movement types multiselect (replaces individual toggles)
+const selectedMovementTypes = ref<string[]>(
+  route.query.movement ? (Array.isArray(route.query.movement) ? route.query.movement : [route.query.movement]) : []
+)
 
 // New filters (6 additional filters)
 const selectedArmorTypes = ref<string[]>(
@@ -57,6 +58,26 @@ const hpRangeOptions = [
 
 // Fetch reference data for filters
 const { data: sizes } = useReferenceData<Size>('/sizes')
+const { data: sources } = useReferenceData<Source>('/sources')
+
+// Movement type options for multiselect
+const movementTypeOptions = [
+  { label: 'Fly', value: 'fly' },
+  { label: 'Swim', value: 'swim' },
+  { label: 'Burrow', value: 'burrow' },
+  { label: 'Climb', value: 'climb' },
+  { label: 'Hover', value: 'hover' }
+]
+
+// Source filter state
+const selectedSources = ref<string[]>(
+  route.query.source ? (Array.isArray(route.query.source) ? route.query.source : [route.query.source]) : []
+)
+
+// Source filter options
+const sourceOptions = computed(() =>
+  sources.value?.map(s => ({ label: s.name, value: s.code })) || []
+)
 
 // CR multiselect options (common D&D 5e CR values)
 const crOptions = [
@@ -195,18 +216,14 @@ const { queryParams: filterParams } = useMeilisearchFilters([
     field: 'alignment',
     type: 'in'
   },
-  // Speed filters - use greaterThan to check if field has a value (> 0)
-  { ref: hasFly, field: 'speed_fly', type: 'greaterThan', transform: () => 0 },
-  { ref: hasSwim, field: 'speed_swim', type: 'greaterThan', transform: () => 0 },
-  { ref: hasBurrow, field: 'speed_burrow', type: 'greaterThan', transform: () => 0 },
-  { ref: hasClimb, field: 'speed_climb', type: 'greaterThan', transform: () => 0 },
-  // New filters
+  // Note: Movement types handled manually in queryBuilder (requires IS NOT NULL syntax)
+  // Other filters
   { ref: selectedArmorTypes, field: 'armor_type', type: 'in' },
-  { ref: canHover, field: 'can_hover', type: 'boolean' },
   { ref: hasLairActions, field: 'has_lair_actions', type: 'boolean' },
   { ref: hasReactions, field: 'has_reactions', type: 'boolean' },
   { ref: isSpellcaster, field: 'is_spellcaster', type: 'boolean' },
-  { ref: hasMagicResistance, field: 'has_magic_resistance', type: 'boolean' }
+  { ref: hasMagicResistance, field: 'has_magic_resistance', type: 'boolean' },
+  { ref: selectedSources, field: 'source_codes', type: 'in' }
 ])
 
 const queryBuilder = computed(() => {
@@ -243,6 +260,24 @@ const queryBuilder = computed(() => {
     if (rangeFilter) {
       meilisearchFilters.push(rangeFilter)
     }
+  }
+
+  // Add movement types filter (uses IS NOT NULL for each selected type)
+  if (selectedMovementTypes.value.length > 0) {
+    const movementFilters = selectedMovementTypes.value.map(type => {
+      const fieldMap: Record<string, string> = {
+        fly: 'speed_fly',
+        swim: 'speed_swim',
+        burrow: 'speed_burrow',
+        climb: 'speed_climb',
+        hover: 'can_hover'
+      }
+      const field = fieldMap[type]
+      // For hover, it's a boolean field; for others, check IS NOT NULL
+      return type === 'hover' ? `${field} = true` : `${field} IS NOT NULL`
+    })
+    // All selected movement types must be present (AND logic)
+    meilisearchFilters.push(`(${movementFilters.join(' AND ')})`)
   }
 
   // Combine all filters
@@ -289,19 +324,15 @@ const clearFilters = () => {
   isLegendary.value = null
   selectedSizes.value = []
   selectedAlignments.value = []
-  hasFly.value = null
-  hasSwim.value = null
-  hasBurrow.value = null
-  hasClimb.value = null
+  selectedMovementTypes.value = []
   selectedACRange.value = null
   selectedHPRange.value = null
-  // New filters
   selectedArmorTypes.value = []
-  canHover.value = null
   hasLairActions.value = null
   hasReactions.value = null
   isSpellcaster.value = null
   hasMagicResistance.value = null
+  selectedSources.value = []
 }
 
 // Helper functions for filter chips
@@ -377,6 +408,21 @@ const clearArmorTypeFilter = () => {
   selectedArmorTypes.value = []
 }
 
+// Helper functions for movement types filter chip
+const getMovementTypesFilterText = computed(() => {
+  if (selectedMovementTypes.value.length === 0) return null
+
+  const labels = selectedMovementTypes.value
+    .map(type => movementTypeOptions.find(o => o.value === type)?.label || type)
+    .sort()
+
+  return `Movement: ${labels.join(', ')}`
+})
+
+const clearMovementTypesFilter = () => {
+  selectedMovementTypes.value = []
+}
+
 // Filter collapse state
 const filtersOpen = ref(false)
 
@@ -387,19 +433,15 @@ const activeFilterCount = useFilterCount(
   isLegendary,
   selectedSizes,
   selectedAlignments,
-  hasFly,
-  hasSwim,
-  hasBurrow,
-  hasClimb,
+  selectedMovementTypes,
   selectedACRange,
   selectedHPRange,
-  // New filters
   selectedArmorTypes,
-  canHover,
   hasLairActions,
   hasReactions,
   isSpellcaster,
-  hasMagicResistance
+  hasMagicResistance,
+  selectedSources
 )
 
 const perPage = 24
@@ -442,6 +484,17 @@ const perPage = 24
                 />
               </template>
             </UInput>
+
+            <!-- Source filter in prominent position -->
+            <UiFilterMultiSelect
+              v-model="selectedSources"
+              :options="sourceOptions"
+              placeholder="All Sources"
+              color="monster"
+              class="w-full sm:w-48"
+              data-testid="source-filter"
+            />
+
             <USelectMenu
               v-model="sortValue"
               :items="sortOptions"
@@ -498,7 +551,7 @@ const perPage = 24
             />
           </template>
 
-          <!-- Quick Toggles: ALL 10 toggles together -->
+          <!-- Quick Toggles: Reduced from 10 to 5 (movement combined into multiselect) -->
           <template #quick>
             <UiFilterToggle
               v-model="isLegendary"
@@ -511,64 +564,15 @@ const perPage = 24
               ]"
             />
 
-            <UiFilterToggle
-              v-model="hasFly"
-              data-testid="has-fly-toggle"
-              label="Has Fly"
+            <!-- Movement Types Multiselect (replaces 5 individual toggles) -->
+            <UiFilterMultiSelect
+              v-model="selectedMovementTypes"
+              data-testid="movement-types-filter"
+              :options="movementTypeOptions"
+              label="Movement Types"
+              placeholder="All Movement"
               color="info"
-              :options="[
-                { value: null, label: 'All' },
-                { value: '1', label: 'Yes' },
-                { value: '0', label: 'No' }
-              ]"
-            />
-
-            <UiFilterToggle
-              v-model="hasSwim"
-              data-testid="has-swim-toggle"
-              label="Has Swim"
-              color="info"
-              :options="[
-                { value: null, label: 'All' },
-                { value: '1', label: 'Yes' },
-                { value: '0', label: 'No' }
-              ]"
-            />
-
-            <UiFilterToggle
-              v-model="hasBurrow"
-              data-testid="has-burrow-toggle"
-              label="Has Burrow"
-              color="info"
-              :options="[
-                { value: null, label: 'All' },
-                { value: '1', label: 'Yes' },
-                { value: '0', label: 'No' }
-              ]"
-            />
-
-            <UiFilterToggle
-              v-model="hasClimb"
-              data-testid="has-climb-toggle"
-              label="Has Climb"
-              color="info"
-              :options="[
-                { value: null, label: 'All' },
-                { value: '1', label: 'Yes' },
-                { value: '0', label: 'No' }
-              ]"
-            />
-
-            <UiFilterToggle
-              v-model="canHover"
-              data-testid="can-hover-toggle"
-              label="Can Hover"
-              color="info"
-              :options="[
-                { value: null, label: 'All' },
-                { value: '1', label: 'Yes' },
-                { value: '0', label: 'No' }
-              ]"
+              class="w-full sm:w-48"
             />
 
             <UiFilterToggle
@@ -729,45 +733,16 @@ const perPage = 24
           >
             Legendary: {{ isLegendary === '1' ? 'Yes' : 'No' }} ✕
           </UButton>
+          <!-- Movement Types Chip -->
           <UButton
-            v-if="hasFly !== null"
-            data-testid="has-fly-chip"
+            v-if="getMovementTypesFilterText"
+            data-testid="movement-types-chip"
             size="xs"
             color="info"
             variant="soft"
-            @click="hasFly = null"
+            @click="clearMovementTypesFilter"
           >
-            Has Fly: {{ hasFly === '1' ? 'Yes' : 'No' }} ✕
-          </UButton>
-          <UButton
-            v-if="hasSwim !== null"
-            data-testid="has-swim-chip"
-            size="xs"
-            color="info"
-            variant="soft"
-            @click="hasSwim = null"
-          >
-            Has Swim: {{ hasSwim === '1' ? 'Yes' : 'No' }} ✕
-          </UButton>
-          <UButton
-            v-if="hasBurrow !== null"
-            data-testid="has-burrow-chip"
-            size="xs"
-            color="info"
-            variant="soft"
-            @click="hasBurrow = null"
-          >
-            Has Burrow: {{ hasBurrow === '1' ? 'Yes' : 'No' }} ✕
-          </UButton>
-          <UButton
-            v-if="hasClimb !== null"
-            data-testid="has-climb-chip"
-            size="xs"
-            color="info"
-            variant="soft"
-            @click="hasClimb = null"
-          >
-            Has Climb: {{ hasClimb === '1' ? 'Yes' : 'No' }} ✕
+            {{ getMovementTypesFilterText }} ✕
           </UButton>
           <!-- AC Range Chip -->
           <UButton
@@ -799,16 +774,6 @@ const perPage = 24
             @click="clearArmorTypeFilter"
           >
             {{ getArmorTypeFilterText }} ✕
-          </UButton>
-          <!-- Can Hover Chip -->
-          <UButton
-            v-if="canHover !== null"
-            size="xs"
-            color="info"
-            variant="soft"
-            @click="canHover = null"
-          >
-            Can Hover: {{ canHover === '1' ? 'Yes' : 'No' }} ✕
           </UButton>
           <!-- Has Lair Actions Chip -->
           <UButton
@@ -849,6 +814,18 @@ const perPage = 24
             @click="hasMagicResistance = null"
           >
             Has Magic Resistance: {{ hasMagicResistance === '1' ? 'Yes' : 'No' }} ✕
+          </UButton>
+          <!-- Source Chips -->
+          <UButton
+            v-for="source in selectedSources"
+            :key="source"
+            data-testid="source-filter-chip"
+            size="xs"
+            color="neutral"
+            variant="soft"
+            @click="selectedSources = selectedSources.filter(s => s !== source)"
+          >
+            {{ sources?.find(s => s.code === source)?.name || source }} ✕
           </UButton>
           <UButton
             v-if="searchQuery"

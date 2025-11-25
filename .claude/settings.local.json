@@ -187,7 +187,9 @@
       "Bash(do curl -s \"http://localhost:8080/api/v1/items?per_page=200&page=$i\")",
       "Bash(do curl -s \"http://localhost:8080/api/v1/items?q=$keyword&per_page=100\")",
       "Skill(superpowers:systematic-debugging)",
-      "Bash(node --check:*)"
+      "Bash(node --check:*)",
+      "Bash(do echo -n \"$endpoint: \")",
+      "Bash(do echo -n \"$endpoint: \" curl -s \"http://localhost:8080/api/v1/$endpoint?per_page=100\")"
     ],
     "deny": [],
     "ask": []

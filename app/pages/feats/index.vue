@@ -264,10 +264,6 @@ const activeFilterCount = useFilterCount(
             />
           </template>
 
-          <!-- Advanced Filters: Less frequently used -->
-          <template #advanced />
-
-
           <!-- Actions: Empty (Clear Filters moved to chips row) -->
           <template #actions />
         </UiFilterLayout>

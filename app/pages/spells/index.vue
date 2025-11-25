@@ -511,134 +511,151 @@ const activeFilterCount = useFilterCount(
           >
             Active filters:
           </span>
-        <UButton
-          v-if="getLevelFilterText"
-          data-testid="level-filter-chip"
-          size="xs"
-          color="primary"
-          variant="soft"
-          @click="clearLevelFilter"
-        >
-          {{ getLevelFilterText }} ✕
-        </UButton>
-        <UButton
-          v-if="selectedSchool !== null"
-          size="xs"
-          color="info"
-          variant="soft"
-          @click="selectedSchool = null"
-        >
-          {{ getSchoolName(selectedSchool) }} ✕
-        </UButton>
-        <UButton
-          v-if="selectedClass !== null"
-          size="xs"
-          color="class"
-          variant="soft"
-          @click="selectedClass = null"
-        >
-          {{ getClassName(selectedClass) }} ✕
-        </UButton>
-        <UButton
-          v-if="searchQuery"
-          size="xs"
-          color="neutral"
-          variant="soft"
-          @click="searchQuery = ''"
-        >
-          "{{ searchQuery }}" ✕
-        </UButton>
-        <UButton
-          v-if="concentrationFilter !== null"
-          size="xs"
-          color="primary"
-          variant="soft"
-          @click="concentrationFilter = null"
-        >
-          Concentration: {{ concentrationFilter === '1' ? 'Yes' : 'No' }} ✕
-        </UButton>
-        <UButton
-          v-if="ritualFilter !== null"
-          size="xs"
-          color="primary"
-          variant="soft"
-          @click="ritualFilter = null"
-        >
-          Ritual: {{ ritualFilter === '1' ? 'Yes' : 'No' }} ✕
-        </UButton>
-        <!-- Phase 1: Damage type chips -->
-        <UButton
-          v-for="damageType in selectedDamageTypes"
-          :key="damageType"
-          size="xs"
-          color="error"
-          variant="soft"
-          @click="selectedDamageTypes = selectedDamageTypes.filter(dt => dt !== damageType)"
-        >
-          {{ getDamageTypeName(damageType) }} ✕
-        </UButton>
-        <!-- Phase 1: Saving throw chips -->
-        <UButton
-          v-for="savingThrow in selectedSavingThrows"
-          :key="savingThrow"
-          size="xs"
-          color="info"
-          variant="soft"
-          @click="selectedSavingThrows = selectedSavingThrows.filter(st => st !== savingThrow)"
-        >
-          {{ getSavingThrowName(savingThrow) }} Save ✕
-        </UButton>
-        <!-- Source chips -->
-        <UButton
-          v-for="source in selectedSources"
-          :key="source"
-          size="xs"
-          color="neutral"
-          variant="soft"
-          @click="selectedSources = selectedSources.filter(s => s !== source)"
-        >
-          {{ getSourceName(source) }} ✕
-        </UButton>
-        <!-- Tag chips -->
-        <UButton
-          v-for="tag in selectedTags"
-          :key="tag"
-          size="xs"
-          color="spell"
-          variant="soft"
-          @click="selectedTags = selectedTags.filter(t => t !== tag)"
-        >
-          {{ getTagName(tag) }} ✕
-        </UButton>
-        <!-- Phase 2: Component flag chips -->
-        <UButton
-          v-if="verbalFilter !== null"
-          size="xs"
-          color="primary"
-          variant="soft"
-          @click="verbalFilter = null"
-        >
-          Verbal: {{ verbalFilter === '1' ? 'Yes' : 'No' }} ✕
-        </UButton>
-        <UButton
-          v-if="somaticFilter !== null"
-          size="xs"
-          color="primary"
-          variant="soft"
-          @click="somaticFilter = null"
-        >
-          Somatic: {{ somaticFilter === '1' ? 'Yes' : 'No' }} ✕
-        </UButton>
-        <UButton
-          v-if="materialFilter !== null"
-          size="xs"
-          color="primary"
-          variant="soft"
-          @click="materialFilter = null"
-        >
-          Material: {{ materialFilter === '1' ? 'Yes' : 'No' }} ✕
-        </UButton>
-        <!-- Removed: Filter chips for unsupported filters (higherLevels, castingTime, range, duration) -->
+          <!-- CHIP ORDER: Source → Entity-specific → Boolean toggles → Search (last) -->
+
+          <!-- 1. Source chips (neutral color) -->
+          <UButton
+            v-for="source in selectedSources"
+            :key="source"
+            data-testid="source-filter-chip"
+            size="xs"
+            color="neutral"
+            variant="soft"
+            @click="selectedSources = selectedSources.filter(s => s !== source)"
+          >
+            {{ getSourceName(source) }} ✕
+          </UButton>
+
+          <!-- 2. Entity-specific: Level, School, Class -->
+          <UButton
+            v-if="getLevelFilterText"
+            data-testid="level-filter-chip"
+            size="xs"
+            color="spell"
+            variant="soft"
+            @click="clearLevelFilter"
+          >
+            {{ getLevelFilterText }} ✕
+          </UButton>
+          <UButton
+            v-if="selectedSchool !== null"
+            data-testid="school-filter-chip"
+            size="xs"
+            color="spell"
+            variant="soft"
+            @click="selectedSchool = null"
+          >
+            School: {{ getSchoolName(selectedSchool) }} ✕
+          </UButton>
+          <UButton
+            v-if="selectedClass !== null"
+            data-testid="class-filter-chip"
+            size="xs"
+            color="class"
+            variant="soft"
+            @click="selectedClass = null"
+          >
+            Class: {{ getClassName(selectedClass) }} ✕
+          </UButton>
+
+          <!-- 3. Entity-specific: Damage Types, Saving Throws, Tags -->
+          <UButton
+            v-for="damageType in selectedDamageTypes"
+            :key="damageType"
+            data-testid="damage-type-filter-chip"
+            size="xs"
+            color="error"
+            variant="soft"
+            @click="selectedDamageTypes = selectedDamageTypes.filter(dt => dt !== damageType)"
+          >
+            {{ getDamageTypeName(damageType) }} ✕
+          </UButton>
+          <UButton
+            v-for="savingThrow in selectedSavingThrows"
+            :key="savingThrow"
+            data-testid="saving-throw-filter-chip"
+            size="xs"
+            color="info"
+            variant="soft"
+            @click="selectedSavingThrows = selectedSavingThrows.filter(st => st !== savingThrow)"
+          >
+            {{ getSavingThrowName(savingThrow) }} Save ✕
+          </UButton>
+          <UButton
+            v-for="tag in selectedTags"
+            :key="tag"
+            data-testid="tag-filter-chip"
+            size="xs"
+            color="spell"
+            variant="soft"
+            @click="selectedTags = selectedTags.filter(t => t !== tag)"
+          >
+            {{ getTagName(tag) }} ✕
+          </UButton>
+
+          <!-- 4. Boolean toggles (primary color, "Label: Yes/No" format) -->
+          <UButton
+            v-if="concentrationFilter !== null"
+            data-testid="concentration-filter-chip"
+            size="xs"
+            color="primary"
+            variant="soft"
+            @click="concentrationFilter = null"
+          >
+            Concentration: {{ concentrationFilter === '1' ? 'Yes' : 'No' }} ✕
+          </UButton>
+          <UButton
+            v-if="ritualFilter !== null"
+            data-testid="ritual-filter-chip"
+            size="xs"
+            color="primary"
+            variant="soft"
+            @click="ritualFilter = null"
+          >
+            Ritual: {{ ritualFilter === '1' ? 'Yes' : 'No' }} ✕
+          </UButton>
+          <UButton
+            v-if="verbalFilter !== null"
+            data-testid="verbal-filter-chip"
+            size="xs"
+            color="primary"
+            variant="soft"
+            @click="verbalFilter = null"
+          >
+            Verbal: {{ verbalFilter === '1' ? 'Yes' : 'No' }} ✕
+          </UButton>
+          <UButton
+            v-if="somaticFilter !== null"
+            data-testid="somatic-filter-chip"
+            size="xs"
+            color="primary"
+            variant="soft"
+            @click="somaticFilter = null"
+          >
+            Somatic: {{ somaticFilter === '1' ? 'Yes' : 'No' }} ✕
+          </UButton>
+          <UButton
+            v-if="materialFilter !== null"
+            data-testid="material-filter-chip"
+            size="xs"
+            color="primary"
+            variant="soft"
+            @click="materialFilter = null"
+          >
+            Material: {{ materialFilter === '1' ? 'Yes' : 'No' }} ✕
+          </UButton>
+
+          <!-- 5. Search query (always last, neutral color) -->
+          <UButton
+            v-if="searchQuery"
+            data-testid="search-filter-chip"
+            size="xs"
+            color="neutral"
+            variant="soft"
+            @click="searchQuery = ''"
+          >
+            "{{ searchQuery }}" ✕
+          </UButton>
         </div>
 
         <!-- Clear Filters Button (right-aligned) -->

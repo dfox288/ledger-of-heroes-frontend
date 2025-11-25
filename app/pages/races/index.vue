@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue'
-import type { Race, Size, Source } from '~/types'
+import type { Race, Size, Source, AbilityScore } from '~/types'
 
 const route = useRoute()
 
@@ -36,6 +36,8 @@ const { data: baseRaces } = useReferenceData<Race>('/races', {
   transform: (data) => data.filter(r => !r.parent_race)
 })
 
+const { data: abilityScores } = useReferenceData<AbilityScore>('/ability-scores')
+
 // Size filter options
 const sizeOptions = computed(() => {
   const options: Array<{ label: string, value: string }> = [{ label: 'All Sizes', value: '' }]
@@ -69,15 +71,14 @@ const parentRaceOptions = computed(() => {
   return options
 })
 
-// Ability score filter options (hardcoded - standard D&D abilities)
-const abilityOptions = [
-  { label: 'Strength (STR)', value: 'STR' },
-  { label: 'Dexterity (DEX)', value: 'DEX' },
-  { label: 'Constitution (CON)', value: 'CON' },
-  { label: 'Intelligence (INT)', value: 'INT' },
-  { label: 'Wisdom (WIS)', value: 'WIS' },
-  { label: 'Charisma (CHA)', value: 'CHA' }
-]
+// Ability score filter options (from API)
+const abilityOptions = computed(() => {
+  if (!abilityScores.value) return []
+  return abilityScores.value.map(ab => ({
+    label: `${ab.name} (${ab.code})`,
+    value: ab.code
+  }))
+})
 
 // Build ability bonus filter manually (each ability is separate field: ability_str_bonus, etc.)
 const abilityBonusFilter = computed(() => {
@@ -326,8 +327,8 @@ const perPage = 24
               color="primary"
               :options="[
                 { value: null, label: 'All' },
-                { value: 'false', label: 'Base Only' },
-                { value: 'true', label: 'Subraces' }
+                { value: '0', label: 'Base Only' },
+                { value: '1', label: 'Subraces' }
               ]"
               data-testid="race-type-filter"
             />
@@ -339,8 +340,8 @@ const perPage = 24
               color="primary"
               :options="[
                 { value: null, label: 'All' },
-                { value: 'true', label: 'Yes' },
-                { value: 'false', label: 'No' }
+                { value: '1', label: 'Yes' },
+                { value: '0', label: 'No' }
               ]"
               data-testid="has-innate-spells-filter"
             />
@@ -424,7 +425,7 @@ const perPage = 24
             {{ selectedParentRace }} ✕
           </UButton>
           <UButton
-            v-if="raceTypeFilter === 'false'"
+            v-if="raceTypeFilter === '0'"
             data-testid="race-type-filter-chip"
             size="xs"
             color="primary"
@@ -434,7 +435,7 @@ const perPage = 24
             Base Races Only ✕
           </UButton>
           <UButton
-            v-if="raceTypeFilter === 'true'"
+            v-if="raceTypeFilter === '1'"
             data-testid="race-type-filter-chip"
             size="xs"
             color="primary"
@@ -444,14 +445,14 @@ const perPage = 24
             Subraces Only ✕
           </UButton>
           <UButton
-            v-if="hasInnateSpellsFilter === 'true'"
+            v-if="hasInnateSpellsFilter !== null"
             data-testid="has-innate-spells-chip"
             size="xs"
             color="primary"
             variant="soft"
             @click="hasInnateSpellsFilter = null"
           >
-            Has Innate Spells ✕
+            Innate Spells: {{ hasInnateSpellsFilter === '1' ? 'Yes' : 'No' }} ✕
           </UButton>
           <UButton
             v-for="ability in selectedAbilityBonuses"
