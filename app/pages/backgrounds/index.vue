@@ -7,6 +7,10 @@ const route = useRoute()
 // Filter collapse state
 const filtersOpen = ref(false)
 
+// Sorting state
+const sortBy = ref<string>((route.query.sort_by as string) || 'name')
+const sortDirection = ref<'asc' | 'desc'>((route.query.sort_direction as 'asc' | 'desc') || 'asc')
+
 // Custom filter state (entity-specific)
 const selectedSources = ref<string[]>(
   route.query.source ? (Array.isArray(route.query.source) ? route.query.source : [route.query.source]) as string[] : []
@@ -63,6 +67,13 @@ const { queryParams: filterParams } = useMeilisearchFilters([
   { ref: languageChoiceFilter, field: 'grants_language_choice', type: 'boolean' }
 ])
 
+// Combined query params (filters + sorting)
+const queryParams = computed(() => ({
+  ...filterParams.value,
+  sort_by: sortBy.value,
+  sort_direction: sortDirection.value
+}))
+
 // Use entity list composable for all shared logic
 const {
   searchQuery,
@@ -78,7 +89,7 @@ const {
 } = useEntityList({
   endpoint: '/backgrounds',
   cacheKey: 'backgrounds-list',
-  queryBuilder: filterParams,
+  queryBuilder: queryParams,
   seo: {
     title: 'Backgrounds - D&D 5e Compendium',
     description: 'Browse all D&D 5e character backgrounds.'
@@ -105,6 +116,22 @@ const getSkillName = (code: string) => {
 const getToolTypeName = (value: string) => {
   return toolTypeOptions.find(t => t.value === value)?.label || value
 }
+
+// Sort options
+const sortOptions = [
+  { label: 'Name (A-Z)', value: 'name:asc' },
+  { label: 'Name (Z-A)', value: 'name:desc' }
+]
+
+// Computed sort value for USelectMenu binding
+const sortValue = computed({
+  get: () => `${sortBy.value}:${sortDirection.value}`,
+  set: (value: string) => {
+    const [newSortBy, newSortDirection] = value.split(':')
+    sortBy.value = newSortBy
+    sortDirection.value = newSortDirection as 'asc' | 'desc'
+  }
+})
 
 // Active filter count for badge
 const activeFilterCount = useFilterCount(
@@ -137,38 +164,50 @@ const perPage = 24
         :badge-count="activeFilterCount"
       >
         <template #search>
-          <UInput
-            v-model="searchQuery"
-            placeholder="Search backgrounds..."
-            class="flex-1"
-          >
-            <template
-              v-if="searchQuery"
-              #trailing
+          <div class="flex gap-2 w-full">
+            <UInput
+              v-model="searchQuery"
+              placeholder="Search backgrounds..."
+              class="flex-1"
             >
-              <UButton
-                color="neutral"
-                variant="link"
-                :padded="false"
-                @click="searchQuery = ''"
-              />
-            </template>
-          </UInput>
+              <template
+                v-if="searchQuery"
+                #trailing
+              >
+                <UButton
+                  color="neutral"
+                  variant="link"
+                  :padded="false"
+                  @click="searchQuery = ''"
+                />
+              </template>
+            </UInput>
+
+            <!-- Source filter moved to prominent position -->
+            <UiFilterMultiSelect
+              v-model="selectedSources"
+              :options="sourceOptions"
+              placeholder="All Sources"
+              color="background"
+              class="w-full sm:w-48"
+              data-testid="source-filter"
+            />
+
+            <USelectMenu
+              v-model="sortValue"
+              :items="sortOptions"
+              value-key="value"
+              placeholder="Sort by..."
+              size="md"
+              class="w-full sm:w-48"
+            />
+          </div>
         </template>
 
         <!-- Filters -->
         <UiFilterLayout>
           <!-- Primary Filters: Quick access filters -->
           <template #primary>
-            <UiFilterMultiSelect
-              v-model="selectedSources"
-              :options="sourceOptions"
-              placeholder="All Sources"
-              label="Sources"
-              color="background"
-              class="w-full sm:w-48"
-            />
-
             <UiFilterMultiSelect
               v-model="selectedSkills"
               :options="skillOptions"

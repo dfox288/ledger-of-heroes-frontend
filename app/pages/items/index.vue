@@ -8,6 +8,10 @@ const route = useRoute()
 // Filter collapse state
 const filtersOpen = ref(false)
 
+// Sorting state
+const sortBy = ref<string>((route.query.sort_by as string) || 'name')
+const sortDirection = ref<'asc' | 'desc'>((route.query.sort_direction as 'asc' | 'desc') || 'asc')
+
 // Custom filter state (entity-specific) - PRIMARY section
 const selectedType = ref(route.query.type ? Number(route.query.type) : null)
 const selectedRarity = ref((route.query.rarity as string) || null)
@@ -172,6 +176,24 @@ const propertyOptions = computed(() => {
   }))
 })
 
+// Sort options
+const sortOptions = [
+  { label: 'Name (A-Z)', value: 'name:asc' },
+  { label: 'Name (Z-A)', value: 'name:desc' },
+  { label: 'Rarity (Common→Legendary)', value: 'rarity:asc' },
+  { label: 'Rarity (Legendary→Common)', value: 'rarity:desc' }
+]
+
+// Computed sort value for USelectMenu binding
+const sortValue = computed({
+  get: () => `${sortBy.value}:${sortDirection.value}`,
+  set: (value: string) => {
+    const [newSortBy, newSortDirection] = value.split(':')
+    sortBy.value = newSortBy
+    sortDirection.value = newSortDirection as 'asc' | 'desc'
+  }
+})
+
 // Query builder for custom filters (hybrid: composable + manual for special cases)
 const queryBuilder = computed(() => {
   const params: Record<string, unknown> = {}
@@ -264,6 +286,10 @@ const queryBuilder = computed(() => {
   if (meilisearchFilters.length > 0) {
     params.filter = meilisearchFilters.join(' AND ')
   }
+
+  // Add sorting
+  params.sort_by = sortBy.value
+  params.sort_direction = sortDirection.value
 
   return params
 })
@@ -379,23 +405,44 @@ const activeFilterCount = useFilterCount(
         :badge-count="activeFilterCount"
       >
         <template #search>
-          <UInput
-            v-model="searchQuery"
-            placeholder="Search items..."
-            class="flex-1"
-          >
-            <template
-              v-if="searchQuery"
-              #trailing
+          <div class="flex gap-2 w-full">
+            <UInput
+              v-model="searchQuery"
+              placeholder="Search items..."
+              class="flex-1"
             >
-              <UButton
-                color="neutral"
-                variant="link"
-                :padded="false"
-                @click="searchQuery = ''"
-              />
-            </template>
-          </UInput>
+              <template
+                v-if="searchQuery"
+                #trailing
+              >
+                <UButton
+                  color="neutral"
+                  variant="link"
+                  :padded="false"
+                  @click="searchQuery = ''"
+                />
+              </template>
+            </UInput>
+
+            <!-- Source filter moved to prominent position -->
+            <UiFilterMultiSelect
+              v-model="selectedSources"
+              :options="sourceOptions"
+              placeholder="All Sources"
+              color="item"
+              class="w-full sm:w-48"
+              data-testid="source-filter"
+            />
+
+            <USelectMenu
+              v-model="sortValue"
+              :items="sortOptions"
+              value-key="value"
+              placeholder="Sort by..."
+              size="md"
+              class="w-full sm:w-48"
+            />
+          </div>
         </template>
 
         <!-- Filter Content -->
@@ -466,49 +513,40 @@ const activeFilterCount = useFilterCount(
             />
 
             <!-- Strength Requirement Filter (TIER 2 HIGH IMPACT) -->
-            <div>
-              <label class="text-sm font-medium mb-2 block">Strength Req</label>
-              <USelectMenu
-                v-model="selectedStrengthReq"
-                :items="strengthReqOptions"
-                value-key="value"
-                placeholder="Any"
-                size="md"
-                class="w-full sm:w-32"
-                data-testid="strength-req-filter"
-              />
-            </div>
+            <USelectMenu
+              v-model="selectedStrengthReq"
+              :items="strengthReqOptions"
+              value-key="value"
+              placeholder="Strength Req"
+              size="md"
+              class="w-full sm:w-32"
+              data-testid="strength-req-filter"
+            />
           </template>
 
           <!-- Advanced Filters: Multiselects (Properties, Damage Types, Sources) -->
           <template #advanced>
             <!-- Cost Range Filter -->
-            <div>
-              <label class="text-sm font-medium mb-2 block">Cost</label>
-              <USelectMenu
-                v-model="selectedCostRange"
-                :items="costRangeOptions"
-                value-key="value"
-                placeholder="All Prices"
-                size="md"
-                class="w-full sm:w-44"
-                data-testid="cost-filter"
-              />
-            </div>
+            <USelectMenu
+              v-model="selectedCostRange"
+              :items="costRangeOptions"
+              value-key="value"
+              placeholder="Cost"
+              size="md"
+              class="w-full sm:w-44"
+              data-testid="cost-filter"
+            />
 
             <!-- AC Range Filter -->
-            <div>
-              <label class="text-sm font-medium mb-2 block">Armor Class</label>
-              <USelectMenu
-                v-model="selectedACRange"
-                :items="acRangeOptions"
-                value-key="value"
-                placeholder="All AC"
-                size="md"
-                class="w-full sm:w-44"
-                data-testid="ac-filter"
-              />
-            </div>
+            <USelectMenu
+              v-model="selectedACRange"
+              :items="acRangeOptions"
+              value-key="value"
+              placeholder="Armor Class"
+              size="md"
+              class="w-full sm:w-44"
+              data-testid="ac-filter"
+            />
 
             <UiFilterMultiSelect
               v-model="selectedProperties"
@@ -524,15 +562,6 @@ const activeFilterCount = useFilterCount(
               :options="damageTypeOptions"
               label="Damage Types"
               placeholder="All Damage Types"
-              color="primary"
-              class="w-full sm:w-48"
-            />
-
-            <UiFilterMultiSelect
-              v-model="selectedSources"
-              :options="sourceOptions"
-              label="Sources"
-              placeholder="All Sources"
               color="primary"
               class="w-full sm:w-48"
             />
@@ -558,18 +587,15 @@ const activeFilterCount = useFilterCount(
               data-testid="versatile-damage-filter"
             />
 
-            <div>
-              <label class="text-sm font-medium mb-2 block">Range</label>
-              <USelectMenu
-                v-model="selectedRange"
-                :items="rangeOptions"
-                value-key="value"
-                placeholder="Any Range"
-                size="md"
-                class="w-full sm:w-48"
-                data-testid="range-filter"
-              />
-            </div>
+            <USelectMenu
+              v-model="selectedRange"
+              :items="rangeOptions"
+              value-key="value"
+              placeholder="Range"
+              size="md"
+              class="w-full sm:w-48"
+              data-testid="range-filter"
+            />
 
             <UiFilterMultiSelect
               v-model="selectedRechargeTiming"

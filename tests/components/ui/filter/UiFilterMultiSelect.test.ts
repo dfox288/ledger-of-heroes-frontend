@@ -128,17 +128,18 @@ describe('UiFilterMultiSelect', () => {
   })
 
   describe('Styling Props', () => {
-    it('displays count in badge', async () => {
+    it('accepts custom color prop', async () => {
       const wrapper = await mountSuspended(UiFilterMultiSelect, {
         props: {
           modelValue: ['fire', 'cold', 'lightning'],
           label: 'Damage Types',
-          options: defaultOptions
+          options: defaultOptions,
+          color: 'spell'
         }
       })
 
-      const badge = wrapper.findComponent({ name: 'UBadge' })
-      expect(badge.text()).toBe('3')
+      // Verify component receives the color prop
+      expect(wrapper.props('color')).toBe('spell')
     })
   })
 
@@ -166,8 +167,9 @@ describe('UiFilterMultiSelect', () => {
         }
       })
 
-      const badge = wrapper.findComponent({ name: 'UBadge' })
-      expect(badge.text()).toBe('6')
+      // Verify all 6 options are selected
+      expect(wrapper.props('modelValue')).toHaveLength(6)
+      expect(wrapper.props('modelValue')).toEqual(['fire', 'cold', 'lightning', 'thunder', 'acid', 'poison'])
     })
 
     it('handles rapid selection changes', async () => {

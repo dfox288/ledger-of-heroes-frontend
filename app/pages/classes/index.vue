@@ -4,6 +4,10 @@ import type { CharacterClass, Source } from '~/types'
 
 const route = useRoute()
 
+// Sorting state
+const sortBy = ref<string>((route.query.sort_by as string) || 'name')
+const sortDirection = ref<'asc' | 'desc'>((route.query.sort_direction as 'asc' | 'desc') || 'asc')
+
 // Custom filter state (entity-specific)
 const isBaseClass = ref<string | null>((route.query.is_base_class as string) || null)
 const isSpellcaster = ref<string | null>((route.query.is_spellcaster as string) || null)
@@ -52,8 +56,26 @@ const sourceOptions = computed(() =>
 
 const selectedSources = ref<string[]>([])
 
+// Sort options
+const sortOptions = [
+  { label: 'Name (A-Z)', value: 'name:asc' },
+  { label: 'Name (Z-A)', value: 'name:desc' },
+  { label: 'Hit Die (Low→High)', value: 'hit_die:asc' },
+  { label: 'Hit Die (High→Low)', value: 'hit_die:desc' }
+]
+
+// Computed sort value for USelectMenu binding
+const sortValue = computed({
+  get: () => `${sortBy.value}:${sortDirection.value}`,
+  set: (value: string) => {
+    const [newSortBy, newSortDirection] = value.split(':')
+    sortBy.value = newSortBy
+    sortDirection.value = newSortDirection as 'asc' | 'desc'
+  }
+})
+
 // Query builder (using composable)
-const { queryParams } = useMeilisearchFilters([
+const { queryParams: filterParams } = useMeilisearchFilters([
   { ref: isBaseClass, field: 'is_base_class', type: 'boolean' },
   { ref: isSpellcaster, field: 'is_spellcaster', type: 'boolean' },
   { ref: selectedHitDice, field: 'hit_die', type: 'in' },
@@ -61,6 +83,13 @@ const { queryParams } = useMeilisearchFilters([
   { ref: selectedParentClass, field: 'parent_class_name' },
   { ref: selectedSources, field: 'source_codes', type: 'in' }
 ])
+
+// Combined query params (filters + sorting)
+const queryParams = computed(() => ({
+  ...filterParams.value,
+  sort_by: sortBy.value,
+  sort_direction: sortDirection.value
+}))
 
 // Use entity list composable for all shared logic
 const {
@@ -134,23 +163,44 @@ const perPage = 24
         :badge-count="activeFilterCount"
       >
         <template #search>
-          <UInput
-            v-model="searchQuery"
-            placeholder="Search classes..."
-            class="flex-1"
-          >
-            <template
-              v-if="searchQuery"
-              #trailing
+          <div class="flex gap-2 w-full">
+            <UInput
+              v-model="searchQuery"
+              placeholder="Search classes..."
+              class="flex-1"
             >
-              <UButton
-                color="neutral"
-                variant="link"
-                :padded="false"
-                @click="searchQuery = ''"
-              />
-            </template>
-          </UInput>
+              <template
+                v-if="searchQuery"
+                #trailing
+              >
+                <UButton
+                  color="neutral"
+                  variant="link"
+                  :padded="false"
+                  @click="searchQuery = ''"
+                />
+              </template>
+            </UInput>
+
+            <!-- Source filter moved to prominent position -->
+            <UiFilterMultiSelect
+              v-model="selectedSources"
+              :options="sourceOptions"
+              placeholder="All Sources"
+              color="class"
+              class="w-full sm:w-48"
+              data-testid="source-filter"
+            />
+
+            <USelectMenu
+              v-model="sortValue"
+              :items="sortOptions"
+              value-key="value"
+              placeholder="Sort by..."
+              size="md"
+              class="w-full sm:w-48"
+            />
+          </div>
         </template>
 
         <UiFilterLayout>
@@ -186,16 +236,6 @@ const perPage = 24
               class="w-full sm:w-48"
               data-testid="parent-class-filter"
             />
-
-            <!-- Sources Filter -->
-            <UiFilterMultiSelect
-              v-model="selectedSources"
-              :options="sourceOptions"
-              placeholder="All Sources"
-              color="secondary"
-              class="w-full sm:w-48"
-              data-testid="source-filter"
-            />
           </template>
 
           <template #quick>
@@ -225,6 +265,7 @@ const perPage = 24
           </template>
 
           <template #advanced />
+
 
           <template #actions />
         </UiFilterLayout>

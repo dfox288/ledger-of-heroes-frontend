@@ -152,8 +152,8 @@ const sortValue = computed({
   get: () => `${sortBy.value}:${sortDirection.value}`,
   set: (value: string) => {
     const [newSortBy, newSortDirection] = value.split(':')
-    sortBy.value = newSortBy
-    sortDirection.value = newSortDirection as 'asc' | 'desc'
+    if (newSortBy) sortBy.value = newSortBy
+    if (newSortDirection) sortDirection.value = newSortDirection as 'asc' | 'desc'
   }
 })
 
@@ -351,6 +351,17 @@ const activeFilterCount = useFilterCount(
                 />
               </template>
             </UInput>
+
+            <!-- Source filter moved to prominent position -->
+            <UiFilterMultiSelect
+              v-model="selectedSources"
+              :options="sourceOptions"
+              placeholder="All Sources"
+              color="primary"
+              class="w-full sm:w-48"
+              data-testid="source-filter"
+            />
+
             <USelectMenu
               v-model="sortValue"
               :items="sortOptions"
@@ -469,15 +480,6 @@ const activeFilterCount = useFilterCount(
               :options="savingThrowOptions"
               label="Saving Throws"
               placeholder="All Saving Throws"
-              color="primary"
-              class="w-full sm:w-48"
-            />
-
-            <UiFilterMultiSelect
-              v-model="selectedSources"
-              :options="sourceOptions"
-              label="Sources"
-              placeholder="All Sources"
               color="primary"
               class="w-full sm:w-48"
             />

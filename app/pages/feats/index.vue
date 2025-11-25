@@ -188,6 +188,17 @@ const activeFilterCount = useFilterCount(
                 />
               </template>
             </UInput>
+
+            <!-- Source filter moved to prominent position -->
+            <UiFilterMultiSelect
+              v-model="selectedSources"
+              :options="sourceOptions"
+              placeholder="All Sources"
+              color="feat"
+              class="w-full sm:w-48"
+              data-testid="source-filter"
+            />
+
             <USelectMenu
               v-model="sortValue"
               :items="sortOptions"
@@ -224,17 +235,6 @@ const activeFilterCount = useFilterCount(
               color="primary"
               class="w-full sm:w-64"
             />
-
-            <!-- Sources Multiselect -->
-            <UiFilterMultiSelect
-              v-model="selectedSources"
-              data-testid="sources-filter"
-              :options="sourceOptions"
-              label="Source"
-              placeholder="All Sources"
-              color="primary"
-              class="w-full sm:w-48"
-            />
           </template>
 
           <!-- Quick Toggles: Binary filters -->
@@ -264,8 +264,9 @@ const activeFilterCount = useFilterCount(
             />
           </template>
 
-          <!-- Advanced Filters: Empty for now -->
+          <!-- Advanced Filters: Less frequently used -->
           <template #advanced />
+
 
           <!-- Actions: Empty (Clear Filters moved to chips row) -->
           <template #actions />

@@ -7,6 +7,10 @@ const route = useRoute()
 // Filter collapse state
 const filtersOpen = ref(false)
 
+// Sorting state
+const sortBy = ref<string>((route.query.sort_by as string) || 'name')
+const sortDirection = ref<'asc' | 'desc'>((route.query.sort_direction as 'asc' | 'desc') || 'asc')
+
 // Custom filter state (entity-specific)
 const selectedSize = ref((route.query.size as string) || '')
 const speedMin = ref(Number(route.query.speed_min) || 10)
@@ -55,11 +59,14 @@ const sourceOptions = computed(() => {
 
 // Parent race filter options
 const parentRaceOptions = computed(() => {
-  if (!baseRaces.value) return []
-  return baseRaces.value.map(race => ({
-    label: race.name,
-    value: race.name
-  }))
+  const options: Array<{ label: string, value: string }> = [{ label: 'All Races', value: '' }]
+  if (baseRaces.value) {
+    options.push(...baseRaces.value.map(race => ({
+      label: race.name,
+      value: race.name
+    })))
+  }
+  return options
 })
 
 // Ability score filter options (hardcoded - standard D&D abilities)
@@ -84,6 +91,24 @@ const abilityBonusFilter = computed(() => {
   return conditions.join(' OR ')
 })
 
+// Sort options
+const sortOptions = [
+  { label: 'Name (A-Z)', value: 'name:asc' },
+  { label: 'Name (Z-A)', value: 'name:desc' },
+  { label: 'Speed (Low→High)', value: 'speed:asc' },
+  { label: 'Speed (High→Low)', value: 'speed:desc' }
+]
+
+// Computed sort value for USelectMenu binding
+const sortValue = computed({
+  get: () => `${sortBy.value}:${sortDirection.value}`,
+  set: (value: string) => {
+    const [newSortBy, newSortDirection] = value.split(':')
+    if (newSortBy) sortBy.value = newSortBy
+    if (newSortDirection) sortDirection.value = newSortDirection as 'asc' | 'desc'
+  }
+})
+
 // Query builder for custom filters (using composable)
 const baseFilters = useMeilisearchFilters([
   { ref: selectedSize, field: 'size_code' },
@@ -104,6 +129,10 @@ const queryParams = computed(() => {
       ? `${existingFilter} AND (${abilityBonusFilter.value})`
       : abilityBonusFilter.value
   }
+
+  // Add sorting
+  params.sort_by = sortBy.value
+  params.sort_direction = sortDirection.value
 
   return params
 })
@@ -188,23 +217,44 @@ const perPage = 24
         :badge-count="activeFilterCount"
       >
         <template #search>
-          <UInput
-            v-model="searchQuery"
-            placeholder="Search races..."
-            class="flex-1"
-          >
-            <template
-              v-if="searchQuery"
-              #trailing
+          <div class="flex gap-2 w-full">
+            <UInput
+              v-model="searchQuery"
+              placeholder="Search races..."
+              class="flex-1"
             >
-              <UButton
-                color="neutral"
-                variant="link"
-                :padded="false"
-                @click="searchQuery = ''"
-              />
-            </template>
-          </UInput>
+              <template
+                v-if="searchQuery"
+                #trailing
+              >
+                <UButton
+                  color="neutral"
+                  variant="link"
+                  :padded="false"
+                  @click="searchQuery = ''"
+                />
+              </template>
+            </UInput>
+
+            <!-- Source filter moved to prominent position -->
+            <UiFilterMultiSelect
+              v-model="selectedSources"
+              :options="sourceOptions"
+              placeholder="All Sources"
+              color="race"
+              class="w-full sm:w-48"
+              data-testid="source-filter"
+            />
+
+            <USelectMenu
+              v-model="sortValue"
+              :items="sortOptions"
+              value-key="value"
+              placeholder="Sort by..."
+              size="md"
+              class="w-full sm:w-48"
+            />
+          </div>
         </template>
 
         <UiFilterLayout>
@@ -218,6 +268,7 @@ const perPage = 24
                 v-model="selectedSize"
                 :items="sizeOptions"
                 value-key="value"
+                text-key="label"
                 placeholder="All Sizes"
                 size="md"
                 class="w-full sm:w-48"
@@ -257,14 +308,6 @@ const perPage = 24
                 </div>
               </div>
             </div>
-
-            <!-- Source Filter -->
-            <UiFilterMultiSelect
-              v-model="selectedSources"
-              label="Source"
-              :options="sourceOptions"
-              data-testid="source-filter"
-            />
 
             <!-- Ability Score Bonuses Filter -->
             <UiFilterMultiSelect
@@ -309,9 +352,13 @@ const perPage = 24
               <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Parent Race
               </label>
-              <USelect
+              <USelectMenu
                 v-model="selectedParentRace"
-                :options="[{ label: 'All Races', value: '' }, ...parentRaceOptions]"
+                :items="parentRaceOptions"
+                value-key="value"
+                text-key="label"
+                placeholder="All Races"
+                size="md"
                 class="w-full sm:w-48"
                 data-testid="parent-race-filter"
               />

@@ -107,16 +107,6 @@ const clearAll = () => {
         />
       </div>
 
-      <!-- Selection Count Badge -->
-      <UBadge
-        v-if="normalizedValue.length > 0"
-        :color="color as any"
-        size="md"
-        variant="soft"
-      >
-        {{ normalizedValue.length }}
-      </UBadge>
-
       <!-- Clear Button -->
       <UButton
         v-if="showClearButton"

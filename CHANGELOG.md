@@ -11,12 +11,31 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- **Filter Section Standardization & UX Improvements (2025-11-25)** - Standardized all filter sections to use UiFilterLayout component
-  - **Races Page:** Refactored to use UiFilterLayout (Primary/Quick/Advanced sections), converted Size filter from 6 buttons to dropdown (saves ~650px horizontal space), compressed Speed sliders side-by-side (saves ~50px vertical)
-  - **Classes Page:** Refactored to use UiFilterLayout, consistent `w-48` width classes on all filters for visual consistency
-  - **Monsters Page:** Reorganized Quick section (10 toggles → 5 Quick combat filters + 5 Advanced movement filters) for better logical grouping
-  - **Impact:** 7/7 entity pages now use consistent UiFilterLayout pattern, improved space efficiency on Races page, better filter organization on Monsters page
-  - See filter audit report for complete analysis and rationale
+- **Sorting Added to All List Pages (2025-11-25)** - Added sort dropdowns to 5 entity pages that didn't have sorting
+  - **Items:** Name (A-Z/Z-A), Rarity (Common→Legendary/Legendary→Common)
+  - **Races:** Name (A-Z/Z-A), Speed (Low→High/High→Low)
+  - **Classes:** Name (A-Z/Z-A), Hit Die (Low→High/High→Low)
+  - **Backgrounds:** Name (A-Z/Z-A)
+  - **Monsters:** Name (A-Z/Z-A), CR (Low→High/High→Low)
+  - All pages now have consistent sorting interface next to search input
+
+### Changed
+
+- **Source Filter Repositioned to Prominent Location (2025-11-25)** - Moved Source filter from Advanced section to search bar
+  - Positioned between search input and sort dropdown on all 6 entity pages (Spells, Items, Races, Classes, Backgrounds, Feats)
+  - Rationale: Sources are important metadata for quickly filtering content by sourcebook (PHB, XGE, TCE, etc.)
+  - Improved accessibility - no longer hidden in collapsed Advanced section
+- **Filter Section Standardization & UX Improvements (2025-11-25)** - Fixed critical filter UX issues and standardized layouts
+  - **Races Page:** Fixed Size dropdown (wasn't opening), fixed Parent Race dropdown (was empty), refactored to use UiFilterLayout, compressed Speed sliders side-by-side
+  - **Classes Page:** Refactored to use UiFilterLayout, consistent `w-48` width classes on all filters
+  - **Monsters Page:** Restored original Quick section (all 10 toggles together) per user feedback
+  - **Items Page:** Fixed vertical alignment skew by removing inconsistent label wrappers
+  - **All Pages:** Standardized Source filter placement in search bar (between search and sort)
+  - **Impact:** 7/7 entity pages use consistent UiFilterLayout, improved space efficiency, better filter organization
+- **UiFilterMultiSelect Component Cleanup (2025-11-25)** - Removed redundant selection count badge
+  - Removed badge showing number of selected items (e.g., "3") from multiselect component
+  - Rationale: Count already shown in global "Active filters" badge at top of filter section
+  - Cleaner UI with less visual noise
 
 ### Added
 

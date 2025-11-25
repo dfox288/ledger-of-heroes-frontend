@@ -4,6 +4,10 @@ import type { Monster, Size } from '~/types'
 
 const route = useRoute()
 
+// Sorting state
+const sortBy = ref<string>((route.query.sort_by as string) || 'name')
+const sortDirection = ref<'asc' | 'desc'>((route.query.sort_direction as 'asc' | 'desc') || 'asc')
+
 // Custom filter state
 // Note: UiFilterMultiSelect works with strings, so we store as strings and convert to numbers for filtering
 const selectedCRs = ref<string[]>(
@@ -145,6 +149,24 @@ const armorTypeOptions = [
   { label: 'Unarmored Defense', value: 'Unarmored Defense' }
 ]
 
+// Sort options
+const sortOptions = [
+  { label: 'Name (A-Z)', value: 'name:asc' },
+  { label: 'Name (Z-A)', value: 'name:desc' },
+  { label: 'CR (Low→High)', value: 'challenge_rating:asc' },
+  { label: 'CR (High→Low)', value: 'challenge_rating:desc' }
+]
+
+// Computed sort value for USelectMenu binding
+const sortValue = computed({
+  get: () => `${sortBy.value}:${sortDirection.value}`,
+  set: (value: string) => {
+    const [newSortBy, newSortDirection] = value.split(':')
+    if (newSortBy) sortBy.value = newSortBy
+    if (newSortDirection) sortDirection.value = newSortDirection as 'asc' | 'desc'
+  }
+})
+
 // Query builder (using composable for all filters)
 const { queryParams: filterParams } = useMeilisearchFilters([
   // CR multiselect filter (convert strings to numbers for API)
@@ -227,6 +249,10 @@ const queryBuilder = computed(() => {
   if (meilisearchFilters.length > 0) {
     params.filter = meilisearchFilters.join(' AND ')
   }
+
+  // Add sorting
+  params.sort_by = sortBy.value
+  params.sort_direction = sortDirection.value
 
   return params
 })
@@ -398,23 +424,33 @@ const perPage = 24
         :badge-count="activeFilterCount"
       >
         <template #search>
-          <UInput
-            v-model="searchQuery"
-            placeholder="Search monsters..."
-            class="flex-1"
-          >
-            <template
-              v-if="searchQuery"
-              #trailing
+          <div class="flex gap-2 w-full">
+            <UInput
+              v-model="searchQuery"
+              placeholder="Search monsters..."
+              class="flex-1"
             >
-              <UButton
-                color="neutral"
-                variant="link"
-                :padded="false"
-                @click="searchQuery = ''"
-              />
-            </template>
-          </UInput>
+              <template
+                v-if="searchQuery"
+                #trailing
+              >
+                <UButton
+                  color="neutral"
+                  variant="link"
+                  :padded="false"
+                  @click="searchQuery = ''"
+                />
+              </template>
+            </UInput>
+            <USelectMenu
+              v-model="sortValue"
+              :items="sortOptions"
+              value-key="value"
+              placeholder="Sort by..."
+              size="md"
+              class="w-full sm:w-48"
+            />
+          </div>
         </template>
 
         <UiFilterLayout>
@@ -462,7 +498,7 @@ const perPage = 24
             />
           </template>
 
-          <!-- Quick Toggles: Combat/Encounter filters (Legendary, Lair Actions, Reactions, Spellcaster, Magic Resistance) -->
+          <!-- Quick Toggles: ALL 10 toggles together -->
           <template #quick>
             <UiFilterToggle
               v-model="isLegendary"
@@ -475,58 +511,6 @@ const perPage = 24
               ]"
             />
 
-            <UiFilterToggle
-              v-model="hasLairActions"
-              data-testid="has-lair-actions-toggle"
-              label="Has Lair Actions"
-              color="warning"
-              :options="[
-                { value: null, label: 'All' },
-                { value: '1', label: 'Yes' },
-                { value: '0', label: 'No' }
-              ]"
-            />
-
-            <UiFilterToggle
-              v-model="hasReactions"
-              data-testid="has-reactions-toggle"
-              label="Has Reactions"
-              color="secondary"
-              :options="[
-                { value: null, label: 'All' },
-                { value: '1', label: 'Yes' },
-                { value: '0', label: 'No' }
-              ]"
-            />
-
-            <UiFilterToggle
-              v-model="isSpellcaster"
-              data-testid="is-spellcaster-toggle"
-              label="Is Spellcaster"
-              color="primary"
-              :options="[
-                { value: null, label: 'All' },
-                { value: '1', label: 'Yes' },
-                { value: '0', label: 'No' }
-              ]"
-            />
-
-            <UiFilterToggle
-              v-model="hasMagicResistance"
-              data-testid="has-magic-resistance-toggle"
-              label="Has Magic Resistance"
-              color="success"
-              :options="[
-                { value: null, label: 'All' },
-                { value: '1', label: 'Yes' },
-                { value: '0', label: 'No' }
-              ]"
-            />
-          </template>
-
-          <!-- Advanced Filters: Movement toggles + Armor Type + AC + HP -->
-          <template #advanced>
-            <!-- Movement Toggles -->
             <UiFilterToggle
               v-model="hasFly"
               data-testid="has-fly-toggle"
@@ -587,6 +571,57 @@ const perPage = 24
               ]"
             />
 
+            <UiFilterToggle
+              v-model="hasLairActions"
+              data-testid="has-lair-actions-toggle"
+              label="Has Lair Actions"
+              color="warning"
+              :options="[
+                { value: null, label: 'All' },
+                { value: '1', label: 'Yes' },
+                { value: '0', label: 'No' }
+              ]"
+            />
+
+            <UiFilterToggle
+              v-model="hasReactions"
+              data-testid="has-reactions-toggle"
+              label="Has Reactions"
+              color="secondary"
+              :options="[
+                { value: null, label: 'All' },
+                { value: '1', label: 'Yes' },
+                { value: '0', label: 'No' }
+              ]"
+            />
+
+            <UiFilterToggle
+              v-model="isSpellcaster"
+              data-testid="is-spellcaster-toggle"
+              label="Is Spellcaster"
+              color="primary"
+              :options="[
+                { value: null, label: 'All' },
+                { value: '1', label: 'Yes' },
+                { value: '0', label: 'No' }
+              ]"
+            />
+
+            <UiFilterToggle
+              v-model="hasMagicResistance"
+              data-testid="has-magic-resistance-toggle"
+              label="Has Magic Resistance"
+              color="success"
+              :options="[
+                { value: null, label: 'All' },
+                { value: '1', label: 'Yes' },
+                { value: '0', label: 'No' }
+              ]"
+            />
+          </template>
+
+          <!-- Advanced Filters: ONLY 3 stat filters (Armor Type, AC, HP) -->
+          <template #advanced>
             <!-- Armor Type Filter Multiselect -->
             <div>
               <label class="text-sm font-medium mb-2 block">Armor Type</label>
