@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue'
-import type { Feat, AbilityScore, Source } from '~/types'
+import type { Feat, AbilityScore } from '~/types'
 
 const route = useRoute()
 
@@ -10,27 +10,25 @@ const filtersOpen = ref(false)
 // Sorting state
 const sortBy = ref<string>((route.query.sort_by as string) || 'name')
 const sortDirection = ref<'asc' | 'desc'>((route.query.sort_direction as 'asc' | 'desc') || 'asc')
+const sortValue = useSortValue(sortBy, sortDirection)
 
-// Custom filter state (entity-specific)
+// Source filter (using composable)
+const { selectedSources, sourceOptions, getSourceName, clearSources } = useSourceFilter()
+
+// Entity-specific filter state
 const hasPrerequisites = ref<string | null>((route.query.has_prerequisites as string) || null)
 const grantsProficiencies = ref<string | null>((route.query.grants_proficiencies as string) || null)
-
-// Multi-select filters
 const selectedImprovedAbilities = ref<string[]>(
   route.query.improved_ability ? (Array.isArray(route.query.improved_ability) ? route.query.improved_ability : [route.query.improved_ability]) as string[] : []
 )
 const selectedPrerequisiteTypes = ref<string[]>(
   route.query.prerequisite_type ? (Array.isArray(route.query.prerequisite_type) ? route.query.prerequisite_type : [route.query.prerequisite_type]) as string[] : []
 )
-const selectedSources = ref<string[]>(
-  route.query.source ? (Array.isArray(route.query.source) ? route.query.source : [route.query.source]) as string[] : []
-)
 
-// Fetch reference data for filter options
+// Fetch reference data
 const { data: abilityScores } = useReferenceData<AbilityScore>('/ability-scores')
-const { data: sources } = useReferenceData<Source>('/sources')
 
-// Ability score filter options (for ASI)
+// Filter options
 const improvedAbilityOptions = computed(() => {
   if (!abilityScores.value) return []
   return abilityScores.value.map(ab => ({
@@ -39,39 +37,18 @@ const improvedAbilityOptions = computed(() => {
   }))
 })
 
-// Prerequisite type options
 const prerequisiteTypeOptions = [
   { label: 'Race Requirement', value: 'Race' },
   { label: 'Ability Score Requirement', value: 'AbilityScore' },
   { label: 'Proficiency Requirement', value: 'ProficiencyType' }
 ]
 
-// Source filter options
-const sourceOptions = computed(() => {
-  if (!sources.value) return []
-  return sources.value.map(source => ({
-    label: source.name,
-    value: source.code
-  }))
-})
-
-// Sort options
 const sortOptions = [
   { label: 'Name (A-Z)', value: 'name:asc' },
   { label: 'Name (Z-A)', value: 'name:desc' }
 ]
 
-// Computed sort value for USelectMenu binding
-const sortValue = computed({
-  get: () => `${sortBy.value}:${sortDirection.value}`,
-  set: (value: string) => {
-    const [newSortBy, newSortDirection] = value.split(':')
-    if (newSortBy) sortBy.value = newSortBy
-    if (newSortDirection) sortDirection.value = newSortDirection as 'asc' | 'desc'
-  }
-})
-
-// Query builder for custom filters (using composable)
+// Query builder for filters
 const { queryParams: filterParams } = useMeilisearchFilters([
   { ref: hasPrerequisites, field: 'has_prerequisites', type: 'boolean' },
   { ref: grantsProficiencies, field: 'grants_proficiencies', type: 'boolean' },
@@ -80,14 +57,13 @@ const { queryParams: filterParams } = useMeilisearchFilters([
   { ref: selectedSources, field: 'source_codes', type: 'in' }
 ])
 
-// Combined query params (filters + sorting)
 const queryParams = computed(() => ({
   ...filterParams.value,
   sort_by: sortBy.value,
   sort_direction: sortDirection.value
 }))
 
-// Use entity list composable for all shared logic
+// Use entity list composable
 const {
   searchQuery,
   currentPage,
@@ -109,39 +85,29 @@ const {
   }
 })
 
-// Type the data array
 const feats = computed(() => data.value as Feat[])
 
-// Clear all filters (base + custom)
+// Clear all filters
 const clearFilters = () => {
   clearBaseFilters()
+  clearSources()
   hasPrerequisites.value = null
   grantsProficiencies.value = null
   selectedImprovedAbilities.value = []
   selectedPrerequisiteTypes.value = []
-  selectedSources.value = []
 }
 
-// Get ability name for filter chips
+// Helper functions
 const getAbilityName = (code: string) => {
   const ability = abilityScores.value?.find(a => a.code === code)
   return ability ? `${ability.name} (${code})` : code
 }
 
-// Get prerequisite type label for chips
 const getPrerequisiteTypeLabel = (type: string) => {
   return prerequisiteTypeOptions.find(opt => opt.value === type)?.label || type
 }
 
-// Get source name for filter chips
-const getSourceName = (code: string) => {
-  return sources.value?.find(s => s.code === code)?.name || code
-}
-
-// Pagination settings
-const perPage = 24
-
-// Count active filters for collapse badge
+// Active filter count
 const activeFilterCount = useFilterCount(
   hasPrerequisites,
   grantsProficiencies,
@@ -149,11 +115,12 @@ const activeFilterCount = useFilterCount(
   selectedPrerequisiteTypes,
   selectedSources
 )
+
+const perPage = 24
 </script>
 
 <template>
   <div class="container mx-auto px-4 py-8 max-w-7xl">
-    <!-- Header -->
     <UiListPageHeader
       title="Feats"
       :total="totalResults"
@@ -162,7 +129,6 @@ const activeFilterCount = useFilterCount(
       :has-active-filters="hasActiveFilters"
     />
 
-    <!-- Search and Filters -->
     <div class="mb-6">
       <UiFilterCollapse
         v-model="filtersOpen"
@@ -170,51 +136,19 @@ const activeFilterCount = useFilterCount(
         :badge-count="activeFilterCount"
       >
         <template #search>
-          <div class="flex flex-wrap gap-2 w-full">
-            <UInput
-              v-model="searchQuery"
-              placeholder="Search feats..."
-              class="flex-1 min-w-[200px]"
-            >
-              <template
-                v-if="searchQuery"
-                #trailing
-              >
-                <UButton
-                  color="neutral"
-                  variant="link"
-                  :padded="false"
-                  @click="searchQuery = ''"
-                />
-              </template>
-            </UInput>
-
-            <!-- Source filter moved to prominent position -->
-            <UiFilterMultiSelect
-              v-model="selectedSources"
-              :options="sourceOptions"
-              placeholder="All Sources"
-              color="feat"
-              width-class="flex-1 min-w-[192px]"
-              data-testid="source-filter"
-            />
-
-            <USelectMenu
-              v-model="sortValue"
-              :items="sortOptions"
-              value-key="value"
-              placeholder="Sort by..."
-              size="md"
-              class="flex-1 min-w-[192px]"
-            />
-          </div>
+          <UiEntitySearchRow
+            v-model:search="searchQuery"
+            v-model:sources="selectedSources"
+            v-model:sort="sortValue"
+            placeholder="Search feats..."
+            :source-options="sourceOptions"
+            :sort-options="sortOptions"
+            color="feat"
+          />
         </template>
 
-        <!-- Filter Content -->
         <UiFilterLayout>
-          <!-- Primary Filters: Most frequently used -->
           <template #primary>
-            <!-- Improved Abilities (ASI) Multiselect -->
             <UiFilterMultiSelect
               v-model="selectedImprovedAbilities"
               data-testid="improved-abilities-filter"
@@ -225,7 +159,6 @@ const activeFilterCount = useFilterCount(
               class="w-full sm:w-64"
             />
 
-            <!-- Prerequisite Types Multiselect -->
             <UiFilterMultiSelect
               v-model="selectedPrerequisiteTypes"
               data-testid="prerequisite-types-filter"
@@ -237,7 +170,6 @@ const activeFilterCount = useFilterCount(
             />
           </template>
 
-          <!-- Quick Toggles: Binary filters -->
           <template #quick>
             <UiFilterToggle
               v-model="hasPrerequisites"
@@ -264,157 +196,93 @@ const activeFilterCount = useFilterCount(
             />
           </template>
 
-          <!-- Actions: Empty (Clear Filters moved to chips row) -->
           <template #actions />
         </UiFilterLayout>
       </UiFilterCollapse>
 
-      <!-- Active Filter Chips -->
-      <div
-        v-if="hasActiveFilters"
-        class="flex flex-wrap items-center justify-between gap-2 pt-2"
+      <UiFilterChips
+        :visible="hasActiveFilters"
+        :search-query="searchQuery"
+        :active-count="activeFilterCount"
+        @clear-search="searchQuery = ''"
+        @clear-all="clearFilters"
       >
-        <div class="flex flex-wrap items-center gap-2">
-          <span
-            v-if="activeFilterCount > 0 || searchQuery"
-            class="text-sm font-medium text-gray-600 dark:text-gray-400"
-          >
-            Active filters:
-          </span>
-          <!-- CHIP ORDER: Source → Entity-specific → Boolean toggles → Search (last) -->
-
-          <!-- 1. Source chips (neutral color) -->
-          <UButton
+        <template #sources>
+          <UiFilterChip
             v-for="source in selectedSources"
             :key="source"
-            data-testid="source-filter-chip"
-            size="xs"
             color="neutral"
-            variant="soft"
-            @click="selectedSources = selectedSources.filter(s => s !== source)"
+            test-id="source-filter-chip"
+            @remove="selectedSources = selectedSources.filter(s => s !== source)"
           >
-            {{ getSourceName(source) }} ✕
-          </UButton>
+            {{ getSourceName(source) }}
+          </UiFilterChip>
+        </template>
 
-          <!-- 2. Entity-specific: Improved Abilities, Prerequisite Types -->
-          <UButton
-            v-for="ability in selectedImprovedAbilities"
-            :key="ability"
-            data-testid="improved-ability-filter-chip"
-            size="xs"
-            color="feat"
-            variant="soft"
-            @click="selectedImprovedAbilities = selectedImprovedAbilities.filter(a => a !== ability)"
-          >
-            ASI: {{ getAbilityName(ability) }} ✕
-          </UButton>
-          <UButton
-            v-for="type in selectedPrerequisiteTypes"
-            :key="type"
-            data-testid="prerequisite-type-filter-chip"
-            size="xs"
-            color="feat"
-            variant="soft"
-            @click="selectedPrerequisiteTypes = selectedPrerequisiteTypes.filter(t => t !== type)"
-          >
-            Prereq: {{ getPrerequisiteTypeLabel(type) }} ✕
-          </UButton>
-
-          <!-- 3. Boolean toggles (primary color, "Label: Yes/No" format) -->
-          <UButton
-            v-if="hasPrerequisites !== null"
-            data-testid="has-prerequisites-filter-chip"
-            size="xs"
-            color="primary"
-            variant="soft"
-            @click="hasPrerequisites = null"
-          >
-            Has Prerequisites: {{ hasPrerequisites === '1' ? 'Yes' : 'No' }} ✕
-          </UButton>
-          <UButton
-            v-if="grantsProficiencies !== null"
-            data-testid="grants-proficiencies-filter-chip"
-            size="xs"
-            color="primary"
-            variant="soft"
-            @click="grantsProficiencies = null"
-          >
-            Grants Proficiencies: {{ grantsProficiencies === '1' ? 'Yes' : 'No' }} ✕
-          </UButton>
-
-          <!-- 4. Search query (always last, neutral color) -->
-          <UButton
-            v-if="searchQuery"
-            data-testid="search-filter-chip"
-            size="xs"
-            color="neutral"
-            variant="soft"
-            @click="searchQuery = ''"
-          >
-            "{{ searchQuery }}" ✕
-          </UButton>
-        </div>
-
-        <!-- Clear Filters Button (right-aligned) -->
-        <UButton
-          v-if="activeFilterCount > 0 || searchQuery"
-          color="neutral"
-          variant="soft"
-          size="sm"
-          @click="clearFilters"
+        <UiFilterChip
+          v-for="ability in selectedImprovedAbilities"
+          :key="ability"
+          color="feat"
+          test-id="improved-ability-filter-chip"
+          @remove="selectedImprovedAbilities = selectedImprovedAbilities.filter(a => a !== ability)"
         >
-          Clear filters
-        </UButton>
-      </div>
+          ASI: {{ getAbilityName(ability) }}
+        </UiFilterChip>
+        <UiFilterChip
+          v-for="type in selectedPrerequisiteTypes"
+          :key="type"
+          color="feat"
+          test-id="prerequisite-type-filter-chip"
+          @remove="selectedPrerequisiteTypes = selectedPrerequisiteTypes.filter(t => t !== type)"
+        >
+          Prereq: {{ getPrerequisiteTypeLabel(type) }}
+        </UiFilterChip>
+
+        <template #toggles>
+          <UiFilterChip
+            v-if="hasPrerequisites !== null"
+            color="primary"
+            test-id="has-prerequisites-filter-chip"
+            @remove="hasPrerequisites = null"
+          >
+            Has Prerequisites: {{ hasPrerequisites === '1' ? 'Yes' : 'No' }}
+          </UiFilterChip>
+          <UiFilterChip
+            v-if="grantsProficiencies !== null"
+            color="primary"
+            test-id="grants-proficiencies-filter-chip"
+            @remove="grantsProficiencies = null"
+          >
+            Grants Proficiencies: {{ grantsProficiencies === '1' ? 'Yes' : 'No' }}
+          </UiFilterChip>
+        </template>
+      </UiFilterChips>
     </div>
 
-    <!-- Loading State -->
-    <UiListSkeletonCards v-if="loading" />
-
-    <!-- Error State -->
-    <UiListErrorState
-      v-else-if="error"
+    <UiListStates
+      :loading="loading"
       :error="error"
-      entity-name="Feats"
-      @retry="refresh"
-    />
-
-    <!-- Empty State -->
-    <UiListEmptyState
-      v-else-if="feats.length === 0"
-      entity-name="feats"
+      :empty="feats.length === 0"
+      :meta="meta"
+      :total="totalResults"
+      entity-name="feat"
+      entity-name-plural="Feats"
       :has-filters="hasActiveFilters"
+      :current-page="currentPage"
+      :per-page="perPage"
+      @retry="refresh"
       @clear-filters="clearFilters"
-    />
-
-    <!-- Results -->
-    <div v-else>
-      <!-- Results count -->
-      <UiListResultsCount
-        :from="meta?.from || 0"
-        :to="meta?.to || 0"
-        :total="totalResults"
-        entity-name="feat"
-      />
-
-      <!-- Feats Grid -->
-      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
+      @update:current-page="currentPage = $event"
+    >
+      <template #grid>
         <FeatCard
           v-for="feat in feats"
           :key="feat.id"
           :feat="feat"
         />
-      </div>
+      </template>
+    </UiListStates>
 
-      <!-- Pagination -->
-      <UiListPagination
-        v-model="currentPage"
-        :total="totalResults"
-        :items-per-page="perPage"
-      />
-    </div>
-
-    <!-- Back to Home -->
     <UiBackLink />
   </div>
 </template>

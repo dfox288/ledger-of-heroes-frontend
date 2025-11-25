@@ -1,19 +1,33 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue'
-import type { CharacterClass, Source } from '~/types'
+import type { CharacterClass } from '~/types'
 
 const route = useRoute()
+
+// Filter collapse state
+const filtersOpen = ref(false)
 
 // Sorting state
 const sortBy = ref<string>((route.query.sort_by as string) || 'name')
 const sortDirection = ref<'asc' | 'desc'>((route.query.sort_direction as 'asc' | 'desc') || 'asc')
+const sortValue = useSortValue(sortBy, sortDirection)
 
-// Custom filter state (entity-specific)
+// Source filter (using composable)
+const { selectedSources, sourceOptions, getSourceName, clearSources } = useSourceFilter()
+
+// Entity-specific filter state
 const isBaseClass = ref<string | null>((route.query.is_base_class as string) || null)
 const isSpellcaster = ref<string | null>((route.query.is_spellcaster as string) || null)
-
-// Hit Die filter
 const selectedHitDice = ref<number[]>([])
+const selectedSpellcastingAbility = ref<string | null>(null)
+const selectedParentClass = ref<string | null>(null)
+
+// Fetch base classes for parent filter
+const { data: baseClasses } = useReferenceData<CharacterClass>('/classes', {
+  transform: (data) => data.filter(c => c.is_base_class === true)
+})
+
+// Filter options
 const hitDieOptions = [
   { label: 'd6', value: 6 },
   { label: 'd8', value: 8 },
@@ -21,19 +35,12 @@ const hitDieOptions = [
   { label: 'd12', value: 12 }
 ]
 
-// Spellcasting Ability filter
-const selectedSpellcastingAbility = ref<string | null>(null)
 const spellcastingAbilityOptions = [
   { label: 'All Abilities', value: null },
   { label: 'Intelligence', value: 'INT' },
   { label: 'Wisdom', value: 'WIS' },
   { label: 'Charisma', value: 'CHA' }
 ]
-
-// Parent Class filter - fetch base classes for dropdown
-const { data: baseClasses } = useReferenceData<CharacterClass>('/classes', {
-  transform: (data) => data.filter(c => c.is_base_class === true)
-})
 
 const parentClassOptions = computed(() => {
   const options = [{ label: 'All Classes', value: null }]
@@ -45,18 +52,6 @@ const parentClassOptions = computed(() => {
   return options
 })
 
-const selectedParentClass = ref<string | null>(null)
-
-// Source filter
-const { data: sources } = useReferenceData<Source>('/sources')
-
-const sourceOptions = computed(() =>
-  sources.value?.map(s => ({ label: s.name, value: s.code })) || []
-)
-
-const selectedSources = ref<string[]>([])
-
-// Sort options
 const sortOptions = [
   { label: 'Name (A-Z)', value: 'name:asc' },
   { label: 'Name (Z-A)', value: 'name:desc' },
@@ -64,17 +59,7 @@ const sortOptions = [
   { label: 'Hit Die (High→Low)', value: 'hit_die:desc' }
 ]
 
-// Computed sort value for USelectMenu binding
-const sortValue = computed({
-  get: () => `${sortBy.value}:${sortDirection.value}`,
-  set: (value: string) => {
-    const [newSortBy, newSortDirection] = value.split(':')
-    sortBy.value = newSortBy
-    sortDirection.value = newSortDirection as 'asc' | 'desc'
-  }
-})
-
-// Query builder (using composable)
+// Query builder
 const { queryParams: filterParams } = useMeilisearchFilters([
   { ref: isBaseClass, field: 'is_base_class', type: 'boolean' },
   { ref: isSpellcaster, field: 'is_spellcaster', type: 'boolean' },
@@ -84,14 +69,13 @@ const { queryParams: filterParams } = useMeilisearchFilters([
   { ref: selectedSources, field: 'source_codes', type: 'in' }
 ])
 
-// Combined query params (filters + sorting)
 const queryParams = computed(() => ({
   ...filterParams.value,
   sort_by: sortBy.value,
   sort_direction: sortDirection.value
 }))
 
-// Use entity list composable for all shared logic
+// Use entity list composable
 const {
   searchQuery,
   currentPage,
@@ -113,24 +97,20 @@ const {
   }
 })
 
-// Type the data array
 const classes = computed(() => data.value as CharacterClass[])
 
-// Clear all filters (base + custom)
+// Clear all filters
 const clearFilters = () => {
   clearBaseFilters()
+  clearSources()
   isBaseClass.value = null
   isSpellcaster.value = null
   selectedHitDice.value = []
   selectedSpellcastingAbility.value = null
   selectedParentClass.value = null
-  selectedSources.value = []
 }
 
-// Filter collapse state
-const filtersOpen = ref(false)
-
-// Active filter count for badge
+// Active filter count
 const activeFilterCount = useFilterCount(
   isBaseClass,
   isSpellcaster,
@@ -140,13 +120,11 @@ const activeFilterCount = useFilterCount(
   selectedSources
 )
 
-// Pagination settings
 const perPage = 24
 </script>
 
 <template>
   <div class="container mx-auto px-4 py-8 max-w-7xl">
-    <!-- Header -->
     <UiListPageHeader
       title="Classes"
       :total="totalResults"
@@ -155,7 +133,6 @@ const perPage = 24
       :has-active-filters="hasActiveFilters"
     />
 
-    <!-- Search and Filters -->
     <div class="mb-6">
       <UiFilterCollapse
         v-model="filtersOpen"
@@ -163,44 +140,15 @@ const perPage = 24
         :badge-count="activeFilterCount"
       >
         <template #search>
-          <div class="flex flex-wrap gap-2 w-full">
-            <UInput
-              v-model="searchQuery"
-              placeholder="Search classes..."
-              class="flex-1 min-w-[200px]"
-            >
-              <template
-                v-if="searchQuery"
-                #trailing
-              >
-                <UButton
-                  color="neutral"
-                  variant="link"
-                  :padded="false"
-                  @click="searchQuery = ''"
-                />
-              </template>
-            </UInput>
-
-            <!-- Source filter moved to prominent position -->
-            <UiFilterMultiSelect
-              v-model="selectedSources"
-              :options="sourceOptions"
-              placeholder="All Sources"
-              color="class"
-              width-class="flex-1 min-w-[192px]"
-              data-testid="source-filter"
-            />
-
-            <USelectMenu
-              v-model="sortValue"
-              :items="sortOptions"
-              value-key="value"
-              placeholder="Sort by..."
-              size="md"
-              class="flex-1 min-w-[192px]"
-            />
-          </div>
+          <UiEntitySearchRow
+            v-model:search="searchQuery"
+            v-model:sources="selectedSources"
+            v-model:sort="sortValue"
+            placeholder="Search classes..."
+            :source-options="sourceOptions"
+            :sort-options="sortOptions"
+            color="class"
+          />
         </template>
 
         <UiFilterLayout>
@@ -233,7 +181,6 @@ const perPage = 24
           </template>
 
           <template #quick>
-            <!-- Base Class filter -->
             <UiFilterToggle
               v-model="isBaseClass"
               label="Base Class Only"
@@ -245,7 +192,6 @@ const perPage = 24
               ]"
             />
 
-            <!-- Spellcaster filter -->
             <UiFilterToggle
               v-model="isSpellcaster"
               label="Spellcaster"
@@ -262,158 +208,96 @@ const perPage = 24
         </UiFilterLayout>
       </UiFilterCollapse>
 
-      <!-- Active Filter Chips -->
-      <div
-        v-if="hasActiveFilters"
-        data-testid="chips-container"
-        class="flex flex-wrap items-center justify-between gap-2 pt-2"
+      <UiFilterChips
+        :visible="hasActiveFilters"
+        :search-query="searchQuery"
+        :active-count="activeFilterCount"
+        @clear-search="searchQuery = ''"
+        @clear-all="clearFilters"
       >
-        <div class="flex flex-wrap items-center gap-2">
-          <span class="text-sm font-medium text-gray-600 dark:text-gray-400">Active filters:</span>
-          <!-- CHIP ORDER: Source → Entity-specific → Boolean toggles → Search (last) -->
-
-          <!-- 1. Source chips (neutral color) -->
-          <UButton
+        <template #sources>
+          <UiFilterChip
             v-for="source in selectedSources"
             :key="source"
-            data-testid="source-filter-chip"
-            size="xs"
             color="neutral"
-            variant="soft"
-            @click="selectedSources = selectedSources.filter(s => s !== source)"
+            test-id="source-filter-chip"
+            @remove="selectedSources = selectedSources.filter(s => s !== source)"
           >
-            {{ sources?.find(s => s.code === source)?.name || source }} ✕
-          </UButton>
+            {{ getSourceName(source) }}
+          </UiFilterChip>
+        </template>
 
-          <!-- 2. Entity-specific: Hit Die, Spellcasting Ability, Parent Class -->
-          <UButton
-            v-for="hitDie in selectedHitDice"
-            :key="hitDie"
-            data-testid="hit-die-filter-chip"
-            size="xs"
-            color="class"
-            variant="soft"
-            @click="selectedHitDice = selectedHitDice.filter(d => d !== hitDie)"
-          >
-            Hit Die: d{{ hitDie }} ✕
-          </UButton>
-          <UButton
-            v-if="selectedSpellcastingAbility"
-            data-testid="spellcasting-ability-filter-chip"
-            size="xs"
-            color="class"
-            variant="soft"
-            @click="selectedSpellcastingAbility = null"
-          >
-            Spellcasting: {{ spellcastingAbilityOptions.find(o => o.value === selectedSpellcastingAbility)?.label }} ✕
-          </UButton>
-          <UButton
-            v-if="selectedParentClass"
-            data-testid="parent-class-filter-chip"
-            size="xs"
-            color="class"
-            variant="soft"
-            @click="selectedParentClass = null"
-          >
-            Parent: {{ selectedParentClass }} ✕
-          </UButton>
-
-          <!-- 3. Boolean toggles (primary color, "Label: Yes/No" format) -->
-          <UButton
-            v-if="isBaseClass !== null"
-            data-testid="is-base-class-filter-chip"
-            size="xs"
-            color="primary"
-            variant="soft"
-            @click="isBaseClass = null"
-          >
-            Base Class: {{ isBaseClass === '1' ? 'Yes' : 'No' }} ✕
-          </UButton>
-          <UButton
-            v-if="isSpellcaster !== null"
-            data-testid="is-spellcaster-filter-chip"
-            size="xs"
-            color="primary"
-            variant="soft"
-            @click="isSpellcaster = null"
-          >
-            Spellcaster: {{ isSpellcaster === '1' ? 'Yes' : 'No' }} ✕
-          </UButton>
-
-          <!-- 4. Search query (always last, neutral color) -->
-          <UButton
-            v-if="searchQuery"
-            data-testid="search-filter-chip"
-            size="xs"
-            color="neutral"
-            variant="soft"
-            @click="searchQuery = ''"
-          >
-            "{{ searchQuery }}" ✕
-          </UButton>
-        </div>
-
-        <!-- Clear Filters Button (right-aligned) -->
-        <UButton
-          v-if="activeFilterCount > 0 || searchQuery"
-          data-testid="clear-filters-button"
-          color="neutral"
-          variant="soft"
-          size="sm"
-          @click="clearFilters"
+        <UiFilterChip
+          v-for="hitDie in selectedHitDice"
+          :key="hitDie"
+          color="class"
+          test-id="hit-die-filter-chip"
+          @remove="selectedHitDice = selectedHitDice.filter(d => d !== hitDie)"
         >
-          Clear filters
-        </UButton>
-      </div>
+          Hit Die: d{{ hitDie }}
+        </UiFilterChip>
+        <UiFilterChip
+          v-if="selectedSpellcastingAbility"
+          color="class"
+          test-id="spellcasting-ability-filter-chip"
+          @remove="selectedSpellcastingAbility = null"
+        >
+          Spellcasting: {{ spellcastingAbilityOptions.find(o => o.value === selectedSpellcastingAbility)?.label }}
+        </UiFilterChip>
+        <UiFilterChip
+          v-if="selectedParentClass"
+          color="class"
+          test-id="parent-class-filter-chip"
+          @remove="selectedParentClass = null"
+        >
+          Parent: {{ selectedParentClass }}
+        </UiFilterChip>
+
+        <template #toggles>
+          <UiFilterChip
+            v-if="isBaseClass !== null"
+            color="primary"
+            test-id="is-base-class-filter-chip"
+            @remove="isBaseClass = null"
+          >
+            Base Class: {{ isBaseClass === '1' ? 'Yes' : 'No' }}
+          </UiFilterChip>
+          <UiFilterChip
+            v-if="isSpellcaster !== null"
+            color="primary"
+            test-id="is-spellcaster-filter-chip"
+            @remove="isSpellcaster = null"
+          >
+            Spellcaster: {{ isSpellcaster === '1' ? 'Yes' : 'No' }}
+          </UiFilterChip>
+        </template>
+      </UiFilterChips>
     </div>
 
-    <!-- Loading State -->
-    <UiListSkeletonCards v-if="loading" />
-
-    <!-- Error State -->
-    <UiListErrorState
-      v-else-if="error"
+    <UiListStates
+      :loading="loading"
       :error="error"
-      entity-name="Classes"
-      @retry="refresh"
-    />
-
-    <!-- Empty State -->
-    <UiListEmptyState
-      v-else-if="classes.length === 0"
-      entity-name="classes"
+      :empty="classes.length === 0"
+      :meta="meta"
+      :total="totalResults"
+      entity-name="class"
+      entity-name-plural="Classes"
       :has-filters="hasActiveFilters"
+      :current-page="currentPage"
+      :per-page="perPage"
+      @retry="refresh"
       @clear-filters="clearFilters"
-    />
-
-    <!-- Results -->
-    <div v-else>
-      <!-- Results count -->
-      <UiListResultsCount
-        :from="meta?.from || 0"
-        :to="meta?.to || 0"
-        :total="totalResults"
-        entity-name="class"
-      />
-
-      <!-- Classes Grid -->
-      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
+      @update:current-page="currentPage = $event"
+    >
+      <template #grid>
         <ClassCard
           v-for="charClass in classes"
           :key="charClass.id"
           :character-class="charClass"
         />
-      </div>
+      </template>
+    </UiListStates>
 
-      <!-- Pagination -->
-      <UiListPagination
-        v-model="currentPage"
-        :total="totalResults"
-        :items-per-page="perPage"
-      />
-    </div>
-
-    <!-- Back to Home -->
     <UiBackLink />
   </div>
 </template>
