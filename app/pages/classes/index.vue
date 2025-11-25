@@ -220,7 +220,6 @@ const perPage = 24
               :options="spellcastingAbilityOptions"
               label="Spellcasting"
               placeholder="All Abilities"
-              width-class="w-full sm:w-48"
               data-testid="spellcasting-ability-filter"
             />
 
@@ -229,7 +228,6 @@ const perPage = 24
               :options="parentClassOptions"
               label="Parent Class"
               placeholder="All Classes"
-              width-class="w-full sm:w-48"
               data-testid="parent-class-filter"
             />
           </template>

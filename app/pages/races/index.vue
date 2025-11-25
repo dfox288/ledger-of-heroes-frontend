@@ -296,7 +296,6 @@ const perPage = 24
               :options="sizeOptions"
               label="Size"
               placeholder="All Sizes"
-              width-class="w-full sm:w-48"
               data-testid="size-filter"
             />
 
@@ -306,7 +305,6 @@ const perPage = 24
               :options="speedRangeOptions"
               label="Speed"
               placeholder="All Speeds"
-              width-class="w-full sm:w-44"
               data-testid="speed-filter"
             />
 
@@ -354,7 +352,6 @@ const perPage = 24
               :options="parentRaceOptions"
               label="Parent Race"
               placeholder="All Races"
-              width-class="w-full sm:w-48"
               data-testid="parent-race-filter"
             />
           </template>

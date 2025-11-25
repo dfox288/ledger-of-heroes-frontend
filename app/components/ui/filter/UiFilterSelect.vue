@@ -28,13 +28,13 @@ interface Props {
   options: Option[]
   /** Placeholder text when nothing selected */
   placeholder?: string
-  /** Width class (default: 'w-full sm:w-44') */
+  /** Width class (default: 'w-full sm:w-48' to match UiFilterMultiSelect) */
   widthClass?: string
 }
 
 const props = withDefaults(defineProps<Props>(), {
   placeholder: 'Select...',
-  widthClass: 'w-full sm:w-44'
+  widthClass: 'w-full sm:w-48'
 })
 
 const emit = defineEmits<{

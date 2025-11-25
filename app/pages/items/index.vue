@@ -454,7 +454,6 @@ const activeFilterCount = useFilterCount(
               :options="typeOptions"
               label="Item Type"
               placeholder="All Types"
-              width-class="w-full sm:w-48"
               data-testid="type-filter"
             />
 
@@ -463,7 +462,6 @@ const activeFilterCount = useFilterCount(
               :options="rarityOptions"
               label="Rarity"
               placeholder="All Rarities"
-              width-class="w-full sm:w-44"
               data-testid="rarity-filter"
             />
 
@@ -472,7 +470,6 @@ const activeFilterCount = useFilterCount(
               :options="magicOptions"
               label="Magic"
               placeholder="All Items"
-              width-class="w-full sm:w-44"
               data-testid="magic-filter"
             />
 
@@ -481,7 +478,6 @@ const activeFilterCount = useFilterCount(
               :options="strengthReqOptions"
               label="STR Required"
               placeholder="All STR"
-              width-class="w-full sm:w-36"
               data-testid="strength-req-filter"
             />
           </template>

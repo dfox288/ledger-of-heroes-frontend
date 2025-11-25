@@ -393,7 +393,6 @@ const activeFilterCount = useFilterCount(
               :options="schoolOptions"
               label="School"
               placeholder="All Schools"
-              width-class="w-full sm:w-48"
               data-testid="school-filter"
             />
 
@@ -402,7 +401,6 @@ const activeFilterCount = useFilterCount(
               :options="classOptions"
               label="Class"
               placeholder="All Classes"
-              width-class="w-full sm:w-48"
               data-testid="class-filter"
             />
           </template>

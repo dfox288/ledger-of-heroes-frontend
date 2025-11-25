@@ -524,7 +524,6 @@ const perPage = 24
               :options="typeOptions"
               label="Creature Type"
               placeholder="All Types"
-              width-class="w-full sm:w-48"
               data-testid="type-filter"
             />
 
