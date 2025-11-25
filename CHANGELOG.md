@@ -29,14 +29,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 **Documentation:** `docs/UI-FILTER-LAYOUT-GUIDE.md` (comprehensive migration guide)
 
-### Added - Tools Dropdown (2025-11-25)
+### Changed - Navigation Restructure (2025-11-25)
 
-**🛠️ New Navigation Dropdown:**
+**📚 Compendium Dropdown:**
+- Consolidated 7 entities (Spells, Items, Monsters, Races, Classes, Backgrounds, Feats) into "Compendium" dropdown
+- Cleaner navbar: 3 dropdowns (Compendium, Tools, Reference) vs 9 items
+- Semantic grouping: game entities vs tools vs reference data
+- Added icons to all entity links
+- Active state highlighting for current section
+- Ready for future feature categories
+
+**🛠️ Tools Dropdown:**
 - Added "Tools" dropdown to navbar (desktop + mobile)
-- Moved "Spell List Creator" from spells page to Tools menu
-- Positioned between main nav and Reference dropdown
-- Active state highlighting on tools routes
-- Extensible structure ready for future tools
+- Moved "Spell List Creator" to Tools menu
+- Changed route: `/spells/list-generator` → `/tools/spell-list`
+- Consistent URL structure for all future tools
+- Tools dropdown highlights correctly when on `/tools/*` routes
+- Extensible structure ready for more tools
 
 ### Changed - Spell Filter Layout (2025-11-25)
 
