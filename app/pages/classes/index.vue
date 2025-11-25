@@ -121,53 +121,56 @@ const perPage = 24
               ]"
             />
           </div>
-
-          <!-- Clear filters button -->
-          <div class="flex justify-end">
-            <UButton
-              v-if="hasActiveFilters"
-              color="neutral"
-              variant="soft"
-              @click="clearFilters"
-            >
-              Clear Filters
-            </UButton>
-          </div>
         </div>
       </UiFilterCollapse>
 
       <!-- Active Filter Chips -->
       <div
         v-if="hasActiveFilters"
-        class="flex flex-wrap items-center gap-2 pt-2"
+        data-testid="chips-container"
+        class="flex flex-wrap items-center justify-between gap-2 pt-2"
       >
-        <span class="text-sm font-medium text-gray-600 dark:text-gray-400">Active:</span>
+        <div class="flex flex-wrap items-center gap-2">
+          <span class="text-sm font-medium text-gray-600 dark:text-gray-400">Active filters:</span>
+          <UButton
+            v-if="isBaseClass !== null"
+            size="xs"
+            color="primary"
+            variant="soft"
+            @click="isBaseClass = null"
+          >
+            Base Class Only: {{ isBaseClass === '1' ? 'Yes' : 'No' }} ✕
+          </UButton>
+          <UButton
+            v-if="isSpellcaster !== null"
+            size="xs"
+            color="primary"
+            variant="soft"
+            @click="isSpellcaster = null"
+          >
+            Spellcaster: {{ isSpellcaster === '1' ? 'Yes' : 'No' }} ✕
+          </UButton>
+          <UButton
+            v-if="searchQuery"
+            size="xs"
+            color="neutral"
+            variant="soft"
+            @click="searchQuery = ''"
+          >
+            "{{ searchQuery }}" ✕
+          </UButton>
+        </div>
+
+        <!-- Clear Filters Button (right-aligned) -->
         <UButton
-          v-if="isBaseClass !== null"
-          size="xs"
-          color="primary"
-          variant="soft"
-          @click="isBaseClass = null"
-        >
-          Base Class Only: {{ isBaseClass === '1' ? 'Yes' : 'No' }} ✕
-        </UButton>
-        <UButton
-          v-if="isSpellcaster !== null"
-          size="xs"
-          color="primary"
-          variant="soft"
-          @click="isSpellcaster = null"
-        >
-          Spellcaster: {{ isSpellcaster === '1' ? 'Yes' : 'No' }} ✕
-        </UButton>
-        <UButton
-          v-if="searchQuery"
-          size="xs"
+          v-if="activeFilterCount > 0 || searchQuery"
+          data-testid="clear-filters-button"
           color="neutral"
           variant="soft"
-          @click="searchQuery = ''"
+          size="sm"
+          @click="clearFilters"
         >
-          "{{ searchQuery }}" ✕
+          Clear filters
         </UButton>
       </div>
     </div>
