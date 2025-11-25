@@ -33,16 +33,21 @@ const toggleColorMode = () => {
   colorMode.preference = colorMode.value === 'dark' ? 'light' : 'dark'
 }
 
-// Main navigation items (top-level entities)
-const navItems = [
-  { label: 'Spells', to: '/spells', color: 'arcane' }, // spell → arcane (purple)
-  { label: 'Items', to: '/items', color: 'treasure' }, // item → treasure (gold)
-  { label: 'Monsters', to: '/monsters', color: 'danger' }, // monster → danger (orange)
-  { label: 'Races', to: '/races', color: 'emerald' }, // race → emerald (green)
-  { label: 'Classes', to: '/classes', color: 'red' }, // class → red
-  { label: 'Backgrounds', to: '/backgrounds', color: 'lore' }, // background → lore (brown)
-  { label: 'Feats', to: '/feats', color: 'glory' } // feat → glory (blue)
-]
+// Compendium dropdown items (main game entities)
+const compendiumItems = ref([
+  { label: 'Spells', to: '/spells', icon: 'i-heroicons-sparkles' },
+  { label: 'Items', to: '/items', icon: 'i-heroicons-cube' },
+  { label: 'Monsters', to: '/monsters', icon: 'i-heroicons-fire' },
+  { label: 'Races', to: '/races', icon: 'i-heroicons-users' },
+  { label: 'Classes', to: '/classes', icon: 'i-heroicons-academic-cap' },
+  { label: 'Backgrounds', to: '/backgrounds', icon: 'i-heroicons-book-open' },
+  { label: 'Feats', to: '/feats', icon: 'i-heroicons-star' }
+])
+
+// Check if current route is in compendium section
+const isCompendiumActive = computed(() => {
+  return compendiumItems.value.some(item => route.path.startsWith(item.to))
+})
 
 // Tools dropdown items (utility tools and generators)
 const toolsItems = ref([
@@ -74,6 +79,7 @@ const isReferenceActive = computed(() => {
 })
 
 // Mobile menu state
+const isCompendiumExpanded = ref(false)
 const isToolsExpanded = ref(false)
 const isReferenceExpanded = ref(false)
 </script>
@@ -120,18 +126,19 @@ const isReferenceExpanded = ref(false)
 
             <!-- Navigation Links (Center) - Desktop -->
             <div class="hidden md:flex items-center space-x-1">
-              <!-- Main navigation items -->
-              <NuxtLink
-                v-for="item in navItems"
-                :key="item.to"
-                :to="item.to"
-                class="px-3 py-2 rounded-md text-sm font-medium transition-colors"
-                :class="route.path.startsWith(item.to)
-                  ? 'bg-gray-100 dark:bg-gray-800 text-blue-600 dark:text-blue-400'
-                  : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800'"
-              >
-                {{ item.label }}
-              </NuxtLink>
+              <!-- Compendium dropdown -->
+              <UDropdownMenu :items="compendiumItems">
+                <UButton
+                  color="neutral"
+                  variant="ghost"
+                  trailing-icon="i-heroicons-chevron-down-20-solid"
+                  :class="isCompendiumActive
+                    ? 'bg-gray-100 dark:bg-gray-800 text-blue-600 dark:text-blue-400'
+                    : 'text-gray-700 dark:text-gray-300'"
+                >
+                  Compendium
+                </UButton>
+              </UDropdownMenu>
               <!-- Tools dropdown -->
               <UDropdownMenu :items="toolsItems">
                 <UButton
@@ -174,18 +181,45 @@ const isReferenceExpanded = ref(false)
 
           <!-- Mobile Navigation -->
           <div class="md:hidden pb-3 space-y-1">
-            <!-- Main navigation items -->
-            <NuxtLink
-              v-for="item in navItems"
-              :key="item.to"
-              :to="item.to"
-              class="block px-3 py-2 rounded-md text-base font-medium transition-colors"
-              :class="route.path.startsWith(item.to)
-                ? 'bg-gray-100 dark:bg-gray-800 text-blue-600 dark:text-blue-400'
-                : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800'"
-            >
-              {{ item.label }}
-            </NuxtLink>
+            <!-- Compendium expandable section -->
+            <div>
+              <button
+                class="w-full flex items-center justify-between px-3 py-2 rounded-md text-base font-medium transition-colors"
+                :class="isCompendiumActive
+                  ? 'bg-gray-100 dark:bg-gray-800 text-blue-600 dark:text-blue-400'
+                  : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800'"
+                @click="isCompendiumExpanded = !isCompendiumExpanded"
+              >
+                <span>Compendium</span>
+                <UIcon
+                  :name="isCompendiumExpanded ? 'i-heroicons-chevron-up-20-solid' : 'i-heroicons-chevron-down-20-solid'"
+                  class="w-5 h-5"
+                />
+              </button>
+
+              <!-- Compendium submenu -->
+              <div
+                v-show="isCompendiumExpanded"
+                class="pl-4 space-y-1 mt-1"
+              >
+                <NuxtLink
+                  v-for="item in compendiumItems"
+                  :key="item.to"
+                  :to="item.to"
+                  class="flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition-colors"
+                  :class="route.path.startsWith(item.to)
+                    ? 'bg-gray-100 dark:bg-gray-800 text-blue-600 dark:text-blue-400'
+                    : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800'"
+                >
+                  <UIcon
+                    v-if="item.icon"
+                    :name="item.icon"
+                    class="w-4 h-4"
+                  />
+                  {{ item.label }}
+                </NuxtLink>
+              </div>
+            </div>
 
             <!-- Tools expandable section -->
             <div>
