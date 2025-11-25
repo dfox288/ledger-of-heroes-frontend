@@ -1,12 +1,16 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue'
-import type { Monster, Size, Source } from '~/types'
+import type { Monster, Size } from '~/types'
 
 const route = useRoute()
 
 // Sorting state
 const sortBy = ref<string>((route.query.sort_by as string) || 'name')
 const sortDirection = ref<'asc' | 'desc'>((route.query.sort_direction as 'asc' | 'desc') || 'asc')
+const sortValue = useSortValue(sortBy, sortDirection)
+
+// Source filter (using composable)
+const { selectedSources, sourceOptions, getSourceName, clearSources } = useSourceFilter()
 
 // Custom filter state
 // Note: UiFilterMultiSelect works with strings, so we store as strings and convert to numbers for filtering
@@ -58,7 +62,6 @@ const hpRangeOptions = [
 
 // Fetch reference data for filters
 const { data: sizes } = useReferenceData<Size>('/sizes')
-const { data: sources } = useReferenceData<Source>('/sources')
 
 // Movement type options for multiselect
 const movementTypeOptions = [
@@ -68,16 +71,6 @@ const movementTypeOptions = [
   { label: 'Climb', value: 'climb' },
   { label: 'Hover', value: 'hover' }
 ]
-
-// Source filter state
-const selectedSources = ref<string[]>(
-  route.query.source ? (Array.isArray(route.query.source) ? route.query.source : [route.query.source]) : []
-)
-
-// Source filter options
-const sourceOptions = computed(() =>
-  sources.value?.map(s => ({ label: s.name, value: s.code })) || []
-)
 
 // CR multiselect options (common D&D 5e CR values)
 const crOptions = [
@@ -177,16 +170,6 @@ const sortOptions = [
   { label: 'CR (Low→High)', value: 'challenge_rating:asc' },
   { label: 'CR (High→Low)', value: 'challenge_rating:desc' }
 ]
-
-// Computed sort value for USelectMenu binding
-const sortValue = computed({
-  get: () => `${sortBy.value}:${sortDirection.value}`,
-  set: (value: string) => {
-    const [newSortBy, newSortDirection] = value.split(':')
-    if (newSortBy) sortBy.value = newSortBy
-    if (newSortDirection) sortDirection.value = newSortDirection as 'asc' | 'desc'
-  }
-})
 
 // Query builder (using composable for all filters)
 const { queryParams: filterParams } = useMeilisearchFilters([
@@ -319,6 +302,7 @@ const monsters = computed(() => data.value as Monster[])
 // Clear all filters
 const clearFilters = () => {
   clearBaseFilters()
+  clearSources()
   selectedCRs.value = []
   selectedType.value = null
   isLegendary.value = null
@@ -332,7 +316,6 @@ const clearFilters = () => {
   hasReactions.value = null
   isSpellcaster.value = null
   hasMagicResistance.value = null
-  selectedSources.value = []
 }
 
 // Helper functions for filter chips
@@ -466,44 +449,15 @@ const perPage = 24
         :badge-count="activeFilterCount"
       >
         <template #search>
-          <div class="flex flex-wrap gap-2 w-full">
-            <UInput
-              v-model="searchQuery"
-              placeholder="Search monsters..."
-              class="flex-1 min-w-[200px]"
-            >
-              <template
-                v-if="searchQuery"
-                #trailing
-              >
-                <UButton
-                  color="neutral"
-                  variant="link"
-                  :padded="false"
-                  @click="searchQuery = ''"
-                />
-              </template>
-            </UInput>
-
-            <!-- Source filter in prominent position -->
-            <UiFilterMultiSelect
-              v-model="selectedSources"
-              :options="sourceOptions"
-              placeholder="All Sources"
-              color="monster"
-              width-class="flex-1 min-w-[192px]"
-              data-testid="source-filter"
-            />
-
-            <USelectMenu
-              v-model="sortValue"
-              :items="sortOptions"
-              value-key="value"
-              placeholder="Sort by..."
-              size="md"
-              class="flex-1 min-w-[192px]"
-            />
-          </div>
+          <UiEntitySearchRow
+            v-model:search="searchQuery"
+            v-model:sources="selectedSources"
+            v-model:sort="sortValue"
+            placeholder="Search monsters..."
+            :source-options="sourceOptions"
+            :sort-options="sortOptions"
+            color="monster"
+          />
         </template>
 
         <UiFilterLayout>
@@ -654,240 +608,160 @@ const perPage = 24
         </UiFilterLayout>
       </UiFilterCollapse>
 
-      <!-- Active Filter Chips -->
-      <div
-        v-if="hasActiveFilters"
-        class="flex flex-wrap items-center justify-between gap-2 pt-2"
+      <UiFilterChips
+        :visible="hasActiveFilters"
+        :search-query="searchQuery"
+        :active-count="activeFilterCount"
+        @clear-search="searchQuery = ''"
+        @clear-all="clearFilters"
       >
-        <div class="flex flex-wrap items-center gap-2">
-          <span
-            v-if="activeFilterCount > 0 || searchQuery"
-            class="text-sm font-medium text-gray-600 dark:text-gray-400"
-          >
-            Active filters:
-          </span>
-          <!-- CHIP ORDER: Source → Entity-specific → Boolean toggles → Search (last) -->
-
-          <!-- 1. Source chips (neutral color) -->
-          <UButton
+        <template #sources>
+          <UiFilterChip
             v-for="source in selectedSources"
             :key="source"
-            data-testid="source-filter-chip"
-            size="xs"
             color="neutral"
-            variant="soft"
-            @click="selectedSources = selectedSources.filter(s => s !== source)"
+            test-id="source-filter-chip"
+            @remove="selectedSources = selectedSources.filter(s => s !== source)"
           >
-            {{ sources?.find(s => s.code === source)?.name || source }} ✕
-          </UButton>
+            {{ getSourceName(source) }}
+          </UiFilterChip>
+        </template>
 
-          <!-- 2. Entity-specific: CR, Type, Size, Alignment, Movement, AC, HP, Armor -->
-          <UButton
-            v-if="getCRFilterText"
-            data-testid="cr-filter-chip"
-            size="xs"
-            color="monster"
-            variant="soft"
-            @click="clearCRFilter"
-          >
-            {{ getCRFilterText }} ✕
-          </UButton>
-          <UButton
-            v-if="selectedType !== null"
-            data-testid="type-filter-chip"
-            size="xs"
-            color="monster"
-            variant="soft"
-            @click="selectedType = null"
-          >
-            Type: {{ getTypeLabel(selectedType) }} ✕
-          </UButton>
-          <UButton
-            v-if="getSizeFilterText"
-            data-testid="size-filter-chip"
-            size="xs"
-            color="monster"
-            variant="soft"
-            @click="clearSizeFilter"
-          >
-            {{ getSizeFilterText }} ✕
-          </UButton>
-          <UButton
-            v-if="getAlignmentFilterText"
-            data-testid="alignment-filter-chip"
-            size="xs"
-            color="monster"
-            variant="soft"
-            @click="clearAlignmentFilter"
-          >
-            {{ getAlignmentFilterText }} ✕
-          </UButton>
-          <UButton
-            v-if="getMovementTypesFilterText"
-            data-testid="movement-types-chip"
-            size="xs"
-            color="monster"
-            variant="soft"
-            @click="clearMovementTypesFilter"
-          >
-            {{ getMovementTypesFilterText }} ✕
-          </UButton>
-          <UButton
-            v-if="selectedACRange"
-            data-testid="ac-filter-chip"
-            size="xs"
-            color="monster"
-            variant="soft"
-            @click="selectedACRange = null"
-          >
-            AC: {{ acRangeOptions.find(o => o.value === selectedACRange)?.label }} ✕
-          </UButton>
-          <UButton
-            v-if="selectedHPRange"
-            data-testid="hp-filter-chip"
-            size="xs"
-            color="monster"
-            variant="soft"
-            @click="selectedHPRange = null"
-          >
-            HP: {{ hpRangeOptions.find(o => o.value === selectedHPRange)?.label }} ✕
-          </UButton>
-          <UButton
-            v-if="getArmorTypeFilterText"
-            data-testid="armor-type-filter-chip"
-            size="xs"
-            color="monster"
-            variant="soft"
-            @click="clearArmorTypeFilter"
-          >
-            {{ getArmorTypeFilterText }} ✕
-          </UButton>
-
-          <!-- 3. Boolean toggles (primary color, "Label: Yes/No" format) -->
-          <UButton
-            v-if="isLegendary !== null"
-            data-testid="is-legendary-filter-chip"
-            size="xs"
-            color="primary"
-            variant="soft"
-            @click="isLegendary = null"
-          >
-            Legendary: {{ isLegendary === '1' ? 'Yes' : 'No' }} ✕
-          </UButton>
-          <UButton
-            v-if="hasLairActions !== null"
-            data-testid="has-lair-actions-filter-chip"
-            size="xs"
-            color="primary"
-            variant="soft"
-            @click="hasLairActions = null"
-          >
-            Lair Actions: {{ hasLairActions === '1' ? 'Yes' : 'No' }} ✕
-          </UButton>
-          <UButton
-            v-if="hasReactions !== null"
-            data-testid="has-reactions-filter-chip"
-            size="xs"
-            color="primary"
-            variant="soft"
-            @click="hasReactions = null"
-          >
-            Reactions: {{ hasReactions === '1' ? 'Yes' : 'No' }} ✕
-          </UButton>
-          <UButton
-            v-if="isSpellcaster !== null"
-            data-testid="is-spellcaster-filter-chip"
-            size="xs"
-            color="primary"
-            variant="soft"
-            @click="isSpellcaster = null"
-          >
-            Spellcaster: {{ isSpellcaster === '1' ? 'Yes' : 'No' }} ✕
-          </UButton>
-          <UButton
-            v-if="hasMagicResistance !== null"
-            data-testid="has-magic-resistance-filter-chip"
-            size="xs"
-            color="primary"
-            variant="soft"
-            @click="hasMagicResistance = null"
-          >
-            Magic Resistance: {{ hasMagicResistance === '1' ? 'Yes' : 'No' }} ✕
-          </UButton>
-
-          <!-- 4. Search query (always last, neutral color) -->
-          <UButton
-            v-if="searchQuery"
-            data-testid="search-filter-chip"
-            size="xs"
-            color="neutral"
-            variant="soft"
-            @click="searchQuery = ''"
-          >
-            "{{ searchQuery }}" ✕
-          </UButton>
-        </div>
-
-        <!-- Clear Filters Button (right-aligned) -->
-        <UButton
-          v-if="activeFilterCount > 0 || searchQuery"
-          color="neutral"
-          variant="soft"
-          size="sm"
-          @click="clearFilters"
+        <!-- Entity-specific chips: CR, Type, Size, Alignment, Movement, AC, HP, Armor -->
+        <UiFilterChip
+          v-if="getCRFilterText"
+          color="monster"
+          test-id="cr-filter-chip"
+          @remove="clearCRFilter"
         >
-          Clear filters
-        </UButton>
-      </div>
+          {{ getCRFilterText }}
+        </UiFilterChip>
+        <UiFilterChip
+          v-if="selectedType !== null"
+          color="monster"
+          test-id="type-filter-chip"
+          @remove="selectedType = null"
+        >
+          Type: {{ getTypeLabel(selectedType) }}
+        </UiFilterChip>
+        <UiFilterChip
+          v-if="getSizeFilterText"
+          color="monster"
+          test-id="size-filter-chip"
+          @remove="clearSizeFilter"
+        >
+          {{ getSizeFilterText }}
+        </UiFilterChip>
+        <UiFilterChip
+          v-if="getAlignmentFilterText"
+          color="monster"
+          test-id="alignment-filter-chip"
+          @remove="clearAlignmentFilter"
+        >
+          {{ getAlignmentFilterText }}
+        </UiFilterChip>
+        <UiFilterChip
+          v-if="getMovementTypesFilterText"
+          color="monster"
+          test-id="movement-types-chip"
+          @remove="clearMovementTypesFilter"
+        >
+          {{ getMovementTypesFilterText }}
+        </UiFilterChip>
+        <UiFilterChip
+          v-if="selectedACRange"
+          color="monster"
+          test-id="ac-filter-chip"
+          @remove="selectedACRange = null"
+        >
+          AC: {{ acRangeOptions.find(o => o.value === selectedACRange)?.label }}
+        </UiFilterChip>
+        <UiFilterChip
+          v-if="selectedHPRange"
+          color="monster"
+          test-id="hp-filter-chip"
+          @remove="selectedHPRange = null"
+        >
+          HP: {{ hpRangeOptions.find(o => o.value === selectedHPRange)?.label }}
+        </UiFilterChip>
+        <UiFilterChip
+          v-if="getArmorTypeFilterText"
+          color="monster"
+          test-id="armor-type-filter-chip"
+          @remove="clearArmorTypeFilter"
+        >
+          {{ getArmorTypeFilterText }}
+        </UiFilterChip>
+
+        <template #toggles>
+          <UiFilterChip
+            v-if="isLegendary !== null"
+            color="primary"
+            test-id="is-legendary-filter-chip"
+            @remove="isLegendary = null"
+          >
+            Legendary: {{ isLegendary === '1' ? 'Yes' : 'No' }}
+          </UiFilterChip>
+          <UiFilterChip
+            v-if="hasLairActions !== null"
+            color="primary"
+            test-id="has-lair-actions-filter-chip"
+            @remove="hasLairActions = null"
+          >
+            Lair Actions: {{ hasLairActions === '1' ? 'Yes' : 'No' }}
+          </UiFilterChip>
+          <UiFilterChip
+            v-if="hasReactions !== null"
+            color="primary"
+            test-id="has-reactions-filter-chip"
+            @remove="hasReactions = null"
+          >
+            Reactions: {{ hasReactions === '1' ? 'Yes' : 'No' }}
+          </UiFilterChip>
+          <UiFilterChip
+            v-if="isSpellcaster !== null"
+            color="primary"
+            test-id="is-spellcaster-filter-chip"
+            @remove="isSpellcaster = null"
+          >
+            Spellcaster: {{ isSpellcaster === '1' ? 'Yes' : 'No' }}
+          </UiFilterChip>
+          <UiFilterChip
+            v-if="hasMagicResistance !== null"
+            color="primary"
+            test-id="has-magic-resistance-filter-chip"
+            @remove="hasMagicResistance = null"
+          >
+            Magic Resistance: {{ hasMagicResistance === '1' ? 'Yes' : 'No' }}
+          </UiFilterChip>
+        </template>
+      </UiFilterChips>
     </div>
 
-    <!-- Loading State -->
-    <UiListSkeletonCards v-if="loading" />
-
-    <!-- Error State -->
-    <UiListErrorState
-      v-else-if="error"
+    <UiListStates
+      :loading="loading"
       :error="error"
-      entity-name="Monsters"
-      @retry="refresh"
-    />
-
-    <!-- Empty State -->
-    <UiListEmptyState
-      v-else-if="monsters.length === 0"
-      entity-name="monsters"
+      :empty="monsters.length === 0"
+      :meta="meta"
+      :total="totalResults"
+      entity-name="monster"
+      entity-name-plural="Monsters"
       :has-filters="hasActiveFilters"
+      :current-page="currentPage"
+      :per-page="perPage"
+      @retry="refresh"
       @clear-filters="clearFilters"
-    />
-
-    <!-- Results -->
-    <div v-else>
-      <!-- Results count -->
-      <UiListResultsCount
-        :from="meta?.from || 0"
-        :to="meta?.to || 0"
-        :total="totalResults"
-        entity-name="monster"
-      />
-
-      <!-- Monsters Grid -->
-      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
+      @update:current-page="currentPage = $event"
+    >
+      <template #grid>
         <MonsterCard
           v-for="monster in monsters"
           :key="monster.id"
           :monster="monster"
         />
-      </div>
+      </template>
+    </UiListStates>
 
-      <!-- Pagination -->
-      <UiListPagination
-        v-model="currentPage"
-        :total="totalResults"
-        :items-per-page="perPage"
-      />
-    </div>
-
-    <!-- Back to Home -->
     <UiBackLink />
   </div>
 </template>
