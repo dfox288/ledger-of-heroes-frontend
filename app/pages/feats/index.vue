@@ -7,24 +7,10 @@ const route = useRoute()
 // Custom filter state
 const hasPrerequisites = ref<string | null>((route.query.has_prerequisites as string) || null)
 
-// Query builder for custom filters (Meilisearch syntax)
-const queryBuilder = computed(() => {
-  const params: Record<string, unknown> = {}
-  const meilisearchFilters: string[] = []
-
-  // has_prerequisites filter (convert string to boolean)
-  if (hasPrerequisites.value !== null) {
-    const boolValue = hasPrerequisites.value === '1' || hasPrerequisites.value === 'true'
-    meilisearchFilters.push(`has_prerequisites = ${boolValue}`)
-  }
-
-  // Combine all filters with AND
-  if (meilisearchFilters.length > 0) {
-    params.filter = meilisearchFilters.join(' AND ')
-  }
-
-  return params
-})
+// Query builder for custom filters (using composable)
+const { queryParams } = useMeilisearchFilters([
+  { ref: hasPrerequisites, field: 'has_prerequisites', type: 'boolean' }
+])
 
 // Use entity list composable for all shared logic
 const {
@@ -41,7 +27,7 @@ const {
 } = useEntityList({
   endpoint: '/feats',
   cacheKey: 'feats-list',
-  queryBuilder,
+  queryBuilder: queryParams,
   seo: {
     title: 'Feats - D&D 5e Compendium',
     description: 'Browse all D&D 5e feats and character abilities.'
@@ -61,11 +47,7 @@ const clearFilters = () => {
 const filtersOpen = ref(false)
 
 // Active filter count for badge
-const activeFilterCount = computed(() => {
-  let count = 0
-  if (hasPrerequisites.value !== null) count++
-  return count
-})
+const activeFilterCount = useFilterCount(hasPrerequisites)
 
 // Pagination settings
 const perPage = 24
