@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue'
-import type { Background, Source } from '~/types'
+import type { Background, Source, Skill } from '~/types'
 
 const route = useRoute()
 
@@ -12,10 +12,23 @@ const selectedSources = ref<string[]>(
   route.query.source ? (Array.isArray(route.query.source) ? route.query.source : [route.query.source]) as string[] : []
 )
 
+// New filters for Tier 2 implementation
+const selectedSkills = ref<string[]>(
+  route.query.skill ? (Array.isArray(route.query.skill) ? route.query.skill : [route.query.skill]) as string[] : []
+)
+
+const selectedToolTypes = ref<string[]>(
+  route.query.tool_type ? (Array.isArray(route.query.tool_type) ? route.query.tool_type : [route.query.tool_type]) as string[] : []
+)
+
+const languageChoiceFilter = ref<string | null>((route.query.grants_language_choice as string) || null)
+
 // Fetch reference data for filter options
 const { data: sources } = useReferenceData<Source>('/sources', {
   transform: (data) => data.filter(s => ['PHB', 'ERLW', 'WGTE'].includes(s.code))
 })
+
+const { data: skills } = useReferenceData<Skill>('/skills')
 
 // Source filter options (backgrounds only use PHB, ERLW, WGTE)
 const sourceOptions = computed(() => {
@@ -26,9 +39,28 @@ const sourceOptions = computed(() => {
   }))
 })
 
+// Skill filter options
+const skillOptions = computed(() => {
+  if (!skills.value) return []
+  return skills.value.map(skill => ({
+    label: skill.name,
+    value: skill.code
+  }))
+})
+
+// Tool proficiency type options (hardcoded - stable categories)
+const toolTypeOptions = [
+  { label: 'Artisan Tools', value: 'artisan-tools' },
+  { label: 'Musical Instruments', value: 'musical-instruments' },
+  { label: 'Gaming Sets', value: 'gaming-sets' }
+]
+
 // Query builder for custom filters
 const { queryParams: filterParams } = useMeilisearchFilters([
-  { ref: selectedSources, field: 'source_codes', type: 'in' }
+  { ref: selectedSources, field: 'source_codes', type: 'in' },
+  { ref: selectedSkills, field: 'skill_proficiencies', type: 'in' },
+  { ref: selectedToolTypes, field: 'tool_proficiency_types', type: 'in' },
+  { ref: languageChoiceFilter, field: 'grants_language_choice', type: 'boolean' }
 ])
 
 // Use entity list composable for all shared logic
@@ -60,10 +92,27 @@ const backgrounds = computed(() => data.value as Background[])
 const clearFilters = () => {
   clearBaseFilters()
   selectedSources.value = []
+  selectedSkills.value = []
+  selectedToolTypes.value = []
+  languageChoiceFilter.value = null
+}
+
+// Helper functions for filter chips
+const getSkillName = (code: string) => {
+  return skills.value?.find(s => s.code === code)?.name || code
+}
+
+const getToolTypeName = (value: string) => {
+  return toolTypeOptions.find(t => t.value === value)?.label || value
 }
 
 // Active filter count for badge
-const activeFilterCount = useFilterCount(selectedSources)
+const activeFilterCount = useFilterCount(
+  selectedSources,
+  selectedSkills,
+  selectedToolTypes,
+  languageChoiceFilter
+)
 
 // Pagination settings
 const perPage = 24
@@ -108,19 +157,57 @@ const perPage = 24
         </template>
 
         <!-- Filters -->
-        <div class="space-y-4">
-          <!-- Source Filter -->
-          <div>
-            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              Source
-            </label>
+        <UiFilterLayout>
+          <!-- Primary Filters: Quick access filters -->
+          <template #primary>
             <UiFilterMultiSelect
               v-model="selectedSources"
               :options="sourceOptions"
-              placeholder="All sources"
+              placeholder="All Sources"
+              label="Sources"
+              color="background"
+              class="w-full sm:w-48"
             />
-          </div>
-        </div>
+
+            <UiFilterMultiSelect
+              v-model="selectedSkills"
+              :options="skillOptions"
+              placeholder="All Skills"
+              label="Skills"
+              color="background"
+              class="w-full sm:w-48"
+            />
+          </template>
+
+          <!-- Quick Toggles: Binary filters -->
+          <template #quick>
+            <UiFilterToggle
+              v-model="languageChoiceFilter"
+              label="Language Choice"
+              color="background"
+              :options="[
+                { value: null, label: 'All' },
+                { value: '1', label: 'Yes' },
+                { value: '0', label: 'No' }
+              ]"
+            />
+          </template>
+
+          <!-- Advanced Filters: Less frequently used -->
+          <template #advanced>
+            <UiFilterMultiSelect
+              v-model="selectedToolTypes"
+              :options="toolTypeOptions"
+              placeholder="All Tool Types"
+              label="Tool Types"
+              color="background"
+              class="w-full sm:w-48"
+            />
+          </template>
+
+          <!-- Actions: Empty (Clear Filters moved to chips row) -->
+          <template #actions />
+        </UiFilterLayout>
       </UiFilterCollapse>
 
       <!-- Active Filter Chips -->
@@ -140,13 +227,43 @@ const perPage = 24
             "{{ searchQuery }}" ✕
           </UButton>
           <UButton
-            v-if="selectedSources.length > 0"
+            v-for="source in selectedSources"
+            :key="source"
             size="xs"
             color="neutral"
             variant="soft"
-            @click="selectedSources = []"
+            @click="selectedSources = selectedSources.filter(s => s !== source)"
           >
-            Source: {{ selectedSources.join(', ') }} ✕
+            {{ sources?.find(s => s.code === source)?.name || source }} ✕
+          </UButton>
+          <UButton
+            v-for="skill in selectedSkills"
+            :key="skill"
+            size="xs"
+            color="background"
+            variant="soft"
+            @click="selectedSkills = selectedSkills.filter(s => s !== skill)"
+          >
+            {{ getSkillName(skill) }} ✕
+          </UButton>
+          <UButton
+            v-for="toolType in selectedToolTypes"
+            :key="toolType"
+            size="xs"
+            color="background"
+            variant="soft"
+            @click="selectedToolTypes = selectedToolTypes.filter(t => t !== toolType)"
+          >
+            {{ getToolTypeName(toolType) }} ✕
+          </UButton>
+          <UButton
+            v-if="languageChoiceFilter !== null"
+            size="xs"
+            color="background"
+            variant="soft"
+            @click="languageChoiceFilter = null"
+          >
+            Language Choice: {{ languageChoiceFilter === '1' ? 'Yes' : 'No' }} ✕
           </UButton>
         </div>
 

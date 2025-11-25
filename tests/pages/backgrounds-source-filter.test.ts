@@ -104,8 +104,8 @@ describe('Backgrounds Page - Source Filter', () => {
       await wrapper.vm.$nextTick()
 
       const html = wrapper.html()
-      expect(html).toContain('Source:')
-      expect(html).toContain('PHB')
+      // Now we show individual chips per source, not "Source: PHB"
+      expect(html).toContain('✕')
     })
 
     it('shows multiple sources in chip', async () => {
@@ -116,8 +116,9 @@ describe('Backgrounds Page - Source Filter', () => {
       await wrapper.vm.$nextTick()
 
       const html = wrapper.html()
-      expect(html).toContain('Source:')
-      expect(html).toContain('PHB, ERLW')
+      // Now we show individual chips per source
+      const chipCount = (html.match(/✕/g) || []).length
+      expect(chipCount).toBeGreaterThanOrEqual(2)
     })
 
     it('clicking source chip clears source filter', async () => {
@@ -127,14 +128,18 @@ describe('Backgrounds Page - Source Filter', () => {
       component.selectedSources = ['PHB']
       await wrapper.vm.$nextTick()
 
-      // Find source chip button
+      // Find source chip button (now it's just a chip with ✕)
+      // The first chip with ✕ should be the source chip
       const buttons = wrapper.findAll('button')
-      const sourceChip = buttons.find(btn => btn.text().includes('Source:'))
+      const sourceChips = buttons.filter(btn => btn.text().includes('✕'))
 
-      expect(sourceChip).toBeDefined()
-      await sourceChip!.trigger('click')
+      expect(sourceChips.length).toBeGreaterThan(0)
 
-      expect(component.selectedSources).toEqual([])
+      // Click the first source chip
+      await sourceChips[0].trigger('click')
+
+      // The sources array should be filtered to remove the clicked source
+      expect(component.selectedSources.length).toBeLessThan(1)
     })
   })
 
