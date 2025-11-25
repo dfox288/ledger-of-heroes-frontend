@@ -9,6 +9,29 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed - Spell List Generator (2025-11-25)
+
+**🐛 Critical Bug Fix: Updated spell list generator to use Meilisearch API:**
+
+**Issues Fixed:**
+- **Wrong field names:** Changed `concentration` → `needs_concentration`, `ritual` → `is_ritual` (badges now display correctly)
+- **Deprecated API syntax:** Changed `?classes=wizard` → `?filter=class_slugs IN [wizard]` (using Meilisearch filter syntax)
+- **Wrong type checks:** Removed `=== '1'` checks for booleans (now checking boolean fields directly)
+- **Missing badges:** Added component requirement badges (V/S/M) using `requires_verbal`, `requires_somatic`, `requires_material`
+- **Excessive pagination:** Reduced `per_page=1000` → `per_page=500` (more reasonable limit)
+
+**Impact:**
+- Concentration/Ritual badges now work correctly (were never showing before)
+- Component badges (V/S/M) now display for all spells
+- API calls use modern Meilisearch filter syntax (consistent with spell index page)
+- Better UI: improved badge layout with flexbox wrapping
+
+**Files Changed:**
+- `app/pages/spells/list-generator.vue` - Updated API call and badge rendering
+- `tests/pages/spells/list-generator.test.ts` - Added 3 new tests to prevent regression
+
+**Test Results:** ✅ 5/5 tests passing (889/889 total suite passing)
+
 ### Changed - API Integration (2025-11-25)
 
 **🚨 BREAKING CHANGE: Complete migration to Meilisearch-only filtering:**

@@ -70,13 +70,13 @@ watch(selectedClassOption, (selectedSlug) => {
   }
 })
 
-// Fetch spells for selected class
+// Fetch spells for selected class (using Meilisearch filter syntax)
 const { data: spells, status: spellsStatus } = await useAsyncData(
   'class-spells',
   async () => {
     if (!selectedClass.value) return []
     const response = await apiFetch<{ data: Spell[] }>(
-      `/spells?classes=${selectedClass.value.slug}&per_page=1000`
+      `/spells?filter=class_slugs IN [${selectedClass.value.slug}]&per_page=500`
     )
     return response?.data || []
   },
@@ -321,25 +321,49 @@ const handleClearAll = () => {
                     <div class="font-medium">
                       {{ spell.name }}
                     </div>
-                    <div class="text-sm text-gray-600 dark:text-gray-400">
-                      {{ spell.school?.name }} • {{ spell.range }}
+                    <div class="text-sm text-gray-600 dark:text-gray-400 flex items-center gap-2 flex-wrap">
+                      <span>{{ spell.school?.name }}</span>
+                      <span>•</span>
+                      <span>{{ spell.range }}</span>
                       <UBadge
-                        v-if="spell.concentration === '1'"
+                        v-if="spell.needs_concentration"
                         color="primary"
                         variant="soft"
                         size="xs"
-                        class="ml-2"
                       >
                         Concentration
                       </UBadge>
                       <UBadge
-                        v-if="spell.ritual === '1'"
+                        v-if="spell.is_ritual"
                         color="info"
                         variant="soft"
                         size="xs"
-                        class="ml-1"
                       >
                         Ritual
+                      </UBadge>
+                      <UBadge
+                        v-if="spell.requires_verbal"
+                        color="neutral"
+                        variant="soft"
+                        size="xs"
+                      >
+                        V
+                      </UBadge>
+                      <UBadge
+                        v-if="spell.requires_somatic"
+                        color="neutral"
+                        variant="soft"
+                        size="xs"
+                      >
+                        S
+                      </UBadge>
+                      <UBadge
+                        v-if="spell.requires_material"
+                        color="neutral"
+                        variant="soft"
+                        size="xs"
+                      >
+                        M
                       </UBadge>
                     </div>
                   </div>
