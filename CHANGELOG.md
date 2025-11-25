@@ -9,6 +9,50 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added - UiFilterLayout Component (2025-11-25)
+
+**🎨 New Reusable Filter Layout Component:**
+- Created `UiFilterLayout` component with 3-tier slot-based architecture
+- Provides consistent filter layout across all entity pages
+- 16 tests, 100% passing (TDD implementation)
+
+**Features:**
+- **Primary slot:** Most used filters (dropdowns) - flex layout, gap-3
+- **Quick slot:** Binary toggles (All/Yes/No) - responsive grid (2→3→5 cols)
+- **Advanced slot:** Multi-select filters - flex layout, gap-3
+- **Actions slot:** Action buttons (Clear Filters) - right-aligned
+
+**Benefits:**
+- Single source of truth for filter spacing/responsiveness
+- ~20 lines less layout code per page
+- Ready to apply to 6 entity pages (items, monsters, races, classes, backgrounds, feats)
+
+**Documentation:** `docs/UI-FILTER-LAYOUT-GUIDE.md` (comprehensive migration guide)
+
+### Added - Tools Dropdown (2025-11-25)
+
+**🛠️ New Navigation Dropdown:**
+- Added "Tools" dropdown to navbar (desktop + mobile)
+- Moved "Spell List Creator" from spells page to Tools menu
+- Positioned between main nav and Reference dropdown
+- Active state highlighting on tools routes
+- Extensible structure ready for future tools
+
+### Changed - Spell Filter Layout (2025-11-25)
+
+**🎯 Improved Filter UX:**
+- Refactored spell filters with 3-tier structure using `UiFilterLayout`
+- Changed component labels from "V", "S", "M" to "Verbal", "Somatic", "Material"
+- Removed visual dividers between filter sections (cleaner appearance)
+- All filters now use consistent width: `w-full sm:w-48` (192px desktop)
+- Perfect vertical alignment across all filter rows
+- ~50% vertical space savings vs original layout
+
+**Responsive Grid:**
+- Mobile: 2 columns for quick toggles
+- Tablet: 3 columns for quick toggles
+- Desktop: 5 columns (all in one row!)
+
 ### Fixed - Spell List Generator (2025-11-25)
 
 **🐛 Multiple Bug Fixes and UX Improvements:**
