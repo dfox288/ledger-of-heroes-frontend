@@ -112,13 +112,24 @@ const queryBuilder = computed(() => {
 
   // Standard filters via composable
   const { queryParams: standardParams } = useMeilisearchFilters([
-    { ref: selectedType, field: 'item_type_id' },
+    {
+      ref: selectedType,
+      field: 'type_code',
+      // Transform ID to code for Meilisearch
+      transform: (id) => itemTypes.value?.find(t => t.id === id)?.code || null
+    },
     { ref: selectedRarity, field: 'rarity' },
     { ref: selectedMagic, field: 'is_magic', type: 'boolean' },
-    { ref: hasPrerequisites, field: 'prerequisites', type: 'isEmpty' },
+    // Note: has_prerequisites removed - 'prerequisites' field not filterable in Meilisearch
     { ref: requiresAttunement, field: 'requires_attunement', type: 'boolean' },
     { ref: stealthDisadvantage, field: 'stealth_disadvantage', type: 'boolean' },
-    { ref: selectedDamageTypes, field: 'damage_type_code', type: 'in' },
+    {
+      ref: selectedDamageTypes,
+      field: 'damage_type',
+      type: 'in',
+      // Transform damage type codes to names for Meilisearch
+      transform: (code) => damageTypes.value?.find(dt => dt.code === code)?.name || null
+    },
     { ref: selectedSources, field: 'source_codes', type: 'in' },
     { ref: selectedProperties, field: 'property_codes', type: 'in' }
   ])
@@ -131,7 +142,17 @@ const queryBuilder = computed(() => {
   // Special handling for has_charges (needs both > 0 and = 0 logic)
   if (hasCharges.value !== null) {
     const hasCharge = hasCharges.value === '1' || hasCharges.value === 'true'
-    meilisearchFilters.push(hasCharge ? 'charges_max > 0' : 'charges_max = 0')
+    // Use has_charges field which is filterable in Meilisearch
+    meilisearchFilters.push(`has_charges = ${hasCharge}`)
+  }
+
+  // Special handling for has_prerequisites
+  // Note: 'prerequisites' field is NOT filterable in Meilisearch
+  // This filter is temporarily disabled until backend adds filterability
+  if (hasPrerequisites.value !== null) {
+    // Backend limitation: cannot filter on prerequisites field
+    // Silently skip this filter for now
+    // TODO: Remove this filter from UI or add backend support
   }
 
   // Combine all filters
