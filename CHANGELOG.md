@@ -11,6 +11,39 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **New UiFilterSelect Component (2025-11-25)** - Wrapper for USelectMenu with consistent label structure
+  - Matches height of UiFilterMultiSelect and UiFilterToggle
+  - Prevents vertical drift in flex filter layouts
+  - Optional label prop (reserves space for alignment when omitted)
+
+### Changed
+
+- **Filter Chip Standardization (2025-11-25)** - Comprehensive chip consistency across all 7 entity pages
+  - Standardized ordering: Source → Entity-specific → Boolean toggles → Search (always last)
+  - Standardized colors: neutral (source/search), entity color (entity-specific), primary (boolean)
+  - Standardized text format: "Label: Value ✕" for all filters
+  - Added `data-testid` to ALL filter chips for E2E testing
+- **Monsters Movement Filters Redesign (2025-11-25)** - Replaced 5 toggles with single multiselect
+  - Combined Fly/Swim/Burrow/Climb/Hover into "Movement Types" multiselect
+  - Fixed broken "No" option (now uses `IS NOT NULL` filter syntax)
+  - Reduced quick section from 10 to 5 controls
+- **Races Ability Filter (2025-11-25)** - Now fetches from API instead of hardcoded
+  - Uses `useReferenceData<AbilityScore>('/ability-scores')`
+- **Items Advanced Section (2025-11-25)** - Reorganized by usage frequency
+  - High frequency: Properties, Cost Range
+  - Weapon filters: Damage Types, Damage Dice, Range
+  - Armor filters: AC Range
+  - Niche filters: Versatile Dice, Recharge
+
+### Fixed
+
+- **Vertical Drift in Filter Layouts (2025-11-25)** - Resolved height misalignment
+  - Raw USelectMenu components lacked label wrapper (~28px height difference)
+  - Converted all filter dropdowns to UiFilterSelect component
+  - Affects: Spells, Items, Races, Classes, Monsters pages
+
+### Added
+
 - **Sorting Added to All List Pages (2025-11-25)** - Added sort dropdowns to 5 entity pages that didn't have sorting
   - **Items:** Name (A-Z/Z-A), Rarity (Common→Legendary/Legendary→Common)
   - **Races:** Name (A-Z/Z-A), Speed (Low→High/High→Low)

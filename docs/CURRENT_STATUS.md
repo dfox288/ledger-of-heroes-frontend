@@ -1,19 +1,56 @@
 # D&D 5e Compendium Frontend - Current Status
 
-**Last Updated:** 2025-11-25 (Latest: ✅ RE-AUDIT IMPLEMENTATION COMPLETE - 21 New Filters Added!)
+**Last Updated:** 2025-11-25 (Latest: ✅ Filter Consistency & UX Standardization Complete!)
 **Status:** ✅ **PRODUCTION-READY - Perfect Code Quality!**
 **Framework:** Nuxt 4.x + NuxtUI 4.x + Three.js + Storybook 8.x
 **7 of 7 Entity Types + 10 Reference Pages + 🆕 Builder Tools** (All Complete!)
 **Test Coverage:** 1164+ tests (103 new tests added, all passing) ✨
 **Code Quality:** ESLint 0 errors ✅ | TypeScript: Clean ✅
-**NEW TODAY:** ✅ **RE-AUDIT COMPLETE** - 21 new filters, 5 bug fixes, +45% filter coverage, 4 entities at 100%!
-**MAJOR ACHIEVEMENT:** Filter coverage: 47 → 68 filters (+45%), Backgrounds: 25% → 100% (+300%), Monsters: 0 bugs
+**NEW TODAY:** ✅ **FILTER CONSISTENCY** - All 7 pages standardized, vertical drift fixed, new UiFilterSelect component!
+**MAJOR ACHIEVEMENT:** Chip ordering/colors/testids standardized, Monsters movement filters redesigned, Items advanced reorganized
 
 ---
 
 ## 🎉 Latest Session Summary (2025-11-25)
 
-### Session: ✅ RE-AUDIT IMPLEMENTATION COMPLETE - 21 New Filters Across 5 Entities! (COMPLETE) ✅
+### Session: ✅ Filter Consistency & UX Standardization (COMPLETE) ✅
+
+**Focus:** Comprehensive audit of all 7 entity filter pages and systematic standardization
+
+**What Was Completed:**
+
+#### ✅ Filter Chip Standardization (All 7 Pages)
+- **Ordering:** Source → Entity-specific → Boolean toggles → Search (always last)
+- **Colors:** neutral (source/search), entity color (entity-specific), primary (boolean)
+- **Format:** "Label: Value ✕" for all filters
+- **Testing:** `data-testid` added to ALL chips
+
+#### ✅ Monsters Movement Filters Redesign
+- Replaced 5 separate toggles (Fly/Swim/Burrow/Climb/Hover) with single "Movement Types" multiselect
+- Fixed broken "No" option (now uses `IS NOT NULL` filter syntax)
+- Reduced quick section from 10 controls to 5
+
+#### ✅ Vertical Drift Fix
+- Created new `UiFilterSelect` component matching height of other filter components
+- Converted all raw USelectMenu filters to use new component
+- Affects: Spells, Items, Races, Classes, Monsters pages
+
+#### ✅ Items Advanced Section Reorganization
+- Reordered by usage frequency
+- Grouped weapon filters together (Damage Types, Damage Dice, Range)
+- Grouped armor filters (AC Range)
+- Moved niche filters last (Versatile Dice, Recharge)
+
+#### ✅ Data Source Improvements
+- Races ability filter now uses API (`/ability-scores`) instead of hardcoded array
+- Monsters page now has Source filter in prominent search row position
+
+**Commits:** `0c4e393`, `50df8ca`, `4e27c60`
+**Handover:** `docs/HANDOVER-2025-11-25-FILTER-CONSISTENCY.md`
+
+---
+
+### Previous Session: ✅ RE-AUDIT IMPLEMENTATION COMPLETE - 21 New Filters Across 5 Entities!
 
 **Focus:** Implement all high and medium priority filters from comprehensive re-audit using parallel subagents
 
