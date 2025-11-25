@@ -1,6 +1,35 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue'
-import type { Background } from '~/types'
+import type { Background, Source } from '~/types'
+
+const route = useRoute()
+
+// Filter collapse state
+const filtersOpen = ref(false)
+
+// Custom filter state (entity-specific)
+const selectedSources = ref<string[]>(
+  route.query.source ? (Array.isArray(route.query.source) ? route.query.source : [route.query.source]) as string[] : []
+)
+
+// Fetch reference data for filter options
+const { data: sources } = useReferenceData<Source>('/sources', {
+  transform: (data) => data.filter(s => ['PHB', 'ERLW', 'WGTE'].includes(s.code))
+})
+
+// Source filter options (backgrounds only use PHB, ERLW, WGTE)
+const sourceOptions = computed(() => {
+  if (!sources.value) return []
+  return sources.value.map(source => ({
+    label: source.name,
+    value: source.code
+  }))
+})
+
+// Query builder for custom filters
+const { queryParams: filterParams } = useMeilisearchFilters([
+  { ref: selectedSources, field: 'source_codes', type: 'in' }
+])
 
 // Use entity list composable for all shared logic
 const {
@@ -12,12 +41,12 @@ const {
   loading,
   error,
   refresh,
-  clearFilters,
+  clearFilters: clearBaseFilters,
   hasActiveFilters
 } = useEntityList({
   endpoint: '/backgrounds',
   cacheKey: 'backgrounds-list',
-  queryBuilder: computed(() => ({})), // No custom filters for backgrounds
+  queryBuilder: filterParams,
   seo: {
     title: 'Backgrounds - D&D 5e Compendium',
     description: 'Browse all D&D 5e character backgrounds.'
@@ -27,8 +56,14 @@ const {
 // Type the data array
 const backgrounds = computed(() => data.value as Background[])
 
-// Filter collapse state
-const filtersOpen = ref(false)
+// Clear all filters (base + custom)
+const clearFilters = () => {
+  clearBaseFilters()
+  selectedSources.value = []
+}
+
+// Active filter count for badge
+const activeFilterCount = useFilterCount(selectedSources)
 
 // Pagination settings
 const perPage = 24
@@ -50,7 +85,7 @@ const perPage = 24
       <UiFilterCollapse
         v-model="filtersOpen"
         label="Filters"
-        :badge-count="0"
+        :badge-count="activeFilterCount"
       >
         <template #search>
           <UInput
@@ -72,11 +107,19 @@ const perPage = 24
           </UInput>
         </template>
 
-        <!-- Filter section ready for future filters -->
-        <!-- No specific filters identified in API analysis yet -->
-        <!-- Structure in place for when filters are added -->
+        <!-- Filters -->
         <div class="space-y-4">
-          <!-- Future filters will go here -->
+          <!-- Source Filter -->
+          <div>
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              Source
+            </label>
+            <UiFilterMultiSelect
+              v-model="selectedSources"
+              :options="sourceOptions"
+              placeholder="All sources"
+            />
+          </div>
         </div>
       </UiFilterCollapse>
 
@@ -96,11 +139,19 @@ const perPage = 24
           >
             "{{ searchQuery }}" ✕
           </UButton>
+          <UButton
+            v-if="selectedSources.length > 0"
+            size="xs"
+            color="neutral"
+            variant="soft"
+            @click="selectedSources = []"
+          >
+            Source: {{ selectedSources.join(', ') }} ✕
+          </UButton>
         </div>
 
         <!-- Clear Filters Button (right-aligned) -->
         <UButton
-          v-if="searchQuery"
           color="neutral"
           variant="soft"
           size="sm"
