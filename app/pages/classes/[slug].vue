@@ -37,6 +37,44 @@ const baseClassFeatures = computed(() => {
 })
 
 /**
+ * Determine if viewing a subclass (not a base class)
+ */
+const isSubclass = computed(() => entity.value && !entity.value.is_base_class)
+
+/**
+ * Get parent class data (only available for subclasses)
+ */
+const parentClass = computed(() => entity.value?.parent_class)
+
+/**
+ * Get parent class image path for overlay
+ */
+const parentClassImagePath = computed(() => {
+  if (!parentClass.value?.slug) return null
+  return getImagePath('classes', parentClass.value.slug, 256)
+})
+
+/**
+ * Get base class features for progression table (from parent for subclasses)
+ */
+const progressionFeatures = computed(() => {
+  if (isSubclass.value && parentClass.value?.features) {
+    return parentClass.value.features.filter((f: { is_optional?: boolean }) => !f.is_optional)
+  }
+  return baseClassFeatures.value
+})
+
+/**
+ * Get counters for progression table (from parent for subclasses)
+ */
+const progressionCounters = computed(() => {
+  if (isSubclass.value && parentClass.value?.counters) {
+    return parentClass.value.counters
+  }
+  return entity.value?.counters || []
+})
+
+/**
  * Build accordion items with icons
  */
 const accordionItems = computed(() => {
