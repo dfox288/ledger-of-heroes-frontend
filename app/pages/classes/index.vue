@@ -1,26 +1,54 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { computed, watch, onMounted } from 'vue'
+import { storeToRefs } from 'pinia'
 import type { CharacterClass } from '~/types'
+import { useClassFiltersStore } from '~/stores/classFilters'
 
 const route = useRoute()
 
-// Filter collapse state
-const filtersOpen = ref(false)
+// Use filter store instead of local refs
+const store = useClassFiltersStore()
+const {
+  searchQuery,
+  sortBy,
+  sortDirection,
+  selectedSources,
+  isBaseClass,
+  isSpellcaster,
+  selectedHitDice,
+  selectedSpellcastingAbility,
+  selectedParentClass,
+  filtersOpen
+} = storeToRefs(store)
 
-// Sorting state
-const sortBy = ref<string>((route.query.sort_by as string) || 'name')
-const sortDirection = ref<'asc' | 'desc'>((route.query.sort_direction as 'asc' | 'desc') || 'asc')
+// URL sync composable
+const { hasUrlParams, syncToUrl, clearUrl } = useFilterUrlSync()
+
+// On mount: URL params override persisted state
+onMounted(() => {
+  if (hasUrlParams.value) {
+    store.setFromUrlQuery(route.query)
+  }
+})
+
+// Sync store changes to URL (debounced)
+let urlSyncTimeout: ReturnType<typeof setTimeout> | null = null
+watch(
+  () => store.toUrlQuery,
+  (query) => {
+    if (urlSyncTimeout) clearTimeout(urlSyncTimeout)
+    urlSyncTimeout = setTimeout(() => {
+      syncToUrl(query)
+    }, 300)
+  },
+  { deep: true }
+)
+
+// Sort value computed (combines sortBy + sortDirection)
 const sortValue = useSortValue(sortBy, sortDirection)
 
-// Source filter (using composable)
-const { selectedSources, sourceOptions, getSourceName, clearSources } = useSourceFilter()
-
-// Entity-specific filter state
-const isBaseClass = ref<string | null>((route.query.is_base_class as string) || null)
-const isSpellcaster = ref<string | null>((route.query.is_spellcaster as string) || null)
-const selectedHitDice = ref<number[]>([])
-const selectedSpellcastingAbility = ref<string | null>(null)
-const selectedParentClass = ref<string | null>(null)
+// Source filter options (still need the composable for options)
+const { sourceOptions, getSourceName } = useSourceFilter()
 
 // Fetch base classes for parent filter
 const { data: baseClasses } = useReferenceData<CharacterClass>('/classes', {
@@ -59,7 +87,7 @@ const sortOptions = [
   { label: 'Hit Die (High→Low)', value: 'hit_die:desc' }
 ]
 
-// Query builder
+// Query builder for filters (uses store refs)
 const { queryParams: filterParams } = useMeilisearchFilters([
   { ref: isBaseClass, field: 'is_base_class', type: 'boolean' },
   { ref: isSpellcaster, field: 'is_spellcaster', type: 'boolean' },
@@ -77,20 +105,18 @@ const queryParams = computed(() => ({
 
 // Use entity list composable
 const {
-  searchQuery,
   currentPage,
   data,
   meta,
   totalResults,
   loading,
   error,
-  refresh,
-  clearFilters: clearBaseFilters,
-  hasActiveFilters
+  refresh
 } = useEntityList({
   endpoint: '/classes',
   cacheKey: 'classes-list',
   queryBuilder: queryParams,
+  searchQuery, // Pass store's searchQuery
   seo: {
     title: 'Classes - D&D 5e Compendium',
     description: 'Browse all D&D 5e player classes and subclasses.'
@@ -99,26 +125,17 @@ const {
 
 const classes = computed(() => data.value as CharacterClass[])
 
-// Clear all filters
+// Clear all filters - uses store action + URL clear
 const clearFilters = () => {
-  clearBaseFilters()
-  clearSources()
-  isBaseClass.value = null
-  isSpellcaster.value = null
-  selectedHitDice.value = []
-  selectedSpellcastingAbility.value = null
-  selectedParentClass.value = null
+  store.clearAll()
+  clearUrl()
 }
 
-// Active filter count
-const activeFilterCount = useFilterCount(
-  isBaseClass,
-  isSpellcaster,
-  selectedHitDice,
-  selectedSpellcastingAbility,
-  selectedParentClass,
-  selectedSources
-)
+// Active filter count (use store getter)
+const activeFilterCount = computed(() => store.activeFilterCount)
+
+// Has active filters (use store getter)
+const hasActiveFilters = computed(() => store.hasActiveFilters)
 
 const perPage = 24
 </script>
