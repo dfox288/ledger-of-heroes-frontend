@@ -17,91 +17,92 @@ describe('UiClassHitPointsCard', () => {
     }
   }
 
-  it('renders hit die value', () => {
+  // Mock data matching API response structure
+  const createHitPoints = (hitDie: number, className: string) => ({
+    hit_die: `d${hitDie}`,
+    hit_die_numeric: hitDie,
+    first_level: {
+      value: hitDie,
+      description: `${hitDie} + your Constitution modifier`
+    },
+    higher_levels: {
+      roll: `1d${hitDie}`,
+      average: Math.floor(hitDie / 2) + 1,
+      description: `1d${hitDie} (or ${Math.floor(hitDie / 2) + 1}) + your Constitution modifier per ${className} level after 1st`
+    }
+  })
+
+  it('renders hit die value from backend data', () => {
     const wrapper = mount(UiClassHitPointsCard, {
       props: {
-        hitDie: 8,
-        className: 'rogue'
+        hitPoints: createHitPoints(8, 'rogue')
       },
       ...mountOptions
     })
 
-    expect(wrapper.text()).toContain('1d8')
+    expect(wrapper.text()).toContain('d8')
   })
 
-  it('renders HP at 1st level correctly', () => {
+  it('renders HP at 1st level from backend description', () => {
     const wrapper = mount(UiClassHitPointsCard, {
       props: {
-        hitDie: 10,
-        className: 'fighter'
+        hitPoints: createHitPoints(10, 'fighter')
       },
       ...mountOptions
     })
 
-    expect(wrapper.text()).toContain('10 + Constitution modifier')
+    expect(wrapper.text()).toContain('10 + your Constitution modifier')
   })
 
-  it('renders HP at higher levels correctly', () => {
+  it('renders HP at higher levels from backend description', () => {
     const wrapper = mount(UiClassHitPointsCard, {
       props: {
-        hitDie: 12,
-        className: 'barbarian'
+        hitPoints: createHitPoints(12, 'barbarian')
       },
       ...mountOptions
     })
 
-    // Should show both die roll and average
-    expect(wrapper.text()).toContain('1d12')
-    expect(wrapper.text()).toContain('(or 7)')
+    expect(wrapper.text()).toContain('1d12 (or 7) + your Constitution modifier per barbarian level after 1st')
   })
 
-  it('calculates average HP correctly for different hit dice', () => {
-    // d6 average = 4
+  it('displays different hit dice correctly', () => {
+    // d6 wizard
     const d6Wrapper = mount(UiClassHitPointsCard, {
-      props: { hitDie: 6, className: 'wizard' },
+      props: { hitPoints: createHitPoints(6, 'wizard') },
       ...mountOptions
     })
+    expect(d6Wrapper.text()).toContain('d6')
     expect(d6Wrapper.text()).toContain('(or 4)')
 
-    // d8 average = 5
+    // d8 rogue
     const d8Wrapper = mount(UiClassHitPointsCard, {
-      props: { hitDie: 8, className: 'rogue' },
+      props: { hitPoints: createHitPoints(8, 'rogue') },
       ...mountOptions
     })
+    expect(d8Wrapper.text()).toContain('d8')
     expect(d8Wrapper.text()).toContain('(or 5)')
 
-    // d10 average = 6
+    // d10 fighter
     const d10Wrapper = mount(UiClassHitPointsCard, {
-      props: { hitDie: 10, className: 'fighter' },
+      props: { hitPoints: createHitPoints(10, 'fighter') },
       ...mountOptions
     })
+    expect(d10Wrapper.text()).toContain('d10')
     expect(d10Wrapper.text()).toContain('(or 6)')
 
-    // d12 average = 7
+    // d12 barbarian
     const d12Wrapper = mount(UiClassHitPointsCard, {
-      props: { hitDie: 12, className: 'barbarian' },
+      props: { hitPoints: createHitPoints(12, 'barbarian') },
       ...mountOptions
     })
+    expect(d12Wrapper.text()).toContain('d12')
     expect(d12Wrapper.text()).toContain('(or 7)')
-  })
-
-  it('includes class name in per-level description', () => {
-    const wrapper = mount(UiClassHitPointsCard, {
-      props: {
-        hitDie: 8,
-        className: 'rogue'
-      },
-      ...mountOptions
-    })
-
-    expect(wrapper.text()).toContain('per rogue level')
   })
 
   it('displays heart icon', () => {
     const wrapper = mount(UiClassHitPointsCard, {
       props: {
-        hitDie: 8,
-        className: 'rogue'
+        hitPoints: createHitPoints(8, 'rogue')
       },
       ...mountOptions
     })

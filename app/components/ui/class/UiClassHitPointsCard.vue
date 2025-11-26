@@ -1,25 +1,11 @@
 <script setup lang="ts">
+import type { ClassHitPoints } from '~/types/api/entities'
+
 interface Props {
-  hitDie: number
-  className: string
+  hitPoints: ClassHitPoints
 }
 
-const props = defineProps<Props>()
-
-/**
- * Calculate average HP per level (rounded up as per D&D rules)
- * Formula: (hitDie / 2) + 1
- */
-const averageHp = computed(() => {
-  return Math.floor(props.hitDie / 2) + 1
-})
-
-/**
- * Format class name for display (lowercase for readability)
- */
-const formattedClassName = computed(() => {
-  return props.className.toLowerCase()
-})
+defineProps<Props>()
 </script>
 
 <template>
@@ -45,7 +31,7 @@ const formattedClassName = computed(() => {
               Hit Dice
             </dt>
             <dd class="text-gray-900 dark:text-gray-100">
-              1d{{ hitDie }} per {{ formattedClassName }} level
+              1{{ hitPoints.hit_die }} per level
             </dd>
           </div>
 
@@ -54,7 +40,7 @@ const formattedClassName = computed(() => {
               HP at 1st Level
             </dt>
             <dd class="text-gray-900 dark:text-gray-100">
-              {{ hitDie }} + Constitution modifier
+              {{ hitPoints.first_level.description }}
             </dd>
           </div>
 
@@ -63,7 +49,7 @@ const formattedClassName = computed(() => {
               HP at Higher Levels
             </dt>
             <dd class="text-gray-900 dark:text-gray-100">
-              1d{{ hitDie }} (or {{ averageHp }}) + Constitution modifier per {{ formattedClassName }} level after 1st
+              {{ hitPoints.higher_levels.description }}
             </dd>
           </div>
         </dl>
