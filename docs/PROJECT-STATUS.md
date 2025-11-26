@@ -94,6 +94,7 @@
 
 ## Recent Milestones
 
+- **2025-11-26:** Classes Detail Page Phase 1 & 2 (+25 tests, hit die fix, feature grouping)
 - **2025-11-26:** Test Helper Library (22% reduction in store tests, mock factories)
 - **2025-11-26:** Page Filter Setup Composable (removed ~140 lines duplication)
 - **2025-11-26:** Pinia Store Factory Pattern (80% code reduction)

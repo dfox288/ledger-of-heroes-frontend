@@ -1,1 +1,1 @@
-handovers/SESSION-HANDOVER-2025-11-26-2100-classes-detail-page-audit.md
+handovers/SESSION-HANDOVER-2025-11-26-2300-classes-implementation-complete.md

@@ -257,7 +257,7 @@ export function testBasicChipBehavior(config: BasicChipTestConfig): void {
  */
 export function testMultipleChipsDisplay(
   mountPage: () => Promise<VueWrapper>,
-  chips: Array<{ testId: string; storeField: string; value: unknown }>
+  chips: Array<{ testId: string, storeField: string, value: unknown }>
 ): void {
   describe('Multiple Filter Chips', () => {
     it('shows all active filter chips simultaneously', async () => {

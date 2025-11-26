@@ -38,6 +38,7 @@ _Future tasks, not yet prioritized_
 
 _Recently completed tasks (move to CHANGELOG.md after release)_
 
+- [x] Classes Detail Page Phase 1 & 2 implementation (+25 tests)
 - [x] Filter persistence with IndexedDB (7 Pinia stores)
 - [x] Domain-specific test suites
 - [x] Class/Subclass detail page enhancements
