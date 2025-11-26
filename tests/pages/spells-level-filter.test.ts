@@ -1,8 +1,14 @@
-import { describe, it, expect } from 'vitest'
+import { describe, it, expect, beforeEach } from 'vitest'
 import { mountSuspended } from '@nuxt/test-utils/runtime'
+import { setActivePinia, createPinia } from 'pinia'
 import SpellsPage from '~/pages/spells/index.vue'
 
 describe('Spells Page - Level Filtering', () => {
+  // Reset Pinia store before each test to ensure clean state
+  beforeEach(() => {
+    setActivePinia(createPinia())
+  })
+
   describe('UI components', () => {
     it('displays level filter multiselect', async () => {
       const wrapper = await mountSuspended(SpellsPage)
@@ -61,6 +67,10 @@ describe('Spells Page - Level Filtering', () => {
       const wrapper = await mountSuspended(SpellsPage)
 
       const component = wrapper.vm as any
+      // Clear any persisted state from previous test
+      component.clearFilters()
+      await wrapper.vm.$nextTick()
+
       expect(Array.isArray(component.selectedLevels)).toBe(true)
       expect(component.selectedLevels.length).toBe(0)
     })

@@ -1,40 +1,60 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { computed, watch, onMounted } from 'vue'
+import { storeToRefs } from 'pinia'
 import type { SpellSchool, Spell, CharacterClass, DamageType, AbilityScore } from '~/types'
+import { useSpellFiltersStore } from '~/stores/spellFilters'
 
 const route = useRoute()
 
-// Filter collapse state
-const filtersOpen = ref(false)
+// Use filter store instead of local refs
+const store = useSpellFiltersStore()
+const {
+  searchQuery,
+  sortBy,
+  sortDirection,
+  selectedSources,
+  selectedLevels,
+  selectedSchool,
+  selectedClass,
+  concentrationFilter,
+  ritualFilter,
+  selectedDamageTypes,
+  selectedSavingThrows,
+  selectedTags,
+  verbalFilter,
+  somaticFilter,
+  materialFilter,
+  filtersOpen
+} = storeToRefs(store)
 
-// Sorting state
-const sortBy = ref<string>((route.query.sort_by as string) || 'name')
-const sortDirection = ref<'asc' | 'desc'>((route.query.sort_direction as 'asc' | 'desc') || 'asc')
+// URL sync composable
+const { hasUrlParams, syncToUrl, clearUrl } = useFilterUrlSync()
+
+// On mount: URL params override persisted state
+onMounted(() => {
+  if (hasUrlParams.value) {
+    store.setFromUrlQuery(route.query)
+  }
+})
+
+// Sync store changes to URL (debounced)
+let urlSyncTimeout: ReturnType<typeof setTimeout> | null = null
+watch(
+  () => store.toUrlQuery,
+  (query) => {
+    if (urlSyncTimeout) clearTimeout(urlSyncTimeout)
+    urlSyncTimeout = setTimeout(() => {
+      syncToUrl(query)
+    }, 300)
+  },
+  { deep: true }
+)
+
+// Sort value computed (combines sortBy + sortDirection)
 const sortValue = useSortValue(sortBy, sortDirection)
 
-// Source filter (using composable)
-const { selectedSources, sourceOptions, getSourceName, clearSources } = useSourceFilter()
-
-// Entity-specific filter state
-const selectedLevels = ref<string[]>(
-  route.query.level ? (Array.isArray(route.query.level) ? route.query.level.map(String) : [String(route.query.level)]) : []
-)
-const selectedSchool = ref(route.query.school ? Number(route.query.school) : null)
-const selectedClass = ref<string | null>((route.query.class as string) || null)
-const concentrationFilter = ref<string | null>((route.query.concentration as string) || null)
-const ritualFilter = ref<string | null>((route.query.ritual as string) || null)
-const selectedDamageTypes = ref<string[]>(
-  route.query.damage_type ? (Array.isArray(route.query.damage_type) ? route.query.damage_type : [route.query.damage_type]) as string[] : []
-)
-const selectedSavingThrows = ref<string[]>(
-  route.query.saving_throw ? (Array.isArray(route.query.saving_throw) ? route.query.saving_throw : [route.query.saving_throw]) as string[] : []
-)
-const selectedTags = ref<string[]>(
-  route.query.tag ? (Array.isArray(route.query.tag) ? route.query.tag : [route.query.tag]) as string[] : []
-)
-const verbalFilter = ref<string | null>((route.query.has_verbal as string) || null)
-const somaticFilter = ref<string | null>((route.query.has_somatic as string) || null)
-const materialFilter = ref<string | null>((route.query.has_material as string) || null)
+// Source filter options (still need the composable for options)
+const { sourceOptions, getSourceName } = useSourceFilter()
 
 // Fetch reference data
 const { data: spellSchools } = useReferenceData<SpellSchool>('/spell-schools')
@@ -98,7 +118,7 @@ const sortOptions = [
   { label: 'Level (High-Low)', value: 'level:desc' }
 ]
 
-// Query builder
+// Query builder for filters (uses store refs)
 const { queryParams: filterParams } = useMeilisearchFilters([
   { ref: selectedLevels, field: 'level', type: 'in', transform: (levels) => levels.map(Number) },
   { ref: selectedSchool, field: 'school_code', transform: (id) => spellSchools.value?.find(s => s.id === id)?.code || null },
@@ -122,20 +142,18 @@ const queryParams = computed(() => ({
 
 // Use entity list composable
 const {
-  searchQuery,
   currentPage,
   data: spellsData,
   meta,
   totalResults,
   loading,
   error,
-  refresh,
-  clearFilters: clearBaseFilters,
-  hasActiveFilters
+  refresh
 } = useEntityList({
   endpoint: '/spells',
   cacheKey: 'spells-list',
   queryBuilder: queryParams,
+  searchQuery, // Pass store's searchQuery
   seo: {
     title: 'Spells - D&D 5e Compendium',
     description: 'Browse all D&D 5e spells. Filter by level, school, and search for specific spells.'
@@ -144,21 +162,10 @@ const {
 
 const spells = computed(() => spellsData.value as Spell[])
 
-// Clear all filters
+// Clear all filters - uses store action + URL clear
 const clearFilters = () => {
-  clearBaseFilters()
-  clearSources()
-  selectedLevels.value = []
-  selectedSchool.value = null
-  selectedClass.value = null
-  concentrationFilter.value = null
-  ritualFilter.value = null
-  selectedDamageTypes.value = []
-  selectedSavingThrows.value = []
-  selectedTags.value = []
-  verbalFilter.value = null
-  somaticFilter.value = null
-  materialFilter.value = null
+  store.clearAll()
+  clearUrl()
 }
 
 // Helper functions
@@ -181,21 +188,11 @@ const getLevelFilterText = computed(() => {
   return `${prefix}: ${labels.join(', ')}`
 })
 
-// Active filter count
-const activeFilterCount = useFilterCount(
-  selectedLevels,
-  selectedSchool,
-  selectedClass,
-  concentrationFilter,
-  ritualFilter,
-  selectedDamageTypes,
-  selectedSavingThrows,
-  selectedSources,
-  selectedTags,
-  verbalFilter,
-  somaticFilter,
-  materialFilter
-)
+// Active filter count (use store getter)
+const activeFilterCount = computed(() => store.activeFilterCount)
+
+// Has active filters (use store getter)
+const hasActiveFilters = computed(() => store.hasActiveFilters)
 
 const perPage = 24
 </script>
