@@ -9,7 +9,7 @@ const route = useRoute()
 
 // Initialize store and URL sync
 const store = useMonsterFiltersStore()
-const { updateUrl, clearUrl } = useFilterUrlSync()
+const { syncToUrl, clearUrl } = useFilterUrlSync()
 
 // Convert store state to refs
 const {
@@ -43,7 +43,7 @@ onMounted(() => {
 
 // Watch store and sync to URL (debounced)
 const debouncedUrlSync = useDebounceFn(() => {
-  updateUrl(store.toUrlQuery)
+  syncToUrl(store.toUrlQuery)
 }, 300)
 
 watch(() => store.toUrlQuery, debouncedUrlSync, { deep: true })
