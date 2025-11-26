@@ -1,6 +1,9 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { ref } from 'vue'
 
+// Must import after mocks
+import { useFilterUrlSync } from '~/composables/useFilterUrlSync'
+
 // Mock vue-router
 const mockReplace = vi.fn()
 const mockRoute = ref({ query: {} })
@@ -9,9 +12,6 @@ vi.mock('vue-router', () => ({
   useRoute: () => mockRoute.value,
   useRouter: () => ({ replace: mockReplace })
 }))
-
-// Must import after mocks
-import { useFilterUrlSync } from '~/composables/useFilterUrlSync'
 
 describe('useFilterUrlSync', () => {
   beforeEach(() => {

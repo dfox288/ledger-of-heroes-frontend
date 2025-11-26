@@ -33,7 +33,7 @@ describe('useMeilisearchFilters', () => {
         {
           ref: schoolIdRef,
           field: 'school_code',
-          transform: (id) => id === 2 ? 'EV' : null
+          transform: id => id === 2 ? 'EV' : null
         }
       ])
 

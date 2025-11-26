@@ -34,7 +34,7 @@ describe('UiClassSubclassCards', () => {
         { id: 3, level: 13, feature_name: 'Versatile Trickster' },
         { id: 4, level: 17, feature_name: 'Spell Thief' }
       ],
-      sources: [{ id: 1, name: "Player's Handbook", abbreviation: 'PHB', page_number: 97 }]
+      sources: [{ id: 1, name: 'Player\'s Handbook', abbreviation: 'PHB', page_number: 97 }]
     },
     {
       id: 87,
@@ -45,7 +45,7 @@ describe('UiClassSubclassCards', () => {
         { id: 5, level: 3, feature_name: 'Assassinate' },
         { id: 6, level: 9, feature_name: 'Infiltration Expertise' }
       ],
-      sources: [{ id: 1, name: "Player's Handbook", abbreviation: 'PHB', page_number: 97 }]
+      sources: [{ id: 1, name: 'Player\'s Handbook', abbreviation: 'PHB', page_number: 97 }]
     }
   ]
 

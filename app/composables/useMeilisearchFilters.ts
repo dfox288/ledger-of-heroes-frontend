@@ -1,12 +1,12 @@
 import { computed, type Ref, type ComputedRef } from 'vue'
 
-export type FilterType =
-  | 'equals'           // field = value
-  | 'boolean'          // field = true/false (auto-converts strings)
-  | 'in'              // field IN [value1, value2]
-  | 'range'           // field >= min AND field <= max
-  | 'isEmpty'         // field IS EMPTY / IS NOT EMPTY
-  | 'greaterThan'     // field > value
+export type FilterType
+  = | 'equals' // field = value
+    | 'boolean' // field = true/false (auto-converts strings)
+    | 'in' // field IN [value1, value2]
+    | 'range' // field >= min AND field <= max
+    | 'isEmpty' // field IS EMPTY / IS NOT EMPTY
+    | 'greaterThan' // field > value
 
 export interface FilterConfig {
   /** Vue ref containing the filter value */

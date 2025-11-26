@@ -13,8 +13,8 @@ export default defineVitestConfig({
     exclude: [
       '**/node_modules/**',
       '**/dist/**',
-      '**/e2e/**',           // Playwright E2E tests
-      '**/*.spec.ts',        // E2E tests use .spec.ts convention
+      '**/e2e/**', // Playwright E2E tests
+      '**/*.spec.ts' // E2E tests use .spec.ts convention
     ],
 
     // ==========================================================================
@@ -31,13 +31,13 @@ export default defineVitestConfig({
         // Limit concurrent test files to prevent memory explosion
         // Adjust based on available Docker memory (2 is safe for 4GB)
         maxForks: 2,
-        minForks: 1,
+        minForks: 1
       }
     },
 
     // Ensure tests within a file run sequentially (not concurrently)
     sequence: {
-      concurrent: false,
+      concurrent: false
     },
 
     // Isolate each test file for cleaner state

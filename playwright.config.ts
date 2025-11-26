@@ -36,15 +36,15 @@ export default defineConfig({
     trace: 'on-first-retry',
 
     // Screenshot on failure
-    screenshot: 'only-on-failure',
+    screenshot: 'only-on-failure'
   },
 
   // Configure projects for major browsers
   projects: [
     {
       name: 'chromium',
-      use: { ...devices['Desktop Chrome'] },
-    },
+      use: { ...devices['Desktop Chrome'] }
+    }
 
     // Uncomment to test on Firefox
     // {
@@ -73,6 +73,6 @@ export default defineConfig({
     command: 'echo "Dev server should be running at http://localhost:3000"',
     url: 'http://localhost:3000',
     reuseExistingServer: true,
-    timeout: 5 * 1000,
-  },
+    timeout: 5 * 1000
+  }
 })

@@ -150,7 +150,7 @@ describe('Spell Tag Filtering', () => {
 
       // Helper to count non-empty arrays
       const countActiveFilters = (...filters: any[]) => {
-        return filters.filter(f => {
+        return filters.filter((f) => {
           if (Array.isArray(f.value)) return f.value.length > 0
           return f.value !== null && f.value !== undefined && f.value !== ''
         }).length

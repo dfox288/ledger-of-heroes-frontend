@@ -14,7 +14,7 @@ describe('Items Page - Filter Layout', () => {
       const wrapper = await mountSuspended(ItemsPage)
 
       const component = wrapper.vm as any
-      component.selectedRarity = 'rare'  // Use rarity instead - it's known to work
+      component.selectedRarity = 'rare' // Use rarity instead - it's known to work
       await wrapper.vm.$nextTick()
       await flushPromises()
 
@@ -52,7 +52,7 @@ describe('Items Page - Filter Layout', () => {
       // Find the outer chips container (UiFilterChips component root)
       // It has justify-between to separate chips from clear button
       const outerContainer = wrapper.findAll('.flex.flex-wrap.items-center.justify-between')
-        .find(el => {
+        .find((el) => {
           const text = el.text()
           return text.includes('Active filters:') && text.includes('Clear filters')
         })
@@ -96,7 +96,7 @@ describe('Items Page - Filter Layout', () => {
 
       // Find the chips row with justify-between (UiFilterChips root element)
       const chipsRow = wrapper.findAll('.flex.flex-wrap.items-center.justify-between')
-        .find(el => {
+        .find((el) => {
           const text = el.text()
           return text.includes('Active filters:') && text.includes('Clear filters')
         })
@@ -416,7 +416,7 @@ describe('Items Page - Filter Layout', () => {
 
       // Find chips that look like damage type chips (contain just code letters and ×)
       const allButtons = wrapper.findAll('button')
-      const damageTypeChips = allButtons.filter(btn => {
+      const damageTypeChips = allButtons.filter((btn) => {
         const text = btn.text().trim()
         // Damage type chips show just the code (like "S ✕" or "P ✕")
         return text.includes('✕') && (text.includes('S') || text.includes('P')) && text.length < 10
@@ -437,7 +437,7 @@ describe('Items Page - Filter Layout', () => {
 
       // Find chips that look like damage type chips
       const allButtons = wrapper.findAll('button')
-      const damageTypeChips = allButtons.filter(btn => {
+      const damageTypeChips = allButtons.filter((btn) => {
         const text = btn.text().trim()
         return text.includes('✕') && (text.includes('S') || text.includes('P')) && text.length < 10
       })

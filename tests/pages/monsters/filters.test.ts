@@ -48,7 +48,7 @@ describe('Monsters Page - Filter Layout', () => {
       const wrapper = await mountSuspended(MonstersPage)
 
       // No filters active initially
-      let clearButton = wrapper.find('button:contains("Clear filters")')
+      const clearButton = wrapper.find('button:contains("Clear filters")')
       expect(clearButton.exists()).toBe(false)
 
       // Apply a filter

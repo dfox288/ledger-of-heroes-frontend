@@ -1,14 +1,14 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { idbStorage } from '~/utils/idbStorage'
 
+import { get, set, del } from 'idb-keyval'
+
 // Mock idb-keyval for testing (IndexedDB not available in jsdom)
 vi.mock('idb-keyval', () => ({
   get: vi.fn(),
   set: vi.fn(),
   del: vi.fn()
 }))
-
-import { get, set, del } from 'idb-keyval'
 
 describe('idbStorage', () => {
   beforeEach(() => {

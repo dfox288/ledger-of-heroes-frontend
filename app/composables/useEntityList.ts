@@ -162,7 +162,7 @@ export function useEntityList(config: UseEntityListConfig): UseEntityListReturn 
     )
 
     // Check if any actual filter params have values
-    return filterKeys.some(key => {
+    return filterKeys.some((key) => {
       const value = config.queryBuilder.value[key]
       // Empty strings, null, undefined, empty arrays don't count as active
       if (value === null || value === undefined || value === '') return false

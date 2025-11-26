@@ -34,7 +34,7 @@ withDefaults(defineProps<Props>(), {
 })
 
 defineEmits<{
-  'remove': []
+  remove: []
 }>()
 </script>
 
