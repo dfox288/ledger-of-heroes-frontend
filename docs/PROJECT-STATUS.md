@@ -9,11 +9,12 @@
 | Metric | Count |
 |--------|-------|
 | Test Files | 120 |
-| Test Cases | ~1,573 |
+| Test Cases | ~1,588 |
 | Components | 81 |
 | Pages | 31 |
-| Composables | 15 |
+| Composables | 16 |
 | Pinia Stores | 8 |
+| Test Helpers | 8 |
 
 ---
 
@@ -93,6 +94,7 @@
 
 ## Recent Milestones
 
+- **2025-11-26:** Test Helper Library (22% reduction in store tests, mock factories)
 - **2025-11-26:** Page Filter Setup Composable (removed ~140 lines duplication)
 - **2025-11-26:** Pinia Store Factory Pattern (80% code reduction)
 - **2025-11-26:** Filter persistence with IndexedDB (7 stores)
