@@ -166,7 +166,36 @@ const accordionItems = computed(() => {
       class="space-y-8"
     >
       <!-- Breadcrumb Navigation -->
+      <nav
+        v-if="isSubclass && parentClass"
+        class="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400"
+      >
+        <NuxtLink
+          to="/classes"
+          class="hover:text-gray-700 dark:hover:text-gray-200"
+        >
+          Classes
+        </NuxtLink>
+        <UIcon
+          name="i-heroicons-chevron-right"
+          class="w-4 h-4"
+        />
+        <NuxtLink
+          :to="`/classes/${parentClass.slug}`"
+          class="hover:text-class-600 dark:hover:text-class-400"
+        >
+          {{ parentClass.name }}
+        </NuxtLink>
+        <UIcon
+          name="i-heroicons-chevron-right"
+          class="w-4 h-4"
+        />
+        <span class="text-gray-900 dark:text-gray-100 font-medium">
+          {{ entity.name }}
+        </span>
+      </nav>
       <UiBackLink
+        v-else
         to="/classes"
         label="Back to Classes"
       />
