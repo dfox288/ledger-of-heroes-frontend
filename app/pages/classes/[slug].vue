@@ -36,6 +36,180 @@ const hitPointsData = computed(() => {
 })
 
 /**
+ * Get effective hit die value.
+ * Uses computed.hit_points.hit_die_numeric which correctly inherits from parent class
+ * for subclasses that have hit_die: 0 in the raw data.
+ */
+const effectiveHitDie = computed(() => {
+  return entity.value?.computed?.hit_points?.hit_die_numeric ?? null
+})
+
+/**
+ * Extract saving throw proficiencies.
+ * Returns abbreviated ability names (e.g., "DEX, WIS").
+ */
+const savingThrows = computed(() => {
+  const proficiencies = entity.value?.proficiencies
+    ?? entity.value?.inherited_data?.proficiencies
+    ?? []
+
+  return proficiencies
+    .filter(p => p.proficiency_type === 'saving_throw' && p.ability_score)
+    .map(p => p.ability_score?.code)
+    .filter(Boolean)
+})
+
+/**
+ * Get subclass entry level for base classes.
+ * Uses subclass_level field if available, otherwise extracts from first subclass feature.
+ */
+const subclassLevel = computed(() => {
+  if (!entity.value?.is_base_class) return null
+
+  // Try the dedicated field first (may be null until backend populates it)
+  if (entity.value.subclass_level) {
+    return entity.value.subclass_level
+  }
+
+  // Fallback: find the minimum level among subclass features
+  const subclasses = entity.value.subclasses
+  if (!subclasses?.length) return null
+
+  // Get the first subclass's first feature level
+  const firstSubclass = subclasses[0]
+  if (firstSubclass.features?.length) {
+    return Math.min(...firstSubclass.features.map(f => f.level))
+  }
+
+  return null
+})
+
+/**
+ * Get subclass feature name (e.g., "Arcane Tradition", "Divine Domain").
+ */
+const subclassName = computed(() => {
+  if (!entity.value?.is_base_class) return null
+
+  // Try dedicated field first
+  if (entity.value.subclass_name) {
+    return entity.value.subclass_name
+  }
+
+  // Common subclass feature name patterns by class
+  const subclassPatterns: Record<string, string> = {
+    barbarian: 'Primal Path',
+    bard: 'Bard College',
+    cleric: 'Divine Domain',
+    druid: 'Druid Circle',
+    fighter: 'Martial Archetype',
+    monk: 'Monastic Tradition',
+    paladin: 'Sacred Oath',
+    ranger: 'Ranger Archetype',
+    rogue: 'Roguish Archetype',
+    sorcerer: 'Sorcerous Origin',
+    warlock: 'Otherworldly Patron',
+    wizard: 'Arcane Tradition'
+  }
+
+  return subclassPatterns[entity.value.slug] || 'Subclass'
+})
+
+/**
+ * Patterns that indicate choice options (not primary features).
+ */
+const CHOICE_OPTION_PATTERNS = [
+  /^Fighting Style: /,
+  /^Bear \(/,
+  /^Eagle \(/,
+  /^Wolf \(/,
+  /^Elk \(/,
+  /^Tiger \(/,
+  /^Aspect of the Bear/,
+  /^Aspect of the Eagle/,
+  /^Aspect of the Wolf/,
+  /^Aspect of the Elk/,
+  /^Aspect of the Tiger/
+]
+
+/**
+ * Get meaningful feature count (excludes choice options).
+ */
+const featureCount = computed(() => {
+  const features = entity.value?.features ?? []
+  return features.filter((f) => {
+    const name = f.feature_name || ''
+    return !CHOICE_OPTION_PATTERNS.some(pattern => pattern.test(name))
+  }).length
+})
+
+/**
+ * Build enhanced Quick Stats array.
+ */
+const quickStats = computed(() => {
+  if (!entity.value) return []
+
+  const stats = []
+
+  // Hit Die (always present)
+  if (effectiveHitDie.value) {
+    stats.push({
+      icon: 'i-heroicons-heart',
+      label: 'Hit Die',
+      value: `1d${effectiveHitDie.value}`
+    })
+  }
+
+  // Primary Ability
+  if (entity.value.primary_ability) {
+    stats.push({
+      icon: 'i-heroicons-star',
+      label: 'Primary Ability',
+      value: entity.value.primary_ability
+    })
+  }
+
+  // Spellcasting Ability
+  const spellAbility = entity.value.spellcasting_ability
+    ?? (isSubclass.value ? parentClass.value?.spellcasting_ability : null)
+  if (spellAbility) {
+    stats.push({
+      icon: 'i-heroicons-sparkles',
+      label: 'Spellcasting',
+      value: `${spellAbility.name} (${spellAbility.code})`
+    })
+  }
+
+  // Saving Throws
+  if (savingThrows.value.length > 0) {
+    stats.push({
+      icon: 'i-heroicons-shield-check',
+      label: 'Saving Throws',
+      value: savingThrows.value.join(', ')
+    })
+  }
+
+  // Subclass Level (base classes only)
+  if (entity.value.is_base_class && subclassLevel.value && entity.value.subclasses?.length) {
+    stats.push({
+      icon: 'i-heroicons-users',
+      label: subclassName.value || 'Subclass',
+      value: `Level ${subclassLevel.value}`
+    })
+  }
+
+  // Feature Count
+  if (featureCount.value > 0) {
+    stats.push({
+      icon: 'i-heroicons-bolt',
+      label: 'Features',
+      value: `${featureCount.value} ${featureCount.value === 1 ? 'feature' : 'features'}`
+    })
+  }
+
+  return stats
+})
+
+/**
  * Get computed progression table (works for both base and subclasses)
  */
 const progressionTableData = computed(() => {
@@ -272,11 +446,7 @@ const accordionData = computed(() => {
         <div class="lg:col-span-2">
           <UiDetailQuickStatsCard
             :columns="2"
-            :stats="[
-              ...(entity.hit_die ? [{ icon: 'i-heroicons-heart', label: 'Hit Die', value: `1d${entity.hit_die}` }] : []),
-              ...(entity.primary_ability ? [{ icon: 'i-heroicons-star', label: 'Primary Ability', value: entity.primary_ability }] : []),
-              ...(entity.spellcasting_ability ? [{ icon: 'i-heroicons-sparkles', label: 'Spellcasting Ability', value: `${entity.spellcasting_ability.name} (${entity.spellcasting_ability.code})` }] : [])
-            ]"
+            :stats="quickStats"
           />
         </div>
 
@@ -361,12 +531,10 @@ const accordionData = computed(() => {
             name="i-heroicons-sparkles"
             class="w-5 h-5 text-class-500"
           />
-          {{ entity.name }} Features ({{ entity.features.length }})
+          {{ entity.name }} Features
         </h3>
-        <UiAccordionTraitsList
-          :traits="entity.features"
-          :show-level="true"
-          border-color="class-500"
+        <UiClassFeaturesByLevel
+          :features="entity.features"
         />
       </div>
 
@@ -444,9 +612,8 @@ const accordionData = computed(() => {
           v-if="accordionData.features && accordionData.features.length > 0"
           #features
         >
-          <UiAccordionTraitsList
-            :traits="accordionData.features"
-            :show-level="true"
+          <UiClassFeaturesByLevel
+            :features="accordionData.features"
           />
         </template>
 

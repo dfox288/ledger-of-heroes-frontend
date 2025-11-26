@@ -48,11 +48,124 @@ const getSourceAbbreviation = (subclass: Subclass): string | null => {
 }
 
 /**
+ * Patterns that indicate choice options (not primary features).
+ * These should be excluded from feature counts.
+ */
+const CHOICE_OPTION_PATTERNS = [
+  /^Fighting Style: /,
+  /^Bear \(/,
+  /^Eagle \(/,
+  /^Wolf \(/,
+  /^Elk \(/,
+  /^Tiger \(/,
+  /^Aspect of the Bear/,
+  /^Aspect of the Eagle/,
+  /^Aspect of the Wolf/,
+  /^Aspect of the Elk/,
+  /^Aspect of the Tiger/
+]
+
+/**
+ * Check if a feature is a choice option (not a primary feature)
+ */
+const isChoiceOption = (featureName: string): boolean => {
+  return CHOICE_OPTION_PATTERNS.some(pattern => pattern.test(featureName))
+}
+
+/**
+ * Get meaningful feature count (excludes choice options)
+ */
+const getFeatureCount = (subclass: Subclass): number => {
+  if (!subclass.features) return 0
+
+  return subclass.features.filter((f) => {
+    const name = f.feature_name || ''
+    return !isChoiceOption(name)
+  }).length
+}
+
+/**
  * Get feature count text
  */
 const getFeatureCountText = (subclass: Subclass): string => {
-  const count = subclass.features?.length || 0
+  const count = getFeatureCount(subclass)
   return count === 1 ? '1 feature' : `${count} features`
+}
+
+/**
+ * Get subclass entry level (first feature's level)
+ */
+const getEntryLevel = (subclass: Subclass): number | null => {
+  if (!subclass.features?.length) return null
+  return Math.min(...subclass.features.map(f => f.level))
+}
+
+/**
+ * Get brief description preview.
+ * For subclasses with placeholder descriptions, extracts from first feature.
+ */
+const getDescriptionPreview = (subclass: Subclass): string | null => {
+  let desc = subclass.description || ''
+
+  // If it's a placeholder "Subclass of X", try first feature
+  if (desc.startsWith('Subclass of ')) {
+    const firstFeature = subclass.features?.[0]
+    if (firstFeature && 'description' in firstFeature) {
+      desc = (firstFeature as { description?: string }).description || ''
+    } else {
+      return null
+    }
+  }
+
+  if (!desc) return null
+
+  // Remove "Source:" references and clean up
+  const sourceIndex = desc.indexOf('\n\nSource:')
+  if (sourceIndex > 0) {
+    desc = desc.substring(0, sourceIndex)
+  }
+
+  // Take first sentence only (up to 120 chars)
+  const firstSentence = desc.split('.')[0]
+  if (firstSentence && firstSentence.length < 120) {
+    return firstSentence + '.'
+  }
+
+  // Or truncate at 100 chars
+  if (desc.length > 100) {
+    return desc.substring(0, 97) + '...'
+  }
+
+  return desc
+}
+
+/**
+ * Get source category for color coding
+ */
+const getSourceCategory = (subclass: Subclass): 'core' | 'expansion' | 'setting' => {
+  const source = subclass.sources?.[0]
+  if (!source) return 'core'
+
+  const abbr = source.abbreviation || ''
+  const coreBooks = ['PHB', 'DMG', 'MM']
+  const expansionBooks = ['XGE', 'TCE', 'FTD', 'SCC', 'VGTM', 'MTOF']
+
+  if (coreBooks.includes(abbr)) return 'core'
+  if (expansionBooks.includes(abbr)) return 'expansion'
+  return 'setting'
+}
+
+/**
+ * Get badge color based on source category
+ */
+const getSourceBadgeColor = (subclass: Subclass): string => {
+  const category = getSourceCategory(subclass)
+  switch (category) {
+    case 'core': return 'success'
+    case 'expansion': return 'info'
+    case 'setting': return 'warning'
+    default: return 'neutral'
+  }
 }
 </script>
 
@@ -80,21 +193,41 @@ const getFeatureCountText = (subclass: Subclass): string => {
             {{ subclass.name }}
           </h4>
 
-          <!-- Meta Info -->
+          <!-- Meta Info Row -->
           <div class="flex items-center gap-2 flex-wrap text-sm">
+            <!-- Source Badge (color-coded by category) -->
             <UBadge
               v-if="getSourceAbbreviation(subclass)"
-              color="class"
+              :color="getSourceBadgeColor(subclass)"
               variant="subtle"
               size="xs"
             >
               {{ getSourceAbbreviation(subclass) }}
             </UBadge>
 
+            <!-- Entry Level Badge -->
+            <UBadge
+              v-if="getEntryLevel(subclass)"
+              color="info"
+              variant="soft"
+              size="xs"
+            >
+              Level {{ getEntryLevel(subclass) }}
+            </UBadge>
+
+            <!-- Feature Count -->
             <span class="text-gray-500 dark:text-gray-400">
               {{ getFeatureCountText(subclass) }}
             </span>
           </div>
+
+          <!-- Brief Description Preview -->
+          <p
+            v-if="getDescriptionPreview(subclass)"
+            class="text-xs text-gray-500 dark:text-gray-400 line-clamp-2"
+          >
+            {{ getDescriptionPreview(subclass) }}
+          </p>
         </div>
 
         <template #footer>
