@@ -6,9 +6,11 @@ interface Feature {
 }
 
 interface Source {
-  id: number
+  id?: number
+  code?: string
   name: string
   abbreviation?: string
+  pages?: string | null
   page_number?: number
 }
 

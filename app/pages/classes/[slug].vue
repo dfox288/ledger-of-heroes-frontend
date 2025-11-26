@@ -29,19 +29,85 @@ const imagePath = computed(() => {
 })
 
 /**
- * Get the first trait to display in the description box
+ * Get base class features (non-optional) for the progression table
  */
-const firstTrait = computed(() => {
-  if (!entity.value?.traits || entity.value.traits.length === 0) return null
-  return entity.value.traits[0]
+const baseClassFeatures = computed(() => {
+  if (!entity.value?.features) return []
+  return entity.value.features.filter(f => !f.is_optional)
 })
 
 /**
- * Get remaining traits (excluding the first one) for the accordion
+ * Build accordion items with icons
  */
-const remainingTraits = computed(() => {
-  if (!entity.value?.traits || entity.value.traits.length <= 1) return []
-  return entity.value.traits.slice(1)
+const accordionItems = computed(() => {
+  if (!entity.value) return []
+
+  const items = []
+
+  if (entity.value.counters && entity.value.counters.length > 0) {
+    items.push({
+      label: 'Class Counters',
+      slot: 'counters',
+      defaultOpen: false,
+      icon: 'i-heroicons-calculator'
+    })
+  }
+
+  if (entity.value.traits && entity.value.traits.length > 0) {
+    items.push({
+      label: `Class Traits (${entity.value.traits.length})`,
+      slot: 'traits',
+      defaultOpen: false,
+      icon: 'i-heroicons-shield-check'
+    })
+  }
+
+  if (entity.value.level_progression && entity.value.level_progression.length > 0) {
+    items.push({
+      label: 'Spell Slot Progression',
+      slot: 'level-progression',
+      defaultOpen: false,
+      icon: 'i-heroicons-sparkles'
+    })
+  }
+
+  if (entity.value.equipment && entity.value.equipment.length > 0) {
+    items.push({
+      label: 'Starting Equipment & Proficiencies',
+      slot: 'equipment',
+      defaultOpen: false,
+      icon: 'i-heroicons-shopping-bag'
+    })
+  }
+
+  if (entity.value.proficiencies && entity.value.proficiencies.length > 0) {
+    items.push({
+      label: `Proficiencies (${entity.value.proficiencies.length})`,
+      slot: 'proficiencies',
+      defaultOpen: false,
+      icon: 'i-heroicons-academic-cap'
+    })
+  }
+
+  if (entity.value.features && entity.value.features.length > 0) {
+    items.push({
+      label: `Features (${entity.value.features.length})`,
+      slot: 'features',
+      defaultOpen: false,
+      icon: 'i-heroicons-star'
+    })
+  }
+
+  if (entity.value.sources && entity.value.sources.length > 0) {
+    items.push({
+      label: 'Source',
+      slot: 'source',
+      defaultOpen: false,
+      icon: 'i-heroicons-book-open'
+    })
+  }
+
+  return items
 })
 </script>
 
@@ -100,61 +166,47 @@ const remainingTraits = computed(() => {
         </div>
       </div>
 
-      <!-- Description (from first trait or fallback to description) -->
-      <UiDetailDescriptionCard
-        v-if="firstTrait?.description || entity.description"
-        :description="firstTrait?.description || entity.description || ''"
+      <!-- Class Progression Table -->
+      <UiClassProgressionTable
+        v-if="entity.is_base_class && baseClassFeatures.length > 0"
+        :features="baseClassFeatures"
+        :counters="entity.counters || []"
       />
+
+      <!-- Description -->
+      <UiDetailDescriptionCard
+        v-if="entity.description"
+        :description="entity.description"
+      />
+
+      <!-- Hit Points Card -->
+      <UiClassHitPointsCard
+        v-if="entity.hit_die && entity.is_base_class"
+        :hit-die="Number(entity.hit_die)"
+        :class-name="entity.name"
+      />
+
+      <!-- Subclasses (Card Grid) -->
+      <div
+        v-if="entity.is_base_class && entity.subclasses && entity.subclasses.length > 0"
+        class="space-y-4"
+      >
+        <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 flex items-center gap-2">
+          <UIcon
+            name="i-heroicons-users"
+            class="w-5 h-5 text-gray-400"
+          />
+          Subclasses ({{ entity.subclasses.length }})
+        </h3>
+        <UiClassSubclassCards
+          :subclasses="entity.subclasses"
+          base-path="/classes"
+        />
+      </div>
 
       <!-- Additional Details (Accordion) -->
       <UAccordion
-        :items="[
-          ...(entity.counters && entity.counters.length > 0 ? [{
-            label: 'Class Counters',
-            slot: 'counters',
-            defaultOpen: false
-          }] : []),
-          ...(remainingTraits.length > 0 ? [{
-            label: `Additional Class Traits (${remainingTraits.length})`,
-            slot: 'traits',
-            defaultOpen: false
-          }] : []),
-          ...(entity.level_progression && entity.level_progression.length > 0 ? [{
-            label: 'Spell Slot Progression',
-            slot: 'level-progression',
-            defaultOpen: false
-          }] : []),
-          ...(entity.equipment && entity.equipment.length > 0 ? [{
-            label: 'Starting Equipment & Proficiencies',
-            slot: 'equipment',
-            defaultOpen: false
-          }] : []),
-          ...(entity.proficiencies && entity.proficiencies.length > 0 ? [{
-            label: `Proficiencies (${entity.proficiencies.length})`,
-            slot: 'proficiencies',
-            defaultOpen: false
-          }] : []),
-          ...(entity.features && entity.features.length > 0 ? [{
-            label: `Features (${entity.features.length})`,
-            slot: 'features',
-            defaultOpen: false
-          }] : []),
-          ...(entity.subclasses && entity.subclasses.length > 0 ? [{
-            label: `Subclasses (${entity.subclasses.length})`,
-            slot: 'subclasses',
-            defaultOpen: false
-          }] : []),
-          ...(entity.sources && entity.sources.length > 0 ? [{
-            label: 'Source',
-            slot: 'source',
-            defaultOpen: false
-          }] : []),
-          ...(entity.tags && entity.tags.length > 0 ? [{
-            label: 'Tags',
-            slot: 'tags',
-            defaultOpen: false
-          }] : [])
-        ]"
+        :items="accordionItems"
         type="multiple"
       >
         <!-- Counters Slot -->
@@ -165,13 +217,13 @@ const remainingTraits = computed(() => {
           <UiAccordionClassCounters :counters="entity.counters" />
         </template>
 
-        <!-- Additional Traits Slot (excluding first trait shown in description) -->
+        <!-- Traits Slot -->
         <template
-          v-if="remainingTraits.length > 0"
+          v-if="entity.traits && entity.traits.length > 0"
           #traits
         >
           <UiAccordionTraitsList
-            :traits="remainingTraits"
+            :traits="entity.traits"
             border-color="primary-500"
           />
         </template>
@@ -214,31 +266,12 @@ const remainingTraits = computed(() => {
           />
         </template>
 
-        <!-- Subclasses Slot -->
-        <template
-          v-if="entity.subclasses && entity.subclasses.length > 0"
-          #subclasses
-        >
-          <UiAccordionSubclassesList
-            :subclasses="entity.subclasses"
-            base-path="/classes"
-          />
-        </template>
-
         <!-- Source Slot -->
         <template
           v-if="entity.sources && entity.sources.length > 0"
           #source
         >
           <UiSourceDisplay :sources="entity.sources" />
-        </template>
-
-        <!-- Tags Slot -->
-        <template
-          v-if="entity.tags && entity.tags.length > 0"
-          #tags
-        >
-          <UiTagsDisplay :tags="entity.tags" />
         </template>
       </UAccordion>
 
