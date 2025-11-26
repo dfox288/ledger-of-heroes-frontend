@@ -8,11 +8,11 @@
 
 | Metric | Count |
 |--------|-------|
-| Test Files | 118 |
-| Test Cases | ~1,450 |
+| Test Files | 120 |
+| Test Cases | ~1,573 |
 | Components | 81 |
 | Pages | 31 |
-| Composables | 14 |
+| Composables | 15 |
 | Pinia Stores | 8 |
 
 ---
@@ -93,6 +93,8 @@
 
 ## Recent Milestones
 
+- **2025-11-26:** Page Filter Setup Composable (removed ~140 lines duplication)
+- **2025-11-26:** Pinia Store Factory Pattern (80% code reduction)
 - **2025-11-26:** Filter persistence with IndexedDB (7 stores)
 - **2025-11-26:** Domain-specific test suites
 - **2025-11-26:** API verification proposals (7 entities)
