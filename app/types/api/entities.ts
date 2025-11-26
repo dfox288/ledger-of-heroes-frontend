@@ -144,6 +144,24 @@ export type EntityConditionResource = components['schemas']['EntityConditionReso
 export type EntityPrerequisiteResource = components['schemas']['EntityPrerequisiteResource']
 
 /**
+ * Class computed data types for detail views
+ * These are pre-calculated by the backend to eliminate frontend calculations
+ */
+export type ClassComputedResource = components['schemas']['ClassComputedResource']
+
+/** Pre-computed hit points with D&D 5e formulas */
+export type ClassHitPoints = NonNullable<ClassComputedResource['hit_points']>
+
+/** Pre-computed spell slot summary for caster classes */
+export type ClassSpellSlotSummary = NonNullable<ClassComputedResource['spell_slot_summary']>
+
+/** Section counts for lazy-loading accordion badges */
+export type ClassSectionCounts = NonNullable<ClassComputedResource['section_counts']>
+
+/** Pre-computed progression table with dynamic columns */
+export type ClassProgressionTable = NonNullable<ClassComputedResource['progression_table']>
+
+/**
  * Lookup/Reference types for filter dropdowns
  *
  * These are simple slug/name pairs returned by /api/v1/lookups/* endpoints.
