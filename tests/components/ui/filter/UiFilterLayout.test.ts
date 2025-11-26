@@ -91,7 +91,7 @@ describe('UiFilterLayout', () => {
       expect(primaryContainer.classes()).toContain('gap-3')
     })
 
-    it('applies responsive grid to quick slot container', async () => {
+    it('applies flex layout to quick slot container', async () => {
       const wrapper = await mountSuspended(UiFilterLayout, {
         slots: {
           quick: '<div>Quick</div>'
@@ -99,10 +99,8 @@ describe('UiFilterLayout', () => {
       })
 
       const quickContainer = wrapper.find('[data-section="quick"]')
-      expect(quickContainer.classes()).toContain('grid')
-      expect(quickContainer.classes()).toContain('grid-cols-2')
-      expect(quickContainer.classes()).toContain('sm:grid-cols-3')
-      expect(quickContainer.classes()).toContain('lg:grid-cols-5')
+      expect(quickContainer.classes()).toContain('flex')
+      expect(quickContainer.classes()).toContain('flex-wrap')
       expect(quickContainer.classes()).toContain('gap-3')
     })
 
