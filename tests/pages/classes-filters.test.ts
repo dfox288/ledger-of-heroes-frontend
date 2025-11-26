@@ -28,12 +28,12 @@ describe('Classes Page - Filter Layout', () => {
       component.isSpellcaster = '1'
       await wrapper.vm.$nextTick()
 
-      // Find the chips container
-      const chipsContainer = wrapper.find('[data-testid="chips-container"]')
-      expect(chipsContainer.exists()).toBe(true)
+      // Find the active filters row
+      const activeFiltersRow = wrapper.find('[data-testid="active-filters-row"]')
+      expect(activeFiltersRow.exists()).toBe(true)
 
       // Check it has justify-between class
-      expect(chipsContainer.classes()).toContain('justify-between')
+      expect(activeFiltersRow.classes()).toContain('justify-between')
     })
 
     it('displays Clear filters button with right alignment', async () => {
@@ -83,11 +83,11 @@ describe('Classes Page - Filter Layout', () => {
       component.isBaseClass = '1'
       await wrapper.vm.$nextTick()
 
-      // Find chip
-      const chips = wrapper.findAll('.gap-2 button')
-      const baseClassChip = chips.find(c => c.text().includes('Base Class Only'))
-      expect(baseClassChip).toBeDefined()
-      expect(baseClassChip?.text()).toContain('Yes')
+      // Find chip by test ID
+      const baseClassChip = wrapper.find('[data-testid="is-base-class-filter-chip"]')
+      expect(baseClassChip.exists()).toBe(true)
+      expect(baseClassChip.text()).toContain('Base Class')
+      expect(baseClassChip.text()).toContain('Yes')
     })
 
     it('shows Spellcaster filter chip', async () => {
@@ -97,11 +97,11 @@ describe('Classes Page - Filter Layout', () => {
       component.isSpellcaster = '0'
       await wrapper.vm.$nextTick()
 
-      // Find chip
-      const chips = wrapper.findAll('.gap-2 button')
-      const spellcasterChip = chips.find(c => c.text().includes('Spellcaster'))
-      expect(spellcasterChip).toBeDefined()
-      expect(spellcasterChip?.text()).toContain('No')
+      // Find chip by test ID
+      const spellcasterChip = wrapper.find('[data-testid="is-spellcaster-filter-chip"]')
+      expect(spellcasterChip.exists()).toBe(true)
+      expect(spellcasterChip.text()).toContain('Spellcaster')
+      expect(spellcasterChip.text()).toContain('No')
     })
 
     it('shows search query chip', async () => {
@@ -111,10 +111,10 @@ describe('Classes Page - Filter Layout', () => {
       component.searchQuery = 'Wizard'
       await wrapper.vm.$nextTick()
 
-      // Find chip
-      const chips = wrapper.findAll('.gap-2 button')
-      const searchChip = chips.find(c => c.text().includes('Wizard'))
-      expect(searchChip).toBeDefined()
+      // Find chip by test ID
+      const searchChip = wrapper.find('[data-testid="search-query-chip"]')
+      expect(searchChip.exists()).toBe(true)
+      expect(searchChip.text()).toContain('Wizard')
     })
 
     it('clicking filter chip clears that filter', async () => {
@@ -125,11 +125,10 @@ describe('Classes Page - Filter Layout', () => {
       await wrapper.vm.$nextTick()
 
       // Find and click chip
-      const chips = wrapper.findAll('.gap-2 button')
-      const baseClassChip = chips.find(c => c.text().includes('Base Class Only'))
-      expect(baseClassChip).toBeDefined()
+      const baseClassChip = wrapper.find('[data-testid="is-base-class-filter-chip"]')
+      expect(baseClassChip.exists()).toBe(true)
 
-      await baseClassChip?.trigger('click')
+      await baseClassChip.trigger('click')
 
       // Filter should be cleared
       expect(component.isBaseClass).toBe(null)

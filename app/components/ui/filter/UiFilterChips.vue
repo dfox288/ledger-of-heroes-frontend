@@ -74,12 +74,14 @@ const showClearButton = computed(() => props.activeCount > 0 || props.searchQuer
   <div
     v-if="visible"
     class="flex flex-wrap items-center justify-between gap-2 pt-2"
+    data-testid="active-filters-row"
   >
     <div class="flex flex-wrap items-center gap-2">
       <!-- Label -->
       <span
         v-if="activeCount > 0 || searchQuery"
         class="text-sm font-medium text-gray-600 dark:text-gray-400"
+        data-testid="active-filters-label"
       >
         Active filters:
       </span>
@@ -96,7 +98,7 @@ const showClearButton = computed(() => props.activeCount > 0 || props.searchQuer
       <!-- 4. Search chip (always last before clear button) -->
       <UButton
         v-if="searchQuery"
-        data-testid="search-filter-chip"
+        data-testid="search-query-chip"
         size="xs"
         color="neutral"
         variant="soft"
@@ -109,6 +111,7 @@ const showClearButton = computed(() => props.activeCount > 0 || props.searchQuer
     <!-- Clear Filters Button (right-aligned) -->
     <UButton
       v-if="showClearButton"
+      data-testid="clear-filters-button"
       color="neutral"
       variant="soft"
       size="sm"
