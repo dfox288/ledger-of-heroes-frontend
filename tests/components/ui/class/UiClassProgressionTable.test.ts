@@ -7,146 +7,123 @@ describe('UiClassProgressionTable', () => {
     global: {
       stubs: {
         UCard: {
-          template: '<div class="card"><slot /></div>'
-        },
-        UTable: {
-          template: '<table class="table"><slot /></table>',
-          props: ['data', 'columns']
-        },
-        UBadge: {
-          template: '<span class="badge"><slot /></span>',
-          props: ['color', 'variant', 'size']
+          template: '<div class="card"><template v-if="$slots.header"><div class="card-header"><slot name="header" /></div></template><slot /></div>'
         }
       }
     }
   }
 
-  const mockFeatures = [
-    { id: 1, level: 1, feature_name: 'Expertise', description: 'Choose two proficiencies', is_optional: false, sort_order: 1 },
-    { id: 2, level: 1, feature_name: 'Sneak Attack', description: 'Deal extra damage', is_optional: false, sort_order: 2 },
-    { id: 3, level: 1, feature_name: "Thieves' Cant", description: 'Secret language', is_optional: false, sort_order: 3 },
-    { id: 4, level: 2, feature_name: 'Cunning Action', description: 'Bonus action Dash/Disengage/Hide', is_optional: false, sort_order: 4 },
-    { id: 5, level: 3, feature_name: 'Roguish Archetype', description: 'Choose subclass', is_optional: false, sort_order: 5 }
-  ]
+  // Mock progression table matching API response structure
+  const mockProgressionTable = {
+    columns: [
+      { key: 'level', label: 'Level', type: 'integer' },
+      { key: 'proficiency_bonus', label: 'Proficiency Bonus', type: 'bonus' },
+      { key: 'features', label: 'Features', type: 'string' },
+      { key: 'sneak_attack', label: 'Sneak Attack', type: 'dice' }
+    ],
+    rows: [
+      { level: 1, proficiency_bonus: '+2', features: 'Expertise, Sneak Attack', sneak_attack: '1d6' },
+      { level: 2, proficiency_bonus: '+2', features: 'Cunning Action', sneak_attack: '1d6' },
+      { level: 3, proficiency_bonus: '+2', features: 'Roguish Archetype', sneak_attack: '2d6' },
+      { level: 4, proficiency_bonus: '+2', features: 'Ability Score Improvement', sneak_attack: '2d6' },
+      { level: 5, proficiency_bonus: '+3', features: 'Uncanny Dodge', sneak_attack: '3d6' }
+    ]
+  }
 
-  const mockCounters = [
-    { id: 1, level: 1, counter_name: 'Sneak Attack', counter_value: 1, reset_timing: 'Does Not Reset' as const },
-    { id: 2, level: 3, counter_name: 'Sneak Attack', counter_value: 2, reset_timing: 'Does Not Reset' as const },
-    { id: 3, level: 5, counter_name: 'Sneak Attack', counter_value: 3, reset_timing: 'Does Not Reset' as const }
-  ]
+  const mockProgressionTableNoCounters = {
+    columns: [
+      { key: 'level', label: 'Level', type: 'integer' },
+      { key: 'proficiency_bonus', label: 'Proficiency Bonus', type: 'bonus' },
+      { key: 'features', label: 'Features', type: 'string' }
+    ],
+    rows: [
+      { level: 1, proficiency_bonus: '+2', features: 'Starting Feature' },
+      { level: 2, proficiency_bonus: '+2', features: '—' },
+      { level: 3, proficiency_bonus: '+2', features: 'Archetype Feature' }
+    ]
+  }
 
-  it('renders a table with level column', () => {
+  it('renders a table with headers from columns', () => {
     const wrapper = mount(UiClassProgressionTable, {
-      props: {
-        features: mockFeatures,
-        counters: []
-      },
+      props: { progressionTable: mockProgressionTable },
       ...mountOptions
     })
 
     expect(wrapper.find('table').exists()).toBe(true)
+    expect(wrapper.text()).toContain('Level')
+    expect(wrapper.text()).toContain('Proficiency Bonus')
+    expect(wrapper.text()).toContain('Features')
+    expect(wrapper.text()).toContain('Sneak Attack')
   })
 
-  it('renders all 20 levels by default', () => {
+  it('renders all rows from backend data', () => {
     const wrapper = mount(UiClassProgressionTable, {
-      props: {
-        features: mockFeatures,
-        counters: []
-      },
+      props: { progressionTable: mockProgressionTable },
       ...mountOptions
     })
 
-    // Component should generate 20 rows
-    expect(wrapper.vm.tableRows.length).toBe(20)
+    // Should have 5 data rows
+    const rows = wrapper.findAll('tbody tr')
+    expect(rows.length).toBe(5)
   })
 
-  it('groups features by level', () => {
+  it('displays features from backend data', () => {
     const wrapper = mount(UiClassProgressionTable, {
-      props: {
-        features: mockFeatures,
-        counters: []
-      },
+      props: { progressionTable: mockProgressionTable },
       ...mountOptions
     })
 
-    const level1Row = wrapper.vm.tableRows.find((r: { level: number }) => r.level === 1)
-    expect(level1Row.features).toContain('Expertise')
-    expect(level1Row.features).toContain('Sneak Attack')
-    expect(level1Row.features).toContain("Thieves' Cant")
+    expect(wrapper.text()).toContain('Expertise, Sneak Attack')
+    expect(wrapper.text()).toContain('Cunning Action')
+    expect(wrapper.text()).toContain('Roguish Archetype')
   })
 
-  it('calculates proficiency bonus correctly', () => {
+  it('displays proficiency bonus from backend data', () => {
     const wrapper = mount(UiClassProgressionTable, {
-      props: {
-        features: [],
-        counters: []
-      },
+      props: { progressionTable: mockProgressionTable },
       ...mountOptions
     })
 
-    const rows = wrapper.vm.tableRows
-    expect(rows[0].proficiencyBonus).toBe('+2')  // Level 1
-    expect(rows[4].proficiencyBonus).toBe('+3')  // Level 5
-    expect(rows[8].proficiencyBonus).toBe('+4')  // Level 9
-    expect(rows[12].proficiencyBonus).toBe('+5') // Level 13
-    expect(rows[16].proficiencyBonus).toBe('+6') // Level 17
+    expect(wrapper.text()).toContain('+2')
+    expect(wrapper.text()).toContain('+3')
   })
 
-  it('adds counter columns dynamically', () => {
+  it('displays counter columns from backend data', () => {
     const wrapper = mount(UiClassProgressionTable, {
-      props: {
-        features: [],
-        counters: mockCounters
-      },
+      props: { progressionTable: mockProgressionTable },
       ...mountOptions
     })
 
-    expect(wrapper.vm.columns.some((c: { key: string }) => c.key === 'counter_Sneak Attack')).toBe(true)
+    expect(wrapper.text()).toContain('1d6')
+    expect(wrapper.text()).toContain('2d6')
+    expect(wrapper.text()).toContain('3d6')
   })
 
-  it('interpolates counter values for levels without explicit entries', () => {
+  it('handles tables without counter columns', () => {
     const wrapper = mount(UiClassProgressionTable, {
-      props: {
-        features: [],
-        counters: mockCounters
-      },
+      props: { progressionTable: mockProgressionTableNoCounters },
       ...mountOptions
     })
 
-    const rows = wrapper.vm.tableRows
-    // Level 1 has explicit value 1
-    expect(rows[0]['counter_Sneak Attack']).toBe('1d6')
-    // Level 2 should carry forward value 1
-    expect(rows[1]['counter_Sneak Attack']).toBe('1d6')
-    // Level 3 has explicit value 2
-    expect(rows[2]['counter_Sneak Attack']).toBe('2d6')
-    // Level 4 should carry forward value 2
-    expect(rows[3]['counter_Sneak Attack']).toBe('2d6')
+    expect(wrapper.find('table').exists()).toBe(true)
+    expect(wrapper.text()).not.toContain('Sneak Attack')
   })
 
-  it('shows dash for empty feature levels', () => {
+  it('displays dash for empty feature levels', () => {
     const wrapper = mount(UiClassProgressionTable, {
-      props: {
-        features: mockFeatures,
-        counters: []
-      },
+      props: { progressionTable: mockProgressionTableNoCounters },
       ...mountOptions
     })
 
-    const level4Row = wrapper.vm.tableRows.find((r: { level: number }) => r.level === 4)
-    expect(level4Row.features).toBe('—')
+    expect(wrapper.text()).toContain('—')
   })
 
-  it('does not render when features array is empty and no counters', () => {
+  it('renders card header with title', () => {
     const wrapper = mount(UiClassProgressionTable, {
-      props: {
-        features: [],
-        counters: []
-      },
+      props: { progressionTable: mockProgressionTable },
       ...mountOptions
     })
 
-    // Should still render the table structure (empty progression is valid)
-    expect(wrapper.find('.card').exists()).toBe(true)
+    expect(wrapper.text()).toContain('Class Progression')
   })
 })
