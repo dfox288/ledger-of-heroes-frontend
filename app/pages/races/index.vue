@@ -1,29 +1,55 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { computed, watch, onMounted } from 'vue'
+import { storeToRefs } from 'pinia'
 import type { Race, Size, AbilityScore } from '~/types'
+import { useRaceFiltersStore } from '~/stores/raceFilters'
 
 const route = useRoute()
 
-// Filter collapse state
-const filtersOpen = ref(false)
+// Use filter store instead of local refs
+const store = useRaceFiltersStore()
+const {
+  searchQuery,
+  sortBy,
+  sortDirection,
+  selectedSources,
+  selectedSize,
+  selectedSpeedRange,
+  selectedParentRace,
+  raceTypeFilter,
+  hasInnateSpellsFilter,
+  selectedAbilityBonuses,
+  filtersOpen
+} = storeToRefs(store)
 
-// Sorting state
-const sortBy = ref<string>((route.query.sort_by as string) || 'name')
-const sortDirection = ref<'asc' | 'desc'>((route.query.sort_direction as 'asc' | 'desc') || 'asc')
+// URL sync composable
+const { hasUrlParams, syncToUrl, clearUrl } = useFilterUrlSync()
+
+// On mount: URL params override persisted state
+onMounted(() => {
+  if (hasUrlParams.value) {
+    store.setFromUrlQuery(route.query)
+  }
+})
+
+// Sync store changes to URL (debounced)
+let urlSyncTimeout: ReturnType<typeof setTimeout> | null = null
+watch(
+  () => store.toUrlQuery,
+  (query) => {
+    if (urlSyncTimeout) clearTimeout(urlSyncTimeout)
+    urlSyncTimeout = setTimeout(() => {
+      syncToUrl(query)
+    }, 300)
+  },
+  { deep: true }
+)
+
+// Sort value computed (combines sortBy + sortDirection)
 const sortValue = useSortValue(sortBy, sortDirection)
 
-// Source filter (using composable)
-const { selectedSources, sourceOptions, getSourceName, clearSources } = useSourceFilter()
-
-// Entity-specific filter state
-const selectedSize = ref((route.query.size as string) || '')
-const selectedSpeedRange = ref<string | null>((route.query.speed as string) || null)
-const selectedParentRace = ref((route.query.parent_race as string) || '')
-const raceTypeFilter = ref<string | null>((route.query.race_type as string) || null)
-const hasInnateSpellsFilter = ref<string | null>((route.query.has_innate_spells as string) || null)
-const selectedAbilityBonuses = ref<string[]>(
-  route.query.ability ? (Array.isArray(route.query.ability) ? route.query.ability : [route.query.ability]) as string[] : []
-)
+// Source filter options (still need the composable for options)
+const { sourceOptions, getSourceName } = useSourceFilter()
 
 // Fetch reference data
 const { data: sizes } = useReferenceData<Size>('/sizes', { cacheKey: 'sizes-for-races' })
@@ -78,8 +104,8 @@ const abilityBonusFilter = computed(() => {
   return conditions.join(' OR ')
 })
 
-// Query builder for base filters
-const baseFilters = useMeilisearchFilters([
+// Query builder for base filters (uses store refs)
+const { queryParams: baseFilterParams } = useMeilisearchFilters([
   { ref: selectedSize, field: 'size_code' },
   { ref: selectedSources, field: 'source_codes', type: 'in' },
   { ref: selectedParentRace, field: 'parent_race_name' },
@@ -89,7 +115,7 @@ const baseFilters = useMeilisearchFilters([
 
 // Combine base filters with custom filters
 const queryParams = computed(() => {
-  const params = { ...baseFilters.queryParams.value }
+  const params = { ...baseFilterParams.value }
   const meilisearchFilters: string[] = []
 
   // Add speed range filter
@@ -122,38 +148,30 @@ const queryParams = computed(() => {
 
 // Use entity list composable
 const {
-  searchQuery,
   currentPage,
-  data: racesData,
+  data,
   meta,
   totalResults,
   loading,
   error,
-  refresh,
-  clearFilters: clearBaseFilters,
-  hasActiveFilters
+  refresh
 } = useEntityList({
   endpoint: '/races',
   cacheKey: 'races-list',
   queryBuilder: queryParams,
+  searchQuery, // Pass store's searchQuery
   seo: {
     title: 'Races - D&D 5e Compendium',
     description: 'Browse all D&D 5e player races and subraces.'
   }
 })
 
-const races = computed(() => racesData.value as Race[])
+const races = computed(() => data.value as Race[])
 
-// Clear all filters
+// Clear all filters - uses store action + URL clear
 const clearFilters = () => {
-  clearBaseFilters()
-  clearSources()
-  selectedSize.value = ''
-  selectedSpeedRange.value = null
-  selectedParentRace.value = ''
-  raceTypeFilter.value = null
-  hasInnateSpellsFilter.value = null
-  selectedAbilityBonuses.value = []
+  store.clearAll()
+  clearUrl()
 }
 
 // Helper functions
@@ -163,16 +181,11 @@ const getSpeedRangeLabel = (value: string | null) => {
 
 const getSizeName = (code: string) => sizes.value?.find(s => s.code === code)?.name || code
 
-// Active filter count
-const activeFilterCount = useFilterCount(
-  selectedSize,
-  selectedSources,
-  selectedParentRace,
-  raceTypeFilter,
-  hasInnateSpellsFilter,
-  selectedAbilityBonuses,
-  selectedSpeedRange
-)
+// Active filter count (use store getter)
+const activeFilterCount = computed(() => store.activeFilterCount)
+
+// Has active filters (use store getter)
+const hasActiveFilters = computed(() => store.hasActiveFilters)
 
 const perPage = 24
 </script>
