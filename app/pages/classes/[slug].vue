@@ -223,10 +223,30 @@ const accordionItems = computed(() => {
           />
         </div>
 
-        <!-- Standalone Image - 1/3 width on large screens -->
+        <!-- Image Section - 1/3 width on large screens -->
         <div class="lg:col-span-1">
+          <!-- Subclass: Dual image display with parent overlay -->
+          <div
+            v-if="isSubclass && parentClass"
+            class="relative"
+          >
+            <UiDetailEntityImage
+              v-if="imagePath"
+              :image-path="imagePath"
+              :image-alt="`${entity.name} subclass illustration`"
+            />
+            <!-- Parent Class Overlay -->
+            <div class="absolute bottom-2 right-2">
+              <UiClassParentImageOverlay
+                :parent-slug="parentClass.slug"
+                :parent-name="parentClass.name"
+              />
+            </div>
+          </div>
+
+          <!-- Base Class: Single image -->
           <UiDetailEntityImage
-            v-if="imagePath"
+            v-else-if="imagePath"
             :image-path="imagePath"
             :image-alt="`${entity.name} class illustration`"
           />
