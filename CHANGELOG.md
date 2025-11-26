@@ -11,6 +11,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **Class Detail Page Enhancements (2025-11-26)** - Major improvements to class pages
+  - **Class Progression Table** - Shows all 20 levels with features and counters (e.g., Sneak Attack dice)
+  - **Hit Points Card** - Displays HP calculations (hit die, 1st level HP, HP per level with average)
+  - **Subclass Cards** - Replaced nested accordion with visual card grid linking to subclass pages
+  - **Accordion Icons** - Added icons to all accordion section headers
+  - 3 new components: `UiClassProgressionTable`, `UiClassHitPointsCard`, `UiClassSubclassCards`
+  - 21 new tests (all passing)
+
 - **New UiFilterSelect Component (2025-11-25)** - Wrapper for USelectMenu with consistent label structure
   - Matches height of UiFilterMultiSelect and UiFilterToggle
   - Prevents vertical drift in flex filter layouts
