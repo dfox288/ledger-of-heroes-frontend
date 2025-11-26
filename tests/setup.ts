@@ -1,6 +1,36 @@
 import { vi, afterEach, beforeEach } from 'vitest'
 import { config, enableAutoUnmount, flushPromises } from '@vue/test-utils'
+import { h } from 'vue'
 import 'vitest-canvas-mock'
+
+// =============================================================================
+// MOCK NUXT UI ICON COMPONENT
+// =============================================================================
+// Icons fail to load in test environment because the icon provider isn't
+// available. Mock the Icon component to render a simple span with the icon name.
+// This silences "[Icon] failed to load icon" warnings in test output.
+// =============================================================================
+
+// Create mock with explicit name for findComponent({ name: 'UIcon' }) to work
+const createMockIcon = (componentName: string) => ({
+  name: componentName,
+  props: ['name', 'size', 'class'],
+  setup(props: { name?: string; class?: string }) {
+    // Preserve the class attribute so tests checking for classes like 'animate-spin' still work
+    const classes = ['mock-icon', props.class].filter(Boolean).join(' ')
+    // Don't render icon name as text content - it adds to wrapper.text() length
+    // and breaks tests that check text length (like description truncation tests)
+    return () => h('span', { class: classes, 'data-icon': props.name })
+  }
+})
+
+// Register mock as global stub for all tests
+// Each stub needs its own component name for findComponent to work
+config.global.stubs = {
+  ...config.global.stubs,
+  Icon: createMockIcon('Icon'),
+  UIcon: createMockIcon('UIcon'),
+}
 
 // =============================================================================
 // GLOBAL TEST CLEANUP - CRITICAL FOR CPU/MEMORY MANAGEMENT
