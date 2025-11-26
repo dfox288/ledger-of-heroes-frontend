@@ -15,7 +15,7 @@ A comprehensive audit of the Classes detail page API responses revealed several 
 
 | Priority | Issues | Effort |
 |----------|--------|--------|
-| Critical | 3 | Low-Medium |
+| Critical | 2 | Low-Medium |
 | High | 4 | Medium |
 | Medium | 5 | Medium-High |
 | Low | 3 | Low |
@@ -27,7 +27,6 @@ A comprehensive audit of the Classes detail page API responses revealed several 
 1. [Critical Issues](#1-critical-issues)
    - 1.1 [Subclass hit_die: 0 Bug](#11-subclass-hit_die-0-bug)
    - 1.2 [Subclass Description Placeholder](#12-subclass-description-placeholder)
-   - 1.3 [Arcane Recovery Level Incorrect](#13-arcane-recovery-level-incorrect)
 2. [High Priority Issues](#2-high-priority-issues)
    - 2.1 [Choice Options as Separate Features](#21-choice-options-as-separate-features)
    - 2.2 [Multiclass Rules Mixed with Core Features](#22-multiclass-rules-mixed-with-core-features)
@@ -41,7 +40,8 @@ A comprehensive audit of the Classes detail page API responses revealed several 
    - 3.5 [Duplicate Description Content](#35-duplicate-description-content)
 4. [Low Priority Issues](#4-low-priority-issues)
 5. [Implementation Recommendations](#5-implementation-recommendations)
-6. [Appendix: Affected Classes/Subclasses](#6-appendix-affected-classessubclasses)
+6. [Appendix A: Affected Classes/Subclasses](#6-appendix-a-affected-classessubclasses)
+7. [Appendix B: Canonical PHB Progression Table Columns](#7-appendix-b-canonical-phb-progression-table-columns)
 
 ---
 
@@ -210,56 +210,6 @@ protected function getEffectiveDescription(): string
 - [ ] Subclass `description` contains thematic flavor text
 - [ ] Description is 1-3 paragraphs (not the full feature text with Source reference)
 - [ ] Placeholder "Subclass of X" is replaced for all subclasses
-
----
-
-### 1.3 Arcane Recovery Level Incorrect
-
-**Severity**: Critical
-**Affected Endpoints**: `GET /api/v1/classes/wizard`
-
-#### Problem
-
-The Arcane Recovery feature is listed at level 6, but per PHB it's a level 1 feature:
-
-```json
-{
-  "features": [
-    {
-      "id": 1074,
-      "level": 6,  // ❌ Should be 1
-      "feature_name": "Arcane Recovery",
-      "description": "You have learned to regain some of your Magical energy..."
-    }
-  ]
-}
-```
-
-Meanwhile, the progression table correctly shows `arcane_recovery: "1"` at level 1.
-
-#### D&D 5e Rules Reference
-
-PHB p. 115:
-> "You have learned to regain some of your magical energy by studying your spellbook. Once per day when you finish a short rest..."
-
-This is listed under "Arcane Recovery" at 1st level in the class features section.
-
-#### Required Fix
-
-```sql
--- Fix Arcane Recovery level
-UPDATE class_features
-SET level = 1
-WHERE feature_name = 'Arcane Recovery'
-  AND class_id = (SELECT id FROM character_classes WHERE slug = 'wizard');
-```
-
-Or during re-import, ensure the level parsing correctly identifies this as a level 1 feature.
-
-#### Acceptance Criteria
-
-- [ ] Arcane Recovery feature has `level: 1`
-- [ ] Progression table and features list are consistent
 
 ---
 
@@ -886,8 +836,8 @@ Many feature descriptions end with "Source: Player's Handbook (2014) p. X" which
 
 1. **Phase 1 - Data Fixes** (no schema changes)
    - Fix `hit_die: 0` values
-   - Fix Arcane Recovery level
    - Populate subclass descriptions
+   - Remove non-canonical progression table columns (see Appendix B)
 
 2. **Phase 2 - Schema Additions**
    - Add `is_choice_option`, `parent_feature_id`, `choice_group` to features
@@ -923,7 +873,7 @@ After backend changes, frontend will need to:
 
 ---
 
-## 6. Appendix: Affected Classes/Subclasses
+## 6. Appendix A: Affected Classes/Subclasses
 
 ### Subclasses with hit_die: 0
 
@@ -962,8 +912,242 @@ ORDER BY class_id, level;
 
 ---
 
+## 7. Appendix B: Canonical PHB Progression Table Columns
+
+This appendix defines which columns should appear in each class's progression table based on the official Player's Handbook tables. This serves as a reference for the `ClassProgressionTableGenerator` to ensure API output matches official source material.
+
+### Design Principles
+
+1. **Match PHB presentation** - Columns should match what appears in the official class tables
+2. **No formula columns** - Features like Arcane Recovery that use formulas (ceil(level/2)) belong in feature descriptions, not as numeric columns
+3. **Subclasses inherit parent columns** - Subclass tables should use the same columns as their parent class
+
+### Column Types
+
+| Type | Description | Examples |
+|------|-------------|----------|
+| `level` | Character level (always present) | 1-20 |
+| `proficiency_bonus` | Proficiency bonus (always present) | +2 to +6 |
+| `features` | Features gained at each level (always present) | "Rage, Unarmored Defense" |
+| `resource` | Numeric resource that scales with level | Rage (2→6), Ki (2→20) |
+| `dice` | Damage dice that scale with level | Sneak Attack (1d6→10d6), Martial Arts (1d4→1d10) |
+| `spell_slots` | Spell slots per level (spellcasters only) | 1st: 2, 2nd: 0, etc. |
+
+### Canonical Columns by Class
+
+#### Barbarian (PHB p. 47)
+| Column | Type | Notes |
+|--------|------|-------|
+| Level | level | |
+| Proficiency Bonus | proficiency_bonus | |
+| Features | features | |
+| Rages | resource | 2 at L1 → 6 at L17, Unlimited at L20 |
+| Rage Damage | resource | +2 at L1 → +4 at L16 |
+
+**NOT included**: No other columns. Brutal Critical dice scaling is in feature description.
+
+---
+
+#### Bard (PHB p. 53)
+| Column | Type | Notes |
+|--------|------|-------|
+| Level | level | |
+| Proficiency Bonus | proficiency_bonus | |
+| Features | features | |
+| Cantrips Known | resource | 2 at L1 → 4 at L10 |
+| Spells Known | resource | 4 at L1 → 22 at L20 |
+| Spell Slots (1st-9th) | spell_slots | Full caster progression |
+
+**NOT included**: Bardic Inspiration die (in feature description).
+
+---
+
+#### Cleric (PHB p. 57)
+| Column | Type | Notes |
+|--------|------|-------|
+| Level | level | |
+| Proficiency Bonus | proficiency_bonus | |
+| Features | features | |
+| Cantrips Known | resource | 3 at L1 → 5 at L10 |
+| Spell Slots (1st-9th) | spell_slots | Full caster progression |
+
+**NOT included**: Channel Divinity uses (in feature description), Destroy Undead CR (in feature description).
+
+---
+
+#### Druid (PHB p. 65)
+| Column | Type | Notes |
+|--------|------|-------|
+| Level | level | |
+| Proficiency Bonus | proficiency_bonus | |
+| Features | features | |
+| Cantrips Known | resource | 2 at L1 → 4 at L10 |
+| Spell Slots (1st-9th) | spell_slots | Full caster progression |
+
+**NOT included**: Wild Shape details (in feature description).
+
+---
+
+#### Fighter (PHB p. 71)
+| Column | Type | Notes |
+|--------|------|-------|
+| Level | level | |
+| Proficiency Bonus | proficiency_bonus | |
+| Features | features | |
+
+**NOT included**: The PHB Fighter table has NO numeric columns beyond the standard three. Action Surge uses, Indomitable uses, and Extra Attacks are all listed in the Features column.
+
+---
+
+#### Monk (PHB p. 77)
+| Column | Type | Notes |
+|--------|------|-------|
+| Level | level | |
+| Proficiency Bonus | proficiency_bonus | |
+| Martial Arts | dice | 1d4 at L1 → 1d10 at L17 |
+| Ki Points | resource | — at L1, 2 at L2 → 20 at L20 |
+| Unarmored Movement | resource | — at L1, +10 ft at L2 → +30 ft at L18 |
+| Features | features | |
+
+**Note**: Monk is unique in having Martial Arts die as a column.
+
+---
+
+#### Paladin (PHB p. 83)
+| Column | Type | Notes |
+|--------|------|-------|
+| Level | level | |
+| Proficiency Bonus | proficiency_bonus | |
+| Features | features | |
+| Spell Slots (1st-5th) | spell_slots | Half caster progression, starts at L2 |
+
+**NOT included**: Lay on Hands pool (formula: level × 5, belongs in feature description).
+
+---
+
+#### Ranger (PHB p. 90)
+| Column | Type | Notes |
+|--------|------|-------|
+| Level | level | |
+| Proficiency Bonus | proficiency_bonus | |
+| Features | features | |
+| Spells Known | resource | — at L1, 2 at L2 → 11 at L19 |
+| Spell Slots (1st-5th) | spell_slots | Half caster progression, starts at L2 |
+
+---
+
+#### Rogue (PHB p. 95)
+| Column | Type | Notes |
+|--------|------|-------|
+| Level | level | |
+| Proficiency Bonus | proficiency_bonus | |
+| Sneak Attack | dice | 1d6 at L1 → 10d6 at L19 |
+| Features | features | |
+
+---
+
+#### Sorcerer (PHB p. 100)
+| Column | Type | Notes |
+|--------|------|-------|
+| Level | level | |
+| Proficiency Bonus | proficiency_bonus | |
+| Sorcery Points | resource | — at L1, 2 at L2 → 20 at L20 |
+| Features | features | |
+| Cantrips Known | resource | 4 at L1 → 6 at L10 |
+| Spells Known | resource | 2 at L1 → 15 at L20 |
+| Spell Slots (1st-9th) | spell_slots | Full caster progression |
+
+---
+
+#### Warlock (PHB p. 106)
+| Column | Type | Notes |
+|--------|------|-------|
+| Level | level | |
+| Proficiency Bonus | proficiency_bonus | |
+| Features | features | |
+| Cantrips Known | resource | 2 at L1 → 4 at L10 |
+| Spells Known | resource | 2 at L1 → 15 at L19 |
+| Spell Slots | resource | 1 at L1 → 4 at L17 |
+| Slot Level | resource | 1st at L1 → 5th at L9 |
+| Invocations Known | resource | — at L1, 2 at L2 → 8 at L18 |
+
+**Note**: Warlock has unique Pact Magic columns (Spell Slots, Slot Level) instead of standard spell slot progression.
+
+---
+
+#### Wizard (PHB p. 113)
+| Column | Type | Notes |
+|--------|------|-------|
+| Level | level | |
+| Proficiency Bonus | proficiency_bonus | |
+| Features | features | |
+| Cantrips Known | resource | 3 at L1 → 5 at L10 |
+| Spell Slots (1st-9th) | spell_slots | Full caster progression |
+
+**NOT included**:
+- ❌ `arcane_recovery` - This is NOT in the PHB table. Arcane Recovery is a feature that lets you recover spell slot levels equal to ceil(wizard_level/2). The scaling is a formula in the feature description, not a tracked progression.
+
+---
+
+### Summary: Columns to Add/Remove
+
+#### Columns to REMOVE (not in PHB tables)
+
+| Class | Column | Reason |
+|-------|--------|--------|
+| Wizard | `arcane_recovery` | Formula-based feature, not in PHB table |
+| Cleric | `channel_divinity` | Listed in Features column in PHB |
+| Paladin | `lay_on_hands` | Formula-based (level × 5), not in PHB table |
+| Paladin | `channel_divinity` | Listed in Features column in PHB |
+| Paladin | `undying_sentinel` | Subclass-specific, only Oath of Ancients |
+| Fighter | `action_surge` | Listed in Features column in PHB |
+| Fighter | `indomitable` | Listed in Features column in PHB |
+| Fighter | `second_wind` | Listed in Features column in PHB |
+
+#### Columns to VERIFY
+
+| Class | Column | Status |
+|-------|--------|--------|
+| Barbarian | `rages`, `rage_damage` | ✅ Correct - in PHB table |
+| Monk | `martial_arts`, `ki_points`, `unarmored_movement` | ✅ Correct - in PHB table |
+| Rogue | `sneak_attack` | ✅ Correct - in PHB table |
+| Sorcerer | `sorcery_points` | ✅ Correct - in PHB table |
+| Warlock | `invocations_known` | ✅ Correct - in PHB table |
+
+---
+
+### Implementation Notes
+
+```php
+// Example: Define canonical columns per class
+const CANONICAL_COLUMNS = [
+    'barbarian' => ['level', 'proficiency_bonus', 'features', 'rages', 'rage_damage'],
+    'bard' => ['level', 'proficiency_bonus', 'features', 'cantrips_known', 'spells_known', ...SPELL_SLOTS],
+    'cleric' => ['level', 'proficiency_bonus', 'features', 'cantrips_known', ...SPELL_SLOTS],
+    'druid' => ['level', 'proficiency_bonus', 'features', 'cantrips_known', ...SPELL_SLOTS],
+    'fighter' => ['level', 'proficiency_bonus', 'features'],  // No resource columns!
+    'monk' => ['level', 'proficiency_bonus', 'martial_arts', 'ki_points', 'unarmored_movement', 'features'],
+    'paladin' => ['level', 'proficiency_bonus', 'features', ...HALF_CASTER_SLOTS],
+    'ranger' => ['level', 'proficiency_bonus', 'features', 'spells_known', ...HALF_CASTER_SLOTS],
+    'rogue' => ['level', 'proficiency_bonus', 'sneak_attack', 'features'],
+    'sorcerer' => ['level', 'proficiency_bonus', 'sorcery_points', 'features', 'cantrips_known', 'spells_known', ...SPELL_SLOTS],
+    'warlock' => ['level', 'proficiency_bonus', 'features', 'cantrips_known', 'spells_known', 'spell_slots', 'slot_level', 'invocations_known'],
+    'wizard' => ['level', 'proficiency_bonus', 'features', 'cantrips_known', ...SPELL_SLOTS],
+];
+
+// Subclasses inherit from parent
+public function getProgressionColumns(): array
+{
+    $baseClass = $this->is_base_class ? $this : $this->parentClass;
+    return self::CANONICAL_COLUMNS[$baseClass->slug] ?? self::DEFAULT_COLUMNS;
+}
+```
+
+---
+
 ## Changelog
 
 | Date | Author | Changes |
 |------|--------|---------|
 | 2025-11-26 | Claude | Initial proposal based on API verification audit |
+| 2025-11-26 | Claude | Removed Arcane Recovery from Critical Issues (not a bug - design choice). Added Appendix B with canonical PHB column definitions. |
