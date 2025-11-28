@@ -509,7 +509,7 @@ const accordionData = computed(() => {
         :hit-points="hitPointsData"
       />
 
-      <!-- Subclass Features (Primary Content for Subclasses) -->
+      <!-- Subclass Features (Primary Content for Subclasses) - Timeline View -->
       <div
         v-if="isSubclass && entity.features && entity.features.length > 0"
         class="space-y-4"
@@ -521,7 +521,7 @@ const accordionData = computed(() => {
           />
           {{ entity.name }} Features
         </h3>
-        <UiClassFeaturesByLevel
+        <UiClassFeaturesTimeline
           :features="entity.features"
         />
       </div>
@@ -548,7 +548,18 @@ const accordionData = computed(() => {
       <UAccordion
         :items="accordionItems"
         type="multiple"
+        class="border border-gray-200 dark:border-gray-700 rounded-lg"
       >
+        <!-- Custom leading slot for icons - soft neutral style -->
+        <template #leading="{ item }">
+          <div class="flex items-center justify-center w-8 h-8 rounded-lg bg-gray-100 dark:bg-gray-800">
+            <UIcon
+              :name="item.icon"
+              class="w-5 h-5 text-gray-500 dark:text-gray-400"
+            />
+          </div>
+        </template>
+
         <!-- Counters Slot -->
         <template
           v-if="accordionData.counters && accordionData.counters.length > 0"
@@ -595,14 +606,16 @@ const accordionData = computed(() => {
           <UiAccordionBulletList :items="accordionData.proficiencies" />
         </template>
 
-        <!-- Features Slot -->
+        <!-- Features Slot - Timeline View -->
         <template
           v-if="accordionData.features && accordionData.features.length > 0"
           #features
         >
-          <UiClassFeaturesByLevel
-            :features="accordionData.features"
-          />
+          <div class="p-4">
+            <UiClassFeaturesTimeline
+              :features="accordionData.features"
+            />
+          </div>
         </template>
 
         <!-- Source Slot (always from current entity) -->
