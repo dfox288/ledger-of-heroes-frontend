@@ -7,6 +7,7 @@ export type FilterType
     | 'range' // field >= min AND field <= max
     | 'isEmpty' // field IS EMPTY / IS NOT EMPTY
     | 'greaterThan' // field > value
+    | 'rangePreset' // field >= preset.min AND field <= preset.max
 
 export interface FilterConfig {
   /** Vue ref containing the filter value */
@@ -22,6 +23,9 @@ export interface FilterConfig {
   min?: Ref<number | null>
   max?: Ref<number | null>
 
+  /** For 'rangePreset' type: preset definitions */
+  presets?: Record<string, { min: number; max: number }>
+
   /** For 'equals' with lookup: transform value before filtering.
    * For 'in' type: receives array and should return transformed array. */
   transform?: (value: any) => string | number | null | (string | number | null)[]
@@ -35,7 +39,7 @@ export interface UseMeilisearchFiltersReturn {
 /**
  * Build Meilisearch filter params from declarative filter configs
  *
- * Handles all common filter types: equals, boolean, IN, ranges, isEmpty, greaterThan.
+ * Handles all common filter types: equals, boolean, IN, ranges, rangePreset, isEmpty, greaterThan.
  * Auto-skips null/undefined/empty values. Combines multiple filters with AND.
  *
  * @example
@@ -43,7 +47,8 @@ export interface UseMeilisearchFiltersReturn {
  * const { queryParams } = useMeilisearchFilters([
  *   { ref: selectedLevel, field: 'level' },
  *   { ref: concentrationFilter, field: 'concentration', type: 'boolean' },
- *   { ref: selectedDamageTypes, field: 'damage_types', type: 'in' }
+ *   { ref: selectedDamageTypes, field: 'damage_types', type: 'in' },
+ *   { ref: selectedACRange, field: 'armor_class', type: 'rangePreset', presets: AC_RANGE_PRESETS }
  * ])
  *
  * // Pass directly to useEntityList
@@ -144,6 +149,16 @@ export function useMeilisearchFilters(
 
         case 'greaterThan': {
           meilisearchFilters.push(`${config.field} > ${value}`)
+          break
+        }
+
+        case 'rangePreset': {
+          if (config.presets && value) {
+            const preset = config.presets[value as string]
+            if (preset) {
+              meilisearchFilters.push(`${config.field} >= ${preset.min} AND ${config.field} <= ${preset.max}`)
+            }
+          }
           break
         }
       }

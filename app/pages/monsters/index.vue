@@ -3,7 +3,7 @@ import { computed } from 'vue'
 import { storeToRefs } from 'pinia'
 import type { Monster, Size, MonsterType, ArmorType, Alignment } from '~/types'
 import { useMonsterFiltersStore } from '~/stores/monsterFilters'
-import { CR_OPTIONS, MOVEMENT_TYPE_OPTIONS, MONSTER_AC_RANGE_OPTIONS, MONSTER_HP_RANGE_OPTIONS } from '~/config/filterOptions'
+import { CR_OPTIONS, MOVEMENT_TYPE_OPTIONS, MONSTER_AC_RANGE_OPTIONS, MONSTER_HP_RANGE_OPTIONS, AC_RANGE_PRESETS, HP_RANGE_PRESETS } from '~/config/filterOptions'
 
 // Initialize store and URL sync
 const store = useMonsterFiltersStore()
@@ -120,7 +120,10 @@ const { queryParams: filterParams } = useMeilisearchFilters([
   { ref: hasReactions, field: 'has_reactions', type: 'boolean' },
   { ref: isSpellcaster, field: 'is_spellcaster', type: 'boolean' },
   { ref: hasMagicResistance, field: 'has_magic_resistance', type: 'boolean' },
-  { ref: selectedSources, field: 'source_codes', type: 'in' }
+  { ref: selectedSources, field: 'source_codes', type: 'in' },
+  // Range preset filters
+  { ref: selectedACRange, field: 'armor_class', type: 'rangePreset', presets: AC_RANGE_PRESETS },
+  { ref: selectedHPRange, field: 'hit_points_average', type: 'rangePreset', presets: HP_RANGE_PRESETS }
 ])
 
 const queryBuilder = computed(() => {
@@ -130,33 +133,6 @@ const queryBuilder = computed(() => {
   // Start with filters from composable
   if (params.filter) {
     meilisearchFilters.push(params.filter as string)
-  }
-
-  // Add AC range filter manually
-  if (selectedACRange.value) {
-    const ranges: Record<string, string> = {
-      '10-14': 'armor_class >= 10 AND armor_class <= 14',
-      '15-17': 'armor_class >= 15 AND armor_class <= 17',
-      '18-25': 'armor_class >= 18 AND armor_class <= 25'
-    }
-    const rangeFilter = ranges[selectedACRange.value]
-    if (rangeFilter) {
-      meilisearchFilters.push(rangeFilter)
-    }
-  }
-
-  // Add HP range filter manually
-  if (selectedHPRange.value) {
-    const ranges: Record<string, string> = {
-      '1-50': 'hit_points_average >= 1 AND hit_points_average <= 50',
-      '51-150': 'hit_points_average >= 51 AND hit_points_average <= 150',
-      '151-300': 'hit_points_average >= 151 AND hit_points_average <= 300',
-      '301-600': 'hit_points_average >= 301 AND hit_points_average <= 600'
-    }
-    const rangeFilter = ranges[selectedHPRange.value]
-    if (rangeFilter) {
-      meilisearchFilters.push(rangeFilter)
-    }
   }
 
   // Add movement types filter (uses IS NOT NULL for each selected type)

@@ -18,12 +18,12 @@ export const SPELL_LEVEL_OPTIONS = [
   { label: '7th Level', value: '7' },
   { label: '8th Level', value: '8' },
   { label: '9th Level', value: '9' }
-] as const
+]
 
 export const SPELL_TAG_OPTIONS = [
   { label: 'Ritual Caster', value: 'ritual-caster' },
   { label: 'Touch Spells', value: 'touch-spells' }
-] as const
+]
 
 // =============================================================================
 // MONSTER OPTIONS
@@ -64,7 +64,7 @@ export const CR_OPTIONS = [
   { label: 'CR 28', value: '28' },
   { label: 'CR 29', value: '29' },
   { label: 'CR 30', value: '30' }
-] as const
+]
 
 export const MOVEMENT_TYPE_OPTIONS = [
   { label: 'Fly', value: 'fly' },
@@ -72,7 +72,7 @@ export const MOVEMENT_TYPE_OPTIONS = [
   { label: 'Burrow', value: 'burrow' },
   { label: 'Climb', value: 'climb' },
   { label: 'Hover', value: 'hover' }
-] as const
+]
 
 // =============================================================================
 // ITEM OPTIONS
@@ -85,30 +85,30 @@ export const DAMAGE_DICE_OPTIONS = [
   { label: '1d10', value: '1d10' },
   { label: '1d12', value: '1d12' },
   { label: '2d6', value: '2d6' }
-] as const
+]
 
 export const VERSATILE_DAMAGE_OPTIONS = [
   { label: '1d8', value: '1d8' },
   { label: '1d10', value: '1d10' },
   { label: '1d12', value: '1d12' }
-] as const
+]
 
 export const RECHARGE_TIMING_OPTIONS = [
   { label: 'Dawn', value: 'dawn' },
   { label: 'Dusk', value: 'dusk' }
-] as const
+]
 
 export const STRENGTH_REQ_OPTIONS = [
   { label: 'Any', value: null },
   { label: 'STR 13+', value: '13' },
   { label: 'STR 15+', value: '15' }
-] as const
+]
 
 export const MAGIC_FILTER_OPTIONS = [
   { label: 'All Items', value: null },
   { label: 'Magic Items', value: 'true' },
   { label: 'Non-Magic Items', value: 'false' }
-] as const
+]
 
 export const ITEM_RANGE_OPTIONS = [
   { label: 'Any', value: null },
@@ -116,7 +116,7 @@ export const ITEM_RANGE_OPTIONS = [
   { label: 'Medium (30-80ft)', value: '30-80' },
   { label: 'Long (80-150ft)', value: '80-150' },
   { label: 'Very Long (>150ft)', value: 'over-150' }
-] as const
+]
 
 // =============================================================================
 // RACE OPTIONS
@@ -127,7 +127,7 @@ export const SPEED_RANGE_OPTIONS = [
   { label: 'Slow (≤25 ft)', value: 'slow' },
   { label: '30 ft', value: '30' },
   { label: 'Fast (≥35 ft)', value: 'fast' }
-] as const
+]
 
 // =============================================================================
 // RANGE PRESETS (for useMeilisearchFilters rangePreset type - future use)
@@ -151,7 +151,7 @@ export const MONSTER_AC_RANGE_OPTIONS = [
   { label: 'Low (10-14)', value: '10-14' },
   { label: 'Medium (15-17)', value: '15-17' },
   { label: 'High (18+)', value: '18-25' }
-] as const
+]
 
 // Monster HP ranges
 export const HP_RANGE_PRESETS: Record<string, RangePreset> = {
@@ -167,7 +167,7 @@ export const MONSTER_HP_RANGE_OPTIONS = [
   { label: 'Medium (51-150)', value: '51-150' },
   { label: 'High (151-300)', value: '151-300' },
   { label: 'Very High (301+)', value: '301-600' }
-] as const
+]
 
 // Item cost ranges (in copper pieces)
 export const COST_RANGE_PRESETS: Record<string, RangePreset> = {
@@ -185,7 +185,7 @@ export const COST_RANGE_OPTIONS = [
   { label: '10-100 gp', value: '1000-10000' },
   { label: '100-1000 gp', value: '10000-100000' },
   { label: '1000+ gp', value: 'over-100000' }
-] as const
+]
 
 // Item AC ranges (armor)
 export const ITEM_AC_RANGE_PRESETS: Record<string, RangePreset> = {
@@ -199,7 +199,7 @@ export const ITEM_AC_RANGE_OPTIONS = [
   { label: 'Light (11-14)', value: '11-14' },
   { label: 'Medium (15-16)', value: '15-16' },
   { label: 'Heavy (17+)', value: '17-21' }
-] as const
+]
 
 // Weapon range presets
 export const WEAPON_RANGE_PRESETS: Record<string, RangePreset> = {
@@ -223,7 +223,7 @@ export const RACE_SPEED_RANGE_PRESETS: Record<string, RangePreset> = {
 export const NAME_SORT_OPTIONS = [
   { label: 'Name (A-Z)', value: 'name:asc' },
   { label: 'Name (Z-A)', value: 'name:desc' }
-] as const
+]
 
 // =============================================================================
 // HELPER: Convert range presets to select options

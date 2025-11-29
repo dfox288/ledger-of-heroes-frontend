@@ -11,7 +11,10 @@ import {
   MAGIC_FILTER_OPTIONS,
   ITEM_RANGE_OPTIONS,
   COST_RANGE_OPTIONS,
-  ITEM_AC_RANGE_OPTIONS
+  ITEM_AC_RANGE_OPTIONS,
+  COST_RANGE_PRESETS,
+  ITEM_AC_RANGE_PRESETS,
+  WEAPON_RANGE_PRESETS
 } from '~/config/filterOptions'
 
 // Use filter store instead of local refs
@@ -159,7 +162,11 @@ const queryBuilder = computed(() => {
     { ref: selectedStrengthReq, field: 'strength_requirement', type: 'greaterThan' },
     { ref: selectedDamageDice, field: 'damage_dice', type: 'in' },
     { ref: selectedVersatileDamage, field: 'versatile_damage', type: 'in' },
-    { ref: selectedRechargeTiming, field: 'recharge_timing', type: 'in' }
+    { ref: selectedRechargeTiming, field: 'recharge_timing', type: 'in' },
+    // Range preset filters
+    { ref: selectedCostRange, field: 'cost_cp', type: 'rangePreset', presets: COST_RANGE_PRESETS },
+    { ref: selectedACRange, field: 'armor_class', type: 'rangePreset', presets: ITEM_AC_RANGE_PRESETS },
+    { ref: selectedRange, field: 'range_normal', type: 'rangePreset', presets: WEAPON_RANGE_PRESETS }
   ])
 
   // Extract standard filter string
@@ -172,48 +179,6 @@ const queryBuilder = computed(() => {
     const hasCharge = hasCharges.value === '1' || hasCharges.value === 'true'
     // Use has_charges field which is filterable in Meilisearch
     meilisearchFilters.push(`has_charges = ${hasCharge}`)
-  }
-
-  // Cost range filter
-  if (selectedCostRange.value) {
-    const ranges: Record<string, string> = {
-      'under-100': 'cost_cp < 100',
-      '100-1000': 'cost_cp >= 100 AND cost_cp <= 1000',
-      '1000-10000': 'cost_cp >= 1000 AND cost_cp <= 10000',
-      '10000-100000': 'cost_cp >= 10000 AND cost_cp <= 100000',
-      'over-100000': 'cost_cp >= 100000'
-    }
-    const rangeFilter = ranges[selectedCostRange.value]
-    if (rangeFilter) {
-      meilisearchFilters.push(rangeFilter)
-    }
-  }
-
-  // AC range filter
-  if (selectedACRange.value) {
-    const ranges: Record<string, string> = {
-      '11-14': 'armor_class >= 11 AND armor_class <= 14',
-      '15-16': 'armor_class >= 15 AND armor_class <= 16',
-      '17-21': 'armor_class >= 17 AND armor_class <= 21'
-    }
-    const rangeFilter = ranges[selectedACRange.value]
-    if (rangeFilter) {
-      meilisearchFilters.push(rangeFilter)
-    }
-  }
-
-  // Weapon range filter (TIER 2 HIGH IMPACT)
-  if (selectedRange.value) {
-    const ranges: Record<string, string> = {
-      'under-30': 'range_normal < 30',
-      '30-80': 'range_normal >= 30 AND range_normal <= 80',
-      '80-150': 'range_normal >= 80 AND range_normal <= 150',
-      'over-150': 'range_normal > 150'
-    }
-    const rangeFilter = ranges[selectedRange.value]
-    if (rangeFilter) {
-      meilisearchFilters.push(rangeFilter)
-    }
   }
 
   // Combine all filters

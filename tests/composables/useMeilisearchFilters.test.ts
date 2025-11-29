@@ -351,6 +351,103 @@ describe('useMeilisearchFilters', () => {
     })
   })
 
+  describe('rangePreset filter type', () => {
+    it('builds range filter from preset', () => {
+      const selectedRange = ref('10-14')
+      const presets = {
+        '10-14': { min: 10, max: 14 },
+        '15-17': { min: 15, max: 17 }
+      }
+
+      const { queryParams } = useMeilisearchFilters([
+        { ref: selectedRange, field: 'armor_class', type: 'rangePreset', presets }
+      ])
+
+      expect(queryParams.value).toEqual({
+        filter: 'armor_class >= 10 AND armor_class <= 14'
+      })
+    })
+
+    it('handles different preset key', () => {
+      const selectedRange = ref('15-17')
+      const presets = {
+        '10-14': { min: 10, max: 14 },
+        '15-17': { min: 15, max: 17 }
+      }
+
+      const { queryParams } = useMeilisearchFilters([
+        { ref: selectedRange, field: 'armor_class', type: 'rangePreset', presets }
+      ])
+
+      expect(queryParams.value).toEqual({
+        filter: 'armor_class >= 15 AND armor_class <= 17'
+      })
+    })
+
+    it('handles null preset value', () => {
+      const selectedRange = ref(null)
+      const presets = {
+        '10-14': { min: 10, max: 14 }
+      }
+
+      const { queryParams } = useMeilisearchFilters([
+        { ref: selectedRange, field: 'armor_class', type: 'rangePreset', presets }
+      ])
+
+      expect(queryParams.value).toEqual({})
+    })
+
+    it('handles invalid preset key', () => {
+      const selectedRange = ref('999-999')
+      const presets = {
+        '10-14': { min: 10, max: 14 }
+      }
+
+      const { queryParams } = useMeilisearchFilters([
+        { ref: selectedRange, field: 'armor_class', type: 'rangePreset', presets }
+      ])
+
+      expect(queryParams.value).toEqual({})
+    })
+
+    it('works with multiple range presets', () => {
+      const selectedACRange = ref('10-14')
+      const selectedHPRange = ref('51-150')
+      const acPresets = {
+        '10-14': { min: 10, max: 14 },
+        '15-17': { min: 15, max: 17 }
+      }
+      const hpPresets = {
+        '1-50': { min: 1, max: 50 },
+        '51-150': { min: 51, max: 150 }
+      }
+
+      const { queryParams } = useMeilisearchFilters([
+        { ref: selectedACRange, field: 'armor_class', type: 'rangePreset', presets: acPresets },
+        { ref: selectedHPRange, field: 'hit_points_average', type: 'rangePreset', presets: hpPresets }
+      ])
+
+      expect(queryParams.value).toEqual({
+        filter: 'armor_class >= 10 AND armor_class <= 14 AND hit_points_average >= 51 AND hit_points_average <= 150'
+      })
+    })
+
+    it('handles cost range preset with large numbers', () => {
+      const selectedCostRange = ref('over-100000')
+      const presets = {
+        'over-100000': { min: 100000, max: 999999999 }
+      }
+
+      const { queryParams } = useMeilisearchFilters([
+        { ref: selectedCostRange, field: 'cost_cp', type: 'rangePreset', presets }
+      ])
+
+      expect(queryParams.value).toEqual({
+        filter: 'cost_cp >= 100000 AND cost_cp <= 999999999'
+      })
+    })
+  })
+
   describe('edge cases', () => {
     it('returns empty params when no active filters', () => {
       const levelRef = ref(null)

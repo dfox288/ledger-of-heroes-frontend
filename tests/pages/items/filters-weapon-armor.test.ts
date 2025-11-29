@@ -297,7 +297,7 @@ describe('Items Range Filter', () => {
     component.selectedRange = 'under-30'
 
     const queryParams = component.queryBuilder
-    expect(queryParams.filter).toContain('range_normal < 30')
+    expect(queryParams.filter).toContain('range_normal >= 0 AND range_normal <= 29')
   })
 
   it('generates correct filter for medium range (30-80ft)', async () => {
@@ -317,7 +317,7 @@ describe('Items Range Filter', () => {
     component.selectedRange = 'over-150'
 
     const queryParams = component.queryBuilder
-    expect(queryParams.filter).toContain('range_normal > 150')
+    expect(queryParams.filter).toContain('range_normal >= 151 AND range_normal <= 999')
   })
 })
 
