@@ -79,6 +79,9 @@ _Future tasks, not yet prioritized_
 
 _Recently completed tasks (move to CHANGELOG.md after release)_
 
+- [x] Fix list page search (useEntityList now accepts external searchQuery)
+- [x] Fix backgrounds page searchQuery sync issue
+- [x] Unified breadcrumb navigation (UiDetailBreadcrumb component)
 - [x] Fix Overview/Journey test failures (127 detail tests now passing)
 - [x] Class detail page 3-view architecture (Overview, Journey, Reference)
 - [x] `useClassDetail` composable for shared data fetching

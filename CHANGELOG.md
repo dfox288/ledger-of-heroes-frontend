@@ -9,6 +9,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- **List Page Search Not Working (2025-11-29)** - Critical fix for search functionality
+  - `useEntityList` composable now accepts external `searchQuery` ref from stores
+  - Previously created internal ref that was never connected to the search input
+  - All 7 entity list pages now have working search functionality
+  - Backgrounds page also fixed: removed manual watch loops, uses standard pattern
+
 ### Added
 
 - **Unified Breadcrumb Navigation (2025-11-29)** - Consistent breadcrumb navigation across all pages
