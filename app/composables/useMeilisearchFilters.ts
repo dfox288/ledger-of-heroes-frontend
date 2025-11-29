@@ -24,7 +24,7 @@ export interface FilterConfig {
   max?: Ref<number | null>
 
   /** For 'rangePreset' type: preset definitions */
-  presets?: Record<string, { min: number; max: number }>
+  presets?: Record<string, { min: number, max: number }>
 
   /** For 'equals' with lookup: transform value before filtering.
    * For 'in' type: receives array and should return transformed array. */

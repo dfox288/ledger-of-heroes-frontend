@@ -46,114 +46,83 @@ const costText = computed(() => {
 })
 
 /**
- * Truncate description to specified length
+ * Get description or fallback
  */
-const truncatedDescription = computed(() => {
-  if (!props.item.description) return 'No description available'
-  const maxLength = 150
-  if (props.item.description.length <= maxLength) return props.item.description
-  return props.item.description.substring(0, maxLength).trim() + '...'
-})
-
-/**
- * Get background image path (256px variant)
- */
-const { getImagePath } = useEntityImage()
-const backgroundImage = computed(() => {
-  return getImagePath('items', props.item.slug, 256)
+const description = computed(() => {
+  return props.item.description || 'No description available'
 })
 </script>
 
 <template>
-  <NuxtLink
+  <UiCardUiEntityCard
     :to="`/items/${item.slug}`"
-    class="block h-full group"
+    entity-type="items"
+    :slug="item.slug"
+    color="item"
+    :description="description"
+    :sources="item.sources"
   >
-    <UCard class="relative overflow-hidden hover:shadow-lg transition-shadow h-full border-2 border-item-300 dark:border-item-700 hover:border-item-500">
-      <!-- Background Image Layer -->
+    <template #badges>
+      <UBadge
+        v-if="item.item_type"
+        color="item"
+        variant="subtle"
+        size="md"
+      >
+        {{ item.item_type.name }}
+      </UBadge>
+      <UBadge
+        :color="rarityColor"
+        variant="subtle"
+        size="md"
+      >
+        {{ rarityText }}
+      </UBadge>
+    </template>
+
+    <template #title>
+      <h3 class="text-xl font-semibold text-gray-900 dark:text-gray-100 line-clamp-2">
+        {{ item.name }}
+      </h3>
+    </template>
+
+    <template #stats>
       <div
-        v-if="backgroundImage"
-        data-test="card-background"
-        class="absolute inset-0 bg-cover bg-center opacity-15 transition-all duration-300 group-hover:opacity-30 group-hover:scale-110 group-hover:rotate-3"
-        :style="{ backgroundImage: `url(${backgroundImage})` }"
-      />
-
-      <!-- Content Layer -->
-      <div class="relative z-10 flex flex-col h-full">
-        <!-- Top content -->
-        <div class="space-y-3 flex-1">
-          <!-- Type and Rarity Badges -->
-          <div class="flex items-center gap-2 flex-wrap justify-between">
-            <UBadge
-              v-if="item.item_type"
-              color="item"
-              variant="subtle"
-              size="md"
-            >
-              {{ item.item_type.name }}
-            </UBadge>
-            <UBadge
-              :color="rarityColor"
-              variant="subtle"
-              size="md"
-            >
-              {{ rarityText }}
-            </UBadge>
-          </div>
-
-          <!-- Item Name -->
-          <h3 class="text-xl font-semibold text-gray-900 dark:text-gray-100 line-clamp-2">
-            {{ item.name }}
-          </h3>
-
-          <!-- Quick Stats (with Magic/Attunement) -->
-          <div class="flex items-center gap-4 flex-wrap text-sm text-gray-600 dark:text-gray-400">
-            <div
-              v-if="costText"
-              class="flex items-center gap-1"
-            >
-              <UIcon
-                name="i-heroicons-currency-dollar"
-                class="w-4 h-4"
-              />
-              <span>{{ costText }}</span>
-            </div>
-            <div
-              v-if="item.weight"
-              class="flex items-center gap-1"
-            >
-              <UIcon
-                name="i-heroicons-scale"
-                class="w-4 h-4"
-              />
-              <span>{{ item.weight }} lb</span>
-            </div>
-            <UBadge
-              v-if="item.is_magic"
-              color="item"
-              variant="subtle"
-              size="md"
-            >
-              ✨ Magic
-            </UBadge>
-            <UBadge
-              v-if="item.requires_attunement"
-              color="item"
-              variant="subtle"
-              size="md"
-            >
-              🔮 Attunement
-            </UBadge>
-          </div>
-
-          <!-- Description Preview -->
-          <p class="text-sm text-gray-700 dark:text-gray-300 line-clamp-3">
-            {{ truncatedDescription }}
-          </p>
-        </div>
-
-        <UiCardSourceFooter :sources="item.sources" />
+        v-if="costText"
+        class="flex items-center gap-1"
+      >
+        <UIcon
+          name="i-heroicons-currency-dollar"
+          class="w-4 h-4"
+        />
+        <span>{{ costText }}</span>
       </div>
-    </UCard>
-  </NuxtLink>
+      <div
+        v-if="item.weight"
+        class="flex items-center gap-1"
+      >
+        <UIcon
+          name="i-heroicons-scale"
+          class="w-4 h-4"
+        />
+        <span>{{ item.weight }} lb</span>
+      </div>
+      <UBadge
+        v-if="item.is_magic"
+        color="item"
+        variant="subtle"
+        size="md"
+      >
+        ✨ Magic
+      </UBadge>
+      <UBadge
+        v-if="item.requires_attunement"
+        color="item"
+        variant="subtle"
+        size="md"
+      >
+        🔮 Attunement
+      </UBadge>
+    </template>
+  </UiCardUiEntityCard>
 </template>
