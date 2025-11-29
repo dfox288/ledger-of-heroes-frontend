@@ -7,6 +7,7 @@
  */
 
 import type { components } from '~/types/api/generated'
+import type { OptionalFeatureResource } from '~/types/api/entities'
 
 type ClassFeatureResource = components['schemas']['ClassFeatureResource']
 
@@ -22,7 +23,7 @@ interface TimelineLevel {
   isMilestone: boolean
   milestoneType?: 'subclass' | 'asi' | 'spell_tier' | 'capstone'
   milestoneLabel?: string
-  availableOptions?: any[]
+  availableOptions?: OptionalFeatureResource[]
 }
 
 interface Props {
