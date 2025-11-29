@@ -8,7 +8,11 @@ Active tasks and priorities for this project.
 
 _Tasks currently being worked on_
 
-_(none)_
+- [ ] **Display optional features (Invocations, Infusions, Disciplines)** 🔄
+  - Plan: `docs/plans/2025-11-29-optional-features-implementation.md`
+  - Design: `docs/plans/2025-11-29-optional-features-display-design.md`
+  - 13 tasks, ~85 min estimated
+  - Run with: `/superpowers:execute-plan`
 
 ---
 
@@ -28,12 +32,12 @@ _Comprehensive D&D 5e rules audit completed 2025-11-29. Critical issues found._
 
 ### 🔴 Critical (Game-Breaking) - Phase 1
 
-- [ ] **Rogue: Sneak Attack stuck at 9d6** for levels 10-20 (should scale to 10d6 at L19)
-- [ ] **Warlock: Zero Eldritch Invocations** - feature exists but no options to choose
-- [ ] **Wizard: Arcane Recovery at L6** - should be Level 1 per PHB p.115
-- [ ] **Monk: Four Elements missing 8 base disciplines** - subclass unplayable at L3
-- [ ] **Artificer: No Infusions available** - core L2 feature non-functional
-- [ ] **Rogue: Thief has "Spell Thief"** - Arcane Trickster feature contaminating Thief
+- [x] ~~**Rogue: Sneak Attack stuck at 9d6**~~ ✅ Fixed - now 10d6 at L19
+- [x] ~~**Warlock: Zero Eldritch Invocations**~~ ✅ Fixed - 54 invocations in `optional_features`
+- [x] ~~**Wizard: Arcane Recovery at L6**~~ ✅ Fixed - now at Level 1
+- [x] ~~**Monk: Four Elements missing disciplines**~~ ✅ Fixed - 17 disciplines in `optional_features`
+- [x] ~~**Artificer: No Infusions available**~~ ✅ Fixed - 16 infusions in `optional_features`
+- [x] ~~**Rogue: Thief has "Spell Thief"**~~ ✅ Fixed - Thief only has Thief's Reflexes at L17
 
 ### 🟠 High Priority - Phase 2
 
