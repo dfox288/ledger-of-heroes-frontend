@@ -8,9 +8,9 @@
 
 | Metric | Count |
 |--------|-------|
-| Test Files | 123 |
-| Test Cases | ~1,646 |
-| Components | 82 |
+| Test Files | 133 |
+| Test Cases | ~1,842 |
+| Components | 86 |
 | Pages | 31 |
 | Composables | 18 |
 | Pinia Stores | 8 |
@@ -56,14 +56,14 @@
 | Spells | 9 | ~180 | ~14s | `npm run test:spells` |
 | Items | 7 | ~140 | ~12s | `npm run test:items` |
 | Monsters | 6 | ~120 | ~12s | `npm run test:monsters` |
-| Classes | 12 | ~142 | ~19s | `npm run test:classes` |
+| Classes | 19 | ~300 | ~28s | `npm run test:classes` |
 | Races | 5 | ~100 | ~10s | `npm run test:races` |
 | Backgrounds | 5 | ~90 | ~10s | `npm run test:backgrounds` |
 | Feats | 4 | ~80 | ~8s | `npm run test:feats` |
 | Reference | 7 | ~70 | ~10s | `npm run test:reference` |
 | UI | 48 | ~500 | ~52s | `npm run test:ui` |
 | Core | 15 | ~150 | ~18s | `npm run test:core` |
-| **Full Suite** | 123 | ~1,646 | ~142s | `npm run test` |
+| **Full Suite** | 133 | ~1,842 | ~152s | `npm run test` |
 
 ---
 
@@ -113,6 +113,8 @@
 
 ## Recent Milestones
 
+- **2025-11-29:** Optional features display (Invocations, Infusions, Disciplines) across all class views
+- **2025-11-29:** API types sync (+899 lines, `data_tables` rename)
 - **2025-11-29:** Comprehensive D&D 5e rules audit of all 13 classes (6 critical issues found)
 - **2025-11-29:** Frontend updated to use new `archetype` field from API
 - **2025-11-29:** Class detail page 3-view architecture (Overview/Journey/Reference)

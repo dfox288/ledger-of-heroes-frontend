@@ -8,11 +8,7 @@ Active tasks and priorities for this project.
 
 _Tasks currently being worked on_
 
-- [ ] **Display optional features (Invocations, Infusions, Disciplines)** 🔄
-  - Plan: `docs/plans/2025-11-29-optional-features-implementation.md`
-  - Design: `docs/plans/2025-11-29-optional-features-display-design.md`
-  - 13 tasks, ~85 min estimated
-  - Run with: `/superpowers:execute-plan`
+_(None)_
 
 ---
 
@@ -83,6 +79,14 @@ _Future tasks, not yet prioritized_
 
 _Recently completed tasks (move to CHANGELOG.md after release)_
 
+- [x] **Display optional features (Invocations, Infusions, Disciplines)** ✅
+  - Extended `useClassDetail` with `optionalFeatures`, `hasOptionalFeatures`, `optionalFeaturesByType`
+  - Created 4 new components: `ClassOptionCard`, `ClassOptionsGroup`, `ClassOverviewOptionsCard`, `ClassJourneyOptionsSection`
+  - Overview: Teaser card with counts and Journey link
+  - Journey: Available options grouped by prerequisite at first unlock level
+  - Reference: Full alphabetical listing in accordion
+  - 41 new tests (31 component + 10 composable logic)
+  - Also fixed `RandomTableResource` → `EntityDataTableResource` rename from API
 - [x] **Fix all 28 TypeScript errors** (zero remaining)
   - Extended CharacterClass type (hit_die, is_base_class, counters, archetype)
   - Extended CounterFromAPI type for grouped counter structure
