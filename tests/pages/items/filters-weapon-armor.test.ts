@@ -64,7 +64,6 @@ describe('Items Strength Requirement Filter', () => {
     const component = wrapper.vm as any
 
     component.selectedStrengthReq = '13'
-    await wrapper.vm.$nextTick()
 
     const queryParams = component.queryBuilder
     expect(queryParams.filter).toContain('strength_requirement > 13')
@@ -75,7 +74,6 @@ describe('Items Strength Requirement Filter', () => {
     const component = wrapper.vm as any
 
     component.selectedStrengthReq = '15'
-    await wrapper.vm.$nextTick()
 
     const queryParams = component.queryBuilder
     expect(queryParams.filter).toContain('strength_requirement > 15')
@@ -152,7 +150,6 @@ describe('Items Damage Dice Filter', () => {
     const component = wrapper.vm as any
 
     component.selectedDamageDice = ['1d6', '1d8']
-    await wrapper.vm.$nextTick()
 
     const queryParams = component.queryBuilder
     expect(queryParams.filter).toContain('damage_dice')
@@ -227,7 +224,6 @@ describe('Items Versatile Damage Filter', () => {
     const component = wrapper.vm as any
 
     component.selectedVersatileDamage = ['1d8', '1d10']
-    await wrapper.vm.$nextTick()
 
     const queryParams = component.queryBuilder
     expect(queryParams.filter).toContain('versatile_damage')
@@ -299,7 +295,6 @@ describe('Items Range Filter', () => {
     const component = wrapper.vm as any
 
     component.selectedRange = 'under-30'
-    await wrapper.vm.$nextTick()
 
     const queryParams = component.queryBuilder
     expect(queryParams.filter).toContain('range_normal < 30')
@@ -310,7 +305,6 @@ describe('Items Range Filter', () => {
     const component = wrapper.vm as any
 
     component.selectedRange = '30-80'
-    await wrapper.vm.$nextTick()
 
     const queryParams = component.queryBuilder
     expect(queryParams.filter).toContain('range_normal >= 30 AND range_normal <= 80')
@@ -321,7 +315,6 @@ describe('Items Range Filter', () => {
     const component = wrapper.vm as any
 
     component.selectedRange = 'over-150'
-    await wrapper.vm.$nextTick()
 
     const queryParams = component.queryBuilder
     expect(queryParams.filter).toContain('range_normal > 150')
@@ -393,7 +386,6 @@ describe('Items Recharge Timing Filter', () => {
     const component = wrapper.vm as any
 
     component.selectedRechargeTiming = ['dawn']
-    await wrapper.vm.$nextTick()
 
     const queryParams = component.queryBuilder
     expect(queryParams.filter).toContain('recharge_timing')

@@ -62,8 +62,6 @@ describe('Monsters Page - Missing Filter Chips', () => {
       const component = wrapper.vm as any
       component.selectedAlignments = []
 
-      await wrapper.vm.$nextTick()
-
       // Chip should not exist
       const chip = wrapper.find('[data-testid="alignment-filter-chip"]')
       expect(chip.exists()).toBe(false)
@@ -137,8 +135,6 @@ describe('Monsters Page - Missing Filter Chips', () => {
       const component = wrapper.vm as any
       component.selectedMovementTypes = []
 
-      await wrapper.vm.$nextTick()
-
       const chip = wrapper.find('[data-testid="movement-types-chip"]')
       expect(chip.exists()).toBe(false)
     })
@@ -170,7 +166,6 @@ describe('Monsters Page - Missing Filter Chips', () => {
 
       // Clear all
       component.clearFilters()
-      await wrapper.vm.$nextTick()
 
       // All should be cleared
       expect(component.selectedAlignments).toEqual([])

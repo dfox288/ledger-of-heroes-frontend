@@ -4,7 +4,7 @@ import BackgroundsPage from '~/pages/backgrounds/index.vue'
 
 describe('Backgrounds Page - Filter Layout', () => {
   describe('active filters label', () => {
-    it('displays "Active filters:" label when search is active', async () => {
+    it('displays "Active filters:" label (not old "Active:" label)', async () => {
       const wrapper = await mountSuspended(BackgroundsPage)
 
       const component = wrapper.vm as any
@@ -12,25 +12,16 @@ describe('Backgrounds Page - Filter Layout', () => {
       await wrapper.vm.$nextTick()
 
       const html = wrapper.html()
+      // Should have new label
       expect(html).toContain('Active filters:')
-    })
-
-    it('does not display "Active:" (old label)', async () => {
-      const wrapper = await mountSuspended(BackgroundsPage)
-
-      const component = wrapper.vm as any
-      component.searchQuery = 'Noble'
-      await wrapper.vm.$nextTick()
-
-      const html = wrapper.html()
-      // Check that "Active:" is NOT present (without "filters")
+      // Should NOT have old label (without "filters")
       expect(html).not.toMatch(/Active:</)
       expect(html).not.toMatch(/Active:\s*</)
     })
   })
 
   describe('clear filters button layout', () => {
-    it('displays clear filters button on same row as active filters label', async () => {
+    it('displays clear button with filters and clicking it clears search', async () => {
       const wrapper = await mountSuspended(BackgroundsPage)
 
       const component = wrapper.vm as any
@@ -45,6 +36,16 @@ describe('Backgrounds Page - Filter Layout', () => {
       const html = container.html()
       expect(html).toContain('Active filters:')
       expect(html).toContain('Clear filters')
+
+      // Click clear button
+      const buttons = wrapper.findAll('button')
+      const clearFiltersButton = buttons.find(btn => btn.text().includes('Clear filters'))
+
+      expect(clearFiltersButton).toBeDefined()
+      await clearFiltersButton!.trigger('click')
+
+      // Search should be cleared (store mutation is synchronous)
+      expect(component.searchQuery).toBe('')
     })
 
     it('does not show clear button when no filters are active', async () => {
@@ -52,38 +53,15 @@ describe('Backgrounds Page - Filter Layout', () => {
 
       const component = wrapper.vm as any
       component.searchQuery = ''
-      await wrapper.vm.$nextTick()
 
-      // Container should not exist when no active filters
+      // Container should not exist when no active filters (checking default state, no tick needed)
       const container = wrapper.find('.flex.flex-wrap.items-center.justify-between')
       expect(container.exists()).toBe(false)
-    })
-
-    it('clear button clears search query', async () => {
-      const wrapper = await mountSuspended(BackgroundsPage)
-
-      const component = wrapper.vm as any
-      component.searchQuery = 'Noble'
-      await wrapper.vm.$nextTick()
-
-      // Find and click clear button
-      const clearButton = wrapper.find('button')
-      const clearButtonText = clearButton.text()
-
-      // Find the button that says "Clear filters" (not the search clear button)
-      const buttons = wrapper.findAll('button')
-      const clearFiltersButton = buttons.find(btn => btn.text().includes('Clear filters'))
-
-      expect(clearFiltersButton).toBeDefined()
-      await clearFiltersButton!.trigger('click')
-
-      // Search should be cleared
-      expect(component.searchQuery).toBe('')
     })
   })
 
   describe('filter chip display', () => {
-    it('displays search query chip', async () => {
+    it('displays search query chip and allows clearing via click', async () => {
       const wrapper = await mountSuspended(BackgroundsPage)
 
       const component = wrapper.vm as any
@@ -93,53 +71,39 @@ describe('Backgrounds Page - Filter Layout', () => {
       const html = wrapper.html()
       expect(html).toContain('"Noble"')
       expect(html).toContain('✕')
-    })
 
-    it('clicking search chip clears search', async () => {
-      const wrapper = await mountSuspended(BackgroundsPage)
-
-      const component = wrapper.vm as any
-      component.searchQuery = 'Noble'
-      await wrapper.vm.$nextTick()
-
-      // Find and click search chip (the one with the query text)
+      // Click chip to clear
       const chips = wrapper.findAll('button')
       const searchChip = chips.find(btn => btn.text().includes('"Noble"'))
 
       expect(searchChip).toBeDefined()
       await searchChip!.trigger('click')
 
+      // Store mutation is synchronous
       expect(component.searchQuery).toBe('')
     })
   })
 
   describe('layout structure', () => {
-    it('uses flex-wrap for responsive chip layout', async () => {
+    it('uses flex-wrap layout and groups label with chips', async () => {
       const wrapper = await mountSuspended(BackgroundsPage)
 
       const component = wrapper.vm as any
       component.searchQuery = 'Noble'
       await wrapper.vm.$nextTick()
 
+      // Outer container uses flex-wrap
       const container = wrapper.find('.flex.flex-wrap.items-center.justify-between')
       expect(container.exists()).toBe(true)
       expect(container.classes()).toContain('flex-wrap')
-    })
 
-    it('groups label and chips together on left side', async () => {
-      const wrapper = await mountSuspended(BackgroundsPage)
-
-      const component = wrapper.vm as any
-      component.searchQuery = 'Noble'
-      await wrapper.vm.$nextTick()
-
-      // Find the inner flex container with chips
+      // Inner container groups label and chips together on left side
       const innerContainer = wrapper.find('.flex.flex-wrap.items-center.gap-2')
       expect(innerContainer.exists()).toBe(true)
 
-      // Should contain both label and chip
-      expect(innerContainer.text()).toContain('Active filters:')
-      expect(innerContainer.text()).toContain('"Noble"')
+      const text = innerContainer.text()
+      expect(text).toContain('Active filters:')
+      expect(text).toContain('"Noble"')
     })
   })
 })

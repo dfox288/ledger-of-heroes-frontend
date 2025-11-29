@@ -58,7 +58,6 @@ describe('Spells Page - Level Filtering', () => {
 
       // Select multiple levels (as strings, per UiFilterMultiSelect)
       component.selectedLevels = ['0', '3', '9']
-      await wrapper.vm.$nextTick()
 
       expect(component.selectedLevels).toEqual(['0', '3', '9'])
     })
@@ -69,7 +68,6 @@ describe('Spells Page - Level Filtering', () => {
       const component = wrapper.vm as any
       // Clear any persisted state from previous test
       component.clearFilters()
-      await wrapper.vm.$nextTick()
 
       expect(Array.isArray(component.selectedLevels)).toBe(true)
       expect(component.selectedLevels.length).toBe(0)
@@ -148,8 +146,6 @@ describe('Spells Page - Level Filtering', () => {
 
       const component = wrapper.vm as any
       component.selectedLevels = []
-
-      await wrapper.vm.$nextTick()
 
       // Chip should not exist
       const chip = wrapper.find('[data-testid="level-filter-chip"]')

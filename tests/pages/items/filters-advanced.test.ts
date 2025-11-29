@@ -70,7 +70,6 @@ describe('Items Cost Filter - Query Generation', () => {
     const component = wrapper.vm as any
 
     component.selectedCostRange = 'under-100'
-    await wrapper.vm.$nextTick()
 
     const queryParams = component.queryBuilder
     expect(queryParams.filter).toContain('cost_cp < 100')
@@ -81,7 +80,6 @@ describe('Items Cost Filter - Query Generation', () => {
     const component = wrapper.vm as any
 
     component.selectedCostRange = '100-1000'
-    await wrapper.vm.$nextTick()
 
     const queryParams = component.queryBuilder
     expect(queryParams.filter).toContain('cost_cp >= 100 AND cost_cp <= 1000')
@@ -92,7 +90,6 @@ describe('Items Cost Filter - Query Generation', () => {
     const component = wrapper.vm as any
 
     component.selectedCostRange = '10000-100000'
-    await wrapper.vm.$nextTick()
 
     const queryParams = component.queryBuilder
     expect(queryParams.filter).toContain('cost_cp >= 10000 AND cost_cp <= 100000')
@@ -103,7 +100,6 @@ describe('Items Cost Filter - Query Generation', () => {
     const component = wrapper.vm as any
 
     component.selectedCostRange = 'over-100000'
-    await wrapper.vm.$nextTick()
 
     const queryParams = component.queryBuilder
     expect(queryParams.filter).toContain('cost_cp >= 100000')
@@ -114,7 +110,6 @@ describe('Items Cost Filter - Query Generation', () => {
     const component = wrapper.vm as any
 
     component.selectedCostRange = null
-    await wrapper.vm.$nextTick()
 
     const queryParams = component.queryBuilder
     // Should not have cost_cp in filter
@@ -189,7 +184,6 @@ describe('Items AC Filter - Query Generation', () => {
     const component = wrapper.vm as any
 
     component.selectedACRange = '11-14'
-    await wrapper.vm.$nextTick()
 
     const queryParams = component.queryBuilder
     expect(queryParams.filter).toContain('armor_class >= 11 AND armor_class <= 14')
@@ -200,7 +194,6 @@ describe('Items AC Filter - Query Generation', () => {
     const component = wrapper.vm as any
 
     component.selectedACRange = '15-16'
-    await wrapper.vm.$nextTick()
 
     const queryParams = component.queryBuilder
     expect(queryParams.filter).toContain('armor_class >= 15 AND armor_class <= 16')
@@ -211,7 +204,6 @@ describe('Items AC Filter - Query Generation', () => {
     const component = wrapper.vm as any
 
     component.selectedACRange = '17-21'
-    await wrapper.vm.$nextTick()
 
     const queryParams = component.queryBuilder
     expect(queryParams.filter).toContain('armor_class >= 17 AND armor_class <= 21')
@@ -222,7 +214,6 @@ describe('Items AC Filter - Query Generation', () => {
     const component = wrapper.vm as any
 
     component.selectedACRange = null
-    await wrapper.vm.$nextTick()
 
     const queryParams = component.queryBuilder
     // Should not have armor_class in filter

@@ -47,7 +47,6 @@ describe('Backgrounds Page - Source Filter', () => {
 
       // Select PHB
       component.selectedSources = ['PHB']
-      await wrapper.vm.$nextTick()
 
       expect(component.selectedSources).toEqual(['PHB'])
     })
@@ -57,7 +56,6 @@ describe('Backgrounds Page - Source Filter', () => {
       const component = wrapper.vm as any
 
       component.selectedSources = ['PHB', 'ERLW']
-      await wrapper.vm.$nextTick()
 
       expect(component.selectedSources).toEqual(['PHB', 'ERLW'])
     })
@@ -69,7 +67,6 @@ describe('Backgrounds Page - Source Filter', () => {
       const component = wrapper.vm as any
 
       component.selectedSources = ['PHB']
-      await wrapper.vm.$nextTick()
 
       // Badge count should be 1
       expect(component.activeFilterCount).toBe(1)
@@ -81,10 +78,8 @@ describe('Backgrounds Page - Source Filter', () => {
 
       // Clear filters first
       component.clearFilters()
-      await wrapper.vm.$nextTick()
 
       component.selectedSources = ['PHB', 'ERLW', 'WGTE']
-      await wrapper.vm.$nextTick()
 
       // Store counts each selected source individually
       expect(component.activeFilterCount).toBe(3)
@@ -96,7 +91,6 @@ describe('Backgrounds Page - Source Filter', () => {
 
       component.searchQuery = 'Noble'
       component.selectedSources = ['PHB']
-      await wrapper.vm.$nextTick()
 
       // Only counts non-search filters (source = 1)
       // Search is handled separately by hasActiveFilters
@@ -158,7 +152,6 @@ describe('Backgrounds Page - Source Filter', () => {
       const component = wrapper.vm as any
 
       component.selectedSources = ['PHB']
-      await wrapper.vm.$nextTick()
 
       const filterParams = component.filterParams
       expect(filterParams.filter).toContain('source_codes IN [PHB]')
@@ -169,7 +162,6 @@ describe('Backgrounds Page - Source Filter', () => {
       const component = wrapper.vm as any
 
       component.selectedSources = ['PHB', 'ERLW']
-      await wrapper.vm.$nextTick()
 
       const filterParams = component.filterParams
       expect(filterParams.filter).toContain('source_codes IN [PHB, ERLW]')
@@ -182,10 +174,8 @@ describe('Backgrounds Page - Source Filter', () => {
       const component = wrapper.vm as any
 
       component.selectedSources = ['PHB']
-      await wrapper.vm.$nextTick()
 
       component.clearFilters()
-      await wrapper.vm.$nextTick()
 
       expect(component.selectedSources).toEqual([])
     })

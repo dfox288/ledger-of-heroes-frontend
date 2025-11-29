@@ -7,12 +7,9 @@ describe('Races Page - Filter Layout', () => {
     it('displays size filter select (UiFilterSelect)', async () => {
       const wrapper = await mountSuspended(RacesPage)
 
-      // Open filters first
+      // Open filters and wait for sizes to load
       const component = wrapper.vm as any
       component.filtersOpen = true
-      await wrapper.vm.$nextTick()
-
-      // Wait for sizes to load
       await wrapper.vm.$nextTick()
 
       // Look for the size filter select component
@@ -62,18 +59,18 @@ describe('Races Page - Filter Layout', () => {
       const chip = wrapper.find('[data-testid="size-filter-chip"]')
       await chip.trigger('click')
 
-      // Size should be cleared
+      // Size should be cleared (store-only check, no tick needed)
       expect(component.selectedSize).toBe('')
     })
 
     it('does not show size chip when no size selected', async () => {
       const wrapper = await mountSuspended(RacesPage)
 
+      // Ensure no size selected (already default state after mount)
       const component = wrapper.vm as any
       component.selectedSize = ''
-      await wrapper.vm.$nextTick()
 
-      // Chip should not exist
+      // Chip should not exist (checking non-existence, no tick needed)
       const chip = wrapper.find('[data-testid="size-filter-chip"]')
       expect(chip.exists()).toBe(false)
     })
@@ -100,7 +97,7 @@ describe('Races Page - Filter Layout', () => {
 
       const component = wrapper.vm as any
 
-      // No filters - button should not exist
+      // No filters - button should not exist (batch mutations)
       component.selectedSize = ''
       component.searchQuery = ''
       await wrapper.vm.$nextTick()
@@ -119,7 +116,7 @@ describe('Races Page - Filter Layout', () => {
     it('clicking Clear filters button clears all filters', async () => {
       const wrapper = await mountSuspended(RacesPage)
 
-      // Set filters
+      // Set filters (batch mutations before single tick)
       const component = wrapper.vm as any
       component.selectedSize = 'M'
       component.searchQuery = 'Elf'
@@ -131,7 +128,7 @@ describe('Races Page - Filter Layout', () => {
       expect(clearButton).toBeDefined()
       await clearButton!.trigger('click')
 
-      // All filters should be cleared
+      // All filters should be cleared (store-only checks, no tick needed)
       expect(component.selectedSize).toBe('')
       expect(component.searchQuery).toBe('')
     })
@@ -164,6 +161,7 @@ describe('Races Page - Filter Layout', () => {
       expect(searchChip).toBeDefined()
       await searchChip!.trigger('click')
 
+      // Store-only check, no tick needed
       expect(component.searchQuery).toBe('')
     })
   })

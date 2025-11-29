@@ -12,9 +12,6 @@ describe('Races Page - Parent Race Filter', () => {
       component.filtersOpen = true
       await wrapper.vm.$nextTick()
 
-      // Wait for races to load
-      await wrapper.vm.$nextTick()
-
       // Look for the parent race select dropdown
       const parentRaceSelect = wrapper.find('[data-testid="parent-race-filter"]')
       expect(parentRaceSelect.exists()).toBe(true)
@@ -27,7 +24,6 @@ describe('Races Page - Parent Race Filter', () => {
 
       // Select a parent race by name (e.g., "Elf")
       component.selectedParentRace = 'Elf'
-      await wrapper.vm.$nextTick()
 
       // Filter should be set
       expect(component.selectedParentRace).toBe('Elf')
@@ -69,7 +65,6 @@ describe('Races Page - Parent Race Filter', () => {
 
       const component = wrapper.vm as any
       component.selectedParentRace = ''
-      await wrapper.vm.$nextTick()
 
       // Chip should not exist
       const chip = wrapper.find('[data-testid="parent-race-filter-chip"]')
@@ -82,11 +77,9 @@ describe('Races Page - Parent Race Filter', () => {
       // Set parent race filter
       const component = wrapper.vm as any
       component.selectedParentRace = 'Elf'
-      await wrapper.vm.$nextTick()
 
       // Call clearFilters
       component.clearFilters()
-      await wrapper.vm.$nextTick()
 
       // Filter should be cleared
       expect(component.selectedParentRace).toBe('')
