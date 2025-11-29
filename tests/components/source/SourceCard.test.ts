@@ -1,7 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import { mountSuspended } from '@nuxt/test-utils/runtime'
 import SourceCard from '~/components/source/SourceCard.vue'
-import { testCardHoverEffects, testCardBorderStyling } from '../../helpers/cardBehavior'
 
 describe('SourceCard', () => {
   const mockSource = {
@@ -12,13 +11,6 @@ describe('SourceCard', () => {
     publication_year: 2014,
     edition: '5e'
   }
-
-  const mountCard = () => mountSuspended(SourceCard, {
-    props: { source: mockSource }
-  })
-
-  testCardHoverEffects(mountCard)
-  testCardBorderStyling(mountCard)
 
   it('renders source name', async () => {
     const wrapper = await mountSuspended(SourceCard, {

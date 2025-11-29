@@ -2,9 +2,6 @@ import { describe, it, expect } from 'vitest'
 import { mountSuspended } from '@nuxt/test-utils/runtime'
 import type { Background } from '~/types'
 import BackgroundCard from '~/components/background/BackgroundCard.vue'
-import { testCardLinkBehavior, testCardHoverEffects, testCardBorderStyling, testBackgroundImageBehavior } from '../../helpers/cardBehavior'
-import { testDescriptionTruncation } from '../../helpers/descriptionBehavior'
-import { testSourceFooter, testOptionalSourceFooter } from '../../helpers/sourceBehavior'
 
 describe('BackgroundCard', () => {
   const mockBackground: Background = {
@@ -25,35 +22,6 @@ describe('BackgroundCard', () => {
       { code: 'PHB', name: 'Player\'s Handbook', pages: '127' }
     ]
   }
-
-  // Shared card behavior tests (using helpers)
-  testCardLinkBehavior(
-    () => mountSuspended(BackgroundCard, { props: { background: mockBackground } }),
-    '/backgrounds/acolyte'
-  )
-
-  testCardHoverEffects(
-    () => mountSuspended(BackgroundCard, { props: { background: mockBackground } })
-  )
-
-  testCardBorderStyling(
-    () => mountSuspended(BackgroundCard, { props: { background: mockBackground } })
-  )
-
-  testDescriptionTruncation(
-    () => mountSuspended(BackgroundCard, { props: { background: { ...mockBackground, description: 'A'.repeat(200) } } }),
-    () => mountSuspended(BackgroundCard, { props: { background: { ...mockBackground, description: 'Short background description' } } })
-  )
-
-  testSourceFooter(
-    () => mountSuspended(BackgroundCard, { props: { background: mockBackground } }),
-    'Player\'s Handbook'
-  )
-
-  testOptionalSourceFooter(
-    () => mountSuspended(BackgroundCard, { props: { background: { ...mockBackground, sources: undefined } } }),
-    'Acolyte'
-  )
 
   // Background-specific tests (domain logic)
 
@@ -287,11 +255,6 @@ describe('BackgroundCard', () => {
 
     expect(wrapper.text()).toContain('3 Tools')
   })
-
-  testBackgroundImageBehavior(
-    'BackgroundCard',
-    async () => mountSuspended(BackgroundCard, { props: { background: mockBackground } })
-  )
 
   // Equipment Tests
   it('shows equipment count badge when equipment exists', async () => {

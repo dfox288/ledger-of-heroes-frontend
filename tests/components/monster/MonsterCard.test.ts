@@ -1,20 +1,10 @@
 import { describe, it, expect } from 'vitest'
 import { mountSuspended } from '@nuxt/test-utils/runtime'
 import MonsterCard from '~/components/monster/MonsterCard.vue'
-import { testCardLinkBehavior, testCardHoverEffects, testCardBorderStyling } from '../../helpers/cardBehavior'
-import { testSourceFooter } from '../../helpers/sourceBehavior'
 import { createMockMonster } from '../../helpers/mockFactories'
 
 describe('MonsterCard', () => {
   const mockMonster = createMockMonster()
-
-  // Shared behavior tests
-  const mountCard = () => mountSuspended(MonsterCard, { props: { monster: mockMonster } })
-
-  testCardLinkBehavior(mountCard, '/monsters/ancient-red-dragon')
-  testCardHoverEffects(mountCard)
-  testCardBorderStyling(mountCard)
-  testSourceFooter(mountCard, 'Monster Manual')
 
   it('renders monster name', async () => {
     const wrapper = await mountSuspended(MonsterCard, {

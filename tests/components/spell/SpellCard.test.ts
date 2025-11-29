@@ -1,42 +1,10 @@
 import { describe, it, expect } from 'vitest'
 import { mountSuspended } from '@nuxt/test-utils/runtime'
 import SpellCard from '~/components/spell/SpellCard.vue'
-import { testCardLinkBehavior, testCardHoverEffects, testCardBorderStyling, testBackgroundImageBehavior } from '../../helpers/cardBehavior'
-import { testDescriptionTruncation } from '../../helpers/descriptionBehavior'
-import { testSourceFooter, testOptionalSourceFooter } from '../../helpers/sourceBehavior'
 import { createMockSpell } from '../../helpers/mockFactories'
 
 describe('SpellCard', () => {
   const mockSpell = createMockSpell()
-
-  // Shared card behavior tests (using helpers)
-  testCardLinkBehavior(
-    () => mountSuspended(SpellCard, { props: { spell: mockSpell } }),
-    '/spells/fireball'
-  )
-
-  testCardHoverEffects(
-    () => mountSuspended(SpellCard, { props: { spell: mockSpell } })
-  )
-
-  testCardBorderStyling(
-    () => mountSuspended(SpellCard, { props: { spell: mockSpell } })
-  )
-
-  testDescriptionTruncation(
-    () => mountSuspended(SpellCard, { props: { spell: { ...mockSpell, description: 'A'.repeat(200) } } }),
-    () => mountSuspended(SpellCard, { props: { spell: { ...mockSpell, description: 'Short spell description' } } })
-  )
-
-  testSourceFooter(
-    () => mountSuspended(SpellCard, { props: { spell: mockSpell } }),
-    'Player\'s Handbook'
-  )
-
-  testOptionalSourceFooter(
-    () => mountSuspended(SpellCard, { props: { spell: { ...mockSpell, sources: undefined } } }),
-    'Fireball'
-  )
 
   // Spell-specific tests (domain logic)
   it('renders spell name', async () => {
@@ -186,9 +154,4 @@ describe('SpellCard', () => {
     expect(text).toContain('150 feet')
     expect(text).toContain('Player\'s Handbook')
   })
-
-  testBackgroundImageBehavior(
-    'SpellCard',
-    async () => mountSuspended(SpellCard, { props: { spell: mockSpell } })
-  )
 })

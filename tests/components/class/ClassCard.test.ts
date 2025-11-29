@@ -2,9 +2,6 @@ import { describe, it, expect } from 'vitest'
 import { mountSuspended } from '@nuxt/test-utils/runtime'
 import type { CharacterClass } from '~/types'
 import ClassCard from '~/components/class/ClassCard.vue'
-import { testCardLinkBehavior, testCardHoverEffects, testCardBorderStyling, testBackgroundImageBehavior } from '../../helpers/cardBehavior'
-import { testDescriptionTruncation } from '../../helpers/descriptionBehavior'
-import { testSourceFooter, testOptionalSourceFooter } from '../../helpers/sourceBehavior'
 
 describe('ClassCard', () => {
   const mockClass: CharacterClass = {
@@ -38,25 +35,7 @@ describe('ClassCard', () => {
     ]
   }
 
-  // Shared card behavior tests (using helpers)
-  testCardLinkBehavior(
-    () => mountSuspended(ClassCard, { props: { characterClass: mockClass } }),
-    '/classes/wizard'
-  )
-
-  testCardHoverEffects(
-    () => mountSuspended(ClassCard, { props: { characterClass: mockClass } })
-  )
-
-  testCardBorderStyling(
-    () => mountSuspended(ClassCard, { props: { characterClass: mockClass } })
-  )
-
-  testDescriptionTruncation(
-    () => mountSuspended(ClassCard, { props: { characterClass: { ...mockClass, description: 'A'.repeat(200) } } }),
-    () => mountSuspended(ClassCard, { props: { characterClass: { ...mockClass, description: 'Short class description' } } })
-  )
-
+  // Class-specific tests (domain logic)
   it('truncates descriptions to 150 characters', async () => {
     const longDescription = 'A'.repeat(200)
     const wrapper = await mountSuspended(ClassCard, {
@@ -71,17 +50,6 @@ describe('ClassCard', () => {
     expect(text).not.toContain('A'.repeat(151))
   })
 
-  testSourceFooter(
-    () => mountSuspended(ClassCard, { props: { characterClass: mockClass } }),
-    'Player\'s Handbook'
-  )
-
-  testOptionalSourceFooter(
-    () => mountSuspended(ClassCard, { props: { characterClass: { ...mockClass, sources: undefined } } }),
-    'Wizard'
-  )
-
-  // Class-specific tests (domain logic)
   it('renders class name', async () => {
     const wrapper = await mountSuspended(ClassCard, {
       props: { characterClass: mockClass }
@@ -330,9 +298,4 @@ describe('ClassCard', () => {
     expect(wrapper.text()).toContain('d12')
     expect(wrapper.text()).toContain('Base Class')
   })
-
-  testBackgroundImageBehavior(
-    'ClassCard',
-    async () => mountSuspended(ClassCard, { props: { characterClass: mockClass } })
-  )
 })

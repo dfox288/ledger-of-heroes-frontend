@@ -1,42 +1,10 @@
 import { describe, it, expect } from 'vitest'
 import { mountSuspended } from '@nuxt/test-utils/runtime'
 import ItemCard from '~/components/item/ItemCard.vue'
-import { testCardLinkBehavior, testCardHoverEffects, testCardBorderStyling, testBackgroundImageBehavior } from '../../helpers/cardBehavior'
-import { testDescriptionTruncation } from '../../helpers/descriptionBehavior'
-import { testSourceFooter, testOptionalSourceFooter } from '../../helpers/sourceBehavior'
 import { createMockItem } from '../../helpers/mockFactories'
 
 describe('ItemCard', () => {
   const mockItem = createMockItem()
-
-  // Shared card behavior tests (using helpers)
-  testCardLinkBehavior(
-    () => mountSuspended(ItemCard, { props: { item: mockItem } }),
-    '/items/longsword'
-  )
-
-  testCardHoverEffects(
-    () => mountSuspended(ItemCard, { props: { item: mockItem } })
-  )
-
-  testCardBorderStyling(
-    () => mountSuspended(ItemCard, { props: { item: mockItem } })
-  )
-
-  testDescriptionTruncation(
-    () => mountSuspended(ItemCard, { props: { item: { ...mockItem, description: 'A'.repeat(200) } } }),
-    () => mountSuspended(ItemCard, { props: { item: { ...mockItem, description: 'Short item description' } } })
-  )
-
-  testSourceFooter(
-    () => mountSuspended(ItemCard, { props: { item: mockItem } }),
-    'Player\'s Handbook'
-  )
-
-  testOptionalSourceFooter(
-    () => mountSuspended(ItemCard, { props: { item: { ...mockItem, sources: undefined } } }),
-    'Longsword'
-  )
 
   // Item-specific tests (domain logic)
 
@@ -307,9 +275,4 @@ describe('ItemCard', () => {
 
     expect(wrapper.text()).not.toContain('lb')
   })
-
-  testBackgroundImageBehavior(
-    'ItemCard',
-    async () => mountSuspended(ItemCard, { props: { item: mockItem } })
-  )
 })

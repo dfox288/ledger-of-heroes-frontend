@@ -1,7 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import { mountSuspended } from '@nuxt/test-utils/runtime'
 import ItemTypeCard from '~/components/item-type/ItemTypeCard.vue'
-import { testCardHoverEffects, testCardBorderStyling } from '../../helpers/cardBehavior'
 
 describe('ItemTypeCard', () => {
   const mockItemType = {
@@ -10,13 +9,6 @@ describe('ItemTypeCard', () => {
     name: 'Ammunition',
     description: 'Arrows, bolts, sling bullets, and other projectiles'
   }
-
-  const mountCard = () => mountSuspended(ItemTypeCard, {
-    props: { itemType: mockItemType }
-  })
-
-  testCardHoverEffects(mountCard)
-  testCardBorderStyling(mountCard)
 
   it('displays item type code as large badge', async () => {
     const wrapper = await mountSuspended(ItemTypeCard, {

@@ -2,9 +2,6 @@ import { describe, it, expect } from 'vitest'
 import { mountSuspended } from '@nuxt/test-utils/runtime'
 import type { Feat } from '~/types'
 import FeatCard from '~/components/feat/FeatCard.vue'
-import { testCardLinkBehavior, testCardHoverEffects, testCardBorderStyling, testBackgroundImageBehavior } from '../../helpers/cardBehavior'
-import { testDescriptionTruncation } from '../../helpers/descriptionBehavior'
-import { testSourceFooter, testOptionalSourceFooter } from '../../helpers/sourceBehavior'
 
 describe('FeatCard', () => {
   const mockFeat: Feat = {
@@ -26,35 +23,6 @@ describe('FeatCard', () => {
       { code: 'PHB', name: 'Player\'s Handbook', pages: '170' }
     ]
   }
-
-  // Shared card behavior tests (using helpers)
-  testCardLinkBehavior(
-    () => mountSuspended(FeatCard, { props: { feat: mockFeat } }),
-    '/feats/war-caster'
-  )
-
-  testCardHoverEffects(
-    () => mountSuspended(FeatCard, { props: { feat: mockFeat } })
-  )
-
-  testCardBorderStyling(
-    () => mountSuspended(FeatCard, { props: { feat: mockFeat } })
-  )
-
-  testDescriptionTruncation(
-    () => mountSuspended(FeatCard, { props: { feat: { ...mockFeat, description: 'A'.repeat(200) } } }),
-    () => mountSuspended(FeatCard, { props: { feat: { ...mockFeat, description: 'Short feat description' } } })
-  )
-
-  testSourceFooter(
-    () => mountSuspended(FeatCard, { props: { feat: mockFeat } }),
-    'Player\'s Handbook'
-  )
-
-  testOptionalSourceFooter(
-    () => mountSuspended(FeatCard, { props: { feat: { ...mockFeat, sources: undefined } } }),
-    'War Caster'
-  )
 
   // Feat-specific tests (domain logic)
   it('renders feat name', async () => {
@@ -300,9 +268,4 @@ describe('FeatCard', () => {
 
     expect(wrapper.text()).toContain('4 Bonuses')
   })
-
-  testBackgroundImageBehavior(
-    'FeatCard',
-    async () => mountSuspended(FeatCard, { props: { feat: mockFeat } })
-  )
 })

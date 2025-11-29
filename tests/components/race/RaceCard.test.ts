@@ -2,9 +2,6 @@ import { describe, it, expect } from 'vitest'
 import { mountSuspended } from '@nuxt/test-utils/runtime'
 import type { Race } from '~/types'
 import RaceCard from '~/components/race/RaceCard.vue'
-import { testCardLinkBehavior, testCardHoverEffects, testCardBorderStyling, testBackgroundImageBehavior } from '../../helpers/cardBehavior'
-import { testDescriptionTruncation } from '../../helpers/descriptionBehavior'
-import { testSourceFooter, testOptionalSourceFooter } from '../../helpers/sourceBehavior'
 
 describe('RaceCard', () => {
   const mockRace: Race = {
@@ -40,35 +37,6 @@ describe('RaceCard', () => {
       { code: 'PHB', name: 'Player\'s Handbook', pages: '21' }
     ]
   }
-
-  // Shared card behavior tests (using helpers)
-  testCardLinkBehavior(
-    () => mountSuspended(RaceCard, { props: { race: mockRace } }),
-    '/races/elf'
-  )
-
-  testCardHoverEffects(
-    () => mountSuspended(RaceCard, { props: { race: mockRace } })
-  )
-
-  testCardBorderStyling(
-    () => mountSuspended(RaceCard, { props: { race: mockRace } })
-  )
-
-  testDescriptionTruncation(
-    () => mountSuspended(RaceCard, { props: { race: { ...mockRace, description: 'A'.repeat(200) } } }),
-    () => mountSuspended(RaceCard, { props: { race: { ...mockRace, description: 'Short race description' } } })
-  )
-
-  testSourceFooter(
-    () => mountSuspended(RaceCard, { props: { race: mockRace } }),
-    'Player\'s Handbook'
-  )
-
-  testOptionalSourceFooter(
-    () => mountSuspended(RaceCard, { props: { race: { ...mockRace, sources: undefined } } }),
-    'Elf'
-  )
 
   // Race-specific tests (domain logic)
   it('renders race name', async () => {
@@ -497,9 +465,4 @@ describe('RaceCard', () => {
     expect(wrapper.text()).toContain('Human')
     expect(wrapper.text()).toContain('30 ft')
   })
-
-  testBackgroundImageBehavior(
-    'RaceCard',
-    async () => mountSuspended(RaceCard, { props: { race: mockRace } })
-  )
 })

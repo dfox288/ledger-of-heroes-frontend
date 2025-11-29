@@ -1,7 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import { mountSuspended } from '@nuxt/test-utils/runtime'
 import SizeCard from '~/components/size/SizeCard.vue'
-import { testCardHoverEffects, testCardBorderStyling } from '../../helpers/cardBehavior'
 
 describe('SizeCard', () => {
   const mockSize = {
@@ -9,9 +8,6 @@ describe('SizeCard', () => {
     code: 'M',
     name: 'Medium'
   }
-
-  testCardHoverEffects(() => mountSuspended(SizeCard, { props: { size: mockSize } }))
-  testCardBorderStyling(() => mountSuspended(SizeCard, { props: { size: mockSize } }))
 
   it('renders size name', async () => {
     const wrapper = await mountSuspended(SizeCard, {

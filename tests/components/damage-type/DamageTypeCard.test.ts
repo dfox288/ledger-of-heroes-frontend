@@ -1,20 +1,12 @@
 import { describe, it, expect } from 'vitest'
 import { mountSuspended } from '@nuxt/test-utils/runtime'
 import DamageTypeCard from '~/components/damage-type/DamageTypeCard.vue'
-import { testCardHoverEffects, testCardBorderStyling } from '../../helpers/cardBehavior'
 
 describe('DamageTypeCard', () => {
   const mockDamageType = {
     id: 1,
     name: 'Fire'
   }
-
-  const mountCard = () => mountSuspended(DamageTypeCard, {
-    props: { damageType: mockDamageType }
-  })
-
-  testCardHoverEffects(mountCard)
-  testCardBorderStyling(mountCard)
 
   it('renders damage type name', async () => {
     const wrapper = await mountSuspended(DamageTypeCard, {

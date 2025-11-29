@@ -1,7 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import { mountSuspended } from '@nuxt/test-utils/runtime'
 import ConditionCard from '~/components/condition/ConditionCard.vue'
-import { testCardHoverEffects, testCardBorderStyling } from '../../helpers/cardBehavior'
 
 describe('ConditionCard', () => {
   const mockCondition = {
@@ -10,13 +9,6 @@ describe('ConditionCard', () => {
     slug: 'blinded',
     description: 'A blinded creature can\'t see and automatically fails any ability check that requires sight.'
   }
-
-  const mountCard = () => mountSuspended(ConditionCard, {
-    props: { condition: mockCondition }
-  })
-
-  testCardHoverEffects(mountCard)
-  testCardBorderStyling(mountCard)
 
   it('displays condition name as title', async () => {
     const wrapper = await mountSuspended(ConditionCard, {

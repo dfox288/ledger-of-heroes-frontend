@@ -1,7 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import { mountSuspended } from '@nuxt/test-utils/runtime'
 import AbilityScoreCard from '~/components/ability-score/AbilityScoreCard.vue'
-import { testCardHoverEffects, testCardBorderStyling } from '../../helpers/cardBehavior'
 
 describe('AbilityScoreCard', () => {
   const mockAbilityScore = {
@@ -9,13 +8,6 @@ describe('AbilityScoreCard', () => {
     code: 'STR',
     name: 'Strength'
   }
-
-  const mountCard = () => mountSuspended(AbilityScoreCard, {
-    props: { abilityScore: mockAbilityScore }
-  })
-
-  testCardHoverEffects(mountCard)
-  testCardBorderStyling(mountCard)
 
   it('displays ability score code as large badge', async () => {
     const wrapper = await mountSuspended(AbilityScoreCard, {

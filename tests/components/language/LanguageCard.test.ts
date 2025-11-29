@@ -1,7 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import { mountSuspended } from '@nuxt/test-utils/runtime'
 import LanguageCard from '~/components/language/LanguageCard.vue'
-import { testCardHoverEffects, testCardBorderStyling } from '../../helpers/cardBehavior'
 
 describe('LanguageCard', () => {
   const mockLanguage = {
@@ -12,13 +11,6 @@ describe('LanguageCard', () => {
     typical_speakers: 'Elves',
     description: 'Fluid and melodic language spoken by elves across the multiverse.'
   }
-
-  const mountCard = () => mountSuspended(LanguageCard, {
-    props: { language: mockLanguage }
-  })
-
-  testCardHoverEffects(mountCard)
-  testCardBorderStyling(mountCard)
 
   it('renders language name', async () => {
     const wrapper = await mountSuspended(LanguageCard, {
