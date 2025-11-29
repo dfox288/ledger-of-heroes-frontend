@@ -1,18 +1,6 @@
 import { createEntityFilterStore } from './filterFactory'
 import { STORE_KEYS } from './types'
 
-export const useClassFiltersStore = createEntityFilterStore({
-  name: 'classFilters',
-  storageKey: STORE_KEYS.classes,
-  fields: [
-    { name: 'isBaseClass', urlKey: 'is_base_class', type: 'string', defaultValue: null },
-    { name: 'isSpellcaster', urlKey: 'is_spellcaster', type: 'string', defaultValue: null },
-    { name: 'selectedHitDice', urlKey: 'hit_die', type: 'numberArray', defaultValue: [] },
-    { name: 'selectedSpellcastingAbility', urlKey: 'spellcasting_ability', type: 'string', defaultValue: null },
-    { name: 'selectedParentClass', urlKey: 'parent_class_name', type: 'string', defaultValue: null }
-  ]
-})
-
 export interface ClassFiltersState {
   searchQuery: string
   sortBy: string
@@ -25,3 +13,15 @@ export interface ClassFiltersState {
   selectedParentClass: string | null
   filtersOpen: boolean
 }
+
+export const useClassFiltersStore = createEntityFilterStore<ClassFiltersState>({
+  name: 'classFilters',
+  storageKey: STORE_KEYS.classes,
+  fields: [
+    { name: 'isBaseClass', urlKey: 'is_base_class', type: 'string', defaultValue: null },
+    { name: 'isSpellcaster', urlKey: 'is_spellcaster', type: 'string', defaultValue: null },
+    { name: 'selectedHitDice', urlKey: 'hit_die', type: 'numberArray', defaultValue: [] },
+    { name: 'selectedSpellcastingAbility', urlKey: 'spellcasting_ability', type: 'string', defaultValue: null },
+    { name: 'selectedParentClass', urlKey: 'parent_class_name', type: 'string', defaultValue: null }
+  ]
+})

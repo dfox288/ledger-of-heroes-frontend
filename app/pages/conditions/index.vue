@@ -28,6 +28,13 @@ const conditions = computed(() => data.value as Condition[])
 
 <template>
   <div class="container mx-auto px-4 py-8 max-w-7xl">
+    <!-- Breadcrumb -->
+    <UiDetailBreadcrumb
+      list-path="/conditions"
+      list-label="Conditions"
+      class="mb-6"
+    />
+
     <UiListPageHeader
       title="Conditions"
       :total="totalResults"

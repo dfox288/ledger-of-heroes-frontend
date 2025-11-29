@@ -2,11 +2,33 @@ import { createEntityFilterStore } from './filterFactory'
 import { STORE_KEYS } from './types'
 
 /**
+ * Spell filter state interface - defines all filter fields for spells list.
+ */
+export interface SpellFiltersState {
+  searchQuery: string
+  sortBy: string
+  sortDirection: 'asc' | 'desc'
+  selectedSources: string[]
+  selectedLevels: string[]
+  selectedSchool: number | null
+  selectedClass: string | null
+  concentrationFilter: string | null
+  ritualFilter: string | null
+  selectedDamageTypes: string[]
+  selectedSavingThrows: string[]
+  selectedTags: string[]
+  verbalFilter: string | null
+  somaticFilter: string | null
+  materialFilter: string | null
+  filtersOpen: boolean
+}
+
+/**
  * Spell filter store - manages all filter state for the spells list page.
  *
  * Uses the filter factory for consistent behavior with other entity stores.
  */
-export const useSpellFiltersStore = createEntityFilterStore({
+export const useSpellFiltersStore = createEntityFilterStore<SpellFiltersState>({
   name: 'spellFilters',
   storageKey: STORE_KEYS.spells,
   fields: [
@@ -32,24 +54,3 @@ export const useSpellFiltersStore = createEntityFilterStore({
     { name: 'materialFilter', urlKey: 'has_material', type: 'string', defaultValue: null }
   ]
 })
-
-// Re-export interface for backwards compatibility
-// (can be removed once all consumers use store directly)
-export interface SpellFiltersState {
-  searchQuery: string
-  sortBy: string
-  sortDirection: 'asc' | 'desc'
-  selectedSources: string[]
-  selectedLevels: string[]
-  selectedSchool: number | null
-  selectedClass: string | null
-  concentrationFilter: string | null
-  ritualFilter: string | null
-  selectedDamageTypes: string[]
-  selectedSavingThrows: string[]
-  selectedTags: string[]
-  verbalFilter: string | null
-  somaticFilter: string | null
-  materialFilter: string | null
-  filtersOpen: boolean
-}

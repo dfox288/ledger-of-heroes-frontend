@@ -28,6 +28,13 @@ const itemTypes = computed(() => data.value as ItemType[])
 
 <template>
   <div class="container mx-auto px-4 py-8 max-w-7xl">
+    <!-- Breadcrumb -->
+    <UiDetailBreadcrumb
+      list-path="/item-types"
+      list-label="Item Types"
+      class="mb-6"
+    />
+
     <UiListPageHeader
       title="Item Types"
       :total="totalResults"

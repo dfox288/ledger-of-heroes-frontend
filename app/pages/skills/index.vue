@@ -27,6 +27,13 @@ const skills = computed(() => data.value as Skill[])
 
 <template>
   <div class="container mx-auto px-4 py-8 max-w-7xl">
+    <!-- Breadcrumb -->
+    <UiDetailBreadcrumb
+      list-path="/skills"
+      list-label="Skills"
+      class="mb-6"
+    />
+
     <UiListPageHeader
       title="Skills"
       :total="totalResults"

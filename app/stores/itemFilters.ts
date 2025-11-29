@@ -1,7 +1,30 @@
 import { createEntityFilterStore } from './filterFactory'
 import { STORE_KEYS } from './types'
 
-export const useItemFiltersStore = createEntityFilterStore({
+export interface ItemFiltersState {
+  searchQuery: string
+  sortBy: string
+  sortDirection: 'asc' | 'desc'
+  selectedSources: string[]
+  selectedType: number | null
+  selectedRarity: string | null
+  selectedMagic: string | null
+  hasCharges: string | null
+  requiresAttunement: string | null
+  stealthDisadvantage: string | null
+  selectedProperties: string[]
+  selectedDamageTypes: string[]
+  selectedDamageDice: string[]
+  selectedVersatileDamage: string[]
+  selectedRechargeTiming: string[]
+  selectedStrengthReq: string | null
+  selectedRange: string | null
+  selectedCostRange: string | null
+  selectedACRange: string | null
+  filtersOpen: boolean
+}
+
+export const useItemFiltersStore = createEntityFilterStore<ItemFiltersState>({
   name: 'itemFilters',
   storageKey: STORE_KEYS.items,
   fields: [
@@ -26,26 +49,3 @@ export const useItemFiltersStore = createEntityFilterStore({
     { name: 'selectedACRange', urlKey: 'ac', type: 'string', defaultValue: null }
   ]
 })
-
-export interface ItemFiltersState {
-  searchQuery: string
-  sortBy: string
-  sortDirection: 'asc' | 'desc'
-  selectedSources: string[]
-  selectedType: number | null
-  selectedRarity: string | null
-  selectedMagic: string | null
-  hasCharges: string | null
-  requiresAttunement: string | null
-  stealthDisadvantage: string | null
-  selectedProperties: string[]
-  selectedDamageTypes: string[]
-  selectedDamageDice: string[]
-  selectedVersatileDamage: string[]
-  selectedRechargeTiming: string[]
-  selectedStrengthReq: string | null
-  selectedRange: string | null
-  selectedCostRange: string | null
-  selectedACRange: string | null
-  filtersOpen: boolean
-}

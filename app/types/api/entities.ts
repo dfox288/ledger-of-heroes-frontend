@@ -130,9 +130,22 @@ export interface Feat extends Omit<FeatFromAPI, 'sources' | 'modifiers'> {
  */
 type MonsterFromAPI = components['schemas']['MonsterResource']
 
+/**
+ * Monster spellcasting properties (not in OpenAPI spec yet)
+ */
+export interface MonsterSpellcasting {
+  description?: string
+  spellcasting_ability?: string
+  spell_save_dc?: number
+  spell_attack_bonus?: number
+  spell_slots?: string
+}
+
 export interface Monster extends Omit<MonsterFromAPI, 'sources'> {
   // Override with our custom types that have better structure
   sources?: EntitySource[]
+  // Spellcasting data (optional, not all monsters are spellcasters)
+  spellcasting?: MonsterSpellcasting
   // All other fields inherited from MonsterFromAPI
 }
 

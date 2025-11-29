@@ -28,6 +28,13 @@ const sizes = computed(() => data.value as Size[])
 
 <template>
   <div class="container mx-auto px-4 py-8 max-w-7xl">
+    <!-- Breadcrumb -->
+    <UiDetailBreadcrumb
+      list-path="/sizes"
+      list-label="Creature Sizes"
+      class="mb-6"
+    />
+
     <!-- Header -->
     <UiListPageHeader
       title="Creature Sizes"

@@ -8,7 +8,7 @@ Active tasks and priorities for this project.
 
 _Tasks currently being worked on_
 
-- [ ] None currently
+- [ ] Fix remaining TypeScript errors (~28) - see LATEST-HANDOVER.md for details
 
 ---
 
@@ -79,6 +79,10 @@ _Future tasks, not yet prioritized_
 
 _Recently completed tasks (move to CHANGELOG.md after release)_
 
+- [x] Reference page breadcrumbs (10 pages)
+- [x] Filter factory generic typing (root cause of most TS errors)
+- [x] Type extensions: Monster.spellcasting, Source.edition
+- [x] UiFilterChip color type fix
 - [x] Fix list page search (useEntityList now accepts external searchQuery)
 - [x] Fix backgrounds page searchQuery sync issue
 - [x] Unified breadcrumb navigation (UiDetailBreadcrumb component)

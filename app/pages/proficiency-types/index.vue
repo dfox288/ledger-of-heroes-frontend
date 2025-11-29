@@ -28,6 +28,13 @@ const proficiencyTypes = computed(() => data.value as ProficiencyType[])
 
 <template>
   <div class="container mx-auto px-4 py-8 max-w-7xl">
+    <!-- Breadcrumb -->
+    <UiDetailBreadcrumb
+      list-path="/proficiency-types"
+      list-label="Proficiency Types"
+      class="mb-6"
+    />
+
     <UiListPageHeader
       title="Proficiency Types"
       :total="totalResults"

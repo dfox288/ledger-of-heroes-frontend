@@ -28,6 +28,13 @@ const spellSchools = computed(() => data.value as SpellSchool[])
 
 <template>
   <div class="container mx-auto px-4 py-8 max-w-7xl">
+    <!-- Breadcrumb -->
+    <UiDetailBreadcrumb
+      list-path="/spell-schools"
+      list-label="Spell Schools"
+      class="mb-6"
+    />
+
     <UiListPageHeader
       title="Spell Schools"
       :total="totalResults"

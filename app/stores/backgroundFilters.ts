@@ -2,16 +2,6 @@
 import { createEntityFilterStore } from './filterFactory'
 import { STORE_KEYS } from './types'
 
-export const useBackgroundFiltersStore = createEntityFilterStore({
-  name: 'backgroundFilters',
-  storageKey: STORE_KEYS.backgrounds,
-  fields: [
-    { name: 'selectedSkills', urlKey: 'skill', type: 'stringArray', defaultValue: [] },
-    { name: 'selectedToolTypes', urlKey: 'tool_type', type: 'stringArray', defaultValue: [] },
-    { name: 'languageChoiceFilter', urlKey: 'grants_language_choice', type: 'string', defaultValue: null }
-  ]
-})
-
 export interface BackgroundFiltersState {
   searchQuery: string
   sortBy: string
@@ -22,3 +12,13 @@ export interface BackgroundFiltersState {
   languageChoiceFilter: string | null
   filtersOpen: boolean
 }
+
+export const useBackgroundFiltersStore = createEntityFilterStore<BackgroundFiltersState>({
+  name: 'backgroundFilters',
+  storageKey: STORE_KEYS.backgrounds,
+  fields: [
+    { name: 'selectedSkills', urlKey: 'skill', type: 'stringArray', defaultValue: [] },
+    { name: 'selectedToolTypes', urlKey: 'tool_type', type: 'stringArray', defaultValue: [] },
+    { name: 'languageChoiceFilter', urlKey: 'grants_language_choice', type: 'string', defaultValue: null }
+  ]
+})

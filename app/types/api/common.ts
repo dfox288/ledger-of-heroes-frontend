@@ -10,10 +10,15 @@ import type { components } from './generated'
  * Full source book entity
  *
  * Used for: Source list and detail pages
+ * Extended with optional edition field (not in OpenAPI spec yet)
  *
  * @see {components['schemas']['SourceResource']} for generated type
  */
-export type Source = components['schemas']['SourceResource']
+type SourceFromAPI = components['schemas']['SourceResource']
+
+export interface Source extends SourceFromAPI {
+  edition?: string
+}
 
 /**
  * Source book reference (compact version for entity relationships)

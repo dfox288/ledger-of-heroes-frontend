@@ -1,4 +1,5 @@
 import { defineNuxtPlugin } from '#app'
+import type { Pinia } from 'pinia'
 import piniaPluginPersistedstate from 'pinia-plugin-persistedstate'
 
 /**
@@ -9,5 +10,6 @@ import piniaPluginPersistedstate from 'pinia-plugin-persistedstate'
  * runs in the browser (IndexedDB is not available during SSR).
  */
 export default defineNuxtPlugin((nuxtApp) => {
-  nuxtApp.$pinia.use(piniaPluginPersistedstate)
+  const pinia = nuxtApp.$pinia as Pinia
+  pinia.use(piniaPluginPersistedstate)
 })

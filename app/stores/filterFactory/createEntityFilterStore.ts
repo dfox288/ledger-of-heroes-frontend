@@ -2,7 +2,7 @@
 import { defineStore } from 'pinia'
 import type { LocationQuery } from 'vue-router'
 import { idbStorage } from '~/utils/idbStorage'
-import type { EntityFilterStoreConfig, BaseFilterState } from './types'
+import type { EntityFilterStoreConfig, BaseFilterState, FilterFieldDefinition } from './types'
 import { isFieldEmpty, countFieldValue, fieldToUrlValue, urlValueToField } from './utils'
 
 /**
@@ -13,7 +13,7 @@ import { isFieldEmpty, countFieldValue, fieldToUrlValue, urlValueToField } from 
  *
  * @example
  * ```ts
- * export const useSpellFiltersStore = createEntityFilterStore({
+ * export const useSpellFiltersStore = createEntityFilterStore<SpellFiltersState>({
  *   name: 'spellFilters',
  *   storageKey: 'dnd-filters-spells',
  *   fields: [
@@ -23,16 +23,16 @@ import { isFieldEmpty, countFieldValue, fieldToUrlValue, urlValueToField } from 
  * })
  * ```
  */
-export function createEntityFilterStore(config: EntityFilterStoreConfig) {
+export function createEntityFilterStore<T extends BaseFilterState = BaseFilterState>(
+  config: EntityFilterStoreConfig
+) {
   // Build default state from base + config fields
   const defaultEntityState: Record<string, unknown> = {}
   for (const field of config.fields) {
     defaultEntityState[field.name] = field.defaultValue
   }
 
-  type StoreState = BaseFilterState & Record<string, unknown>
-
-  const DEFAULT_STATE: StoreState = {
+  const DEFAULT_STATE = {
     // Base state (same for all entities)
     searchQuery: '',
     sortBy: 'name',
@@ -41,10 +41,15 @@ export function createEntityFilterStore(config: EntityFilterStoreConfig) {
     filtersOpen: false,
     // Entity-specific state from config
     ...defaultEntityState
+  } as T
+
+  // Type-safe field access helper - cast state to Record for dynamic field access
+  const getFieldValue = (state: unknown, field: FilterFieldDefinition): unknown => {
+    return (state as Record<string, unknown>)[field.name]
   }
 
   return defineStore(config.name, {
-    state: (): StoreState => ({
+    state: (): T => ({
       ...DEFAULT_STATE,
       // Deep clone arrays to prevent reference sharing
       selectedSources: [],
@@ -53,7 +58,7 @@ export function createEntityFilterStore(config: EntityFilterStoreConfig) {
           [f.name, Array.isArray(f.defaultValue) ? [...f.defaultValue] : f.defaultValue]
         )
       )
-    }),
+    } as T),
 
     getters: {
       hasActiveFilters: (state): boolean => {
@@ -63,7 +68,7 @@ export function createEntityFilterStore(config: EntityFilterStoreConfig) {
 
         // Check entity-specific fields
         for (const field of config.fields) {
-          if (!isFieldEmpty(field, state[field.name])) {
+          if (!isFieldEmpty(field, getFieldValue(state, field))) {
             return true
           }
         }
@@ -79,7 +84,7 @@ export function createEntityFilterStore(config: EntityFilterStoreConfig) {
 
         // Count entity-specific fields
         for (const field of config.fields) {
-          count += countFieldValue(field, state[field.name])
+          count += countFieldValue(field, getFieldValue(state, field))
         }
 
         return count
@@ -90,8 +95,9 @@ export function createEntityFilterStore(config: EntityFilterStoreConfig) {
 
         // Entity-specific fields
         for (const field of config.fields) {
-          if (!isFieldEmpty(field, state[field.name])) {
-            query[field.urlKey] = fieldToUrlValue(field, state[field.name])
+          const value = getFieldValue(state, field)
+          if (!isFieldEmpty(field, value)) {
+            query[field.urlKey] = fieldToUrlValue(field, value)
           }
         }
 
@@ -125,7 +131,7 @@ export function createEntityFilterStore(config: EntityFilterStoreConfig) {
         for (const field of config.fields) {
           const urlValue = query[field.urlKey]
           if (urlValue !== undefined && urlValue !== null) {
-            (this as Record<string, unknown>)[field.name] = urlValueToField(field, urlValue as string | string[])
+            (this as unknown as Record<string, unknown>)[field.name] = urlValueToField(field, urlValue as string | string[])
           }
         }
 
@@ -146,6 +152,7 @@ export function createEntityFilterStore(config: EntityFilterStoreConfig) {
       }
     },
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     persist: {
       key: config.storageKey,
       storage: idbStorage,
@@ -157,6 +164,6 @@ export function createEntityFilterStore(config: EntityFilterStoreConfig) {
         'filtersOpen',
         ...config.fields.filter(f => f.persist !== false).map(f => f.name)
       ]
-    }
+    } as any
   })
 }
