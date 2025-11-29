@@ -20,6 +20,7 @@ defineProps<Props>()
         :key="tag.id"
         color="primary"
         variant="soft"
+        size="md"
         data-testid="tag-badge"
       >
         {{ tag.name }}

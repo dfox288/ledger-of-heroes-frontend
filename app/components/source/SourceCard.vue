@@ -39,7 +39,7 @@ const backgroundImageUrl = computed(() =>
           v-if="source.edition"
           color="source"
           variant="soft"
-          size="xs"
+          size="md"
         >
           {{ source.edition }}
         </UBadge>

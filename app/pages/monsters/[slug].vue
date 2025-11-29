@@ -239,7 +239,7 @@ const imagePath = computed(() => {
                   v-if="action.action_cost"
                   color="info"
                   variant="soft"
-                  size="sm"
+                  size="md"
                 >
                   {{ action.action_cost === 1 ? 'Costs 1 Action' : `Costs ${action.action_cost} Actions` }}
                 </UBadge>

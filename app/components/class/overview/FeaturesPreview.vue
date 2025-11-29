@@ -97,7 +97,7 @@ function getLevelBadgeColor(level: number): BadgeColor {
             <UBadge
               :color="getLevelBadgeColor(feature.level)"
               variant="soft"
-              size="xs"
+              size="md"
               class="flex-shrink-0"
             >
               Level {{ feature.level }}

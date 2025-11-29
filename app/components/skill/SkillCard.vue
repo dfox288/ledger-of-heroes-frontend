@@ -64,7 +64,7 @@ const backgroundImageUrl = computed(() =>
         <UBadge
           color="skill"
           variant="soft"
-          size="xs"
+          size="md"
         >
           Skill
         </UBadge>

@@ -57,7 +57,7 @@ const backgroundImageUrl = computed(() =>
         <UBadge
           color="itemtype"
           variant="soft"
-          size="xs"
+          size="md"
         >
           Item Type
         </UBadge>

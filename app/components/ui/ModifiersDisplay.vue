@@ -68,7 +68,7 @@ const formatChoiceDescription = (
         <UBadge
           color="info"
           variant="soft"
-          size="sm"
+          size="md"
         >
           CHOICE
         </UBadge>

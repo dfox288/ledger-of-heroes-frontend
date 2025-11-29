@@ -60,7 +60,7 @@ const backgroundImageUrl = computed(() =>
         <UBadge
           color="school"
           variant="soft"
-          size="xs"
+          size="md"
         >
           Spell School
         </UBadge>

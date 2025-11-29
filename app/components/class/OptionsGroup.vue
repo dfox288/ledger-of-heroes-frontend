@@ -20,11 +20,23 @@ const sortedOptions = computed(() => {
 </script>
 
 <template>
-  <details v-if="options.length > 0" :open="defaultOpen" class="group">
+  <details
+    v-if="options.length > 0"
+    :open="defaultOpen"
+    class="group"
+  >
     <summary class="flex cursor-pointer items-center gap-2 text-lg font-semibold list-none">
-      <UIcon name="i-heroicons-chevron-right" class="h-5 w-5 transition-transform group-open:rotate-90" />
+      <UIcon
+        name="i-heroicons-chevron-right"
+        class="h-5 w-5 transition-transform group-open:rotate-90"
+      />
       <span>{{ title }}</span>
-      <UBadge size="sm" variant="subtle">{{ options.length }}</UBadge>
+      <UBadge
+        size="md"
+        variant="subtle"
+      >
+        {{ options.length }}
+      </UBadge>
     </summary>
 
     <div class="mt-4 space-y-3">

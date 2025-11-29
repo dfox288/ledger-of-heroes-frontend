@@ -39,7 +39,7 @@ const backgroundImageUrl = computed(() =>
         <UBadge
           color="damage"
           variant="soft"
-          size="sm"
+          size="md"
         >
           Damage Type
         </UBadge>

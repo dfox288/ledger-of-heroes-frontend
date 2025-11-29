@@ -111,7 +111,7 @@ function getValueSummary(startValue?: number, maxValue?: number): string | null 
                 <UBadge
                   color="info"
                   variant="soft"
-                  size="xs"
+                  size="md"
                 >
                   {{ getResetDisplay(counter.resetTiming) }}
                 </UBadge>

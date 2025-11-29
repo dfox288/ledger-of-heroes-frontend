@@ -3,6 +3,7 @@
  * Milestone Badge
  *
  * Visual indicator for milestone levels (subclass choice, ASI, spell tiers, capstone).
+ * Uses UBadge for consistent styling across the app.
  */
 
 interface Props {
@@ -12,7 +13,9 @@ interface Props {
 
 const props = defineProps<Props>()
 
-const config = computed(() => {
+type BadgeColor = 'warning' | 'primary' | 'info' | 'success'
+
+const config = computed<{ icon: string, color: BadgeColor, defaultLabel: string }>(() => {
   switch (props.type) {
     case 'subclass':
       return {
@@ -23,7 +26,7 @@ const config = computed(() => {
     case 'asi':
       return {
         icon: 'i-heroicons-arrow-trending-up',
-        color: 'primary',
+        color: 'info',
         defaultLabel: 'Ability Score Improvement'
       }
     case 'spell_tier':
@@ -33,6 +36,7 @@ const config = computed(() => {
         defaultLabel: 'New Spell Tier'
       }
     case 'capstone':
+    default:
       return {
         icon: 'i-heroicons-trophy',
         color: 'warning',
@@ -45,11 +49,12 @@ const displayLabel = computed(() => props.label || config.value.defaultLabel)
 </script>
 
 <template>
-  <div class="inline-flex items-center gap-1.5 px-2 py-1 rounded-full bg-warning-100 dark:bg-warning-900/30 text-warning-700 dark:text-warning-300 text-xs font-semibold">
-    <UIcon
-      :name="config.icon"
-      class="w-3.5 h-3.5"
-    />
-    <span>{{ displayLabel }}</span>
-  </div>
+  <UBadge
+    :color="config.color"
+    variant="soft"
+    size="md"
+    :icon="config.icon"
+  >
+    {{ displayLabel }}
+  </UBadge>
 </template>

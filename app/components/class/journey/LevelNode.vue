@@ -100,7 +100,7 @@ const levelIcon = computed(() => {
           <UBadge
             color="neutral"
             variant="subtle"
-            size="xs"
+            size="md"
           >
             {{ level.proficiencyBonus }} Proficiency
           </UBadge>

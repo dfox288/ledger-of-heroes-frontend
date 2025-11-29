@@ -174,7 +174,7 @@ const getSourceBadgeColor = (subclass: Subclass): BadgeColor => {
               v-if="getSourceAbbreviation(subclass)"
               :color="getSourceBadgeColor(subclass)"
               variant="subtle"
-              size="xs"
+              size="md"
             >
               {{ getSourceAbbreviation(subclass) }}
             </UBadge>
@@ -184,7 +184,7 @@ const getSourceBadgeColor = (subclass: Subclass): BadgeColor => {
               v-if="getEntryLevel(subclass)"
               color="info"
               variant="soft"
-              size="xs"
+              size="md"
             >
               Level {{ getEntryLevel(subclass) }}
             </UBadge>

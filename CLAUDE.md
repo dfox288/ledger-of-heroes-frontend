@@ -130,6 +130,21 @@ git commit -m "feat: Add feature description
 Co-Authored-By: Claude <noreply@anthropic.com>"
 ```
 
+### Badge Size Standard
+
+**Always use `size="md"` for UBadge components.** The default `sm` size is too small to read comfortably on cards.
+
+```vue
+<!-- ✅ Correct -->
+<UBadge color="spell" variant="subtle" size="md">Concentration</UBadge>
+
+<!-- ❌ Wrong - too small -->
+<UBadge color="spell" variant="subtle" size="xs">Concentration</UBadge>
+<UBadge color="spell" variant="subtle" size="sm">Concentration</UBadge>
+```
+
+**Exception:** Use `size="lg"` for prominent header badges (entity codes like "STR", "PHB").
+
 ### Other Standards
 - **No git worktrees** - Work directly on main branch
 - **Commit immediately** - Don't batch unrelated changes

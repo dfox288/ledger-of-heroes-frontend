@@ -46,7 +46,7 @@ const backgroundImageUrl = computed(() =>
         <UBadge
           color="condition"
           variant="soft"
-          size="xs"
+          size="md"
         >
           Condition
         </UBadge>

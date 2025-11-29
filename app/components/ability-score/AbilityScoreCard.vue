@@ -51,7 +51,7 @@ const backgroundImageUrl = computed(() =>
         <UBadge
           color="ability"
           variant="soft"
-          size="xs"
+          size="md"
         >
           Ability Score
         </UBadge>

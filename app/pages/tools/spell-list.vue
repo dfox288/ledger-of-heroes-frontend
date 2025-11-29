@@ -370,7 +370,7 @@ const handleClearAll = () => {
                         v-if="spell.needs_concentration"
                         color="primary"
                         variant="soft"
-                        size="xs"
+                        size="md"
                       >
                         Concentration
                       </UBadge>
@@ -378,7 +378,7 @@ const handleClearAll = () => {
                         v-if="spell.is_ritual"
                         color="info"
                         variant="soft"
-                        size="xs"
+                        size="md"
                       >
                         Ritual
                       </UBadge>
@@ -386,7 +386,7 @@ const handleClearAll = () => {
                         v-if="spell.requires_verbal"
                         color="neutral"
                         variant="soft"
-                        size="xs"
+                        size="md"
                       >
                         V
                       </UBadge>
@@ -394,7 +394,7 @@ const handleClearAll = () => {
                         v-if="spell.requires_somatic"
                         color="neutral"
                         variant="soft"
-                        size="xs"
+                        size="md"
                       >
                         S
                       </UBadge>
@@ -402,7 +402,7 @@ const handleClearAll = () => {
                         v-if="spell.requires_material"
                         color="neutral"
                         variant="soft"
-                        size="xs"
+                        size="md"
                       >
                         M
                       </UBadge>
