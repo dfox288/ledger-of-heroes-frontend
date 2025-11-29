@@ -32,30 +32,26 @@ describe('DamageTypeCard', () => {
     expect(wrapper.text()).toContain('Damage Type')
   })
 
-  it('handles all common damage types', async () => {
-    const damageTypes = [
-      'Acid',
-      'Bludgeoning',
-      'Cold',
-      'Fire',
-      'Force',
-      'Lightning',
-      'Necrotic',
-      'Piercing',
-      'Poison',
-      'Psychic',
-      'Radiant',
-      'Slashing',
-      'Thunder'
-    ]
+  it.each([
+    ['Acid'],
+    ['Bludgeoning'],
+    ['Cold'],
+    ['Fire'],
+    ['Force'],
+    ['Lightning'],
+    ['Necrotic'],
+    ['Piercing'],
+    ['Poison'],
+    ['Psychic'],
+    ['Radiant'],
+    ['Slashing'],
+    ['Thunder']
+  ])('handles damage type: %s', async (name) => {
+    const wrapper = await mountSuspended(DamageTypeCard, {
+      props: { damageType: { id: 1, name } }
+    })
 
-    for (const name of damageTypes) {
-      const wrapper = await mountSuspended(DamageTypeCard, {
-        props: { damageType: { id: 1, name } }
-      })
-
-      expect(wrapper.text()).toContain(name)
-    }
+    expect(wrapper.text()).toContain(name)
   })
 
   it('handles long damage type names', async () => {

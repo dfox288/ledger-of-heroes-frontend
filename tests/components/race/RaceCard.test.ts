@@ -452,21 +452,17 @@ describe('RaceCard', () => {
     expect(text).toContain('2 Subraces')
   })
 
-  it('handles different size codes', async () => {
-    const sizes = [
-      { code: 'S', name: 'Small' },
-      { code: 'M', name: 'Medium' },
-      { code: 'L', name: 'Large' }
-    ]
+  it.each([
+    [{ code: 'S', name: 'Small' }],
+    [{ code: 'M', name: 'Medium' }],
+    [{ code: 'L', name: 'Large' }]
+  ])('handles different size codes: %s', async (size) => {
+    const sizedRace = { ...mockRace, size: { id: 1, ...size } }
+    const wrapper = await mountSuspended(RaceCard, {
+      props: { race: sizedRace }
+    })
 
-    for (const size of sizes) {
-      const sizedRace = { ...mockRace, size: { id: 1, ...size } }
-      const wrapper = await mountSuspended(RaceCard, {
-        props: { race: sizedRace }
-      })
-
-      expect(wrapper.text()).toContain(size.name)
-    }
+    expect(wrapper.text()).toContain(size.name)
   })
 
   it('handles races with all optional fields', async () => {

@@ -83,17 +83,18 @@ describe('LanguageCard', () => {
     expect(wrapper.text()).not.toContain('...')
   })
 
-  it('handles different script types', async () => {
-    const scripts = ['Common', 'Dwarvish', 'Draconic', 'Infernal']
+  it.each([
+    ['Common'],
+    ['Dwarvish'],
+    ['Draconic'],
+    ['Infernal']
+  ])('handles different script types: %s', async (script) => {
+    const lang = { ...mockLanguage, script }
+    const wrapper = await mountSuspended(LanguageCard, {
+      props: { language: lang }
+    })
 
-    for (const script of scripts) {
-      const lang = { ...mockLanguage, script }
-      const wrapper = await mountSuspended(LanguageCard, {
-        props: { language: lang }
-      })
-
-      expect(wrapper.text()).toContain(`${script} Script`)
-    }
+    expect(wrapper.text()).toContain(`${script} Script`)
   })
 
   it('handles long language names', async () => {

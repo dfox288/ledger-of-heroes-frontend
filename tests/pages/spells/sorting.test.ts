@@ -115,37 +115,37 @@ describe('Spells Page - Sorting', () => {
       expect(wrapper.exists()).toBe(true)
     })
 
-    it('should support all valid sort_by options', async () => {
-      // Valid options according to API: name, level, created_at, updated_at
-      const sortOptions = ['name', 'level', 'created_at', 'updated_at']
+    // Valid options according to API: name, level, created_at, updated_at
+    it.each([
+      ['name'],
+      ['level'],
+      ['created_at'],
+      ['updated_at']
+    ])('should support sort_by option: %s', async (sortBy) => {
+      const wrapper = await mountSuspended(SpellsIndexPage, {
+        route: {
+          path: '/spells',
+          query: { sort_by: sortBy }
+        }
+      })
 
-      for (const sortBy of sortOptions) {
-        const wrapper = await mountSuspended(SpellsIndexPage, {
-          route: {
-            path: '/spells',
-            query: { sort_by: sortBy }
-          }
-        })
-
-        await flushPromises()
-        expect(wrapper.exists()).toBe(true)
-      }
+      await flushPromises()
+      expect(wrapper.exists()).toBe(true)
     })
 
-    it('should support both sort directions', async () => {
-      const directions = ['asc', 'desc']
+    it.each([
+      ['asc'],
+      ['desc']
+    ])('should support sort direction: %s', async (direction) => {
+      const wrapper = await mountSuspended(SpellsIndexPage, {
+        route: {
+          path: '/spells',
+          query: { sort_by: 'name', sort_direction: direction }
+        }
+      })
 
-      for (const direction of directions) {
-        const wrapper = await mountSuspended(SpellsIndexPage, {
-          route: {
-            path: '/spells',
-            query: { sort_by: 'name', sort_direction: direction }
-          }
-        })
-
-        await flushPromises()
-        expect(wrapper.exists()).toBe(true)
-      }
+      await flushPromises()
+      expect(wrapper.exists()).toBe(true)
     })
   })
 

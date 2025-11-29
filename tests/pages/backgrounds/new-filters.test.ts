@@ -29,7 +29,6 @@ describe('Backgrounds Page - New Filters (skill_proficiencies, tool_proficiency_
 
       // Set multiple skill IDs
       component.selectedSkills = ['1', '2']
-      await wrapper.vm.$nextTick()
 
       expect(component.selectedSkills).toHaveLength(2)
       expect(component.selectedSkills).toContain('1')
@@ -74,7 +73,6 @@ describe('Backgrounds Page - New Filters (skill_proficiencies, tool_proficiency_
 
       // Clear filters to ensure clean state
       component.clearFilters()
-      await wrapper.vm.$nextTick()
 
       const initialCount = component.activeFilterCount
       expect(initialCount).toBe(0)
@@ -93,7 +91,6 @@ describe('Backgrounds Page - New Filters (skill_proficiencies, tool_proficiency_
       await wrapper.vm.$nextTick()
 
       component.clearFilters()
-      await wrapper.vm.$nextTick()
 
       expect(component.selectedSkills).toEqual([])
     })
@@ -119,7 +116,6 @@ describe('Backgrounds Page - New Filters (skill_proficiencies, tool_proficiency_
       const component = wrapper.vm as any
 
       component.selectedToolTypes = ['artisan-tools', 'musical-instruments']
-      await wrapper.vm.$nextTick()
 
       expect(component.selectedToolTypes).toHaveLength(2)
       expect(component.selectedToolTypes).toContain('artisan-tools')
@@ -142,11 +138,9 @@ describe('Backgrounds Page - New Filters (skill_proficiencies, tool_proficiency_
       const component = wrapper.vm as any
 
       component.selectedToolTypes = ['artisan-tools', 'gaming-sets']
-      await wrapper.vm.$nextTick()
 
       // Simulate clicking chip to remove one
       component.selectedToolTypes = component.selectedToolTypes.filter((t: string) => t !== 'artisan-tools')
-      await wrapper.vm.$nextTick()
 
       expect(component.selectedToolTypes).toHaveLength(1)
       expect(component.selectedToolTypes).not.toContain('artisan-tools')
@@ -158,7 +152,6 @@ describe('Backgrounds Page - New Filters (skill_proficiencies, tool_proficiency_
 
       // Clear filters to ensure clean state
       component.clearFilters()
-      await wrapper.vm.$nextTick()
 
       const initialCount = component.activeFilterCount
       expect(initialCount).toBe(0)
@@ -177,7 +170,6 @@ describe('Backgrounds Page - New Filters (skill_proficiencies, tool_proficiency_
       await wrapper.vm.$nextTick()
 
       component.clearFilters()
-      await wrapper.vm.$nextTick()
 
       expect(component.selectedToolTypes).toEqual([])
     })
@@ -203,7 +195,6 @@ describe('Backgrounds Page - New Filters (skill_proficiencies, tool_proficiency_
       const component = wrapper.vm as any
 
       component.languageChoiceFilter = '1'
-      await wrapper.vm.$nextTick()
 
       expect(component.languageChoiceFilter).toBe('1')
     })
@@ -213,7 +204,6 @@ describe('Backgrounds Page - New Filters (skill_proficiencies, tool_proficiency_
       const component = wrapper.vm as any
 
       component.languageChoiceFilter = '0'
-      await wrapper.vm.$nextTick()
 
       expect(component.languageChoiceFilter).toBe('0')
     })
@@ -223,7 +213,6 @@ describe('Backgrounds Page - New Filters (skill_proficiencies, tool_proficiency_
       const component = wrapper.vm as any
 
       component.languageChoiceFilter = null
-      await wrapper.vm.$nextTick()
 
       expect(component.languageChoiceFilter).toBeNull()
     })
@@ -304,7 +293,6 @@ describe('Backgrounds Page - New Filters (skill_proficiencies, tool_proficiency_
       await wrapper.vm.$nextTick()
 
       component.clearFilters()
-      await wrapper.vm.$nextTick()
 
       expect(component.languageChoiceFilter).toBeNull()
     })
@@ -320,7 +308,6 @@ describe('Backgrounds Page - New Filters (skill_proficiencies, tool_proficiency_
       component.selectedSkills = ['stealth']
       component.selectedToolTypes = ['artisan-tools']
       component.languageChoiceFilter = '1'
-      await wrapper.vm.$nextTick()
 
       expect(component.activeFilterCount).toBe(initialCount + 3)
     })
@@ -332,10 +319,8 @@ describe('Backgrounds Page - New Filters (skill_proficiencies, tool_proficiency_
       component.selectedSkills = ['stealth', 'perception']
       component.selectedToolTypes = ['artisan-tools']
       component.languageChoiceFilter = '1'
-      await wrapper.vm.$nextTick()
 
       component.clearFilters()
-      await wrapper.vm.$nextTick()
 
       expect(component.selectedSkills).toEqual([])
       expect(component.selectedToolTypes).toEqual([])

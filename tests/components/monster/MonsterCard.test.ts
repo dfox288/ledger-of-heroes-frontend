@@ -117,26 +117,22 @@ describe('MonsterCard', () => {
     expect(wrapper.text()).not.toContain('...')
   })
 
-  it('handles different CR values correctly', async () => {
-    const crTests = [
-      { cr: '0' },
-      { cr: '1/4' },
-      { cr: '5' },
-      { cr: '11' },
-      { cr: '24' }
-    ]
+  it.each([
+    ['0'],
+    ['1/4'],
+    ['5'],
+    ['11'],
+    ['24']
+  ])('handles CR value %s correctly', async (cr) => {
+    const monster = { ...mockMonster, challenge_rating: cr }
+    const wrapper = await mountSuspended(MonsterCard, {
+      props: { monster }
+    })
 
-    for (const test of crTests) {
-      const monster = { ...mockMonster, challenge_rating: test.cr }
-      const wrapper = await mountSuspended(MonsterCard, {
-        props: { monster }
-      })
-
-      expect(wrapper.text()).toContain(`CR ${test.cr}`)
-      // All CR badges use monster entity color
-      const badge = wrapper.find('[class*="bg-monster"]')
-      expect(badge.exists()).toBe(true)
-    }
+    expect(wrapper.text()).toContain(`CR ${cr}`)
+    // All CR badges use monster entity color
+    const badge = wrapper.find('[class*="bg-monster"]')
+    expect(badge.exists()).toBe(true)
   })
 
   // Icon display tests (replacing emojis)

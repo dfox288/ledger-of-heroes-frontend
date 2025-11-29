@@ -32,9 +32,6 @@ describe('Items Page - API-Driven Rarity Filter', () => {
       const wrapper = await mountSuspended(ItemsPage)
       const component = wrapper.vm as any
 
-      // Wait for API data to potentially load
-      await wrapper.vm.$nextTick()
-
       // If rarities loaded from API, check capitalization
       if (component.rarities && component.rarities.length > 0) {
         const firstRarity = component.rarityOptions[1] // Skip "All Rarities"
@@ -53,8 +50,6 @@ describe('Items Page - API-Driven Rarity Filter', () => {
     it('rarityOptions uses rarity name as value (not slug)', async () => {
       const wrapper = await mountSuspended(ItemsPage)
       const component = wrapper.vm as any
-
-      await wrapper.vm.$nextTick()
 
       // If rarities loaded from API
       if (component.rarities && component.rarities.length > 0) {
@@ -106,8 +101,6 @@ describe('Items Page - API-Driven Rarity Filter', () => {
       const wrapper = await mountSuspended(ItemsPage)
       const component = wrapper.vm as any
 
-      await wrapper.vm.$nextTick()
-
       // If API loaded multi-word rarities, verify capitalization
       if (component.rarities && component.rarities.length > 0) {
         // Find a multi-word rarity if it exists
@@ -158,9 +151,6 @@ describe('Items Page - API-Driven Rarity Filter', () => {
       const wrapper = await mountSuspended(ItemsPage)
       const component = wrapper.vm as any
 
-      component.filtersOpen = true
-      await wrapper.vm.$nextTick()
-
       // selectedRarity should be a simple ref (not array), indicating it's a select, not multiselect
       expect(component.selectedRarity).toBeDefined()
       expect(Array.isArray(component.selectedRarity)).toBe(false)
@@ -175,7 +165,6 @@ describe('Items Page - API-Driven Rarity Filter', () => {
 
       // Set to a value
       component.selectedRarity = 'rare'
-      await wrapper.vm.$nextTick()
 
       expect(component.selectedRarity).toBe('rare')
     })
@@ -288,7 +277,7 @@ describe('Items Page - API-Driven Rarity Filter', () => {
       )
       expect(chip).toBeDefined()
 
-      // Call clearFilters
+      // Call clearFilters and check results
       component.clearFilters()
       await wrapper.vm.$nextTick()
 
@@ -307,9 +296,8 @@ describe('Items Page - API-Driven Rarity Filter', () => {
       const component = wrapper.vm as any
 
       component.selectedRarity = 'rare'
-      await wrapper.vm.$nextTick()
 
-      // queryBuilder should include rarity filter
+      // queryBuilder should include rarity filter (computed property, no nextTick needed)
       const queryParams = component.queryBuilder
       expect(queryParams).toBeDefined()
 
@@ -325,7 +313,6 @@ describe('Items Page - API-Driven Rarity Filter', () => {
 
       // Set rarity to a name value
       component.selectedRarity = 'uncommon'
-      await wrapper.vm.$nextTick()
 
       const queryParams = component.queryBuilder
 
@@ -341,13 +328,10 @@ describe('Items Page - API-Driven Rarity Filter', () => {
 
       // Clear filters to ensure clean state (store may have persisted data)
       component.clearFilters()
-      await wrapper.vm.$nextTick()
-
       const initialCount = component.activeFilterCount
       expect(initialCount).toBe(0)
 
       component.selectedRarity = 'rare'
-      await wrapper.vm.$nextTick()
 
       expect(component.activeFilterCount).toBeGreaterThan(initialCount)
     })
@@ -361,7 +345,6 @@ describe('Items Page - API-Driven Rarity Filter', () => {
 
       // Set via internal ref (simulating route init)
       component.selectedRarity = 'legendary'
-      await wrapper.vm.$nextTick()
 
       expect(component.selectedRarity).toBe('legendary')
     })

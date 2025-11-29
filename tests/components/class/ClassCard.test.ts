@@ -98,17 +98,18 @@ describe('ClassCard', () => {
     expect(wrapper.text()).toContain('d6')
   })
 
-  it('handles different hit die sizes', async () => {
-    const hitDieSizes = [6, 8, 10, 12]
+  it.each([
+    [6],
+    [8],
+    [10],
+    [12]
+  ])('handles different hit die sizes: d%s', async (size) => {
+    const classWithHitDie = { ...mockClass, hit_die: size }
+    const wrapper = await mountSuspended(ClassCard, {
+      props: { characterClass: classWithHitDie }
+    })
 
-    for (const size of hitDieSizes) {
-      const classWithHitDie = { ...mockClass, hit_die: size }
-      const wrapper = await mountSuspended(ClassCard, {
-        props: { characterClass: classWithHitDie }
-      })
-
-      expect(wrapper.text()).toContain(`d${size}`)
-    }
+    expect(wrapper.text()).toContain(`d${size}`)
   })
 
   it('shows base class badge when is_base_class is true', async () => {
@@ -244,25 +245,21 @@ describe('ClassCard', () => {
     expect(text).toContain('2 Subclasses')
   })
 
-  it('handles classes with different primary abilities', async () => {
-    const abilities = [
-      { code: 'STR', name: 'Strength' },
-      { code: 'DEX', name: 'Dexterity' },
-      { code: 'WIS', name: 'Wisdom' },
-      { code: 'CHA', name: 'Charisma' }
-    ]
-
-    for (const ability of abilities) {
-      const classWithAbility = {
-        ...mockClass,
-        primary_ability: { id: 1, ...ability }
-      }
-      const wrapper = await mountSuspended(ClassCard, {
-        props: { characterClass: classWithAbility }
-      })
-
-      expect(wrapper.text()).toContain(ability.code)
+  it.each([
+    [{ code: 'STR', name: 'Strength' }],
+    [{ code: 'DEX', name: 'Dexterity' }],
+    [{ code: 'WIS', name: 'Wisdom' }],
+    [{ code: 'CHA', name: 'Charisma' }]
+  ])('handles classes with different primary abilities: %s', async (ability) => {
+    const classWithAbility = {
+      ...mockClass,
+      primary_ability: { id: 1, ...ability }
     }
+    const wrapper = await mountSuspended(ClassCard, {
+      props: { characterClass: classWithAbility }
+    })
+
+    expect(wrapper.text()).toContain(ability.code)
   })
 
   it('handles non-spellcasting classes', async () => {

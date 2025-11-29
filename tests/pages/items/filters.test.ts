@@ -15,7 +15,6 @@ describe('Items Page - Filter Layout', () => {
 
       const component = wrapper.vm as any
       component.selectedRarity = 'rare' // Use rarity instead - it's known to work
-      await wrapper.vm.$nextTick()
       await flushPromises()
 
       // Find all elements with this class and look for the one with "Active filters:"
@@ -30,7 +29,6 @@ describe('Items Page - Filter Layout', () => {
 
       const component = wrapper.vm as any
       component.selectedRarity = 'rare'
-      await wrapper.vm.$nextTick()
       await flushPromises()
 
       // Check that none of the labels say "Active:"
@@ -46,7 +44,6 @@ describe('Items Page - Filter Layout', () => {
 
       const component = wrapper.vm as any
       component.selectedRarity = 'rare'
-      await wrapper.vm.$nextTick()
       await flushPromises()
 
       // Find the outer chips container (UiFilterChips component root)
@@ -91,7 +88,6 @@ describe('Items Page - Filter Layout', () => {
 
       const component = wrapper.vm as any
       component.selectedRarity = 'rare'
-      await wrapper.vm.$nextTick()
       await flushPromises()
 
       // Find the chips row with justify-between (UiFilterChips root element)
@@ -113,7 +109,6 @@ describe('Items Page - Filter Layout', () => {
       // Set rarity to make chips container visible, then also set type
       component.selectedRarity = 'rare'
       component.selectedType = 1
-      await wrapper.vm.$nextTick()
       await flushPromises()
 
       // The type chip should be visible in the chips section
@@ -130,7 +125,7 @@ describe('Items Page - Filter Layout', () => {
 
       const component = wrapper.vm as any
       component.selectedRarity = 'rare'
-      await wrapper.vm.$nextTick()
+      await flushPromises()
 
       const chips = wrapper.findAll('button').filter(btn =>
         btn.text().includes('rare')
@@ -143,7 +138,7 @@ describe('Items Page - Filter Layout', () => {
 
       const component = wrapper.vm as any
       component.selectedMagic = 'true'
-      await wrapper.vm.$nextTick()
+      await flushPromises()
 
       const chips = wrapper.findAll('button').filter(btn =>
         btn.text().includes('Magic')
@@ -191,7 +186,7 @@ describe('Items Page - Filter Layout', () => {
       component.selectedProperties = ['Finesse', 'Light']
       component.selectedDamageTypes = ['S', 'P']
       component.selectedSources = ['PHB', 'DMG']
-      await wrapper.vm.$nextTick()
+      await flushPromises()
 
       // Find and click clear filters button
       const clearButton = wrapper.findAll('button').find(btn =>
@@ -219,7 +214,6 @@ describe('Items Page - Filter Layout', () => {
       const component = wrapper.vm as any
 
       // Wait for initial render
-      await wrapper.vm.$nextTick()
       await flushPromises()
 
       // No filters active - entire chips container should not be visible
@@ -230,7 +224,6 @@ describe('Items Page - Filter Layout', () => {
 
       // Add a filter
       component.selectedRarity = 'rare'
-      await wrapper.vm.$nextTick()
       await flushPromises()
 
       // Chips container should now be visible with clear button
@@ -263,7 +256,7 @@ describe('Items Page - Filter Layout', () => {
 
       const component = wrapper.vm as any
       component.requiresAttunement = '1'
-      await wrapper.vm.$nextTick()
+      await flushPromises()
 
       const chips = wrapper.findAll('button').filter(btn =>
         btn.text().includes('Attunement: Yes')
@@ -276,7 +269,7 @@ describe('Items Page - Filter Layout', () => {
 
       const component = wrapper.vm as any
       component.requiresAttunement = '0'
-      await wrapper.vm.$nextTick()
+      await flushPromises()
 
       const chips = wrapper.findAll('button').filter(btn =>
         btn.text().includes('Attunement: No')
@@ -289,7 +282,7 @@ describe('Items Page - Filter Layout', () => {
 
       const component = wrapper.vm as any
       component.requiresAttunement = '1'
-      await wrapper.vm.$nextTick()
+      await flushPromises()
 
       const chip = wrapper.findAll('button').find(btn =>
         btn.text().includes('Attunement: Yes')
@@ -318,7 +311,7 @@ describe('Items Page - Filter Layout', () => {
 
       const component = wrapper.vm as any
       component.stealthDisadvantage = '1'
-      await wrapper.vm.$nextTick()
+      await flushPromises()
 
       const chips = wrapper.findAll('button').filter(btn =>
         btn.text().includes('Stealth Disadv.: Yes')
@@ -331,7 +324,7 @@ describe('Items Page - Filter Layout', () => {
 
       const component = wrapper.vm as any
       component.stealthDisadvantage = '1'
-      await wrapper.vm.$nextTick()
+      await flushPromises()
 
       const chip = wrapper.findAll('button').find(btn =>
         btn.text().includes('Stealth Disadv.: Yes')
@@ -361,7 +354,7 @@ describe('Items Page - Filter Layout', () => {
 
       const component = wrapper.vm as any
       component.selectedProperties = ['Finesse', 'Light']
-      await wrapper.vm.$nextTick()
+      await flushPromises()
 
       const finesseChip = wrapper.findAll('button').find(btn =>
         btn.text().includes('Finesse')
@@ -379,7 +372,7 @@ describe('Items Page - Filter Layout', () => {
 
       const component = wrapper.vm as any
       component.selectedProperties = ['Finesse', 'Light']
-      await wrapper.vm.$nextTick()
+      await flushPromises()
 
       const finesseChip = wrapper.findAll('button').find(btn =>
         btn.text().includes('Finesse') && btn.text().includes('✕')
@@ -411,7 +404,6 @@ describe('Items Page - Filter Layout', () => {
       // Set rarity to make chips container visible
       component.selectedRarity = 'rare'
       component.selectedDamageTypes = ['S', 'P']
-      await wrapper.vm.$nextTick()
       await flushPromises()
 
       // Find chips that look like damage type chips (contain just code letters and ×)
@@ -432,7 +424,6 @@ describe('Items Page - Filter Layout', () => {
       // Set rarity to make chips container visible
       component.selectedRarity = 'rare'
       component.selectedDamageTypes = ['S', 'P']
-      await wrapper.vm.$nextTick()
       await flushPromises()
 
       // Find chips that look like damage type chips
@@ -470,7 +461,7 @@ describe('Items Page - Filter Layout', () => {
 
       const component = wrapper.vm as any
       component.selectedSources = ['PHB', 'DMG']
-      await wrapper.vm.$nextTick()
+      await flushPromises()
 
       // Chips should show the source (either full name or code as fallback)
       const phbChip = wrapper.findAll('button').find(btn =>
@@ -489,7 +480,7 @@ describe('Items Page - Filter Layout', () => {
 
       const component = wrapper.vm as any
       component.selectedSources = ['PHB', 'DMG']
-      await wrapper.vm.$nextTick()
+      await flushPromises()
 
       // Find source chips
       const sourceChips = wrapper.findAll('button').filter(btn =>

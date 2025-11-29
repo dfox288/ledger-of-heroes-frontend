@@ -48,24 +48,20 @@ describe('SizeCard', () => {
     expect(text).toContain('Creature Size')
   })
 
-  it('handles all D&D size categories', async () => {
-    const sizes = [
-      { code: 'T', name: 'Tiny' },
-      { code: 'S', name: 'Small' },
-      { code: 'M', name: 'Medium' },
-      { code: 'L', name: 'Large' },
-      { code: 'H', name: 'Huge' },
-      { code: 'G', name: 'Gargantuan' }
-    ]
+  it.each([
+    [{ code: 'T', name: 'Tiny' }],
+    [{ code: 'S', name: 'Small' }],
+    [{ code: 'M', name: 'Medium' }],
+    [{ code: 'L', name: 'Large' }],
+    [{ code: 'H', name: 'Huge' }],
+    [{ code: 'G', name: 'Gargantuan' }]
+  ])('handles D&D size category %s', async (size) => {
+    const wrapper = await mountSuspended(SizeCard, {
+      props: { size: { id: 1, ...size } }
+    })
 
-    for (const size of sizes) {
-      const wrapper = await mountSuspended(SizeCard, {
-        props: { size: { id: 1, ...size } }
-      })
-
-      expect(wrapper.text()).toContain(size.code)
-      expect(wrapper.text()).toContain(size.name)
-    }
+    expect(wrapper.text()).toContain(size.code)
+    expect(wrapper.text()).toContain(size.name)
   })
 
   describe('background images', () => {

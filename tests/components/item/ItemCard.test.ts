@@ -232,30 +232,34 @@ describe('ItemCard', () => {
     expect(text).toContain('Attunement')
   })
 
-  it('handles different rarity levels', async () => {
-    const rarities = ['common', 'uncommon', 'rare', 'very rare', 'legendary', 'artifact']
+  it.each([
+    ['common'],
+    ['uncommon'],
+    ['rare'],
+    ['very rare'],
+    ['legendary'],
+    ['artifact']
+  ])('handles different rarity levels: %s', async (rarity) => {
+    const rarityItem = { ...mockItem, rarity }
+    const wrapper = await mountSuspended(ItemCard, {
+      props: { item: rarityItem }
+    })
 
-    for (const rarity of rarities) {
-      const rarityItem = { ...mockItem, rarity }
-      const wrapper = await mountSuspended(ItemCard, {
-        props: { item: rarityItem }
-      })
-
-      expect(wrapper.html()).toBeTruthy()
-    }
+    expect(wrapper.html()).toBeTruthy()
   })
 
-  it('handles weapon item types', async () => {
-    const weaponTypes = ['Simple Weapon', 'Martial Weapon', 'Bow', 'Sword']
+  it.each([
+    ['Simple Weapon'],
+    ['Martial Weapon'],
+    ['Bow'],
+    ['Sword']
+  ])('handles weapon item types: %s', async (typeName) => {
+    const weaponItem = { ...mockItem, item_type: { id: 1, name: typeName } }
+    const wrapper = await mountSuspended(ItemCard, {
+      props: { item: weaponItem }
+    })
 
-    for (const typeName of weaponTypes) {
-      const weaponItem = { ...mockItem, item_type: { id: 1, name: typeName } }
-      const wrapper = await mountSuspended(ItemCard, {
-        props: { item: weaponItem }
-      })
-
-      expect(wrapper.text()).toContain(typeName)
-    }
+    expect(wrapper.text()).toContain(typeName)
   })
 
   it('handles armor item types', async () => {
