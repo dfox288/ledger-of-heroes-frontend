@@ -1,6 +1,6 @@
 # Project Status
 
-**D&D 5e Compendium Frontend** | **Last Updated:** 2025-11-28
+**D&D 5e Compendium Frontend** | **Last Updated:** 2025-11-29
 
 ---
 
@@ -12,7 +12,7 @@
 | Test Cases | ~1,646 |
 | Components | 82 |
 | Pages | 31 |
-| Composables | 17 |
+| Composables | 18 |
 | Pinia Stores | 8 |
 | Test Helpers | 8 |
 
@@ -100,6 +100,9 @@
 
 ## Recent Milestones
 
+- **2025-11-29:** Class detail page 3-view architecture (Overview/Journey/Reference)
+- **2025-11-29:** `useClassDetail` composable for shared class data fetching
+- **2025-11-29:** 12 new class components (overview + journey views)
 - **2025-11-28:** Phase 3 API flag-based filtering (+31 tests, `useFeatureFiltering` composable)
 - **2025-11-28:** Timeline UI for class features (replaces double accordion)
 - **2025-11-28:** Accordion headers with leading icons

@@ -16,8 +16,9 @@ _Tasks currently being worked on_
 
 _Prioritized tasks ready to start_
 
+- [ ] Fix Overview/Journey test failures (component mocking)
 - [ ] Request backend to flag Totem options with `is_choice_option`
-- [ ] Apply timeline pattern to Race detail page
+- [ ] Apply 3-view pattern to Race detail page
 - [ ] Character Builder feature (pending backend API)
 - [ ] E2E test expansion (Playwright)
 
@@ -40,6 +41,9 @@ _Future tasks, not yet prioritized_
 
 _Recently completed tasks (move to CHANGELOG.md after release)_
 
+- [x] Class detail page 3-view architecture (Overview, Journey, Reference)
+- [x] `useClassDetail` composable for shared data fetching
+- [x] 12 new class components (DetailHeader, ViewNavigation, + overview/journey)
 - [x] Phase 3: API flag-based filtering (`is_choice_option`, `is_multiclass_only`)
 - [x] Timeline UI for class features (replaces double accordion)
 - [x] `useFeatureFiltering` composable (centralizes filtering logic)

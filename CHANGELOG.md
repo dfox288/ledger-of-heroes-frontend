@@ -9,6 +9,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **Class Detail Page 3-View Architecture (2025-11-29)** - Complete redesign of class detail pages with modular view system
+  - **Overview View** (`/classes/[slug]`) - Combat basics grid, spellcasting summary, class resources, subclass gallery
+  - **Journey View** (`/classes/[slug]/journey`) - Level 1-20 timeline with milestones (subclass, ASI, capstone)
+  - **Reference View** (`/classes/[slug]/reference`) - Full progression table, all features expanded
+  - New `useClassDetail` composable - Shared data fetching across all 3 views
+  - New shared components: `ClassDetailHeader`, `ClassViewNavigation`
+  - 5 new Overview components: `CombatBasicsGrid`, `SpellcastingCard`, `ResourcesCard`, `FeaturesPreview`
+  - 5 new Journey components: `Timeline`, `LevelNode`, `MilestoneBadge`, `SpellSlotIndicator`, `ParentToggle`
+  - Subclass support: Parent feature toggle, inherited data display
+  - Fixed counter data structure mismatch (API returns `{name, progression[]}` not flat fields)
+  - 20 files changed, 4,119 lines added
+  - Design document: `docs/plans/2025-11-28-class-detail-page-redesign.md`
+
 ### Changed
 
 - **Page Filter Setup Composable (2025-11-26)** - Extracted URL sync boilerplate from 7 entity list pages
