@@ -135,8 +135,10 @@ export const SPEED_RANGE_OPTIONS = [
 
 export interface RangePreset {
   label: string
-  min: number
-  max: number
+  /** Minimum value (null for open-ended: no lower bound, generates `field < max`) */
+  min: number | null
+  /** Maximum value (null for open-ended: no upper bound, generates `field >= min`) */
+  max: number | null
 }
 
 // Monster AC ranges
@@ -170,12 +172,13 @@ export const MONSTER_HP_RANGE_OPTIONS = [
 ]
 
 // Item cost ranges (in copper pieces)
+// Note: null min/max = open-ended range (< or >= only)
 export const COST_RANGE_PRESETS: Record<string, RangePreset> = {
-  'under-100': { label: 'Under 1 gp', min: 0, max: 99 },
+  'under-100': { label: 'Under 1 gp', min: null, max: 99 },
   '100-1000': { label: '1-10 gp', min: 100, max: 1000 },
   '1000-10000': { label: '10-100 gp', min: 1000, max: 10000 },
   '10000-100000': { label: '100-1000 gp', min: 10000, max: 100000 },
-  'over-100000': { label: '1000+ gp', min: 100000, max: 999999999 }
+  'over-100000': { label: '1000+ gp', min: 100000, max: null }
 }
 
 export const COST_RANGE_OPTIONS = [
@@ -202,11 +205,12 @@ export const ITEM_AC_RANGE_OPTIONS = [
 ]
 
 // Weapon range presets
+// Note: null min/max = open-ended range (< or > only)
 export const WEAPON_RANGE_PRESETS: Record<string, RangePreset> = {
-  'under-30': { label: 'Short (<30ft)', min: 0, max: 29 },
+  'under-30': { label: 'Short (<30ft)', min: null, max: 29 },
   '30-80': { label: 'Medium (30-80ft)', min: 30, max: 80 },
   '80-150': { label: 'Long (80-150ft)', min: 80, max: 150 },
-  'over-150': { label: 'Very Long (>150ft)', min: 151, max: 999 }
+  'over-150': { label: 'Very Long (>150ft)', min: 151, max: null }
 }
 
 // Race speed ranges (used by filter logic, not exposed as select options)

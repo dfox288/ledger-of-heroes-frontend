@@ -23,8 +23,8 @@ export interface FilterConfig {
   min?: Ref<number | null>
   max?: Ref<number | null>
 
-  /** For 'rangePreset' type: preset definitions */
-  presets?: Record<string, { min: number, max: number }>
+  /** For 'rangePreset' type: preset definitions (null min/max = open-ended) */
+  presets?: Record<string, { min: number | null, max: number | null }>
 
   /** For 'equals' with lookup: transform value before filtering.
    * For 'in' type: receives array and should return transformed array. */
@@ -156,7 +156,17 @@ export function useMeilisearchFilters(
           if (config.presets && value) {
             const preset = config.presets[value as string]
             if (preset) {
-              meilisearchFilters.push(`${config.field} >= ${preset.min} AND ${config.field} <= ${preset.max}`)
+              // Support open-ended ranges: null min = no lower bound, null max = no upper bound
+              const conditions: string[] = []
+              if (preset.min !== null) {
+                conditions.push(`${config.field} >= ${preset.min}`)
+              }
+              if (preset.max !== null) {
+                conditions.push(`${config.field} <= ${preset.max}`)
+              }
+              if (conditions.length > 0) {
+                meilisearchFilters.push(conditions.join(' AND '))
+              }
             }
           }
           break

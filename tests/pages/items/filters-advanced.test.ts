@@ -72,7 +72,7 @@ describe('Items Cost Filter - Query Generation', () => {
     component.selectedCostRange = 'under-100'
 
     const queryParams = component.queryBuilder
-    expect(queryParams.filter).toContain('cost_cp >= 0 AND cost_cp <= 99')
+    expect(queryParams.filter).toContain('cost_cp <= 99')
   })
 
   it('generates correct filter for 1-10 gp', async () => {

@@ -432,10 +432,10 @@ describe('useMeilisearchFilters', () => {
       })
     })
 
-    it('handles cost range preset with large numbers', () => {
+    it('handles open-ended range with null max (no upper bound)', () => {
       const selectedCostRange = ref('over-100000')
       const presets = {
-        'over-100000': { min: 100000, max: 999999999 }
+        'over-100000': { min: 100000, max: null }
       }
 
       const { queryParams } = useMeilisearchFilters([
@@ -443,7 +443,37 @@ describe('useMeilisearchFilters', () => {
       ])
 
       expect(queryParams.value).toEqual({
-        filter: 'cost_cp >= 100000 AND cost_cp <= 999999999'
+        filter: 'cost_cp >= 100000'
+      })
+    })
+
+    it('handles open-ended range with null min (no lower bound)', () => {
+      const selectedRange = ref('under-30')
+      const presets = {
+        'under-30': { min: null, max: 29 }
+      }
+
+      const { queryParams } = useMeilisearchFilters([
+        { ref: selectedRange, field: 'range_normal', type: 'rangePreset', presets }
+      ])
+
+      expect(queryParams.value).toEqual({
+        filter: 'range_normal <= 29'
+      })
+    })
+
+    it('handles bounded range (both min and max)', () => {
+      const selectedRange = ref('30-80')
+      const presets = {
+        '30-80': { min: 30, max: 80 }
+      }
+
+      const { queryParams } = useMeilisearchFilters([
+        { ref: selectedRange, field: 'range_normal', type: 'rangePreset', presets }
+      ])
+
+      expect(queryParams.value).toEqual({
+        filter: 'range_normal >= 30 AND range_normal <= 80'
       })
     })
   })
