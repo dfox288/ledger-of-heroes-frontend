@@ -29,7 +29,9 @@ const {
   subclassName,
   spellcastingAbility,
   isCaster,
-  levelProgression
+  levelProgression,
+  hasOptionalFeatures,
+  optionalFeaturesByType
 } = useClassDetail(slug)
 
 /**
@@ -134,6 +136,17 @@ const accordionItems = computed(() => {
             Class Resources
           </h2>
           <ClassOverviewResourcesCard :counters="counters" />
+        </section>
+
+        <!-- Class Options Teaser (conditional) -->
+        <section v-if="hasOptionalFeatures">
+          <h2 class="text-xl font-bold text-gray-900 dark:text-gray-100 mb-4">
+            Class Options
+          </h2>
+          <ClassOverviewOptionsCard
+            :optional-features-by-type="optionalFeaturesByType"
+            :slug="slug"
+          />
         </section>
 
         <!-- Subclass Gallery (only for base classes with subclasses) -->

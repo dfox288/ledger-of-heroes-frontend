@@ -8,6 +8,7 @@
  */
 
 import type { components } from '~/types/api/generated'
+import type { OptionalFeatureResource } from '~/types/api/entities'
 
 type ClassFeatureResource = components['schemas']['ClassFeatureResource']
 type ClassLevelProgressionResource = components['schemas']['ClassLevelProgressionResource']
@@ -24,6 +25,7 @@ interface TimelineLevel {
   isMilestone: boolean
   milestoneType?: 'subclass' | 'asi' | 'spell_tier' | 'capstone'
   milestoneLabel?: string
+  availableOptions?: OptionalFeatureResource[]
 }
 
 const route = useRoute()
@@ -39,7 +41,9 @@ const {
   counters,
   subclassLevel,
   levelProgression,
-  progressionTable
+  progressionTable,
+  optionalFeatures,
+  getOptionsAvailableAtLevel
 } = useClassDetail(slug)
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -247,6 +251,21 @@ function getProficiencyBonus(level: number): string {
   return '+6'
 }
 
+/**
+ * Get the first level where optional features become available
+ */
+function getFirstOptionsLevel(): number {
+  if (optionalFeatures.value.length === 0) return 0
+
+  // Find minimum level requirement, or assume level 2 if none have requirements
+  const minLevel = optionalFeatures.value.reduce((min, f) => {
+    if (f.level_requirement === null) return min
+    return Math.min(min, f.level_requirement)
+  }, Infinity)
+
+  return minLevel === Infinity ? 2 : minLevel
+}
+
 // ─────────────────────────────────────────────────────────────────────────────
 // Timeline Data Construction
 // ─────────────────────────────────────────────────────────────────────────────
@@ -274,6 +293,14 @@ const timelineLevels = computed<TimelineLevel[]>(() => {
     const counterData = getCounterValueAtLevel(level)
     const milestone = getMilestone(level)
 
+    // Calculate available options and determine if this is the first level they appear
+    const availableOptions = optionalFeatures.value.length > 0
+      ? getOptionsAvailableAtLevel(level)
+      : []
+
+    // Only show options at the first level they become available
+    const isFirstOptionsLevel = level === getFirstOptionsLevel()
+
     // Only include levels where something happens
     const hasContent
       = classFeatures.length > 0
@@ -282,6 +309,7 @@ const timelineLevels = computed<TimelineLevel[]>(() => {
         || cantripsKnown
         || counterData
         || milestone.isMilestone
+        || (isFirstOptionsLevel && availableOptions.length > 0)
 
     if (!hasContent) continue
 
@@ -296,7 +324,8 @@ const timelineLevels = computed<TimelineLevel[]>(() => {
       resourceName: counterData?.name,
       isMilestone: milestone.isMilestone,
       milestoneType: milestone.type,
-      milestoneLabel: milestone.label
+      milestoneLabel: milestone.label,
+      availableOptions: isFirstOptionsLevel ? availableOptions : undefined
     })
   }
 

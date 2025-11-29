@@ -20,7 +20,10 @@ const {
   proficiencies,
   equipment,
   traits,
-  progressionTable
+  progressionTable,
+  optionalFeatures,
+  optionalFeaturesByType,
+  hasOptionalFeatures
 } = useClassDetail(slug)
 
 // Use feature filtering composable
@@ -204,6 +207,11 @@ const getChoiceOptions = (feature: typeof features.value[0]) => {
               slot: 'multiclass',
               defaultOpen: false
             }] : []),
+            ...(hasOptionalFeatures ? [{
+              label: `${Array.from(optionalFeaturesByType.keys())[0] || 'Options'} (${optionalFeatures.length})`,
+              slot: 'options',
+              defaultOpen: false
+            }] : []),
             ...(entity.sources && entity.sources.length > 0 ? [{
               label: 'Source',
               slot: 'source',
@@ -259,6 +267,25 @@ const getChoiceOptions = (feature: typeof features.value[0]) => {
                 >
                   {{ feature.description }}
                 </p>
+              </div>
+            </div>
+          </template>
+
+          <!-- Optional Features Slot -->
+          <template
+            v-if="hasOptionalFeatures"
+            #options
+          >
+            <div class="p-4 space-y-4">
+              <div
+                v-for="option in optionalFeatures.slice().sort((a, b) => a.name.localeCompare(b.name))"
+                :key="option.id"
+                class="border-b border-gray-100 dark:border-gray-700 pb-4 last:border-0 last:pb-0"
+              >
+                <ClassOptionCard
+                  :option="option"
+                  :compact="false"
+                />
               </div>
             </div>
           </template>

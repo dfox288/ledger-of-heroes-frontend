@@ -22,6 +22,7 @@ interface TimelineLevel {
   isMilestone: boolean
   milestoneType?: 'subclass' | 'asi' | 'spell_tier' | 'capstone'
   milestoneLabel?: string
+  availableOptions?: any[]
 }
 
 interface Props {
@@ -202,6 +203,13 @@ const levelIcon = computed(() => {
             </details>
           </div>
         </div>
+
+        <!-- Available Options Section -->
+        <ClassJourneyOptionsSection
+          v-if="level.availableOptions && level.availableOptions.length > 0"
+          :options="level.availableOptions"
+          :level="level.level"
+        />
       </div>
     </div>
   </div>
