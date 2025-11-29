@@ -17,7 +17,7 @@ interface TimelineLevel {
   parentFeatures?: ClassFeatureResource[]
   spellSlots?: Record<string, number>
   cantripsKnown?: number
-  resourceValue?: number
+  resourceValue?: string // Changed from number - now parsed from progression string
   resourceName?: string
   isMilestone: boolean
   milestoneType?: 'subclass' | 'asi' | 'spell_tier' | 'capstone'

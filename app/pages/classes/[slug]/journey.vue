@@ -20,7 +20,7 @@ interface TimelineLevel {
   parentFeatures?: ClassFeatureResource[]
   spellSlots?: Record<string, number>
   cantripsKnown?: number
-  resourceValue?: number
+  resourceValue?: string // Changed from number - now parsed from progression string
   resourceName?: string
   isMilestone: boolean
   milestoneType?: 'subclass' | 'asi' | 'spell_tier' | 'capstone'
@@ -160,32 +160,33 @@ function isNewSpellTierLevel(level: number): boolean {
 // ─────────────────────────────────────────────────────────────────────────────
 
 /**
- * Counter from API - actual structure: { name, reset_timing, progression: [{level, value}] }
+ * Parse progression string into array of values by level
+ * Format: "2, 3, 3, 4, 4, 5, ..." where index+1 = level
  */
-interface CounterFromAPI {
-  name: string
-  reset_timing: string
-  progression: Array<{ level: number, value: number }>
+function parseProgressionToArray(progression: string): string[] {
+  if (!progression) return []
+  return progression.split(',').map(v => v.trim())
 }
 
 /**
  * Get counter value at a specific level
+ * New format: progression is a string "2, 3, 3, 4, ..." where each position = level
  */
-function getCounterValueAtLevel(level: number): { value: number, name: string } | undefined {
+function getCounterValueAtLevel(level: number): { value: string, name: string } | undefined {
   if (!counters.value || counters.value.length === 0) return undefined
 
   // Get the first counter (primary resource like Ki, Rage, etc.)
-  const firstCounter = counters.value[0] as unknown as CounterFromAPI
+  const firstCounter = counters.value[0]
   if (!firstCounter?.progression) return undefined
 
-  // Find the progression entry for this level or the most recent one before it
-  const sorted = [...firstCounter.progression].sort((a, b) => a.level - b.level)
-  const applicableEntry = sorted.filter(p => p.level <= level).pop()
+  // Parse progression string - index 0 = level 1, index 1 = level 2, etc.
+  const values = parseProgressionToArray(firstCounter.progression)
+  const valueAtLevel = values[level - 1]
 
-  if (!applicableEntry) return undefined
+  if (!valueAtLevel) return undefined
 
   return {
-    value: applicableEntry.value,
+    value: valueAtLevel,
     name: firstCounter.name
   }
 }

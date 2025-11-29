@@ -81,15 +81,13 @@ type CharacterClassFromAPI = components['schemas']['ClassResource']
 
 /**
  * Counter resource for class features (Ki, Rage, etc.)
- * Extended from API since OpenAPI spec has `unknown[]`
+ * Matches GroupedCounterResource from OpenAPI spec.
+ * Note: progression is now a string (e.g., "2, 3, 3, 4, 4, 4, 5, 5, 6, 6, Unlimited")
  */
 export interface CounterFromAPI {
   name: string
   reset_timing: 'Short Rest' | 'Long Rest' | 'Does Not Reset'
-  progression: Array<{
-    level: number
-    value: number
-  }>
+  progression: string
 }
 
 export interface CharacterClass extends Omit<CharacterClassFromAPI, 'sources' | 'hit_die' | 'counters' | 'is_base_class' | 'subclass_level'> {
@@ -179,7 +177,7 @@ export interface Monster extends Omit<MonsterFromAPI, 'sources'> {
 /**
  * Re-export nested resource types used across multiple entities
  */
-export type ClassCounterResource = components['schemas']['ClassCounterResource']
+export type GroupedCounterResource = components['schemas']['GroupedCounterResource']
 export type EntityConditionResource = components['schemas']['EntityConditionResource']
 export type EntityPrerequisiteResource = components['schemas']['EntityPrerequisiteResource']
 

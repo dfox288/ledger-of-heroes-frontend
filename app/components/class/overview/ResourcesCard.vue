@@ -1,13 +1,5 @@
 <script setup lang="ts">
-/**
- * Counter resource from API - actual structure differs from generated types
- * API returns: { name, reset_timing, progression: [{level, value}] }
- */
-interface CounterFromAPI {
-  name: string
-  reset_timing: string
-  progression: Array<{ level: number, value: number }>
-}
+import type { CounterFromAPI } from '~/types/api/entities'
 
 interface Props {
   counters: CounterFromAPI[]
@@ -16,19 +8,31 @@ interface Props {
 const props = defineProps<Props>()
 
 /**
- * Process counters for display
+ * Parse progression string to extract first and last values
+ * Format: "2, 3, 3, 4, 4, 5, ..., Unlimited"
+ */
+function parseProgressionRange(progression: string): { first: string, last: string } | null {
+  if (!progression) return null
+  const values = progression.split(',').map(v => v.trim()).filter(v => v)
+  if (values.length === 0) return null
+  const first = values[0]
+  const last = values[values.length - 1]
+  if (!first || !last) return null
+  return { first, last }
+}
+
+/**
+ * Process counters for display - new GroupedCounterResource format
  */
 const processedCounters = computed(() => {
   return props.counters.map((counter) => {
-    const sorted = [...counter.progression].sort((a, b) => a.level - b.level)
-    const first = sorted[0]
-    const last = sorted[sorted.length - 1]
+    const range = parseProgressionRange(counter.progression)
 
     return {
       name: counter.name,
       resetTiming: counter.reset_timing || 'Unknown',
-      startValue: first?.value,
-      maxValue: last?.value
+      startValue: range?.first,
+      maxValue: range?.last
     }
   })
 })
@@ -59,9 +63,9 @@ function getCounterIcon(name: string): string {
 /**
  * Get value summary (start -> max)
  */
-function getValueSummary(startValue?: number, maxValue?: number): string | null {
-  if (startValue === undefined) return null
-  if (maxValue === undefined || startValue === maxValue) return startValue.toString()
+function getValueSummary(startValue?: string, maxValue?: string): string | null {
+  if (!startValue) return null
+  if (!maxValue || startValue === maxValue) return startValue
 
   return `${startValue} → ${maxValue}`
 }

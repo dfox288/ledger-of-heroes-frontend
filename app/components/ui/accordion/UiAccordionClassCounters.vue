@@ -1,50 +1,47 @@
 <script setup lang="ts">
-import type { ClassCounterResource } from '~/types/api/entities'
+import type { CounterFromAPI } from '~/types/api/entities'
 import { getResetTimingColor } from '~/utils/badgeColors'
 
 interface Props {
-  counters: ClassCounterResource[]
+  counters: CounterFromAPI[]
 }
 
-interface GroupedCounter {
+interface ParsedCounter {
   name: string
   reset_timing: string
   progressions: Array<{
     level: number
-    value: number
+    value: string
   }>
 }
 
 const props = defineProps<Props>()
 
 /**
- * Group counters by name and collect level progressions
+ * Parse progression string into level-value pairs
+ * Format: "2, 3, 3, 4, 4, 5, 5, 6, 6, 7, 7, 8, 8, 9, 9, 10, 10, 11, 11, Unlimited"
+ * Each position corresponds to level 1, 2, 3, etc.
  */
-const groupedCounters = computed(() => {
+function parseProgression(progression: string): Array<{ level: number, value: string }> {
+  if (!progression) return []
+  const values = progression.split(',').map(v => v.trim())
+  return values.map((value, index) => ({
+    level: index + 1,
+    value
+  }))
+}
+
+/**
+ * Process counters for display - new GroupedCounterResource format
+ */
+const groupedCounters = computed<ParsedCounter[]>(() => {
   if (!props.counters) return []
 
-  // Group by counter_name
-  const groups = new Map<string, GroupedCounter>()
-
-  const sorted = [...props.counters].sort((a, b) => a.level - b.level)
-
-  for (const counter of sorted) {
-    if (!groups.has(counter.counter_name)) {
-      groups.set(counter.counter_name, {
-        name: counter.counter_name,
-        reset_timing: counter.reset_timing,
-        progressions: []
-      })
-    }
-
-    const group = groups.get(counter.counter_name)!
-    group.progressions.push({
-      level: counter.level,
-      value: counter.counter_value
-    })
-  }
-
-  return Array.from(groups.values())
+  return props.counters.map(counter => ({
+    name: counter.name,
+    reset_timing: counter.reset_timing,
+    progressions: parseProgression(counter.progression)
+  }))
 })
 </script>
 
