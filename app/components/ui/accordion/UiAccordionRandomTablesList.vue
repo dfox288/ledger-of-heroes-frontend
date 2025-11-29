@@ -1,10 +1,10 @@
 <script setup lang="ts">
 import type { components } from '~/types/api/generated'
 
-type RandomTableResource = components['schemas']['RandomTableResource']
+type EntityDataTableResource = components['schemas']['EntityDataTableResource']
 
 interface Props {
-  tables: RandomTableResource[]
+  tables: EntityDataTableResource[]
   borderColor?: string
 }
 
@@ -23,7 +23,7 @@ const formatRollRange = (min: number | null, max: number | null): string => {
 /**
  * Check if a table has any dice rolls (non-null roll_min/roll_max)
  */
-const hasRolls = (table: RandomTableResource): boolean => {
+const hasRolls = (table: EntityDataTableResource): boolean => {
   if (!table.entries || table.entries.length === 0) return false
   return table.entries.some(entry => entry.roll_min !== null || entry.roll_max !== null)
 }
@@ -39,7 +39,7 @@ const parseColumns = (resultText: string | null): string[] => {
 /**
  * Get column count for a table (max number of pipe-separated columns)
  */
-const getColumnCount = (table: RandomTableResource): number => {
+const getColumnCount = (table: EntityDataTableResource): number => {
   if (!table.entries || table.entries.length === 0) return 1
   const maxColumns = Math.max(...table.entries.map(entry => parseColumns(entry.result_text).length))
   return maxColumns
@@ -48,7 +48,7 @@ const getColumnCount = (table: RandomTableResource): number => {
 /**
  * Build columns for a specific table
  */
-const buildColumns = (table: RandomTableResource) => {
+const buildColumns = (table: EntityDataTableResource) => {
   const cols: Array<{ key: string, label: string, width?: string }> = []
 
   if (hasRolls(table)) {
@@ -69,7 +69,7 @@ const buildColumns = (table: RandomTableResource) => {
 /**
  * Transform table entries to row format
  */
-const buildRows = (table: RandomTableResource) => {
+const buildRows = (table: EntityDataTableResource) => {
   if (!table.entries) return []
 
   return table.entries.map((entry) => {

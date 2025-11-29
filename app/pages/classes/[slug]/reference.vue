@@ -170,10 +170,10 @@ const getChoiceOptions = (feature: typeof features.value[0]) => {
                 </div>
               </div>
 
-              <!-- Random Tables -->
+              <!-- Data Tables -->
               <UiAccordionRandomTablesList
-                v-if="feature.random_tables && feature.random_tables.length > 0"
-                :tables="feature.random_tables"
+                v-if="feature.data_tables && feature.data_tables.length > 0"
+                :tables="feature.data_tables"
               />
             </div>
           </div>

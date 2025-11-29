@@ -108,10 +108,8 @@ export interface CharacterClass extends Omit<CharacterClassFromAPI, 'sources' | 
   // Override counters with proper type (OpenAPI has unknown[])
   counters?: CounterFromAPI[]
 
-  // Add archetype field (missing from OpenAPI spec)
-  archetype?: string
-
   // All other fields inherited from CharacterClassFromAPI
+  // Note: archetype, optional_features now properly typed in generated.ts
 }
 
 /**

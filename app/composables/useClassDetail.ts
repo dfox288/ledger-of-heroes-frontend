@@ -126,11 +126,11 @@ export function useClassDetail(slug: Ref<string>) {
   const optionalFeatures = computed<OptionalFeatureResource[]>(() => {
     // For subclasses, check both own and inherited optional features
     if (isSubclass.value) {
-      const ownFeatures = (entity.value as any)?.optional_features ?? []
+      const ownFeatures = entity.value?.optional_features ?? []
       // Note: inherited_data may include optional_features in future API versions
       return ownFeatures
     }
-    return (entity.value as any)?.optional_features ?? []
+    return entity.value?.optional_features ?? []
   })
 
   const hasOptionalFeatures = computed(() => optionalFeatures.value.length > 0)

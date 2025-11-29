@@ -60,10 +60,10 @@ withDefaults(defineProps<Props>(), {
         </div>
       </div>
 
-      <!-- NEW: Random tables display -->
+      <!-- Data tables display (random tables, etc.) -->
       <UiAccordionRandomTablesList
-        v-if="'random_tables' in trait && trait.random_tables && trait.random_tables.length > 0"
-        :tables="trait.random_tables"
+        v-if="'data_tables' in trait && trait.data_tables && trait.data_tables.length > 0"
+        :tables="trait.data_tables"
       />
     </div>
   </div>

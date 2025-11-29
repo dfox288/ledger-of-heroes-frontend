@@ -142,9 +142,9 @@ const imagePath = computed(() => {
             slot: 'source',
             defaultOpen: false
           }] : []),
-          ...(spell.random_tables && spell.random_tables.length > 0 ? [{
-            label: 'Random Tables',
-            slot: 'random-tables',
+          ...(spell.data_tables && spell.data_tables.length > 0 ? [{
+            label: 'Data Tables',
+            slot: 'data-tables',
             defaultOpen: false
           }] : []),
           ...(spell.tags && spell.tags.length > 0 ? [{
@@ -194,12 +194,12 @@ const imagePath = computed(() => {
           />
         </template>
 
-        <!-- Random Tables Slot -->
+        <!-- Data Tables Slot -->
         <template
-          v-if="spell.random_tables && spell.random_tables.length > 0"
-          #random-tables
+          v-if="spell.data_tables && spell.data_tables.length > 0"
+          #data-tables
         >
-          <UiAccordionRandomTablesList :tables="spell.random_tables" />
+          <UiAccordionRandomTablesList :tables="spell.data_tables" />
         </template>
 
         <!-- Source Slot -->
