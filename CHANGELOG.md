@@ -9,6 +9,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- **Badge Size Standardization (2025-11-29)** - All badges now use `size="md"` for improved readability
+  - Updated 21 badges across 17 files from `xs`/`sm` to `md`
+  - Refactored `MilestoneBadge` to use `UBadge` component instead of custom Tailwind classes
+  - Added badge size standard to `CLAUDE.md`: always `md`, except `lg` for prominent headers
+
 ### Fixed
 
 - **All 28 TypeScript Errors Resolved (2025-11-29)** - Complete type cleanup, zero errors remaining

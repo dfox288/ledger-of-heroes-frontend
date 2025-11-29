@@ -1,188 +1,174 @@
-# Session Handover: TypeScript Error Cleanup Complete
+# Session Handover: Optional Features Display
 
 **Date:** 2025-11-29
-**Status:** Complete - All 28 TypeScript errors fixed, 1801 tests passing
-**Branch:** `main`
+**Duration:** ~90 minutes
+**Focus:** Display Eldritch Invocations, Artificer Infusions, Elemental Disciplines across class views
 
 ---
 
-## What Was Accomplished
+## Summary
 
-This session completed the TypeScript error cleanup from the previous session, reducing errors from 28 to 0.
+Implemented the full optional features display feature from the plan at `docs/plans/2025-11-29-optional-features-implementation.md`. All 13 tasks completed successfully.
 
 ---
 
-## Changes Summary
+## Changes Made
 
-### 1. Extended CharacterClass Type (`app/types/api/entities.ts`)
+### Type System
+- **Synced API types** from backend (+899 lines in `generated.ts`)
+- **Exported `OptionalFeatureResource`** type from `entities.ts`
+- **Fixed `data_tables` rename** - backend renamed `random_tables` → `data_tables`
 
-The OpenAPI-generated types were missing several fields that the API actually returns:
+### Composable Enhancement
+- **Extended `useClassDetail`** with:
+  - `optionalFeatures` - Array of all optional features
+  - `hasOptionalFeatures` - Boolean check
+  - `optionalFeaturesByType` - Map grouped by feature type label
+  - `getOptionsAvailableAtLevel(level)` - Filter by level availability
+  - `getOptionsUnlockingAtLevel(level)` - Filter by exact unlock level
 
-```typescript
-// Before: Missing fields, wrong types
-export interface CharacterClass extends Omit<CharacterClassFromAPI, 'sources'> { ... }
+### New Components (4)
+| Component | Location | Purpose |
+|-----------|----------|---------|
+| `ClassOptionCard` | `app/components/class/OptionCard.vue` | Single option with name, prerequisite, level badge |
+| `ClassOptionsGroup` | `app/components/class/OptionsGroup.vue` | Collapsible group with title and count |
+| `ClassOverviewOptionsCard` | `app/components/class/overview/OptionsCard.vue` | Teaser card for Overview page |
+| `ClassJourneyOptionsSection` | `app/components/class/journey/OptionsSection.vue` | Full options display for Journey |
 
-// After: Proper type overrides
-export interface CharacterClass extends Omit<CharacterClassFromAPI,
-  'sources' | 'hit_die' | 'counters' | 'is_base_class' | 'subclass_level'
-> {
-  hit_die?: number                    // OpenAPI says string, API returns number
-  is_base_class?: boolean             // OpenAPI says string, API returns boolean
-  subclass_level?: number | null      // OpenAPI says string, API returns number
-  counters?: CounterFromAPI[]         // OpenAPI has unknown[]
-  archetype?: string                  // Missing from OpenAPI spec
-}
+### Page Integrations
+- **Overview page** (`index.vue`): Added "Class Options" section with teaser card
+- **Journey page** (`journey.vue`): Options appear at first level they become available
+- **Reference page** (`reference.vue`): Full alphabetical listing in accordion
+
+### Test Coverage
+| Category | New Tests |
+|----------|-----------|
+| Composable logic | 10 |
+| ClassOptionCard | 9 |
+| ClassOptionsGroup | 8 |
+| ClassOverviewOptionsCard | 6 |
+| ClassJourneyOptionsSection | 8 |
+| **Total** | **41** |
+
+---
+
+## Verification
+
+```bash
+# All tests pass
+npm run test          # 1842 passed
+npm run test:classes  # 300 passed
+npm run typecheck     # No errors
 ```
-
-Also added `CounterFromAPI` interface for the grouped counter structure:
-
-```typescript
-export interface CounterFromAPI {
-  name: string
-  reset_timing: 'Short Rest' | 'Long Rest' | 'Does Not Reset'
-  progression: Array<{ level: number; value: number }>
-}
-```
-
-### 2. Fixed useClassDetail.ts
-
-- Added generic type to apiFetch call
-- Cast inherited counters through `unknown` to handle spec mismatch
-- Removed legacy `subclass_name` fallback (archetype is now the correct field)
-
-### 3. Fixed Component Type Issues
-
-| Component | Issue | Fix |
-|-----------|-------|-----|
-| `ClassCard.vue` | Boolean comparison with string | Simplified to `=== true` |
-| `SpellcastingCard.vue` | `slots` implicitly any[] | Added explicit `string[]` type |
-| `UiClassParentImageOverlay.vue` | null vs undefined + invalid size | Used `?? undefined`, fixed size to 256 |
-| `UiClassSubclassCards.vue` | Color union type | Added `BadgeColor` type, changed `neutral` → `secondary` |
-| `SourceCard.vue` | Local Source type conflict | Import from `~/types`, add v-if guards |
-
-### 4. Fixed Page Type Issues
-
-| Page | Issue | Fix |
-|------|-------|-----|
-| `backgrounds/index.vue` | `skill.code` doesn't exist | Changed to `skill.slug` |
-| `classes/index.vue` | `number[]` vs `string[]` for hit dice | Changed store and options to strings |
-| `monsters/index.vue` | Transform returns array, type expects single | Extended transform type signature |
-| `sources/index.vue` | Source type mismatch | SourceCard now imports shared type |
-| `tools/spell-list.vue` | `alert` not recognized in template | Moved to handleSpellToggle function |
-
-### 5. Fixed useMeilisearchFilters Transform Type
-
-```typescript
-// Before: Only single value return
-transform?: (value: any) => string | number | null
-
-// After: Array return for 'in' type filters
-transform?: (value: any) => string | number | null | (string | number | null)[]
-```
-
-### 6. Updated Test Mocks
-
-Changed `is_base_class` from `'1'`/`'0'` (strings) to `true`/`false` (booleans) in:
-- `tests/components/class/ClassCard.test.ts`
-- `tests/helpers/mockFactories.ts`
-- `tests/stores/classFilters.test.ts`
-
-Changed `selectedHitDice` expectations from `number[]` to `string[]`:
-- `tests/stores/classFilters.test.ts`
 
 ---
 
 ## Files Changed
 
-### Type Definitions
-- `app/types/api/entities.ts` - Extended CharacterClass, added CounterFromAPI
-- `app/composables/useMeilisearchFilters.ts` - Fixed transform signature
+### Created
+```
+app/components/class/OptionCard.vue
+app/components/class/OptionsGroup.vue
+app/components/class/overview/OptionsCard.vue
+app/components/class/journey/OptionsSection.vue
+tests/components/class/ClassOptionCard.test.ts
+tests/components/class/ClassOptionsGroup.test.ts
+tests/components/class/overview/ClassOverviewOptionsCard.test.ts
+tests/components/class/journey/ClassJourneyOptionsSection.test.ts
+tests/composables/useClassDetail.optionalFeatures.test.ts
+```
 
-### Composables
-- `app/composables/useClassDetail.ts` - Added type generics, fixed counter casting
+### Modified
+```
+app/types/api/generated.ts        # Synced from backend
+app/types/api/entities.ts         # Added OptionalFeatureResource export
+app/composables/useClassDetail.ts # Added optional features support
+app/pages/classes/[slug]/index.vue
+app/pages/classes/[slug]/journey.vue
+app/pages/classes/[slug]/reference.vue
+app/components/class/journey/LevelNode.vue
+```
 
-### Components
-- `app/components/class/ClassCard.vue` - Simplified boolean check
-- `app/components/class/overview/SpellcastingCard.vue` - Added explicit type
-- `app/components/ui/class/UiClassParentImageOverlay.vue` - Fixed null handling
-- `app/components/ui/class/UiClassSubclassCards.vue` - Fixed color type
-- `app/components/source/SourceCard.vue` - Import shared type, add v-if guards
-
-### Pages
-- `app/pages/backgrounds/index.vue` - skill.code → skill.slug
-- `app/pages/classes/index.vue` - hit dice string[], typed options array
-- `app/pages/monsters/index.vue` - Added explicit types to transform
-- `app/pages/sources/index.vue` - (no change needed, using shared type)
-- `app/pages/tools/spell-list.vue` - Extracted alert to function
-
-### Stores
-- `app/stores/classFilters.ts` - selectedHitDice: string[], type: 'stringArray'
-
-### Tests
-- `tests/components/class/ClassCard.test.ts` - is_base_class to boolean
-- `tests/helpers/mockFactories.ts` - is_base_class to boolean
-- `tests/stores/classFilters.test.ts` - String arrays for hit dice
-
----
-
-## Test Status
-
-```bash
-# TypeScript
-npm run typecheck  # ✓ 0 errors
-
-# Tests
-npm run test       # ✓ 1801 passed, 1 skipped
-                   # (1 pre-existing environment cleanup warning)
-
-# Class-specific tests
-npm run test:classes  # ✓ 269 passed
+### Fixed (from type sync)
+```
+app/components/ui/accordion/UiAccordionRandomTablesList.vue  # RandomTableResource → EntityDataTableResource
+app/components/ui/accordion/UiAccordionTraitsList.vue        # random_tables → data_tables
+app/pages/items/[slug].vue                                    # random_tables → data_tables
+app/pages/spells/[slug].vue                                   # random_tables → data_tables
+tests/components/ui/accordion/UiAccordionTraitsList.test.ts  # Test fixture update
 ```
 
 ---
 
-## Key Insights
+## Commits
 
-### OpenAPI Spec Drift
-
-The backend API returns different types than what the OpenAPI spec documents:
-
-| Field | OpenAPI Spec | Actual API |
-|-------|--------------|------------|
-| `hit_die` | string | number |
-| `is_base_class` | string | boolean |
-| `subclass_level` | string | number |
-| `counters` | `unknown[]` | `{ name, reset_timing, progression[] }[]` |
-| `archetype` | (missing) | string |
-
-**Solution:** Extended types in `app/types/api/entities.ts` to override generated types. This pattern should be used for any API fields that drift from the spec.
-
-### Transform Function for 'in' Filters
-
-The `useMeilisearchFilters` composable's transform function needed to support array returns for `type: 'in'` filters. The original type signature assumed single value transforms.
+1. `feat(types): export OptionalFeatureResource type`
+2. `test(classes): add tests for optional features logic`
+3. `feat(classes): add optional features support to useClassDetail`
+4. `chore(types): sync API types and fix data_tables rename`
+5. `feat(classes): add optional features display components` (31 tests)
+6. `feat(classes): integrate optional features into all class views`
+7. `fix(tests): update UiAccordionTraitsList tests for data_tables rename`
+8. `fix(lint): use proper type for availableOptions in LevelNode`
 
 ---
 
-## Next Session Priorities
+## How It Works
 
-1. **Apply 3-view pattern to Race detail page** (similar to Class detail)
-2. **Mobile responsiveness for Timeline component** (if not already addressed)
-3. **Backend work** - Fix critical class issues (Rogue Sneak Attack, Warlock Invocations)
+### Overview Page
+- Shows "Class Options" section only for classes with optional features
+- Displays feature types with counts (e.g., "Eldritch Invocation: 54")
+- Links to Journey view for full details
+
+### Journey Page
+- Optional features appear at the **first level** they become available
+- Grouped by prerequisite:
+  - "No Prerequisites" shown first
+  - Then "Requires Eldritch Blast", "Requires Pact of the Blade", etc.
+- Collapsible for space efficiency
+
+### Reference Page
+- Full alphabetical listing in accordion
+- Label shows feature type and count (e.g., "Eldritch Invocation (54)")
+- Each option shown in non-compact mode with full description
 
 ---
 
-## Verification Commands
+## Classes with Optional Features
 
-```bash
-# Verify TypeScript
-docker compose exec nuxt npm run typecheck
+| Class | Feature Type | Count |
+|-------|--------------|-------|
+| Warlock | Eldritch Invocation | 54 |
+| Monk (Four Elements) | Elemental Discipline | 17 |
+| Artificer | Artificer Infusion | 16 |
 
-# Run all tests
-docker compose exec nuxt npm run test
+---
 
-# Run class tests specifically
-docker compose exec nuxt npm run test:classes
+## Session 2: Badge Size Standardization (2025-11-29)
 
-# Dev server
-docker compose exec nuxt npm run dev
-```
+### Summary
+Standardized all badge sizes to `md` for improved readability across the application.
+
+### Changes Made
+- Updated 21 badges across 17 files from `xs`/`sm` to `md`
+- Refactored `MilestoneBadge` from custom Tailwind classes to use `UBadge` component
+- Added "Badge Size Standard" section to `CLAUDE.md`
+
+### Files Changed
+- 10 reference card components (AbilityScore, Skill, Source, etc.)
+- 4 class components (OptionsGroup, FeaturesPreview, ResourcesCard, LevelNode, MilestoneBadge)
+- 2 UI components (ModifiersDisplay, TagsDisplay)
+- 2 pages (monsters/[slug], tools/spell-list)
+- 1 class UI component (UiClassSubclassCards)
+
+### Standard Established
+- **Default:** Always use `size="md"` for UBadge components
+- **Exception:** Use `size="lg"` for prominent header badges (entity codes like "STR", "PHB")
+
+---
+
+## Next Steps
+
+1. **Apply 3-view pattern to Race detail page** (similar architecture)
+2. **Browser testing** of Warlock, Monk, Artificer pages
+3. Consider adding level-gated options display (options that unlock at higher levels)
