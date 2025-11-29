@@ -1,0 +1,203 @@
+<script setup lang="ts">
+import type { CharacterClass } from '~/types/api/entities'
+
+interface Props {
+  entity: CharacterClass
+  isSubclass: boolean
+  parentClass: CharacterClass['parent_class'] | null
+}
+
+const props = defineProps<Props>()
+
+const { getImagePath } = useEntityImage()
+
+const imagePath = computed(() => {
+  if (!props.entity) return null
+  return getImagePath('classes', props.entity.slug, 512)
+})
+
+const parentImagePath = computed(() => {
+  if (!props.parentClass?.slug) return null
+  return getImagePath('classes', props.parentClass.slug, 256)
+})
+
+/**
+ * Get hit die display text
+ */
+const hitDieText = computed(() => {
+  if (props.entity?.hit_die && props.entity.hit_die > 0) {
+    return `d${props.entity.hit_die}`
+  }
+  return null
+})
+
+/**
+ * Get spellcasting ability code
+ */
+const spellcastingCode = computed(() => {
+  if (props.entity?.spellcasting_ability) {
+    return props.entity.spellcasting_ability.code
+  }
+  if (props.isSubclass && props.parentClass?.spellcasting_ability) {
+    return props.parentClass.spellcasting_ability.code
+  }
+  return null
+})
+
+/**
+ * Truncate description for header
+ */
+const truncatedDescription = computed(() => {
+  if (!props.entity?.description) return ''
+  const maxLength = 200
+  if (props.entity.description.length <= maxLength) {
+    return props.entity.description
+  }
+  const truncated = props.entity.description.substring(0, maxLength)
+  const lastPeriod = truncated.lastIndexOf('.')
+  if (lastPeriod > maxLength * 0.6) {
+    return truncated.substring(0, lastPeriod + 1)
+  }
+  return truncated + '...'
+})
+</script>
+
+<template>
+  <div class="space-y-6">
+    <!-- Breadcrumb for subclasses -->
+    <nav
+      v-if="isSubclass && parentClass"
+      class="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400"
+    >
+      <NuxtLink
+        to="/classes"
+        class="hover:text-gray-700 dark:hover:text-gray-200"
+      >
+        Classes
+      </NuxtLink>
+      <UIcon
+        name="i-heroicons-chevron-right"
+        class="w-4 h-4"
+      />
+      <NuxtLink
+        :to="`/classes/${parentClass.slug}`"
+        class="hover:text-class-600 dark:hover:text-class-400"
+      >
+        {{ parentClass.name }}
+      </NuxtLink>
+      <UIcon
+        name="i-heroicons-chevron-right"
+        class="w-4 h-4"
+      />
+      <span class="text-gray-900 dark:text-gray-100 font-medium">
+        {{ entity.name }}
+      </span>
+    </nav>
+
+    <!-- Back link for base classes -->
+    <UiBackLink
+      v-else
+      to="/classes"
+      label="Back to Classes"
+    />
+
+    <!-- Hero section -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <!-- Text content (2/3) -->
+      <div class="lg:col-span-2 space-y-4">
+        <!-- Title -->
+        <h1 class="text-3xl font-bold text-gray-900 dark:text-gray-100">
+          {{ entity.name }}
+        </h1>
+
+        <!-- Badges -->
+        <div class="flex items-center gap-2 flex-wrap">
+          <UBadge
+            v-if="entity.is_base_class"
+            color="error"
+            variant="subtle"
+            size="lg"
+          >
+            Base Class
+          </UBadge>
+          <UBadge
+            v-else
+            color="warning"
+            variant="subtle"
+            size="lg"
+          >
+            Subclass
+          </UBadge>
+
+          <UBadge
+            v-if="hitDieText"
+            color="neutral"
+            variant="soft"
+            size="md"
+          >
+            {{ hitDieText }}
+          </UBadge>
+
+          <UBadge
+            v-if="spellcastingCode"
+            color="primary"
+            variant="soft"
+            size="md"
+          >
+            {{ spellcastingCode }} Caster
+          </UBadge>
+        </div>
+
+        <!-- Subclass parent link -->
+        <div
+          v-if="isSubclass && parentClass"
+          class="flex items-center gap-2"
+        >
+          <NuxtLink
+            :to="`/classes/${parentClass.slug}`"
+            class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-warning-100 dark:bg-warning-900/30 text-warning-700 dark:text-warning-300 hover:bg-warning-200 dark:hover:bg-warning-800/50 transition-colors text-sm font-medium"
+          >
+            <span>Subclass of</span>
+            <span class="font-semibold">{{ parentClass.name }}</span>
+            <UIcon
+              name="i-heroicons-arrow-right"
+              class="w-4 h-4"
+            />
+          </NuxtLink>
+        </div>
+
+        <!-- Description -->
+        <p class="text-gray-600 dark:text-gray-400 leading-relaxed">
+          {{ truncatedDescription }}
+        </p>
+      </div>
+
+      <!-- Image (1/3) -->
+      <div class="lg:col-span-1">
+        <div
+          v-if="isSubclass && parentClass"
+          class="relative"
+        >
+          <UiDetailEntityImage
+            v-if="imagePath"
+            :image-path="imagePath"
+            :image-alt="`${entity.name} subclass illustration`"
+          />
+          <!-- Parent overlay -->
+          <div class="absolute bottom-2 right-2">
+            <UiClassParentImageOverlay
+              :parent-slug="parentClass.slug"
+              :parent-name="parentClass.name"
+            />
+          </div>
+        </div>
+
+        <UiDetailEntityImage
+          v-else-if="imagePath"
+          :image-path="imagePath"
+          :image-alt="`${entity.name} class illustration`"
+        />
+      </div>
+    </div>
+  </div>
+</template>

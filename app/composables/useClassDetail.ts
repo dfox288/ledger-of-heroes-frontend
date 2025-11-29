@@ -1,0 +1,267 @@
+import type { CharacterClass } from '~/types/api/entities'
+import type { components } from '~/types/api/generated'
+
+type ClassFeatureResource = components['schemas']['ClassFeatureResource']
+type ClassCounterResource = components['schemas']['ClassCounterResource']
+
+/**
+ * Composable for class detail pages.
+ *
+ * Provides shared data fetching and computed helpers for all three class detail views
+ * (Overview, Journey, Reference). Data is cached across view navigation.
+ *
+ * @example
+ * ```typescript
+ * const slug = computed(() => route.params.slug as string)
+ * const {
+ *   entity,
+ *   pending,
+ *   error,
+ *   isSubclass,
+ *   parentClass,
+ *   features,
+ *   // ... more
+ * } = useClassDetail(slug)
+ * ```
+ */
+export function useClassDetail(slug: Ref<string>) {
+  const { apiFetch } = useApi()
+
+  // Fetch class data with caching across all views
+  const { data: response, pending, error, refresh } = useAsyncData(
+    `class-detail-${slug.value}`,
+    async () => {
+      const result = await apiFetch(`/classes/${slug.value}`)
+      return result?.data || null
+    },
+    { watch: [slug] }
+  )
+
+  // Main entity accessor
+  const entity = computed(() => response.value as CharacterClass | null)
+
+  // ─────────────────────────────────────────────────────────────────────────────
+  // Basic computed properties
+  // ─────────────────────────────────────────────────────────────────────────────
+
+  const isSubclass = computed(() => entity.value ? !entity.value.is_base_class : false)
+  const parentClass = computed(() => entity.value?.parent_class ?? null)
+  const inheritedData = computed(() => isSubclass.value ? entity.value?.inherited_data : null)
+
+  // ─────────────────────────────────────────────────────────────────────────────
+  // Features
+  // ─────────────────────────────────────────────────────────────────────────────
+
+  const features = computed<ClassFeatureResource[]>(() => entity.value?.features ?? [])
+
+  // ─────────────────────────────────────────────────────────────────────────────
+  // Counters (Ki, Rage, Sorcery Points, etc.)
+  // ─────────────────────────────────────────────────────────────────────────────
+
+  const counters = computed<ClassCounterResource[]>(() => {
+    if (isSubclass.value) {
+      // Subclass may have own counters + inherited
+      const ownCounters = entity.value?.counters ?? []
+      const inheritedCounters = inheritedData.value?.counters ?? []
+      // Combine, avoiding duplicates by name
+      const seen = new Set<string>()
+      return [...ownCounters, ...inheritedCounters].filter((c) => {
+        if (seen.has(c.name)) return false
+        seen.add(c.name)
+        return true
+      })
+    }
+    return entity.value?.counters ?? []
+  })
+
+  // ─────────────────────────────────────────────────────────────────────────────
+  // Proficiencies (with helpers by type)
+  // ─────────────────────────────────────────────────────────────────────────────
+
+  const proficiencies = computed(() => {
+    if (isSubclass.value) {
+      return inheritedData.value?.proficiencies ?? []
+    }
+    return entity.value?.proficiencies ?? []
+  })
+
+  const savingThrows = computed(() =>
+    proficiencies.value.filter(p => p.proficiency_type === 'saving_throw')
+  )
+
+  const armorProficiencies = computed(() =>
+    proficiencies.value.filter(p => p.proficiency_type === 'armor')
+  )
+
+  const weaponProficiencies = computed(() =>
+    proficiencies.value.filter(p => p.proficiency_type === 'weapon')
+  )
+
+  const skillChoices = computed(() =>
+    proficiencies.value.filter(p => p.proficiency_type === 'skill')
+  )
+
+  // ─────────────────────────────────────────────────────────────────────────────
+  // Equipment & Traits
+  // ─────────────────────────────────────────────────────────────────────────────
+
+  const equipment = computed(() => {
+    if (isSubclass.value) {
+      return inheritedData.value?.equipment ?? []
+    }
+    return entity.value?.equipment ?? []
+  })
+
+  const traits = computed(() => {
+    if (isSubclass.value) {
+      return inheritedData.value?.traits ?? []
+    }
+    return entity.value?.traits ?? []
+  })
+
+  // ─────────────────────────────────────────────────────────────────────────────
+  // Subclasses (only for base classes)
+  // ─────────────────────────────────────────────────────────────────────────────
+
+  const subclasses = computed(() => entity.value?.subclasses ?? [])
+
+  const subclassLevel = computed(() => entity.value?.subclass_level ?? null)
+
+  const subclassName = computed(() => {
+    if (entity.value?.subclass_name) {
+      return entity.value.subclass_name
+    }
+    // Fallback patterns
+    const patterns: Record<string, string> = {
+      barbarian: 'Primal Path',
+      bard: 'Bard College',
+      cleric: 'Divine Domain',
+      druid: 'Druid Circle',
+      fighter: 'Martial Archetype',
+      monk: 'Monastic Tradition',
+      paladin: 'Sacred Oath',
+      ranger: 'Ranger Archetype',
+      rogue: 'Roguish Archetype',
+      sorcerer: 'Sorcerous Origin',
+      warlock: 'Otherworldly Patron',
+      wizard: 'Arcane Tradition',
+      artificer: 'Artificer Specialist'
+    }
+    return patterns[entity.value?.slug ?? ''] || 'Subclass'
+  })
+
+  // ─────────────────────────────────────────────────────────────────────────────
+  // Computed data from backend
+  // ─────────────────────────────────────────────────────────────────────────────
+
+  const hitPoints = computed(() => entity.value?.computed?.hit_points ?? null)
+
+  const progressionTable = computed(() => entity.value?.computed?.progression_table ?? null)
+
+  const spellSlotSummary = computed(() => entity.value?.computed?.spell_slot_summary ?? null)
+
+  // ─────────────────────────────────────────────────────────────────────────────
+  // Spellcasting helpers
+  // ─────────────────────────────────────────────────────────────────────────────
+
+  const spellcastingAbility = computed(() => {
+    if (entity.value?.spellcasting_ability) {
+      return entity.value.spellcasting_ability
+    }
+    // Subclass inherits from parent
+    if (isSubclass.value && parentClass.value?.spellcasting_ability) {
+      return parentClass.value.spellcasting_ability
+    }
+    return null
+  })
+
+  const isCaster = computed(() => spellcastingAbility.value !== null)
+
+  const levelProgression = computed(() => {
+    if (isSubclass.value) {
+      return inheritedData.value?.level_progression ?? []
+    }
+    return entity.value?.level_progression ?? []
+  })
+
+  // ─────────────────────────────────────────────────────────────────────────────
+  // Hit Die helper
+  // ─────────────────────────────────────────────────────────────────────────────
+
+  const hitDie = computed(() => {
+    if (entity.value?.hit_die && entity.value.hit_die > 0) {
+      return entity.value.hit_die
+    }
+    // Fallback to computed data
+    return hitPoints.value?.hit_die_numeric ?? null
+  })
+
+  // ─────────────────────────────────────────────────────────────────────────────
+  // SEO
+  // ─────────────────────────────────────────────────────────────────────────────
+
+  useSeoMeta({
+    title: computed(() =>
+      entity.value?.name
+        ? `${entity.value.name} - D&D 5e Class`
+        : 'Class - D&D 5e Compendium'
+    ),
+    description: computed(() =>
+      entity.value?.description?.substring(0, 160) ?? ''
+    )
+  })
+
+  useHead({
+    title: computed(() =>
+      entity.value?.name
+        ? `${entity.value.name} - D&D 5e Class`
+        : 'Class - D&D 5e Compendium'
+    )
+  })
+
+  return {
+    // Core
+    entity,
+    pending,
+    error,
+    refresh,
+
+    // Identity
+    isSubclass,
+    parentClass,
+    inheritedData,
+
+    // Features
+    features,
+
+    // Resources
+    counters,
+
+    // Proficiencies
+    proficiencies,
+    savingThrows,
+    armorProficiencies,
+    weaponProficiencies,
+    skillChoices,
+
+    // Equipment & Traits
+    equipment,
+    traits,
+
+    // Subclasses
+    subclasses,
+    subclassLevel,
+    subclassName,
+
+    // Computed data
+    hitPoints,
+    hitDie,
+    progressionTable,
+    spellSlotSummary,
+
+    // Spellcasting
+    spellcastingAbility,
+    isCaster,
+    levelProgression
+  }
+}
