@@ -33,6 +33,37 @@ const getSchoolColor = (schoolCode: string): 'primary' | 'secondary' | 'success'
   }
   return colorMap[schoolCode] || 'info'
 }
+
+/**
+ * Parse area of effect field (Issue #54)
+ * Safely parse JSON string and extract type/size
+ */
+const areaOfEffect = computed(() => {
+  if (!props.spell.area_of_effect) return null
+  try {
+    return JSON.parse(props.spell.area_of_effect) as { type: string, size: number }
+  } catch {
+    return null
+  }
+})
+
+/**
+ * Format area of effect for display
+ * Example: "20ft sphere", "60ft cone"
+ */
+const aoeText = computed(() => {
+  if (!areaOfEffect.value) return null
+  const { type, size } = areaOfEffect.value
+  return `${size}ft ${type}`
+})
+
+/**
+ * Check if material is consumed (Issue #53)
+ * material_consumed is a string boolean ('true'/'false')
+ */
+const isMaterialConsumed = computed(() => {
+  return props.spell.material_consumed === 'true'
+})
 </script>
 
 <template>
@@ -84,6 +115,14 @@ const getSchoolColor = (schoolCode: string): 'primary' | 'secondary' | 'success'
         <span>{{ spell.range }}</span>
       </div>
       <UBadge
+        v-if="aoeText"
+        color="spell"
+        variant="subtle"
+        size="md"
+      >
+        {{ aoeText }}
+      </UBadge>
+      <UBadge
         v-if="spell.needs_concentration"
         color="spell"
         variant="subtle"
@@ -98,6 +137,22 @@ const getSchoolColor = (schoolCode: string): 'primary' | 'secondary' | 'success'
         size="md"
       >
         🔮 Ritual
+      </UBadge>
+      <UBadge
+        v-if="spell.material_cost_gp"
+        color="spell"
+        variant="subtle"
+        size="md"
+      >
+        💰 {{ spell.material_cost_gp }} gp
+      </UBadge>
+      <UBadge
+        v-if="isMaterialConsumed"
+        color="spell"
+        variant="subtle"
+        size="md"
+      >
+        🔥 Consumed
       </UBadge>
     </template>
   </UiCardUiEntityCard>

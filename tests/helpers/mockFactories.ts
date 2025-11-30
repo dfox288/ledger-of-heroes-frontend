@@ -88,6 +88,9 @@ export function createMockSpell(overrides: Partial<Spell> = {}): Spell {
     description: 'A bright streak flashes from your pointing finger to a point you choose within range and then blossoms with a low roar into an explosion of flame.',
     is_ritual: false,
     needs_concentration: false,
+    area_of_effect: null,
+    material_cost_gp: null,
+    material_consumed: null,
     sources: [{ ...mockSource, pages: '241' }],
     ...overrides
   }
@@ -121,6 +124,8 @@ export function createMockItem(overrides: Partial<Item> = {}): Item {
     requires_attunement: false,
     cost_cp: 1500,
     weight: 3,
+    proficiency_category: 'martial_melee',
+    magic_bonus: null,
     description: 'A versatile martial weapon used by warriors across the realms.',
     sources: [{ ...mockSource, pages: '149' }],
     ...overrides

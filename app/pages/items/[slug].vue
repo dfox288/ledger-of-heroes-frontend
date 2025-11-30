@@ -62,6 +62,27 @@ const imagePath = computed(() => {
   if (!item.value) return null
   return getImagePath('items', item.value.slug, 512)
 })
+
+/**
+ * Format proficiency category for display
+ * Converts "martial_melee" to "Martial Melee"
+ */
+const proficiencyCategoryText = computed(() => {
+  if (!item.value?.proficiency_category) return null
+  return item.value.proficiency_category
+    .split('_')
+    .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(' ')
+})
+
+/**
+ * Format magic bonus for display
+ * Converts "2" to "+2"
+ */
+const magicBonusText = computed(() => {
+  if (!item.value?.magic_bonus) return null
+  return `+${item.value.magic_bonus}`
+})
 </script>
 
 <template>
@@ -96,6 +117,8 @@ const imagePath = computed(() => {
         :badges="[
           { label: item.item_type?.name || 'Unknown', color: itemTypeColor, variant: 'subtle' as const, size: 'lg' as const },
           { label: rarityText, color: rarityColor, variant: 'subtle' as const, size: 'lg' as const },
+          ...(magicBonusText ? [{ label: magicBonusText, color: 'primary' as const, variant: 'solid' as const, size: 'lg' as const }] : []),
+          ...(proficiencyCategoryText ? [{ label: proficiencyCategoryText, color: 'item' as const, variant: 'subtle' as const, size: 'md' as const }] : []),
           ...(item.is_magic ? [{ label: '✨ Magic', color: 'primary' as const, variant: 'soft' as const, size: 'sm' as const }] : []),
           ...(item.requires_attunement ? [{ label: '🔮 Attunement', color: 'info' as const, variant: 'soft' as const, size: 'sm' as const }] : [])
         ]"

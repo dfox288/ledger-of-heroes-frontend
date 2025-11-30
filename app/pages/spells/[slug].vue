@@ -46,6 +46,43 @@ const imagePath = computed(() => {
   if (!spell.value) return null
   return getImagePath('spells', spell.value.slug, 512)
 })
+
+/**
+ * Parse and format area of effect (Issue #54)
+ */
+const areaOfEffectText = computed(() => {
+  if (!spell.value?.area_of_effect) return null
+  try {
+    const aoe = JSON.parse(spell.value.area_of_effect) as { type: string, size: number }
+    return `${aoe.size} ft. ${aoe.type.charAt(0).toUpperCase()}${aoe.type.slice(1)}`
+  } catch {
+    return null
+  }
+})
+
+/**
+ * Format material component info with cost and consumed status (Issue #53)
+ */
+const materialComponentsText = computed(() => {
+  if (!spell.value?.material_components) return null
+
+  let text = spell.value.material_components
+
+  // Add cost if present
+  if (spell.value.material_cost_gp) {
+    text += ` (${spell.value.material_cost_gp} gp`
+    // Add consumed status if applicable
+    if (spell.value.material_consumed === 'true') {
+      text += ', consumed'
+    }
+    text += ')'
+  } else if (spell.value.material_consumed === 'true') {
+    // Consumed but no cost specified
+    text += ' (consumed)'
+  }
+
+  return text
+})
 </script>
 
 <template>
@@ -93,7 +130,8 @@ const imagePath = computed(() => {
             :stats="[
               { icon: 'i-heroicons-clock', label: 'Casting Time', value: spell.casting_time },
               { icon: 'i-heroicons-arrow-trending-up', label: 'Range', value: spell.range },
-              { icon: 'i-heroicons-sparkles', label: 'Components', value: spell.components, subtext: spell.material_components },
+              ...(areaOfEffectText ? [{ icon: 'i-heroicons-map', label: 'Area of Effect', value: areaOfEffectText }] : []),
+              { icon: 'i-heroicons-sparkles', label: 'Components', value: spell.components, subtext: materialComponentsText },
               { icon: 'i-heroicons-clock', label: 'Duration', value: spell.duration }
             ]"
           />

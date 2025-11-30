@@ -275,4 +275,123 @@ describe('ItemCard', () => {
 
     expect(wrapper.text()).not.toContain('lb')
   })
+
+  // Proficiency Category Tests (Issue #56)
+
+  it('shows proficiency category badge when set', async () => {
+    const weapon = createMockItem({ proficiency_category: 'martial_melee' })
+    const wrapper = await mountSuspended(ItemCard, {
+      props: { item: weapon }
+    })
+
+    expect(wrapper.text()).toContain('Martial Melee')
+  })
+
+  it('hides proficiency category when null', async () => {
+    const potion = createMockItem({
+      proficiency_category: null,
+      item_type: { id: 3, name: 'Potion' }
+    })
+    const wrapper = await mountSuspended(ItemCard, {
+      props: { item: potion }
+    })
+
+    expect(wrapper.text()).not.toContain('Martial')
+    expect(wrapper.text()).not.toContain('Simple')
+  })
+
+  it('formats proficiency category nicely', async () => {
+    const rangedWeapon = createMockItem({ proficiency_category: 'simple_ranged' })
+    const wrapper = await mountSuspended(ItemCard, {
+      props: { item: rangedWeapon }
+    })
+
+    expect(wrapper.text()).toContain('Simple Ranged')
+    expect(wrapper.text()).not.toContain('simple_ranged')
+  })
+
+  it('handles all proficiency categories', async () => {
+    const categories = ['simple_melee', 'martial_melee', 'simple_ranged', 'martial_ranged']
+
+    for (const category of categories) {
+      const weapon = createMockItem({ proficiency_category: category })
+      const wrapper = await mountSuspended(ItemCard, {
+        props: { item: weapon }
+      })
+
+      const expectedText = category
+        .split('_')
+        .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+        .join(' ')
+
+      expect(wrapper.text()).toContain(expectedText)
+    }
+  })
+
+  // Magic Bonus Tests (Issue #56)
+
+  it('shows magic bonus badge when magic_bonus is set', async () => {
+    const magicSword = createMockItem({ magic_bonus: '2', is_magic: true })
+    const wrapper = await mountSuspended(ItemCard, {
+      props: { item: magicSword }
+    })
+
+    expect(wrapper.text()).toContain('+2')
+  })
+
+  it('hides magic bonus badge when magic_bonus is null', async () => {
+    const wrapper = await mountSuspended(ItemCard, {
+      props: { item: mockItem }
+    })
+
+    expect(wrapper.text()).not.toContain('+1')
+    expect(wrapper.text()).not.toContain('+2')
+    expect(wrapper.text()).not.toContain('+3')
+  })
+
+  it('handles all magic bonus values', async () => {
+    const bonuses = ['1', '2', '3']
+
+    for (const bonus of bonuses) {
+      const magicItem = createMockItem({ magic_bonus: bonus, is_magic: true })
+      const wrapper = await mountSuspended(ItemCard, {
+        props: { item: magicItem }
+      })
+
+      expect(wrapper.text()).toContain(`+${bonus}`)
+    }
+  })
+
+  it('shows both magic bonus and proficiency together', async () => {
+    const magicLongbow = createMockItem({
+      magic_bonus: '1',
+      proficiency_category: 'martial_ranged',
+      is_magic: true
+    })
+    const wrapper = await mountSuspended(ItemCard, {
+      props: { item: magicLongbow }
+    })
+
+    expect(wrapper.text()).toContain('+1')
+    expect(wrapper.text()).toContain('Martial Ranged')
+  })
+
+  it('shows magic bonus prominently for magic weapons', async () => {
+    const magicSword = createMockItem({
+      name: 'Longsword +2',
+      magic_bonus: '2',
+      proficiency_category: 'martial_melee',
+      is_magic: true,
+      rarity: 'rare'
+    })
+    const wrapper = await mountSuspended(ItemCard, {
+      props: { item: magicSword }
+    })
+
+    const text = wrapper.text()
+    expect(text).toContain('+2')
+    expect(text).toContain('Martial Melee')
+    expect(text).toContain('Rare')
+    expect(text).toContain('Magic')
+  })
 })

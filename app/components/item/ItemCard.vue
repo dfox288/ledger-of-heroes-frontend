@@ -51,6 +51,27 @@ const costText = computed(() => {
 const description = computed(() => {
   return props.item.description || 'No description available'
 })
+
+/**
+ * Format proficiency category for display
+ * Converts "martial_melee" to "Martial Melee"
+ */
+const proficiencyCategoryText = computed(() => {
+  if (!props.item.proficiency_category) return null
+  return props.item.proficiency_category
+    .split('_')
+    .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(' ')
+})
+
+/**
+ * Format magic bonus for display
+ * Converts "2" to "+2"
+ */
+const magicBonusText = computed(() => {
+  if (!props.item.magic_bonus) return null
+  return `+${props.item.magic_bonus}`
+})
 </script>
 
 <template>
@@ -77,6 +98,22 @@ const description = computed(() => {
         size="md"
       >
         {{ rarityText }}
+      </UBadge>
+      <UBadge
+        v-if="magicBonusText"
+        color="primary"
+        variant="solid"
+        size="md"
+      >
+        {{ magicBonusText }}
+      </UBadge>
+      <UBadge
+        v-if="proficiencyCategoryText"
+        color="item"
+        variant="subtle"
+        size="md"
+      >
+        {{ proficiencyCategoryText }}
       </UBadge>
     </template>
 
