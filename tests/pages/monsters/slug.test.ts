@@ -31,6 +31,46 @@ describe('Monster [slug] Page - Structure', () => {
   })
 })
 
+describe('Monster [slug] Page - Reactions Display (#81)', () => {
+  /**
+   * Tests for Issue #81: Display monster reactions separately from actions
+   * Reactions are triggered abilities (e.g., Parry, Shield) that use the reaction economy.
+   */
+
+  it('should have reactions computed property in script', async () => {
+    const pageSource = await import('~/pages/monsters/[slug].vue?raw')
+    const source = pageSource.default
+
+    // Script should define reactions computed property
+    expect(source).toContain('reactions')
+  })
+
+  it('should have Reactions accordion section in template', async () => {
+    const pageSource = await import('~/pages/monsters/[slug].vue?raw')
+    const source = pageSource.default
+
+    // Template should include reactions in accordion items
+    expect(source).toContain("label: 'Reactions'")
+    expect(source).toContain("slot: 'reactions'")
+  })
+
+  it('should access reactions from monster data', async () => {
+    const pageSource = await import('~/pages/monsters/[slug].vue?raw')
+    const source = pageSource.default
+
+    // Should access reactions from monster value (API response)
+    expect(source).toContain('.reactions')
+  })
+
+  it('should have reactions template slot', async () => {
+    const pageSource = await import('~/pages/monsters/[slug].vue?raw')
+    const source = pageSource.default
+
+    // Template should have #reactions slot
+    expect(source).toContain('#reactions')
+  })
+})
+
 describe('Monster [slug] Page - Template Structure (#36, #37, #38)', () => {
   /**
    * These tests verify the PAGE TEMPLATE has the necessary sections.

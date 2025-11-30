@@ -67,6 +67,12 @@ const regularActions = computed(() => {
 })
 
 /**
+ * Reactions (triggered abilities like Parry, Shield)
+ * Issue #81: Display monster reactions separately from actions
+ */
+const reactions = computed(() => monster.value?.reactions ?? [])
+
+/**
  * Senses array for display
  */
 const senses = computed(() => monster.value?.senses ?? [])
@@ -199,6 +205,11 @@ const imagePath = computed(() => {
             slot: 'actions',
             defaultOpen: false
           }] : []),
+          ...(reactions.length > 0 ? [{
+            label: 'Reactions',
+            slot: 'reactions',
+            defaultOpen: false
+          }] : []),
           ...(monster.legendary_actions && monster.legendary_actions.length > 0 ? [{
             label: 'Legendary Actions',
             slot: 'legendary',
@@ -271,6 +282,38 @@ const imagePath = computed(() => {
               <!-- Action description -->
               <p class="text-sm text-gray-700 dark:text-gray-300">
                 {{ action.description }}
+              </p>
+            </div>
+          </div>
+        </template>
+
+        <!-- Reactions Slot (#81) -->
+        <template
+          v-if="reactions.length > 0"
+          #reactions
+        >
+          <div class="p-4 space-y-4">
+            <div
+              v-for="reaction in reactions"
+              :key="reaction.id || reaction.name"
+              class="space-y-2"
+            >
+              <!-- Reaction name with indicator -->
+              <div class="flex items-center gap-2 flex-wrap">
+                <h4 class="font-semibold text-primary-600 dark:text-primary-400">
+                  {{ reaction.name }}
+                </h4>
+                <UBadge
+                  color="warning"
+                  variant="soft"
+                  size="md"
+                >
+                  ⚡ Reaction
+                </UBadge>
+              </div>
+              <!-- Reaction description -->
+              <p class="text-sm text-gray-700 dark:text-gray-300">
+                {{ reaction.description }}
               </p>
             </div>
           </div>
