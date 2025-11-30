@@ -352,3 +352,69 @@ export function getConditionEffectColor(effectType: string): BadgeColor {
       return 'neutral'
   }
 }
+
+/**
+ * Get badge color for damage types
+ *
+ * @param damageType - Damage type name (case-insensitive)
+ * @returns NuxtUI v4 semantic color name
+ *
+ * Damage Types:
+ * - Fire → error (red/orange)
+ * - Cold → info (blue)
+ * - Lightning → warning (yellow)
+ * - Acid → success (green)
+ * - Poison → primary (purple)
+ * - Necrotic → neutral (dark)
+ * - Radiant → warning (gold)
+ * - Force → info (blue-purple)
+ * - Psychic → primary (pink/purple)
+ * - Thunder → info (gray-blue)
+ * - Bludgeoning/Piercing/Slashing → neutral (gray)
+ *
+ * @example
+ * getDamageTypeColor('Fire')     // 'error'
+ * getDamageTypeColor('cold')     // 'info'
+ * getDamageTypeColor('Lightning') // 'warning'
+ */
+export function getDamageTypeColor(damageType: string): BadgeColor {
+  const type = damageType.toLowerCase()
+
+  // Fire (red/orange)
+  if (type === 'fire') return 'error'
+
+  // Cold (blue)
+  if (type === 'cold') return 'info'
+
+  // Lightning (yellow/amber)
+  if (type === 'lightning') return 'warning'
+
+  // Acid (green)
+  if (type === 'acid') return 'success'
+
+  // Poison (purple)
+  if (type === 'poison') return 'primary'
+
+  // Necrotic (dark/neutral)
+  if (type === 'necrotic') return 'neutral'
+
+  // Radiant (gold/amber)
+  if (type === 'radiant') return 'warning'
+
+  // Force (blue-purple)
+  if (type === 'force') return 'info'
+
+  // Psychic (pink/purple)
+  if (type === 'psychic') return 'primary'
+
+  // Thunder (gray-blue)
+  if (type === 'thunder') return 'info'
+
+  // Physical damage types (gray)
+  if (type === 'bludgeoning' || type === 'piercing' || type === 'slashing') {
+    return 'neutral'
+  }
+
+  // Default fallback
+  return 'neutral'
+}

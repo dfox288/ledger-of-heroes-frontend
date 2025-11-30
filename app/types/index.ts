@@ -21,6 +21,8 @@ export type ProficiencyType = components['schemas']['ProficiencyTypeResource']
 export type Size = components['schemas']['SizeResource']
 export type Skill = components['schemas']['SkillResource']
 export type SpellSchool = components['schemas']['SpellSchoolResource']
+export type SpellEffect = components['schemas']['SpellEffectResource']
+export type SpellSavingThrow = components['schemas']['SavingThrowResource']
 export type { components }
 
 // Search types
