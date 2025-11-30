@@ -10,6 +10,8 @@ Nuxt 4.x frontend for D&D 5e Compendium. Consumes REST API from `../importer` (L
 
 **Commands:** `docker compose exec nuxt npm run ...` | Always use Docker, never run locally.
 
+**⚠️ DO NOT use superpowers-chrome** - Browser automation is not needed for this project.
+
 **Essential Docs:**
 - `docs/PROJECT-STATUS.md` - Metrics and current status
 - `docs/LATEST-HANDOVER.md` - Latest session handover
@@ -176,11 +178,7 @@ describe('SpellCard', () => {
 git commit -m "feat: Add feature description
 
 - Detail 1
-- Detail 2
-
-🤖 Generated with [Claude Code](https://claude.com/claude-code)
-
-Co-Authored-By: Claude <noreply@anthropic.com>"
+- Detail 2"
 ```
 
 ### Badge Size Standard
