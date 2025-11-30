@@ -135,6 +135,31 @@ describe('Races [slug] Page - Special Movement Speeds (Issue #26)', () => {
   })
 })
 
+describe('Races [slug] Page - Climb Speed (Issue #65)', () => {
+  it('should display climb speed in quick stats when race has climb_speed', async () => {
+    // Tabaxi (Legacy) has climb_speed: 20
+    const wrapper = await mountSuspended(RacesSlugPage, {
+      route: '/races/tabaxi-legacy'
+    })
+
+    // Look for climb speed display
+    const text = wrapper.text()
+    expect(text).toContain('Climb')
+    expect(text).toContain('20')
+  })
+
+  it('should not display climb speed stat when race has no climb_speed', async () => {
+    // Standard elf has no climb speed
+    const wrapper = await mountSuspended(RacesSlugPage, {
+      route: '/races/elf'
+    })
+
+    const text = wrapper.text()
+    // Should not have "Climb Speed" or similar
+    expect(text.toLowerCase()).not.toContain('climb speed')
+  })
+})
+
 describe('Races [slug] Page - Accordion Structure', () => {
   it('should have single UAccordion with type="multiple"', async () => {
     const wrapper = await mountSuspended(RacesSlugPage, {

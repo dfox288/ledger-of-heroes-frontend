@@ -120,7 +120,8 @@ const accordionItems = computed(() => {
               ...(entity.size ? [{ icon: 'i-heroicons-user', label: 'Size', value: entity.size.name }] : []),
               ...(entity.speed ? [{ icon: 'i-heroicons-bolt', label: 'Speed', value: `${entity.speed} ft.` }] : []),
               ...(entity.fly_speed ? [{ icon: 'i-heroicons-arrow-up', label: 'Fly Speed', value: `${entity.fly_speed} ft.` }] : []),
-              ...(entity.swim_speed ? [{ icon: 'i-heroicons-sparkles', label: 'Swim Speed', value: `${entity.swim_speed} ft.` }] : [])
+              ...(entity.swim_speed ? [{ icon: 'i-heroicons-sparkles', label: 'Swim Speed', value: `${entity.swim_speed} ft.` }] : []),
+              ...(entity.climb_speed ? [{ icon: 'i-heroicons-arrow-trending-up', label: 'Climb Speed', value: `${entity.climb_speed} ft.` }] : [])
             ]"
           />
 

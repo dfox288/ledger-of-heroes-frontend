@@ -94,6 +94,9 @@ const createMockApiResponse = (url) => {
           id: 1,
           name,
           slug,
+          // New extracted feature fields (Issue #67)
+          feature_name: `${name} Expertise`,
+          feature_description: `As a ${slug}, you have a special ability that sets you apart. You can call upon your expertise to gain advantage in relevant situations.`,
           traits: [
             {
               id: 1,
@@ -101,14 +104,6 @@ const createMockApiResponse = (url) => {
               category: null,
               description: `You have spent your life as a ${slug}. This background provides unique skills and experiences.`,
               sort_order: 0,
-              data_tables: []
-            },
-            {
-              id: 2,
-              name: `Feature: ${name} Expertise`,
-              category: 'feature',
-              description: `As a ${slug}, you have a special ability that sets you apart. You can call upon your expertise to gain advantage in relevant situations.`,
-              sort_order: 1,
               data_tables: []
             },
             {
@@ -208,13 +203,16 @@ const createMockApiResponse = (url) => {
         ]
       }
 
-      // Add special movement speeds for specific races (Issue #26)
+      // Add special movement speeds for specific races (Issue #26, #65)
       if (slug === 'aarakocra-dmg') {
         raceData.speed = 25
         raceData.fly_speed = 50
       }
       if (slug === 'triton-legacy') {
         raceData.swim_speed = 30
+      }
+      if (slug === 'tabaxi-legacy') {
+        raceData.climb_speed = 20
       }
 
       return Promise.resolve({ data: raceData })
