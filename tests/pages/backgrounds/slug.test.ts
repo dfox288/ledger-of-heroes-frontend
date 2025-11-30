@@ -89,9 +89,9 @@ describe('Backgrounds [slug] Page', () => {
       })
 
       const text = wrapper.text()
-      // Mock data has Feature: Acolyte Expertise
-      expect(text).toContain('Feature')
-      expect(text).toContain('Expertise')
+      // Mock data has "Acolyte Expertise" feature
+      expect(text).toContain('FEATURE') // Label is all caps
+      expect(text).toContain('Expertise') // Feature name
     })
   })
 

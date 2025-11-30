@@ -321,7 +321,9 @@ export function createMockBackground(overrides: Partial<Background> = {}): Backg
       { language: { id: 1, name: 'Common' }, is_choice: false },
       { language: { id: 2, name: 'Elvish' }, is_choice: false }
     ],
+    // New extracted feature fields (Issue #67)
     feature_name: 'Shelter of the Faithful',
+    feature_description: 'As an acolyte, you command the respect of those who share your faith, and you can perform the religious ceremonies of your deity.',
     description: 'You have spent your life in the service of a temple to a specific god or pantheon of gods.',
     sources: [{ ...mockSource, pages: '127' }],
     ...overrides

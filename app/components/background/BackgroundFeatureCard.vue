@@ -1,10 +1,20 @@
 <script setup lang="ts">
-import type { components } from '~/types/api/generated'
+/**
+ * Background Feature Card Component
+ *
+ * Displays the signature background feature (e.g., "Shelter of the Faithful").
+ *
+ * Updated to use pre-extracted feature_name/feature_description fields
+ * from the API instead of trait objects (Issue #67).
+ */
 
-type TraitResource = components['schemas']['TraitResource']
+interface Feature {
+  name: string
+  description: string
+}
 
 interface Props {
-  feature: TraitResource | null | undefined
+  feature: Feature | null | undefined
 }
 
 defineProps<Props>()

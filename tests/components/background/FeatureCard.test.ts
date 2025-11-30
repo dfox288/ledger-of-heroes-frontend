@@ -1,18 +1,24 @@
 import { describe, it, expect } from 'vitest'
 import { mountSuspended } from '@nuxt/test-utils/runtime'
-import type { components } from '~/types/api/generated'
 import BackgroundFeatureCard from '~/components/background/BackgroundFeatureCard.vue'
 
-type TraitResource = components['schemas']['TraitResource']
+/**
+ * BackgroundFeatureCard Component Tests
+ *
+ * Updated to test new feature object structure (Issue #67):
+ * - Uses { name, description } instead of TraitResource
+ * - Feature data extracted from API fields, not traits array
+ */
+
+interface Feature {
+  name: string
+  description: string
+}
 
 describe('BackgroundFeatureCard', () => {
-  const mockFeature: TraitResource = {
-    id: 1,
+  const mockFeature: Feature = {
     name: 'Shelter of the Faithful',
-    category: 'feature',
-    description: 'As an acolyte, you command the respect of those who share your faith, and you can perform the religious ceremonies of your deity. You and your adventuring companions can expect to receive free healing and care at a temple, shrine, or other established presence of your faith, though you must provide any material components needed for spells. Those who share your religion will support you (but only you) at a modest lifestyle.',
-    sort_order: 1,
-    data_tables: []
+    description: 'As an acolyte, you command the respect of those who share your faith, and you can perform the religious ceremonies of your deity. You and your adventuring companions can expect to receive free healing and care at a temple, shrine, or other established presence of your faith, though you must provide any material components needed for spells. Those who share your religion will support you (but only you) at a modest lifestyle.'
   }
 
   // Core functionality tests
@@ -172,12 +178,9 @@ describe('BackgroundFeatureCard', () => {
 
   it('handles missing description field', async () => {
     const noDescFeature = {
-      id: 1,
       name: 'Test Feature',
-      category: 'feature',
-      sort_order: 1,
-      data_tables: []
-    } as TraitResource
+      description: ''
+    }
     const wrapper = await mountSuspended(BackgroundFeatureCard, {
       props: { feature: noDescFeature }
     })

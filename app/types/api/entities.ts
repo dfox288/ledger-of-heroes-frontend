@@ -133,8 +133,8 @@ type BackgroundFromAPI = components['schemas']['BackgroundResource']
 export interface Background extends Omit<BackgroundFromAPI, 'sources'> {
   // Override with our custom types that have better structure
   description?: string
-  feature_name?: string
   sources?: EntitySource[]
+  // Note: feature_name and feature_description are defined in BackgroundFromAPI (Issue #67)
   // All other fields inherited from BackgroundFromAPI
 }
 

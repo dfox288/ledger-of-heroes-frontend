@@ -64,12 +64,21 @@ export function useBackgroundDetail(slug: Ref<string>) {
   const traits = computed<TraitResource[]>(() => entity.value?.traits ?? [])
 
   /**
-   * The Feature trait - signature background ability
+   * The Feature - signature background ability (extracted from API)
    * e.g., "Shelter of the Faithful" for Acolyte
+   *
+   * Note: Now uses pre-extracted feature_name and feature_description fields
+   * from the API instead of searching through traits array (Issue #67)
    */
-  const feature = computed<TraitResource | null>(() =>
-    traits.value.find(t => t.category === 'feature') ?? null
-  )
+  const feature = computed<{ name: string, description: string } | null>(() => {
+    const name = entity.value?.feature_name?.trim() || ''
+    const description = entity.value?.feature_description?.trim() || ''
+
+    // Only return if both fields have content
+    if (!name || !description) return null
+
+    return { name, description }
+  })
 
   /**
    * The Description trait - background lore/flavor
