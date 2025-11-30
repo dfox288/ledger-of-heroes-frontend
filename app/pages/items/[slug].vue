@@ -1,87 +1,31 @@
 <script setup lang="ts">
-import type { Item } from '~/types/api/entities'
-import { getItemRarityColor, getItemTypeColor } from '~/utils/badgeColors'
-
 const route = useRoute()
+const slug = computed(() => route.params.slug as string)
 
-// Fetch item data and setup SEO
-const { data: item, loading, error } = useEntityDetail<Item>({
-  slug: route.params.slug as string,
-  endpoint: '/items',
-  cacheKey: 'item',
-  seo: {
-    titleTemplate: name => `${name} - D&D 5e Item`,
-    descriptionExtractor: (item: unknown) => {
-      const i = item as { description?: string }
-      return i.description?.substring(0, 160) || ''
-    },
-    fallbackTitle: 'Item - D&D 5e Compendium'
-  }
-})
+// Use the new composable for all derived data
+const {
+  entity,
+  pending: loading,
+  error,
+  isWeapon,
+  isArmor,
+  isShield,
+  isCharged,
+  hasSpells,
+  requiresAttunement,
+  attunementText,
+  spellsByChargeCost,
+  costDisplay
+} = useItemDetail(slug)
 
-/**
- * Format cost in gold pieces
- */
-const costInGold = computed(() => {
-  if (!item.value?.cost_cp) return null
-  const gp = item.value.cost_cp / 100
-  return gp >= 1 ? `${gp} gp` : `${item.value.cost_cp} cp`
-})
+// Alias entity as item for template clarity
+const item = entity
 
-/**
- * Format rarity for display
- */
-const rarityText = computed(() => {
-  if (!item.value) return ''
-  return item.value.rarity?.split(' ').map(w =>
-    w.charAt(0).toUpperCase() + w.slice(1)
-  ).join(' ') || 'Common'
-})
-
-/**
- * Get rarity color for badge
- */
-const rarityColor = computed(() => {
-  if (!item.value) return 'neutral'
-  return getItemRarityColor(item.value.rarity)
-})
-
-/**
- * Get item type color for badge
- */
-const itemTypeColor = computed(() => {
-  if (!item.value?.item_type) return 'neutral'
-  return getItemTypeColor(item.value.item_type.name)
-})
-
-/**
- * Get entity image path (512px variant)
- */
+// Get entity image path
 const { getImagePath } = useEntityImage()
 const imagePath = computed(() => {
   if (!item.value) return null
   return getImagePath('items', item.value.slug, 512)
-})
-
-/**
- * Format proficiency category for display
- * Converts "martial_melee" to "Martial Melee"
- */
-const proficiencyCategoryText = computed(() => {
-  if (!item.value?.proficiency_category) return null
-  return item.value.proficiency_category
-    .split('_')
-    .map(word => word.charAt(0).toUpperCase() + word.slice(1))
-    .join(' ')
-})
-
-/**
- * Format magic bonus for display
- * Converts "2" to "+2"
- */
-const magicBonusText = computed(() => {
-  if (!item.value?.magic_bonus) return null
-  return `+${item.value.magic_bonus}`
 })
 </script>
 
@@ -111,51 +55,61 @@ const magicBonusText = computed(() => {
         :current-label="item.name"
       />
 
-      <!-- Header -->
-      <UiDetailPageHeader
-        :title="item.name"
-        :badges="[
-          { label: item.item_type?.name || 'Unknown', color: itemTypeColor, variant: 'subtle' as const, size: 'lg' as const },
-          { label: rarityText, color: rarityColor, variant: 'subtle' as const, size: 'lg' as const },
-          ...(magicBonusText ? [{ label: magicBonusText, color: 'primary' as const, variant: 'solid' as const, size: 'lg' as const }] : []),
-          ...(proficiencyCategoryText ? [{ label: proficiencyCategoryText, color: 'item' as const, variant: 'subtle' as const, size: 'md' as const }] : []),
-          ...(item.is_magic ? [{ label: '✨ Magic', color: 'primary' as const, variant: 'soft' as const, size: 'sm' as const }] : []),
-          ...(item.requires_attunement ? [{ label: '🔮 Attunement', color: 'info' as const, variant: 'soft' as const, size: 'sm' as const }] : [])
-        ]"
+      <!-- Hero Section (Name, Badges, Image) -->
+      <ItemHero
+        :item="item"
+        :image-path="imagePath"
       />
 
-      <!-- Quick Stats (2/3) + Image (1/3) Side-by-Side -->
-      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <!-- Quick Stats - 2/3 width on large screens -->
-        <div class="lg:col-span-2">
-          <UiDetailQuickStatsCard
-            :columns="2"
-            :stats="[
-              ...(costInGold ? [{ icon: 'i-heroicons-currency-dollar', label: 'Cost', value: costInGold }] : []),
-              ...(item.weight ? [{ icon: 'i-heroicons-scale', label: 'Weight', value: `${item.weight} lb` }] : []),
-              ...(item.damage_dice ? [{ icon: 'i-heroicons-bolt', label: 'Damage', value: item.damage_dice + (item.damage_type ? ` ${item.damage_type.name}` : ''), subtext: item.versatile_damage ? `Versatile: ${item.versatile_damage}` : undefined }] : []),
-              ...(item.armor_class !== null ? [{ icon: 'i-heroicons-shield-check', label: 'Armor Class', value: String(item.armor_class) }] : []),
-              ...(item.range_normal ? [{ icon: 'i-heroicons-arrow-trending-up', label: 'Range', value: `${item.range_normal}${item.range_long ? `/${item.range_long}` : ''} ft.` }] : []),
-              ...(item.strength_requirement ? [{ icon: 'i-heroicons-hand-raised', label: 'Strength Required', value: String(item.strength_requirement) }] : []),
-              ...(item.charges_max ? [{ icon: 'i-heroicons-bolt-slash', label: 'Charges', value: String(item.charges_max), subtext: item.recharge_formula && item.recharge_timing ? `Recharge: ${item.recharge_formula} at ${item.recharge_timing}` : undefined }] : [])
-            ]"
-          />
-        </div>
+      <!-- Weapon Stats (Conditional - Only for weapons) -->
+      <ItemWeaponStats
+        v-if="isWeapon"
+        :damage-dice="item.damage_dice"
+        :versatile-damage="item.versatile_damage"
+        :damage-type="item.damage_type || null"
+        :range-normal="item.range_normal"
+        :range-long="item.range_long"
+        :weight="item.weight !== null ? String(item.weight) : null"
+        :properties="item.properties || []"
+      />
 
-        <!-- Standalone Image - 1/3 width on large screens -->
-        <div class="lg:col-span-1">
-          <UiDetailEntityImage
-            v-if="imagePath"
-            :image-path="imagePath"
-            :image-alt="`${item.name} item illustration`"
-          />
-        </div>
-      </div>
+      <!-- Armor Stats (Conditional - Only for armor/shields) -->
+      <ItemArmorStats
+        v-if="isArmor || isShield"
+        :armor-class="item.armor_class"
+        :strength-requirement="item.strength_requirement"
+        :stealth-disadvantage="item.stealth_disadvantage ?? false"
+        :modifiers="item.modifiers || []"
+        :is-shield="isShield"
+      />
 
-      <!-- Description -->
+      <!-- Magic Section (Conditional - Only for charged or attunement items) -->
+      <ItemMagicSection
+        v-if="isCharged || requiresAttunement"
+        :charges-max="item.charges_max !== null ? String(item.charges_max) : null"
+        :recharge-formula="item.recharge_formula"
+        :recharge-timing="item.recharge_timing"
+        :attunement-text="attunementText"
+        :modifiers="item.modifiers || []"
+      />
+
+      <!-- Spells Table (Conditional - Only for items with spells) -->
+      <ItemSpellsTable
+        v-if="hasSpells"
+        :spells-by-charge-cost="spellsByChargeCost"
+      />
+
+      <!-- Description (Always) -->
       <UiDetailDescriptionCard
         v-if="item.description"
         :description="item.description"
+      />
+
+      <!-- Quick Info Row (Cost, Weight, Source) -->
+      <ItemQuickInfo
+        :cost="costDisplay"
+        :weight="item.weight !== null ? `${item.weight} lb` : null"
+        :sources="item.sources || []"
       />
 
       <!-- Additional Details (Accordion) -->
@@ -191,11 +145,6 @@ const magicBonusText = computed(() => {
             slot: 'abilities',
             defaultOpen: false
           }] : []),
-          ...(item.spells && item.spells.length > 0 ? [{
-            label: 'Spells',
-            slot: 'spells',
-            defaultOpen: false
-          }] : []),
           ...(item.data_tables && item.data_tables.length > 0 ? [{
             label: 'Data Tables',
             slot: 'data-tables',
@@ -204,11 +153,6 @@ const magicBonusText = computed(() => {
           ...(item.saving_throws && item.saving_throws.length > 0 ? [{
             label: 'Saving Throws',
             slot: 'saving-throws',
-            defaultOpen: false
-          }] : []),
-          ...(item.sources && item.sources.length > 0 ? [{
-            label: 'Source',
-            slot: 'source',
             defaultOpen: false
           }] : []),
           ...(item.tags && item.tags.length > 0 ? [{
@@ -267,14 +211,6 @@ const magicBonusText = computed(() => {
           <UiAccordionAbilitiesList :abilities="item.abilities" />
         </template>
 
-        <!-- Spells Slot -->
-        <template
-          v-if="item.spells && item.spells.length > 0"
-          #spells
-        >
-          <UiAccordionItemSpells :spells="item.spells" />
-        </template>
-
         <!-- Data Tables Slot -->
         <template
           v-if="item.data_tables && item.data_tables.length > 0"
@@ -289,14 +225,6 @@ const magicBonusText = computed(() => {
           #saving-throws
         >
           <UiAccordionSavingThrows :saving-throws="item.saving_throws" />
-        </template>
-
-        <!-- Source Slot -->
-        <template
-          v-if="item.sources && item.sources.length > 0"
-          #source
-        >
-          <UiSourceDisplay :sources="item.sources" />
         </template>
 
         <!-- Tags Slot -->
