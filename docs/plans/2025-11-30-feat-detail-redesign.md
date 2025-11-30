@@ -1,8 +1,16 @@
 # Feat Detail Page Redesign
 
+> **For Claude:** REQUIRED SUB-SKILL: Use superpowers:executing-plans to implement this plan task-by-task.
+
 **Issue:** [#57](https://github.com/dfox288/dnd-rulebook-project/issues/57)
 **Date:** 2025-11-30
-**Status:** Design Complete
+**Status:** Ready for Implementation
+
+**Goal:** Redesign feat detail page to surface benefits prominently and enable variant discovery.
+
+**Architecture:** Dedicated `useFeatDetail()` composable extracts all computed values. Two new components (`FeatBenefitsGrid`, `FeatVariantsSection`) handle the new UI sections. Page component orchestrates layout using existing shared UI components.
+
+**Tech Stack:** Vue 3, Nuxt 4, NuxtUI 4, TypeScript, Vitest
 
 ## Overview
 
@@ -602,14 +610,440 @@ const accordionItems = computed(() => {
 - Lucky (no prerequisites, no modifiers - simple feat)
 - Heavily Armored (prerequisites, modifiers, proficiencies)
 
-## Implementation Order
+## Implementation Plan
 
-1. Create `useFeatDetail.ts` composable
-2. Create `FeatBenefitsGrid.vue` component
-3. Create `FeatVariantsSection.vue` component
-4. Rewrite `[slug].vue` page
-5. Write tests
-6. Manual QA
+### Task 1: Create useFeatDetail composable with tests
+
+**Files:**
+- Create: `app/composables/useFeatDetail.ts`
+- Create: `tests/composables/useFeatDetail.test.ts`
+
+**Step 1: Write the failing test for basic feat loading**
+
+```typescript
+// tests/composables/useFeatDetail.test.ts
+import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { useFeatDetail } from '~/composables/useFeatDetail'
+
+// Mock the composables
+vi.mock('~/composables/useEntityDetail', () => ({
+  useEntityDetail: vi.fn()
+}))
+
+vi.mock('#app', () => ({
+  useAsyncData: vi.fn(() => ({ data: ref([]) })),
+  computed: (fn: () => any) => ({ value: fn() }),
+  ref: (val: any) => ({ value: val }),
+  toValue: (val: any) => val
+}))
+
+describe('useFeatDetail', () => {
+  it('returns isHalfFeat as true when feat has is_half_feat', () => {
+    const mockFeat = {
+      id: 1,
+      slug: 'actor',
+      name: 'Actor',
+      is_half_feat: true,
+      modifiers: [],
+      proficiencies: [],
+      conditions: [],
+      prerequisites: [],
+      sources: []
+    }
+
+    // Setup mock return
+    vi.mocked(useEntityDetail).mockReturnValue({
+      data: ref({ value: mockFeat }),
+      pending: ref(false),
+      error: ref(null)
+    } as any)
+
+    const { isHalfFeat } = useFeatDetail('actor')
+    expect(isHalfFeat.value).toBe(true)
+  })
+})
+```
+
+**Step 2: Run test to verify it fails**
+
+Run: `docker compose exec nuxt npm run test -- tests/composables/useFeatDetail.test.ts`
+Expected: FAIL - composable doesn't exist
+
+**Step 3: Create minimal composable**
+
+```typescript
+// app/composables/useFeatDetail.ts
+import type { Feat } from '~/types/api/entities'
+import type { MaybeRef } from 'vue'
+
+export function useFeatDetail(slug: MaybeRef<string>) {
+  const { data: entity, pending, error } = useEntityDetail<Feat>({
+    slug: toValue(slug),
+    endpoint: '/feats',
+    cacheKey: 'feat',
+    seo: {
+      titleTemplate: (name: string) => `${name} - D&D 5e Feat`,
+      descriptionExtractor: (feat: unknown) => {
+        const f = feat as { description?: string }
+        return f.description?.substring(0, 160) || ''
+      },
+      fallbackTitle: 'Feat - D&D 5e Compendium'
+    }
+  })
+
+  const isHalfFeat = computed(() => entity.value?.is_half_feat ?? false)
+
+  return {
+    entity,
+    pending,
+    error,
+    isHalfFeat
+  }
+}
+```
+
+**Step 4: Run test to verify it passes**
+
+Run: `docker compose exec nuxt npm run test -- tests/composables/useFeatDetail.test.ts`
+Expected: PASS
+
+**Step 5: Add remaining computed properties and tests**
+
+Add tests for: `abilityModifiers`, `grantedProficiencies`, `advantages`, `hasBenefits`, `hasPrerequisites`, `prerequisitesList`, `sources`, `tags`
+
+Then implement each computed property as shown in the Design section above.
+
+**Step 6: Add related variants fetching**
+
+```typescript
+// Add to useFeatDetail.ts
+const parentFeatSlug = computed(() => entity.value?.parent_feat_slug ?? null)
+
+const { data: variantsData } = useAsyncData(
+  `feat-variants-${toValue(slug)}`,
+  async () => {
+    const parent = parentFeatSlug.value
+    if (!parent) return []
+
+    const response = await apiFetch<{ data: Feat[] }>('/feats', {
+      query: { filter: `parent_feat_slug = ${parent}` }
+    })
+    return response.data ?? []
+  },
+  { watch: [parentFeatSlug], immediate: false }
+)
+
+const relatedVariants = computed(() => variantsData.value ?? [])
+```
+
+**Step 7: Run full test suite**
+
+Run: `docker compose exec nuxt npm run test:feats`
+Expected: All pass
+
+**Step 8: Commit**
+
+```bash
+git add app/composables/useFeatDetail.ts tests/composables/useFeatDetail.test.ts
+git commit -m "feat(feats): Add useFeatDetail composable with tests (Issue #57)"
+```
+
+---
+
+### Task 2: Create FeatBenefitsGrid component with tests
+
+**Files:**
+- Create: `app/components/feat/BenefitsGrid.vue`
+- Create: `tests/components/feat/BenefitsGrid.test.ts`
+
+**Step 1: Write the failing test**
+
+```typescript
+// tests/components/feat/BenefitsGrid.test.ts
+import { describe, it, expect } from 'vitest'
+import { mountSuspended } from '@nuxt/test-utils/runtime'
+import FeatBenefitsGrid from '~/components/feat/BenefitsGrid.vue'
+
+describe('FeatBenefitsGrid', () => {
+  it('renders ability score card when modifiers provided', async () => {
+    const wrapper = await mountSuspended(FeatBenefitsGrid, {
+      props: {
+        abilityModifiers: [{ ability: 'Charisma', code: 'CHA', value: 1 }],
+        grantedProficiencies: [],
+        advantages: []
+      }
+    })
+
+    expect(wrapper.text()).toContain('Ability Score')
+    expect(wrapper.text()).toContain('+1 Charisma')
+    expect(wrapper.text()).toContain('CHA')
+  })
+
+  it('hides ability score card when no modifiers', async () => {
+    const wrapper = await mountSuspended(FeatBenefitsGrid, {
+      props: {
+        abilityModifiers: [],
+        grantedProficiencies: [],
+        advantages: []
+      }
+    })
+
+    expect(wrapper.text()).not.toContain('Ability Score')
+  })
+
+  it('renders proficiency card when proficiencies provided', async () => {
+    const wrapper = await mountSuspended(FeatBenefitsGrid, {
+      props: {
+        abilityModifiers: [],
+        grantedProficiencies: [{ name: 'heavy armor', type: 'armor' }],
+        advantages: []
+      }
+    })
+
+    expect(wrapper.text()).toContain('Proficiency')
+    expect(wrapper.text()).toContain('heavy armor')
+  })
+
+  it('renders advantage card when conditions provided', async () => {
+    const wrapper = await mountSuspended(FeatBenefitsGrid, {
+      props: {
+        abilityModifiers: [],
+        grantedProficiencies: [],
+        advantages: [{ effectType: 'advantage', description: 'CON saves for concentration' }]
+      }
+    })
+
+    expect(wrapper.text()).toContain('Special Abilities')
+    expect(wrapper.text()).toContain('CON saves for concentration')
+  })
+})
+```
+
+**Step 2: Run test to verify it fails**
+
+Run: `docker compose exec nuxt npm run test -- tests/components/feat/BenefitsGrid.test.ts`
+Expected: FAIL - component doesn't exist
+
+**Step 3: Create the component**
+
+Create `app/components/feat/BenefitsGrid.vue` with the code from the Design section above.
+
+**Step 4: Run test to verify it passes**
+
+Run: `docker compose exec nuxt npm run test -- tests/components/feat/BenefitsGrid.test.ts`
+Expected: PASS
+
+**Step 5: Commit**
+
+```bash
+git add app/components/feat/BenefitsGrid.vue tests/components/feat/BenefitsGrid.test.ts
+git commit -m "feat(feats): Add FeatBenefitsGrid component with tests (Issue #57)"
+```
+
+---
+
+### Task 3: Create FeatVariantsSection component with tests
+
+**Files:**
+- Create: `app/components/feat/VariantsSection.vue`
+- Create: `tests/components/feat/VariantsSection.test.ts`
+
+**Step 1: Write the failing test**
+
+```typescript
+// tests/components/feat/VariantsSection.test.ts
+import { describe, it, expect } from 'vitest'
+import { mountSuspended } from '@nuxt/test-utils/runtime'
+import FeatVariantsSection from '~/components/feat/VariantsSection.vue'
+
+const mockVariants = [
+  { id: 1, slug: 'resilient-strength', name: 'Resilient (Strength)', is_half_feat: true },
+  { id: 2, slug: 'resilient-dexterity', name: 'Resilient (Dexterity)', is_half_feat: true },
+  { id: 3, slug: 'resilient-constitution', name: 'Resilient (Constitution)', is_half_feat: true }
+]
+
+describe('FeatVariantsSection', () => {
+  it('renders all variant cards', async () => {
+    const wrapper = await mountSuspended(FeatVariantsSection, {
+      props: {
+        variants: mockVariants,
+        currentSlug: 'resilient-constitution'
+      }
+    })
+
+    expect(wrapper.text()).toContain('Resilient (Strength)')
+    expect(wrapper.text()).toContain('Resilient (Dexterity)')
+    expect(wrapper.text()).toContain('Resilient (Constitution)')
+  })
+
+  it('highlights current variant', async () => {
+    const wrapper = await mountSuspended(FeatVariantsSection, {
+      props: {
+        variants: mockVariants,
+        currentSlug: 'resilient-constitution'
+      }
+    })
+
+    expect(wrapper.text()).toContain('(current)')
+  })
+
+  it('shows correct other variants count', async () => {
+    const wrapper = await mountSuspended(FeatVariantsSection, {
+      props: {
+        variants: mockVariants,
+        currentSlug: 'resilient-constitution'
+      }
+    })
+
+    expect(wrapper.text()).toContain('2 others')
+  })
+
+  it('hides section when only one variant (current)', async () => {
+    const wrapper = await mountSuspended(FeatVariantsSection, {
+      props: {
+        variants: [mockVariants[0]],
+        currentSlug: 'resilient-strength'
+      }
+    })
+
+    expect(wrapper.text()).not.toContain('Related Variants')
+  })
+
+  it('hides section when no variants', async () => {
+    const wrapper = await mountSuspended(FeatVariantsSection, {
+      props: {
+        variants: [],
+        currentSlug: 'lucky'
+      }
+    })
+
+    expect(wrapper.text()).not.toContain('Related Variants')
+  })
+})
+```
+
+**Step 2: Run test to verify it fails**
+
+Run: `docker compose exec nuxt npm run test -- tests/components/feat/VariantsSection.test.ts`
+Expected: FAIL - component doesn't exist
+
+**Step 3: Create the component**
+
+Create `app/components/feat/VariantsSection.vue` with the code from the Design section above.
+
+**Step 4: Run test to verify it passes**
+
+Run: `docker compose exec nuxt npm run test -- tests/components/feat/VariantsSection.test.ts`
+Expected: PASS
+
+**Step 5: Commit**
+
+```bash
+git add app/components/feat/VariantsSection.vue tests/components/feat/VariantsSection.test.ts
+git commit -m "feat(feats): Add FeatVariantsSection component with tests (Issue #57)"
+```
+
+---
+
+### Task 4: Rewrite feat detail page
+
+**Files:**
+- Modify: `app/pages/feats/[slug].vue`
+- Modify: `tests/components/feat/FeatDetailPage.test.ts` (if exists, or create)
+
+**Step 1: Backup current implementation**
+
+Read current file to understand what tests might break.
+
+**Step 2: Rewrite page component**
+
+Replace entire contents of `app/pages/feats/[slug].vue` with the code from the Design section above.
+
+**Step 3: Run typecheck**
+
+Run: `docker compose exec nuxt npm run typecheck`
+Expected: PASS
+
+**Step 4: Run feat test suite**
+
+Run: `docker compose exec nuxt npm run test:feats`
+Expected: All pass (may need to update existing tests)
+
+**Step 5: Commit**
+
+```bash
+git add app/pages/feats/[slug].vue
+git commit -m "feat(feats): Redesign feat detail page with benefits grid and variants (Issue #57)"
+```
+
+---
+
+### Task 5: Manual QA and polish
+
+**Test Cases:**
+
+| Feat | What to Check |
+|------|---------------|
+| Actor | Half-feat badge, +1 CHA modifier, advantage condition |
+| War Caster | Prerequisites card, advantage condition, no modifiers |
+| Resilient (Constitution) | Half-feat badge, +1 CON, 5 other variants shown |
+| Lucky | No prerequisites, no benefits grid, simple description |
+| Heavily Armored | Prerequisites, +1 STR modifier, heavy armor proficiency |
+| Sentinel | No prerequisites, no benefits, pure description feat |
+
+**Step 1: Start dev server**
+
+Run: `docker compose exec nuxt npm run dev`
+
+**Step 2: Test each feat manually**
+
+Navigate to each feat and verify:
+- [ ] Header badges render correctly
+- [ ] Prerequisites card shows/hides appropriately
+- [ ] Benefits grid shows correct cards
+- [ ] Description renders as markdown
+- [ ] Related variants section shows for variant feats
+- [ ] Current variant is highlighted
+- [ ] Navigation between variants works
+- [ ] Dark mode looks good
+- [ ] Mobile responsive
+
+**Step 3: Fix any issues found**
+
+**Step 4: Final commit**
+
+```bash
+git add -A
+git commit -m "fix(feats): Polish feat detail page based on QA (Issue #57)"
+```
+
+---
+
+### Task 6: Update issue and close
+
+**Step 1: Run full test suite**
+
+Run: `docker compose exec nuxt npm run test`
+Expected: All pass
+
+**Step 2: Run lint**
+
+Run: `docker compose exec nuxt npm run lint:fix`
+
+**Step 3: Push changes**
+
+```bash
+git push
+```
+
+**Step 4: Close related issues**
+
+```bash
+gh issue close 55 --repo dfox288/dnd-rulebook-project --comment "Addressed by feat detail page redesign in Issue #57"
+gh issue close 57 --repo dfox288/dnd-rulebook-project --comment "Feat detail page redesign complete. See commits on main branch."
+```
+
+---
 
 ## Related Issues
 
