@@ -219,19 +219,22 @@ export function useSpellDetail(slug: Ref<string> | string): UseSpellDetailReturn
     if (!areaOfEffect) return null
 
     // API returns object directly: { type: "sphere", size: 20 }
-    if (typeof areaOfEffect === 'object' && areaOfEffect !== null) {
-      const aoe = areaOfEffect as { type?: string; size?: number }
-      if (aoe.type && typeof aoe.size === 'number') {
+    // Cast to unknown first to handle both object and legacy string formats
+    const aoe = areaOfEffect as unknown
+
+    if (typeof aoe === 'object' && aoe !== null) {
+      const parsed = aoe as { type?: string; size?: number }
+      if (parsed.type && typeof parsed.size === 'number') {
         return {
-          type: aoe.type,
-          size: aoe.size
+          type: parsed.type,
+          size: parsed.size
         }
       }
     }
 
     // Fallback: parse string patterns like "20-foot radius" (legacy format)
-    if (typeof areaOfEffect === 'string') {
-      const match = areaOfEffect.match(/^(\d+)-foot\s+(.+)$/i)
+    if (typeof aoe === 'string') {
+      const match = aoe.match(/^(\d+)-foot\s+(.+)$/i)
       if (!match) return null
 
       const size = parseInt(match[1] ?? '0', 10)

@@ -39,12 +39,27 @@ const getSchoolColor = (schoolCode: string): 'primary' | 'secondary' | 'success'
  * Safely parse JSON string and extract type/size
  */
 const areaOfEffect = computed(() => {
-  if (!props.spell.area_of_effect) return null
-  try {
-    return JSON.parse(props.spell.area_of_effect) as { type: string, size: number }
-  } catch {
-    return null
+  const aoe = props.spell.area_of_effect
+  if (!aoe) return null
+
+  // API returns object directly: { type: "sphere", size: 20 }
+  if (typeof aoe === 'object' && aoe !== null) {
+    const parsed = aoe as { type?: string; size?: number }
+    if (parsed.type && typeof parsed.size === 'number') {
+      return { type: parsed.type, size: parsed.size }
+    }
   }
+
+  // Fallback: try JSON.parse for legacy string format
+  if (typeof aoe === 'string') {
+    try {
+      return JSON.parse(aoe) as { type: string, size: number }
+    } catch {
+      return null
+    }
+  }
+
+  return null
 })
 
 /**

@@ -199,7 +199,17 @@ export function useClassDetail(slug: Ref<string>) {
 
   const hitPoints = computed(() => entity.value?.computed?.hit_points ?? null)
 
-  const progressionTable = computed(() => entity.value?.computed?.progression_table ?? null)
+  // Cast to correct type - backend OpenAPI schema is wrong (Issue #80)
+  // API returns { columns: Array<{key,label,type}>, rows: Array<Record<string,any>> }
+  // but schema says { columns: unknown[], rows: string }
+  const progressionTable = computed(() => {
+    const table = entity.value?.computed?.progression_table
+    if (!table) return null
+    return table as unknown as {
+      columns: Array<{ key: string; label: string; type: string }>
+      rows: Array<Record<string, string | number>>
+    }
+  })
 
   const spellSlotSummary = computed(() => entity.value?.computed?.spell_slot_summary ?? null)
 

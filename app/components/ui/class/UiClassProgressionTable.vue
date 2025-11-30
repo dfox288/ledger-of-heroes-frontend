@@ -1,8 +1,22 @@
 <script setup lang="ts">
-import type { ClassProgressionTable } from '~/types/api/entities'
+// Local type definitions to work around incorrect backend OpenAPI schema (Issue #80)
+// The generated types have `rows: string` but API actually returns an array of objects
+interface ProgressionColumn {
+  key: string
+  label: string
+  type: string // Can be 'integer', 'bonus', 'string', 'dice', etc.
+}
+
+// Row is a dynamic object with known fields + arbitrary dynamic columns
+type ProgressionRow = Record<string, string | number>
+
+interface ProgressionTable {
+  columns: ProgressionColumn[]
+  rows: ProgressionRow[]
+}
 
 interface Props {
-  progressionTable: ClassProgressionTable
+  progressionTable: ProgressionTable
 }
 
 defineProps<Props>()

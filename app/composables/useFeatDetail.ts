@@ -183,11 +183,19 @@ export function useFeatDetail(slug: Ref<string>) {
     }
 
     // Add structured prerequisites
+    // Each prerequisite can have one of: ability_score, race, skill, proficiency_type, class
     entity.value.prerequisites?.forEach((p) => {
       if (p.description) {
         list.push(p.description)
-      } else if (p.prerequisite?.name) {
-        list.push(p.prerequisite.name)
+      } else if (p.ability_score?.name) {
+        const minVal = p.minimum_value ? ` ${p.minimum_value}+` : ''
+        list.push(`${p.ability_score.name}${minVal}`)
+      } else if (p.race?.name) {
+        list.push(p.race.name)
+      } else if (p.skill?.name) {
+        list.push(`Proficiency in ${p.skill.name}`)
+      } else if (p.proficiency_type?.name) {
+        list.push(`${p.proficiency_type.name} proficiency`)
       }
     })
 
