@@ -237,14 +237,23 @@ export function useFeatDetail(slug: Ref<string>) {
   // ─────────────────────────────────────────────────────────────────────────────
 
   /**
-   * Spells granted by this feat
+   * Spells granted by this feat (includes both fixed spells and choice placeholders)
    */
   const spells = computed(() => entity.value?.spells ?? [])
 
   /**
-   * Does this feat grant any spells?
+   * Spell choices - aggregated groups for player selection
+   * (e.g., "Choose 1 Divination or Enchantment spell")
    */
-  const hasSpells = computed(() => (entity.value?.spells?.length ?? 0) > 0)
+  const spellChoices = computed(() => entity.value?.spell_choices ?? [])
+
+  /**
+   * Does this feat grant any spells (fixed or choice)?
+   */
+  const hasSpells = computed(() =>
+    (entity.value?.spells?.length ?? 0) > 0
+    || (entity.value?.spell_choices?.length ?? 0) > 0
+  )
 
   // ─────────────────────────────────────────────────────────────────────────────
   // Sources and Tags
@@ -302,6 +311,7 @@ export function useFeatDetail(slug: Ref<string>) {
 
     // Granted Spells
     spells,
+    spellChoices,
     hasSpells,
 
     // Metadata

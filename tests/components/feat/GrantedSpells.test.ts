@@ -4,6 +4,7 @@ import FeatGrantedSpells from '~/components/feat/GrantedSpells.vue'
 import type { components } from '~/types/api/generated'
 
 type EntitySpellResource = components['schemas']['EntitySpellResource']
+type SpellChoiceResource = components['schemas']['SpellChoiceResource']
 
 const mockSpells: EntitySpellResource[] = [
   {
@@ -185,6 +186,41 @@ describe('FeatGrantedSpells', () => {
     expect(wrapper.text()).toContain('Abjuration')
   })
 
+  it('displays casting time and range', async () => {
+    const wrapper = await mountSuspended(FeatGrantedSpells, {
+      props: { spells: [mockSpells[0]] } // Detect Magic
+    })
+
+    expect(wrapper.text()).toContain('1 action')
+    expect(wrapper.text()).toContain('Self')
+  })
+
+  it('displays concentration badge when spell needs concentration', async () => {
+    const wrapper = await mountSuspended(FeatGrantedSpells, {
+      props: { spells: [mockSpells[0]] } // Detect Magic (concentration)
+    })
+
+    expect(wrapper.text()).toContain('Concentration')
+  })
+
+  it('displays ritual badge when spell is ritual', async () => {
+    const wrapper = await mountSuspended(FeatGrantedSpells, {
+      props: { spells: [mockSpells[0]] } // Detect Magic (ritual)
+    })
+
+    expect(wrapper.text()).toContain('Ritual')
+  })
+
+  it('renders background image div for spells', async () => {
+    const wrapper = await mountSuspended(FeatGrantedSpells, {
+      props: { spells: [mockSpells[0]] }
+    })
+
+    // Check for background image style
+    const bgDiv = wrapper.find('.bg-cover')
+    expect(bgDiv.exists()).toBe(true)
+  })
+
   it('creates links to spell detail pages', async () => {
     const wrapper = await mountSuspended(FeatGrantedSpells, {
       props: { spells: [mockSpells[0]] }
@@ -231,5 +267,249 @@ describe('FeatGrantedSpells', () => {
 
     // Check for icon (UIcon component renders as i-heroicons-sparkles class)
     expect(wrapper.html()).toContain('i-heroicons-sparkles')
+  })
+})
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Spell Choices Tests (Fey Touched, Shadow Touched, etc.)
+// ─────────────────────────────────────────────────────────────────────────────
+
+// Mock data mimicking Fey Touched feat structure
+const mockMistyStepSpell: EntitySpellResource = {
+  id: 100,
+  spell_id: 233,
+  spell: {
+    id: 233,
+    slug: 'misty-step',
+    name: 'Misty Step',
+    level: 2,
+    school: {
+      id: 2,
+      code: 'C',
+      name: 'Conjuration',
+      slug: 'conjuration',
+      description: null
+    },
+    casting_time: '1 bonus action',
+    casting_time_type: 'bonus_action',
+    range: 'Self',
+    components: 'V',
+    material_components: null,
+    material_cost_gp: null,
+    material_consumed: null,
+    duration: 'Instantaneous',
+    needs_concentration: false,
+    is_ritual: false,
+    description: 'Briefly surrounded by silvery mist, you teleport up to 30 feet.',
+    higher_levels: null,
+    requires_verbal: true,
+    requires_somatic: false,
+    requires_material: false,
+    area_of_effect: null
+  },
+  ability_score_id: null,
+  ability_score: undefined,
+  level_requirement: null,
+  usage_limit: 'long_rest',
+  is_cantrip: false,
+  charges_cost_min: null,
+  charges_cost_max: null,
+  charges_cost_formula: null
+}
+
+// Choice placeholders (is_choice: true, spell: null)
+const mockChoiceSpells: EntitySpellResource[] = [
+  {
+    id: 101,
+    spell_id: null,
+    spell: undefined,
+    ability_score_id: null,
+    ability_score: undefined,
+    level_requirement: null,
+    usage_limit: null,
+    is_cantrip: false,
+    charges_cost_min: null,
+    charges_cost_max: null,
+    charges_cost_formula: null,
+    is_choice: true,
+    choice_count: 1,
+    choice_group: 'spell_choice_1',
+    max_level: 1,
+    school: {
+      id: 3,
+      code: 'D',
+      name: 'Divination',
+      slug: 'divination',
+      description: null
+    }
+  },
+  {
+    id: 102,
+    spell_id: null,
+    spell: undefined,
+    ability_score_id: null,
+    ability_score: undefined,
+    level_requirement: null,
+    usage_limit: null,
+    is_cantrip: false,
+    charges_cost_min: null,
+    charges_cost_max: null,
+    charges_cost_formula: null,
+    is_choice: true,
+    choice_count: 1,
+    choice_group: 'spell_choice_1',
+    max_level: 1,
+    school: {
+      id: 4,
+      code: 'EN',
+      name: 'Enchantment',
+      slug: 'enchantment',
+      description: null
+    }
+  }
+]
+
+// Aggregated spell choices (spell_choices array)
+const mockSpellChoices: SpellChoiceResource[] = [
+  {
+    choice_group: 'spell_choice_1',
+    choice_count: 1,
+    max_level: 1,
+    is_ritual_only: false,
+    allowed_schools: [
+      { id: 3, code: 'D', name: 'Divination', slug: 'divination', description: null },
+      { id: 4, code: 'EN', name: 'Enchantment', slug: 'enchantment', description: null }
+    ],
+    allowed_class: null
+  }
+]
+
+describe('FeatGrantedSpells - Spell Choices', () => {
+  it('filters out is_choice spells from spell cards', async () => {
+    // Pass both fixed spell and choice placeholders
+    const allSpells = [mockMistyStepSpell, ...mockChoiceSpells]
+
+    const wrapper = await mountSuspended(FeatGrantedSpells, {
+      props: {
+        spells: allSpells,
+        spellChoices: mockSpellChoices
+      }
+    })
+
+    // Should show the fixed spell
+    expect(wrapper.text()).toContain('Misty Step')
+
+    // Should NOT show choice placeholder entries as spell cards
+    // (the individual choice entries have school.name but no spell.name)
+    const spellLinks = wrapper.findAll('a[href^="/spells/"]')
+    expect(spellLinks).toHaveLength(1) // Only Misty Step
+    expect(spellLinks[0].attributes('href')).toBe('/spells/misty-step')
+  })
+
+  it('displays spell choice card when spellChoices are provided', async () => {
+    const wrapper = await mountSuspended(FeatGrantedSpells, {
+      props: {
+        spells: [mockMistyStepSpell, ...mockChoiceSpells],
+        spellChoices: mockSpellChoices
+      }
+    })
+
+    // Should show the spell choice card
+    expect(wrapper.text()).toContain('Choose')
+    expect(wrapper.text()).toContain('1st-level')
+  })
+
+  it('displays allowed schools in spell choice card', async () => {
+    const wrapper = await mountSuspended(FeatGrantedSpells, {
+      props: {
+        spells: [mockMistyStepSpell, ...mockChoiceSpells],
+        spellChoices: mockSpellChoices
+      }
+    })
+
+    // Should show the allowed schools
+    expect(wrapper.text()).toContain('Divination')
+    expect(wrapper.text()).toContain('Enchantment')
+  })
+
+  it('does not render spell choice section when spellChoices is empty', async () => {
+    const wrapper = await mountSuspended(FeatGrantedSpells, {
+      props: {
+        spells: [mockMistyStepSpell],
+        spellChoices: []
+      }
+    })
+
+    // Should show fixed spell but no "Choose" text
+    expect(wrapper.text()).toContain('Misty Step')
+    expect(wrapper.text()).not.toContain('Choose')
+  })
+
+  it('handles multiple spell choices (Magic Initiate pattern)', async () => {
+    const multipleChoices: SpellChoiceResource[] = [
+      {
+        choice_group: 'cantrip_choice',
+        choice_count: 2,
+        max_level: 0,
+        is_ritual_only: false,
+        allowed_schools: [],
+        allowed_class: { id: 1, slug: 'wizard', name: 'Wizard' }
+      },
+      {
+        choice_group: 'spell_choice',
+        choice_count: 1,
+        max_level: 1,
+        is_ritual_only: false,
+        allowed_schools: [],
+        allowed_class: { id: 1, slug: 'wizard', name: 'Wizard' }
+      }
+    ]
+
+    const wrapper = await mountSuspended(FeatGrantedSpells, {
+      props: {
+        spells: [],
+        spellChoices: multipleChoices
+      }
+    })
+
+    // Should show both choice cards
+    expect(wrapper.text()).toContain('cantrip')
+    expect(wrapper.text()).toContain('1st-level')
+  })
+
+  it('displays class restriction when allowed_class is set', async () => {
+    const classRestrictedChoice: SpellChoiceResource[] = [
+      {
+        choice_group: 'spell_choice_1',
+        choice_count: 1,
+        max_level: 1,
+        is_ritual_only: false,
+        allowed_schools: [],
+        allowed_class: { id: 1, slug: 'wizard', name: 'Wizard' }
+      }
+    ]
+
+    const wrapper = await mountSuspended(FeatGrantedSpells, {
+      props: {
+        spells: [],
+        spellChoices: classRestrictedChoice
+      }
+    })
+
+    expect(wrapper.text()).toContain('Wizard')
+  })
+
+  it('renders component when only spellChoices provided (no fixed spells)', async () => {
+    const wrapper = await mountSuspended(FeatGrantedSpells, {
+      props: {
+        spells: mockChoiceSpells, // Only choice entries
+        spellChoices: mockSpellChoices
+      }
+    })
+
+    // Component should still render with the section header
+    expect(wrapper.text()).toContain('Granted Spells')
+    // Should show the choice card
+    expect(wrapper.text()).toContain('Choose')
   })
 })

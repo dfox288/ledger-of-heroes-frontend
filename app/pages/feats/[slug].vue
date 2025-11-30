@@ -15,6 +15,7 @@ const {
   prerequisitesList,
   relatedVariants,
   spells,
+  spellChoices,
   hasSpells,
   sources,
   tags
@@ -144,6 +145,7 @@ const accordionItems = computed(() => {
           <FeatGrantedSpells
             v-if="hasSpells"
             :spells="spells"
+            :spell-choices="spellChoices"
           />
         </div>
 
