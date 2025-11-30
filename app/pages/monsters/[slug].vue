@@ -67,6 +67,21 @@ const regularActions = computed(() => {
 })
 
 /**
+ * Senses array for display
+ */
+const senses = computed(() => monster.value?.senses ?? [])
+
+/**
+ * Languages string for display
+ */
+const languages = computed(() => monster.value?.languages ?? null)
+
+/**
+ * Lair actions for legendary creatures
+ */
+const lairActions = computed(() => monster.value?.lair_actions ?? [])
+
+/**
  * Get entity image path (512px variant)
  */
 const { getImagePath } = useEntityImage()
@@ -128,6 +143,43 @@ const imagePath = computed(() => {
         </div>
       </div>
 
+      <!-- Senses & Languages Row -->
+      <div
+        v-if="senses.length > 0 || languages"
+        class="flex flex-wrap items-center gap-4"
+      >
+        <!-- Senses -->
+        <div
+          v-if="senses.length > 0"
+          class="flex items-center gap-2"
+        >
+          <UIcon
+            name="i-heroicons-eye"
+            class="size-5 text-gray-500 dark:text-gray-400 shrink-0"
+          />
+          <span class="text-sm text-gray-700 dark:text-gray-300">
+            <span
+              v-for="(sense, index) in senses"
+              :key="sense.type"
+            >{{ sense.name }} {{ sense.range }} ft.<span v-if="sense.is_limited"> (limited)</span><span v-if="index < senses.length - 1">, </span></span>
+          </span>
+        </div>
+
+        <!-- Languages -->
+        <div
+          v-if="languages"
+          class="flex items-center gap-2"
+        >
+          <UIcon
+            name="i-heroicons-language"
+            class="size-5 text-gray-500 dark:text-gray-400 shrink-0"
+          />
+          <span class="text-sm text-gray-700 dark:text-gray-300">
+            {{ languages }}
+          </span>
+        </div>
+      </div>
+
       <!-- Description (full width) -->
       <UiDetailDescriptionCard
         v-if="monster.description"
@@ -150,6 +202,11 @@ const imagePath = computed(() => {
           ...(monster.legendary_actions && monster.legendary_actions.length > 0 ? [{
             label: 'Legendary Actions',
             slot: 'legendary',
+            defaultOpen: false
+          }] : []),
+          ...(lairActions.length > 0 ? [{
+            label: 'Lair Actions',
+            slot: 'lair',
             defaultOpen: false
           }] : []),
           ...(monster.spellcasting ? [{
@@ -238,6 +295,39 @@ const imagePath = computed(() => {
                 <UBadge
                   v-if="action.action_cost"
                   color="info"
+                  variant="soft"
+                  size="md"
+                >
+                  {{ action.action_cost === 1 ? 'Costs 1 Action' : `Costs ${action.action_cost} Actions` }}
+                </UBadge>
+              </div>
+              <!-- Action description -->
+              <p class="text-sm text-gray-700 dark:text-gray-300">
+                {{ action.description }}
+              </p>
+            </div>
+          </div>
+        </template>
+
+        <!-- Lair Actions Slot -->
+        <template
+          v-if="lairActions.length > 0"
+          #lair
+        >
+          <div class="p-4 space-y-4">
+            <div
+              v-for="action in lairActions"
+              :key="action.id || action.name"
+              class="space-y-2"
+            >
+              <!-- Action name with cost badge -->
+              <div class="flex items-center gap-2 flex-wrap">
+                <h4 class="font-semibold text-primary-600 dark:text-primary-400">
+                  {{ action.name }}
+                </h4>
+                <UBadge
+                  v-if="action.action_cost"
+                  color="warning"
                   variant="soft"
                   size="md"
                 >
