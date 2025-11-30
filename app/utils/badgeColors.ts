@@ -59,6 +59,7 @@ export type BadgeVariant = 'solid' | 'outline' | 'soft' | 'subtle'
 
 /**
  * Get badge color for spell level (0-9)
+ * Used on spell list cards for compact display
  *
  * @param level - Spell level (0 = cantrip, 1-9 = spell levels)
  * @returns NuxtUI v4 semantic color name
@@ -74,6 +75,37 @@ export function getSpellLevelColor(level: number): BadgeColor {
   if (level <= 3) return 'info' // Low-level (1-3)
   if (level <= 6) return 'warning' // Mid-level (4-6)
   return 'error' // High-level (7-9)
+}
+
+/**
+ * Get badge color for spell level on detail pages
+ * Uses more granular color scale for hero headers
+ *
+ * Mapping per Issue #78:
+ * - Cantrip (0): neutral (gray)
+ * - 1-2: success (green)
+ * - 3-4: info (blue)
+ * - 5-6: primary (purple)
+ * - 7-8: warning (orange)
+ * - 9: error (red)
+ *
+ * @param level - Spell level (0 = cantrip, 1-9 = spell levels)
+ * @returns NuxtUI v4 semantic color name
+ *
+ * @example
+ * getSpellLevelColorDetailed(0) // 'neutral' (cantrip - gray)
+ * getSpellLevelColorDetailed(1) // 'success' (green)
+ * getSpellLevelColorDetailed(3) // 'info' (blue)
+ * getSpellLevelColorDetailed(5) // 'primary' (purple)
+ * getSpellLevelColorDetailed(9) // 'error' (red)
+ */
+export function getSpellLevelColorDetailed(level: number): BadgeColor {
+  if (level === 0) return 'neutral' // Cantrip (gray)
+  if (level <= 2) return 'success' // 1-2 (green)
+  if (level <= 4) return 'info' // 3-4 (blue)
+  if (level <= 6) return 'primary' // 5-6 (purple)
+  if (level <= 8) return 'warning' // 7-8 (orange)
+  return 'error' // 9 (red)
 }
 
 /**
