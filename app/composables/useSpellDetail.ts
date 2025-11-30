@@ -212,23 +212,38 @@ export function useSpellDetail(slug: Ref<string> | string): UseSpellDetailReturn
 
   /**
    * Parsed area of effect into structured data
-   * Examples: "20-foot radius" -> { type: "radius", size: 20 }
+   * API returns: { type: "sphere", size: 20 }
    */
   const parsedAreaOfEffect = computed((): { type: string, size: number } | null => {
     const areaOfEffect = entity.value?.area_of_effect
     if (!areaOfEffect) return null
 
-    // Parse patterns like "20-foot radius" or "30-foot cone"
-    const match = areaOfEffect.match(/^(\d+)-foot\s+(.+)$/i)
-    if (!match) return null
-
-    const size = parseInt(match[1] ?? '0', 10)
-    if (isNaN(size)) return null
-
-    return {
-      size,
-      type: match[2] ?? ''
+    // API returns object directly: { type: "sphere", size: 20 }
+    if (typeof areaOfEffect === 'object' && areaOfEffect !== null) {
+      const aoe = areaOfEffect as { type?: string; size?: number }
+      if (aoe.type && typeof aoe.size === 'number') {
+        return {
+          type: aoe.type,
+          size: aoe.size
+        }
+      }
     }
+
+    // Fallback: parse string patterns like "20-foot radius" (legacy format)
+    if (typeof areaOfEffect === 'string') {
+      const match = areaOfEffect.match(/^(\d+)-foot\s+(.+)$/i)
+      if (!match) return null
+
+      const size = parseInt(match[1] ?? '0', 10)
+      if (isNaN(size)) return null
+
+      return {
+        size,
+        type: match[2] ?? ''
+      }
+    }
+
+    return null
   })
 
   return {
