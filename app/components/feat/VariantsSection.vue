@@ -10,6 +10,9 @@ const props = defineProps<{
 const otherVariantsCount = computed(() =>
   props.variants.filter(v => v.slug !== props.currentSlug).length
 )
+
+// Get image path for background images
+const { getImagePath } = useEntityImage()
 </script>
 
 <template>
@@ -25,17 +28,24 @@ const otherVariantsCount = computed(() =>
         v-for="variant in variants"
         :key="variant.slug"
         :to="`/feats/${variant.slug}`"
-        class="block"
+        class="block group"
       >
         <UCard
           :class="[
-            'h-full transition-all',
+            'relative overflow-hidden h-full transition-all',
             variant.slug === currentSlug
               ? 'ring-2 ring-primary bg-primary/5'
-              : 'hover:bg-gray-50 dark:hover:bg-gray-800'
+              : 'hover:shadow-md'
           ]"
         >
-          <div class="text-center py-2">
+          <!-- Background Image Layer -->
+          <div
+            class="absolute inset-0 bg-cover bg-center opacity-10 transition-all duration-300 group-hover:opacity-25 group-hover:scale-110"
+            :style="{ backgroundImage: `url(${getImagePath('feats', variant.slug, 256)})` }"
+          />
+
+          <!-- Content Layer -->
+          <div class="relative z-10 text-center py-2">
             <div class="font-medium text-sm">
               {{ variant.name }}
             </div>
