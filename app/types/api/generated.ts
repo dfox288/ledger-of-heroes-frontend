@@ -3,7 +3,7 @@
  * Do not make direct changes to the file.
  *
  * Generated from: http://host.docker.internal:8080/docs/api.json
- * Generated at: 2025-11-30T16:21:54.742Z
+ * Generated at: 2025-11-30T16:32:09.057Z
  *
  * To regenerate: npm run types:sync
  */
@@ -4761,10 +4761,37 @@ export interface components {
             subcategory: string | null;
             item?: components["schemas"]["ItemResource"];
         };
+        /** ProgressionColumnResource */
+        ProgressionColumnResource: {
+            key: string;
+            label: string;
+            type: string;
+        };
+        /** ProgressionRowResource */
+        ProgressionRowResource: {
+            level: number;
+            proficiency_bonus: string;
+            features: string;
+            sneak_attack?: string;
+            ki_points?: number;
+            martial_arts?: string;
+            rage_damage?: string;
+            rages?: number;
+            cantrips_known?: number;
+            spell_slots_1st?: number;
+            spell_slots_2nd?: number;
+            spell_slots_3rd?: number;
+            spell_slots_4th?: number;
+            spell_slots_5th?: number;
+            spell_slots_6th?: number;
+            spell_slots_7th?: number;
+            spell_slots_8th?: number;
+            spell_slots_9th?: number;
+        };
         /** ProgressionTableResource */
         ProgressionTableResource: {
-            columns: unknown[];
-            rows: string;
+            columns: components["schemas"]["ProgressionColumnResource"][];
+            rows: components["schemas"]["ProgressionRowResource"][];
         };
         /** RaceResource */
         RaceResource: {

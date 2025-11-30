@@ -1,17 +1,16 @@
 <script setup lang="ts">
-// Local type definitions to work around incorrect backend OpenAPI schema (Issue #80)
-// The generated types have `rows: string` but API actually returns an array of objects
-interface ProgressionColumn {
-  key: string
-  label: string
-  type: string // Can be 'integer', 'bonus', 'string', 'dice', etc.
-}
+import type { components } from '~/types/api/generated'
 
-// Row is a dynamic object with known fields + arbitrary dynamic columns
-type ProgressionRow = Record<string, string | number>
+// Use proper types from generated API schema (Issue #80 fixed)
+type ProgressionColumnResource = components['schemas']['ProgressionColumnResource']
+type ProgressionRowResource = components['schemas']['ProgressionRowResource']
+
+// Extend ProgressionRowResource to allow dynamic column access via index signature
+// API returns dynamic columns (e.g., sneak_attack, ki_points) based on class
+type ProgressionRow = ProgressionRowResource & Record<string, string | number | undefined>
 
 interface ProgressionTable {
-  columns: ProgressionColumn[]
+  columns: ProgressionColumnResource[]
   rows: ProgressionRow[]
 }
 
