@@ -47,6 +47,8 @@ gh issue create --repo dfox288/dnd-rulebook-project \
 
 ### Close When Fixed
 
+Issues close automatically when PR merges if the PR body contains `Closes #N`. For manual closure:
+
 ```bash
 gh issue close 42 --repo dfox288/dnd-rulebook-project --comment "Fixed in PR #123"
 ```
@@ -95,16 +97,32 @@ docker compose exec nuxt npm run types:sync # Sync API types from backend
 
 ```
 1. Check skills           → Use Superpower skills (NOT superpowers-laravel)
-2. Check GitHub Issues    → /issue:inbox for assigned tasks
-3. Write tests FIRST      → Watch them fail (TDD mandatory)
-4. Write minimal code     → Make tests pass
-5. Refactor while green   → Clean up
-6. Run test suite         → Smallest relevant suite
-7. Run npm run lint:fix   → Fix linting
-8. Update CHANGELOG.md    → If user-facing
-9. Commit + Push          → Clear message with Claude footer
-10. Close GitHub Issue    → /issue:close N with resolution comment
+2. Check GitHub Issues    → gh issue list for assigned tasks
+3. Create feature branch  → git checkout -b feature/issue-N-short-description
+4. Write tests FIRST      → Watch them fail (TDD mandatory)
+5. Write minimal code     → Make tests pass
+6. Refactor while green   → Clean up
+7. Run test suite         → Smallest relevant suite
+8. Run npm run lint:fix   → Fix linting
+9. Update CHANGELOG.md    → If user-facing
+10. Commit + Push         → Clear message with Claude footer
+11. Create PR             → gh pr create with issue reference
+12. Close GitHub Issue    → Closes automatically via PR merge (or manual close)
 ```
+
+### Branch Naming Convention
+
+```bash
+# Format: feature/issue-{number}-{short-description}
+git checkout -b feature/issue-42-monster-encounter-builder
+git checkout -b fix/issue-99-filter-url-sync-bug
+git checkout -b chore/issue-13-storybook-setup
+```
+
+**Prefixes:**
+- `feature/` - New functionality
+- `fix/` - Bug fixes
+- `chore/` - Maintenance, docs, refactoring
 
 ### For Filter Changes (Additional)
 - Add field to Pinia store (`app/stores/{entity}Filters.ts`)
@@ -181,9 +199,10 @@ Co-Authored-By: Claude <noreply@anthropic.com>"
 **Exception:** Use `size="lg"` for prominent header badges (entity codes like "STR", "PHB").
 
 ### Other Standards
-- **No git worktrees** - Work directly on main branch
-- **Commit immediately** - Don't batch unrelated changes
+- **Feature branches** - Always work on `feature/issue-N-*` branches, never commit directly to main
+- **Commit frequently** - Small, focused commits on feature branch
 - **CHANGELOG.md** - Update for any user-facing change
+- **PR before merge** - All changes go through pull requests
 
 ---
 
@@ -419,8 +438,9 @@ describe('Page Tests', () => {
 
 ## Success Checklist
 
-Before marking features complete:
+Before creating a PR:
 
+- [ ] Working on feature branch (`feature/issue-N-*`)
 - [ ] Tests written FIRST (TDD)
 - [ ] All tests pass (domain suite + full suite)
 - [ ] TypeScript compiles (`npm run typecheck`)
@@ -428,7 +448,8 @@ Before marking features complete:
 - [ ] Browser verification (light/dark mode)
 - [ ] Mobile-responsive
 - [ ] CHANGELOG.md updated (if user-facing)
-- [ ] **Committed immediately**
+- [ ] Commits pushed to feature branch
+- [ ] **PR created with issue reference** (`Closes #N`)
 
 ---
 
@@ -442,4 +463,4 @@ Before marking features complete:
 
 ---
 
-**Branch:** `main` | **Status:** See `docs/PROJECT-STATUS.md`
+**Default Branch:** `main` | **Workflow:** Feature branches → PR → Merge | **Status:** See `docs/PROJECT-STATUS.md`
