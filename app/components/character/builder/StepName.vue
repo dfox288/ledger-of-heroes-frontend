@@ -1,11 +1,107 @@
 <!-- app/components/character/builder/StepName.vue -->
 <script setup lang="ts">
-// Placeholder - will be implemented in Task 4
+import { storeToRefs } from 'pinia'
+import { useCharacterBuilderStore } from '~/stores/characterBuilder'
+
+/**
+ * Step 1: Name Your Character
+ *
+ * Simple name input with validation.
+ * Creates a draft character on the API when user proceeds.
+ */
+
+const store = useCharacterBuilderStore()
+const { name, isLoading, characterId } = storeToRefs(store)
+
+// Validation
+const isValid = computed(() => name.value.trim().length > 0)
+const errorMessage = ref<string | null>(null)
+
+// Create character and proceed
+async function handleCreate() {
+  if (!isValid.value) return
+
+  errorMessage.value = null
+  store.isLoading = true
+
+  try {
+    const response = await apiFetch<{ data: { id: number; name: string } }>('/characters', {
+      method: 'POST',
+      body: { name: name.value.trim() }
+    })
+
+    store.characterId = response.data.id
+    store.nextStep()
+  }
+  catch (err: unknown) {
+    errorMessage.value = err instanceof Error ? err.message : 'Failed to create character'
+  }
+  finally {
+    store.isLoading = false
+  }
+}
+
+// If character already exists, just proceed
+function handleNext() {
+  if (characterId.value) {
+    store.nextStep()
+  }
+  else {
+    handleCreate()
+  }
+}
 </script>
 
 <template>
-  <div>
-    <h2 class="text-xl font-semibold mb-4">Name Your Character</h2>
-    <p class="text-gray-500">Step 1 content coming soon...</p>
+  <div class="max-w-md mx-auto space-y-6">
+    <!-- Header -->
+    <div class="text-center">
+      <h2 class="text-2xl font-bold text-gray-900 dark:text-white">
+        Name Your Character
+      </h2>
+      <p class="mt-2 text-gray-600 dark:text-gray-400">
+        What shall this hero be called?
+      </p>
+    </div>
+
+    <!-- Name Input -->
+    <UFormField
+      label="Character Name"
+      :error="errorMessage"
+      required
+    >
+      <UInput
+        v-model="name"
+        type="text"
+        placeholder="Enter a name..."
+        size="xl"
+        autofocus
+        :disabled="isLoading"
+        @keyup.enter="handleNext"
+      />
+    </UFormField>
+
+    <!-- Helper Text -->
+    <p class="text-sm text-gray-500 dark:text-gray-400 text-center">
+      Choose a name that fits your character's personality and background.
+      You can always change it later.
+    </p>
+
+    <!-- Create Button -->
+    <div class="flex justify-center">
+      <UButton
+        size="lg"
+        :disabled="!isValid"
+        :loading="isLoading"
+        @click="handleNext"
+      >
+        <template v-if="characterId">
+          Continue
+        </template>
+        <template v-else>
+          Begin Your Journey
+        </template>
+      </UButton>
+    </div>
   </div>
 </template>
