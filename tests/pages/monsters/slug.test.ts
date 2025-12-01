@@ -50,8 +50,8 @@ describe('Monster [slug] Page - Reactions Display (#81)', () => {
     const source = pageSource.default
 
     // Template should include reactions in accordion items
-    expect(source).toContain("label: 'Reactions'")
-    expect(source).toContain("slot: 'reactions'")
+    expect(source).toContain('label: \'Reactions\'')
+    expect(source).toContain('slot: \'reactions\'')
   })
 
   it('should access reactions from monster data', async () => {

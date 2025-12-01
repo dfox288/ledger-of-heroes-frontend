@@ -389,7 +389,7 @@ describe('useSpellDetail - data organization logic', () => {
 
       // API returns object directly: { type: "sphere", size: 20 }
       if (typeof areaOfEffect === 'object' && areaOfEffect !== null) {
-        const aoe = areaOfEffect as { type?: string; size?: number }
+        const aoe = areaOfEffect as { type?: string, size?: number }
         if (aoe.type && typeof aoe.size === 'number') {
           return {
             type: aoe.type,

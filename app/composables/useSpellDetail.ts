@@ -223,7 +223,7 @@ export function useSpellDetail(slug: Ref<string> | string): UseSpellDetailReturn
     const aoe = areaOfEffect as unknown
 
     if (typeof aoe === 'object' && aoe !== null) {
-      const parsed = aoe as { type?: string; size?: number }
+      const parsed = aoe as { type?: string, size?: number }
       if (parsed.type && typeof parsed.size === 'number') {
         return {
           type: parsed.type,

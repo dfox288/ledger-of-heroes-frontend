@@ -45,9 +45,9 @@ export interface CharacterSummary {
   name: string
   level: number
   is_complete: boolean
-  race: { id: number; name: string; slug: string } | null
-  class: { id: number; name: string; slug: string } | null
-  background: { id: number; name: string; slug: string } | null
+  race: { id: number, name: string, slug: string } | null
+  class: { id: number, name: string, slug: string } | null
+  background: { id: number, name: string, slug: string } | null
 }
 
 /**
@@ -67,9 +67,9 @@ export interface Character {
   current_hit_points: number | null
   temp_hit_points: number
   armor_class: number | null
-  race: { id: number; name: string; slug: string } | null
-  class: { id: number; name: string; slug: string } | null
-  background: { id: number; name: string; slug: string } | null
+  race: { id: number, name: string, slug: string } | null
+  class: { id: number, name: string, slug: string } | null
+  background: { id: number, name: string, slug: string } | null
   created_at: string
   updated_at: string
 }
@@ -81,8 +81,8 @@ export interface CharacterStats {
   character_id: number
   level: number
   proficiency_bonus: number
-  ability_scores: Record<AbilityScoreCode, { score: number; modifier: number }>
-  saving_throws: Record<AbilityScoreCode, { modifier: number; proficient: boolean }>
+  ability_scores: Record<AbilityScoreCode, { score: number, modifier: number }>
+  saving_throws: Record<AbilityScoreCode, { modifier: number, proficient: boolean }>
   armor_class: number | null
   hit_points: {
     max: number | null

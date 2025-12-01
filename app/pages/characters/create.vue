@@ -18,7 +18,7 @@ useSeoMeta({
 
 // Store
 const store = useCharacterBuilderStore()
-const { currentStep, totalSteps, isFirstStep, isLastStep, isCaster } = storeToRefs(store)
+const { currentStep, isFirstStep, isLastStep, isCaster } = storeToRefs(store)
 
 // Step definitions
 const steps = computed(() => {

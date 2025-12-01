@@ -56,8 +56,8 @@ export const useCharacterBuilderStore = defineStore('characterBuilder', () => {
   // DERIVED STATE
   // ══════════════════════════════════════════════════════════════
   const isCaster = computed(() =>
-    selectedClass.value?.spellcasting_ability !== null &&
-    selectedClass.value?.spellcasting_ability !== undefined
+    selectedClass.value?.spellcasting_ability !== null
+    && selectedClass.value?.spellcasting_ability !== undefined
   )
 
   const validationStatus = computed(() =>
@@ -111,19 +111,17 @@ export const useCharacterBuilderStore = defineStore('characterBuilder', () => {
     error.value = null
 
     try {
-      const response = await apiFetch<{ data: { id: number; name: string } }>('/characters', {
+      const response = await apiFetch<{ data: { id: number, name: string } }>('/characters', {
         method: 'POST',
         body: { name: characterName }
       })
 
       characterId.value = response.data.id
       name.value = characterName
-    }
-    catch (err: unknown) {
+    } catch (err: unknown) {
       error.value = err instanceof Error ? err.message : 'Failed to create character'
       throw err
-    }
-    finally {
+    } finally {
       isLoading.value = false
     }
   }

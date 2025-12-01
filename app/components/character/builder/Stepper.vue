@@ -21,7 +21,10 @@ defineProps<{
       class="flex items-center"
       :class="{ 'text-primary': step.id === currentStep }"
     >
-      <UIcon :name="step.icon" class="w-5 h-5 mr-1" />
+      <UIcon
+        :name="step.icon"
+        class="w-5 h-5 mr-1"
+      />
       <span class="text-sm">{{ step.label }}</span>
     </div>
   </div>

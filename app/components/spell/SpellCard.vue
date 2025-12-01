@@ -44,7 +44,7 @@ const areaOfEffect = computed(() => {
 
   // API returns object directly: { type: "sphere", size: 20 }
   if (typeof aoe === 'object' && aoe !== null) {
-    const parsed = aoe as { type?: string; size?: number }
+    const parsed = aoe as { type?: string, size?: number }
     if (parsed.type && typeof parsed.size === 'number') {
       return { type: parsed.type, size: parsed.size }
     }

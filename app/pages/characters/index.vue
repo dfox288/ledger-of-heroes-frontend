@@ -29,8 +29,7 @@ async function deleteCharacter(id: number) {
   try {
     await apiFetch(`/characters/${id}`, { method: 'DELETE' })
     await refresh()
-  }
-  catch (err) {
+  } catch (err) {
     console.error('Failed to delete character:', err)
   }
 }
@@ -72,7 +71,7 @@ async function deleteCharacter(id: number) {
     <!-- Error State -->
     <UAlert
       v-else-if="error"
-      color="red"
+      color="error"
       icon="i-heroicons-exclamation-triangle"
       title="Failed to load characters"
       :description="error.message"

@@ -26,8 +26,7 @@ async function handleCreate() {
   try {
     await store.createDraft(name.value.trim())
     store.nextStep()
-  }
-  catch (err: unknown) {
+  } catch (err: unknown) {
     errorMessage.value = err instanceof Error ? err.message : 'Failed to create character'
   }
 }
@@ -36,8 +35,7 @@ async function handleCreate() {
 function handleNext() {
   if (characterId.value) {
     store.nextStep()
-  }
-  else {
+  } else {
     handleCreate()
   }
 }
@@ -58,7 +56,7 @@ function handleNext() {
     <!-- Name Input -->
     <UFormField
       label="Character Name"
-      :error="errorMessage"
+      :error="errorMessage ?? undefined"
       required
     >
       <UInput

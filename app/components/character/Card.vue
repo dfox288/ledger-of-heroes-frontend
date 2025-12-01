@@ -11,7 +11,7 @@ defineEmits<{
 }>()
 
 const statusColor = computed(() =>
-  props.character.is_complete ? 'green' : 'yellow'
+  props.character.is_complete ? 'success' : 'warning'
 )
 
 const statusText = computed(() =>
@@ -71,7 +71,7 @@ const statusText = computed(() =>
         </UButton>
         <UButton
           variant="ghost"
-          color="red"
+          color="error"
           size="sm"
           icon="i-heroicons-trash"
           @click="$emit('delete')"

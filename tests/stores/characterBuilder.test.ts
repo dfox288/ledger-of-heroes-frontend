@@ -163,7 +163,7 @@ describe('useCharacterBuilderStore', () => {
 
     it('sets loading state during API call', async () => {
       let resolvePromise: (value: unknown) => void
-      mockApiFetch.mockReturnValue(new Promise(resolve => {
+      mockApiFetch.mockReturnValue(new Promise((resolve) => {
         resolvePromise = resolve
       }))
 
