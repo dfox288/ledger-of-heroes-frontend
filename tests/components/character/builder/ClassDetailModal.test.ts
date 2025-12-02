@@ -14,9 +14,11 @@ const mockClass: CharacterClass = {
   primary_ability: 'STR',
   description: 'A master of martial combat',
   spellcasting_ability: null,
-  saving_throws: [
-    { id: 1, code: 'STR', name: 'Strength' },
-    { id: 2, code: 'CON', name: 'Constitution' }
+  proficiencies: [
+    { id: 1, proficiency_type: 'All Armor', proficiency_type_detail: { name: 'All Armor' } },
+    { id: 2, proficiency_type: 'Shields', proficiency_type_detail: { name: 'Shields' } },
+    { id: 3, proficiency_type: 'Simple Weapons', proficiency_type_detail: { name: 'Simple Weapons' } },
+    { id: 4, proficiency_type: 'Martial Weapons', proficiency_type_detail: { name: 'Martial Weapons' } }
   ],
   sources: []
 } as CharacterClass
@@ -30,9 +32,9 @@ const mockCasterClass: CharacterClass = {
   primary_ability: 'INT',
   description: 'A scholarly magic-user',
   spellcasting_ability: { id: 4, code: 'INT', name: 'Intelligence' },
-  saving_throws: [
-    { id: 4, code: 'INT', name: 'Intelligence' },
-    { id: 5, code: 'WIS', name: 'Wisdom' }
+  proficiencies: [
+    { id: 1, proficiency_type: 'Daggers', proficiency_type_detail: { name: 'Daggers' } },
+    { id: 2, proficiency_type: 'Quarterstaves', proficiency_type_detail: { name: 'Quarterstaves' } }
   ],
   sources: []
 } as CharacterClass
@@ -63,12 +65,12 @@ describe('ClassDetailModal', () => {
     expect(wrapper.text()).toContain('d10')
   })
 
-  it('shows saving throws', async () => {
+  it('shows proficiencies', async () => {
     const wrapper = await mountSuspended(ClassDetailModal, {
       props: { characterClass: mockClass, open: true }
     })
-    expect(wrapper.text()).toContain('Strength')
-    expect(wrapper.text()).toContain('Constitution')
+    expect(wrapper.text()).toContain('All Armor')
+    expect(wrapper.text()).toContain('Shields')
   })
 
   it('shows spellcasting info for caster classes', async () => {

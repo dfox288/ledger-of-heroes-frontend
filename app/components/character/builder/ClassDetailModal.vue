@@ -87,20 +87,28 @@ function handleClose() {
         </div>
       </div>
 
-      <!-- Saving Throws -->
-      <div v-if="characterClass.saving_throws && characterClass.saving_throws.length > 0">
+      <!-- Proficiencies -->
+      <div v-if="characterClass.proficiencies && characterClass.proficiencies.length > 0">
         <h4 class="font-semibold text-gray-900 dark:text-gray-100 mb-2">
-          Saving Throw Proficiencies
+          Proficiencies
         </h4>
         <div class="flex flex-wrap gap-2">
           <UBadge
-            v-for="save in characterClass.saving_throws"
-            :key="save.id"
+            v-for="prof in characterClass.proficiencies.slice(0, 6)"
+            :key="prof.id"
             color="class"
             variant="subtle"
             size="md"
           >
-            {{ save.name }}
+            {{ prof.proficiency_type_detail?.name || prof.proficiency_type }}
+          </UBadge>
+          <UBadge
+            v-if="characterClass.proficiencies.length > 6"
+            color="neutral"
+            variant="subtle"
+            size="md"
+          >
+            +{{ characterClass.proficiencies.length - 6 }} more
           </UBadge>
         </div>
       </div>

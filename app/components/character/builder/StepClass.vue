@@ -5,7 +5,7 @@ import type { CharacterClass } from '~/types'
 import { useCharacterBuilderStore } from '~/stores/characterBuilder'
 
 const store = useCharacterBuilderStore()
-const { selectedClass, classId, isLoading, error } = storeToRefs(store)
+const { selectedClass, isLoading, error } = storeToRefs(store)
 
 // Get API client
 const { apiFetch } = useApi()
@@ -14,7 +14,7 @@ const { apiFetch } = useApi()
 const { data: classes, pending: loadingClasses } = await useAsyncData(
   'builder-classes',
   () => apiFetch<{ data: CharacterClass[] }>('/classes?filter=is_base_class=true&per_page=50'),
-  { transform: response => response.data }
+  { transform: (response: { data: CharacterClass[] }) => response.data }
 )
 
 // Local state

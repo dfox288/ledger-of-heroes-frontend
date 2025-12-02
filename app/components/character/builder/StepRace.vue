@@ -5,13 +5,16 @@ import type { Race } from '~/types'
 import { useCharacterBuilderStore } from '~/stores/characterBuilder'
 
 const store = useCharacterBuilderStore()
-const { selectedRace, raceId, subraceId, isLoading, error } = storeToRefs(store)
+const { selectedRace, isLoading, error } = storeToRefs(store)
+
+// API client
+const { apiFetch } = useApi()
 
 // Fetch all races
 const { data: races, pending: loadingRaces } = await useAsyncData(
   'builder-races',
   () => apiFetch<{ data: Race[] }>('/races?per_page=100'),
-  { transform: response => response.data }
+  { transform: (response: { data: Race[] }) => response.data }
 )
 
 // Local state
@@ -22,16 +25,16 @@ const detailModalOpen = ref(false)
 const detailRace = ref<Race | null>(null)
 
 // Filter to only show base races (not subraces)
-const baseRaces = computed(() => {
+const baseRaces = computed((): Race[] => {
   if (!races.value) return []
-  return races.value.filter(race => !race.parent_race)
+  return races.value.filter((race: Race) => !race.parent_race)
 })
 
 // Apply search filter
-const filteredRaces = computed(() => {
+const filteredRaces = computed((): Race[] => {
   if (!searchQuery.value) return baseRaces.value
   const query = searchQuery.value.toLowerCase()
-  return baseRaces.value.filter(race =>
+  return baseRaces.value.filter((race: Race) =>
     race.name.toLowerCase().includes(query)
   )
 })
@@ -42,10 +45,10 @@ const selectedRaceHasSubraces = computed(() => {
 })
 
 // Get subraces for selected race (from full race data)
-const availableSubraces = computed(() => {
+const availableSubraces = computed((): Race[] => {
   if (!localSelectedRace.value || !races.value) return []
   // Find full subrace objects from the races list
-  return races.value.filter(race =>
+  return races.value.filter((race: Race) =>
     race.parent_race?.id === localSelectedRace.value?.id
   )
 })
@@ -108,7 +111,7 @@ onMounted(() => {
   if (selectedRace.value) {
     // Find the base race if we have a subrace selected
     if (selectedRace.value.parent_race) {
-      localSelectedRace.value = baseRaces.value.find(r => r.id === selectedRace.value?.parent_race?.id) ?? null
+      localSelectedRace.value = baseRaces.value.find((r: Race) => r.id === selectedRace.value?.parent_race?.id) ?? null
       localSelectedSubrace.value = selectedRace.value
     } else {
       localSelectedRace.value = selectedRace.value
