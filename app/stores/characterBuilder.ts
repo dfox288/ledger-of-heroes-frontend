@@ -126,6 +126,71 @@ export const useCharacterBuilderStore = defineStore('characterBuilder', () => {
     }
   }
 
+  /**
+   * Refresh character stats from API
+   */
+  async function refreshStats(): Promise<void> {
+    if (!characterId.value) return
+
+    const response = await apiFetch<{ data: CharacterStats }>(
+      `/characters/${characterId.value}/stats`
+    )
+    characterStats.value = response.data
+  }
+
+  /**
+   * Step 2: Select race (and optional subrace)
+   * API expects race_id to be the subrace ID when a subrace is selected
+   */
+  async function selectRace(race: Race, subrace?: Race): Promise<void> {
+    isLoading.value = true
+    error.value = null
+
+    try {
+      await apiFetch(`/characters/${characterId.value}`, {
+        method: 'PATCH',
+        body: { race_id: subrace?.id ?? race.id }
+      })
+
+      raceId.value = race.id
+      subraceId.value = subrace?.id ?? null
+      selectedRace.value = subrace ?? race
+
+      await refreshStats()
+    } catch (err: unknown) {
+      error.value = 'Failed to save race'
+      throw err
+    } finally {
+      isLoading.value = false
+    }
+  }
+
+  /**
+   * Step 3: Select class
+   * This updates isCaster computed which affects totalSteps
+   */
+  async function selectClass(cls: CharacterClass): Promise<void> {
+    isLoading.value = true
+    error.value = null
+
+    try {
+      await apiFetch(`/characters/${characterId.value}`, {
+        method: 'PATCH',
+        body: { class_id: cls.id }
+      })
+
+      classId.value = cls.id
+      selectedClass.value = cls
+
+      await refreshStats()
+    } catch (err: unknown) {
+      error.value = 'Failed to save class'
+      throw err
+    } finally {
+      isLoading.value = false
+    }
+  }
+
   // ══════════════════════════════════════════════════════════════
   // RESET ACTION
   // ══════════════════════════════════════════════════════════════
@@ -185,6 +250,9 @@ export const useCharacterBuilderStore = defineStore('characterBuilder', () => {
     previousStep,
     goToStep,
     createDraft,
+    refreshStats,
+    selectRace,
+    selectClass,
     reset
   }
 })

@@ -2,6 +2,7 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { setActivePinia, createPinia } from 'pinia'
 import { useCharacterBuilderStore } from '~/stores/characterBuilder'
+import type { Race, CharacterClass } from '~/types'
 
 // Mock apiFetch at module level
 const mockApiFetch = vi.fn()
@@ -185,6 +186,225 @@ describe('useCharacterBuilderStore', () => {
 
       await expect(store.createDraft('Gandalf')).rejects.toThrow('Network error')
       expect(store.error).toBe('Network error')
+    })
+  })
+
+  describe('refreshStats action', () => {
+    it('fetches stats from API when characterId exists', async () => {
+      mockApiFetch.mockResolvedValue({
+        data: {
+          character_id: 42,
+          level: 1,
+          proficiency_bonus: 2,
+          ability_scores: {}
+        }
+      })
+
+      const store = useCharacterBuilderStore()
+      store.characterId = 42
+
+      await store.refreshStats()
+
+      expect(mockApiFetch).toHaveBeenCalledWith('/characters/42/stats')
+      expect(store.characterStats).toEqual({
+        character_id: 42,
+        level: 1,
+        proficiency_bonus: 2,
+        ability_scores: {}
+      })
+    })
+
+    it('does nothing when characterId is null', async () => {
+      const store = useCharacterBuilderStore()
+      store.characterId = null
+
+      await store.refreshStats()
+
+      expect(mockApiFetch).not.toHaveBeenCalled()
+    })
+  })
+
+  describe('selectRace action', () => {
+    const mockRace: Race = {
+      id: 1,
+      name: 'Dwarf',
+      slug: 'dwarf',
+      speed: 25
+    } as Race
+
+    const mockSubrace: Race = {
+      id: 2,
+      name: 'Hill Dwarf',
+      slug: 'hill-dwarf',
+      speed: 25,
+      parent_race: { id: 1, name: 'Dwarf', slug: 'dwarf' }
+    } as Race
+
+    it('calls API with race_id', async () => {
+      mockApiFetch.mockResolvedValue({ data: {} })
+
+      const store = useCharacterBuilderStore()
+      store.characterId = 42
+
+      await store.selectRace(mockRace)
+
+      expect(mockApiFetch).toHaveBeenCalledWith('/characters/42', {
+        method: 'PATCH',
+        body: { race_id: 1 }
+      })
+    })
+
+    it('uses subrace ID when subrace provided', async () => {
+      mockApiFetch.mockResolvedValue({ data: {} })
+
+      const store = useCharacterBuilderStore()
+      store.characterId = 42
+
+      await store.selectRace(mockRace, mockSubrace)
+
+      expect(mockApiFetch).toHaveBeenCalledWith('/characters/42', {
+        method: 'PATCH',
+        body: { race_id: 2 }
+      })
+    })
+
+    it('updates store state after selection', async () => {
+      mockApiFetch.mockResolvedValue({ data: {} })
+
+      const store = useCharacterBuilderStore()
+      store.characterId = 42
+
+      await store.selectRace(mockRace, mockSubrace)
+
+      expect(store.raceId).toBe(1)
+      expect(store.subraceId).toBe(2)
+      expect(store.selectedRace).toEqual(mockSubrace)
+    })
+
+    it('sets loading state during API call', async () => {
+      let resolvePromise: (value: unknown) => void
+      mockApiFetch.mockReturnValue(new Promise((resolve) => {
+        resolvePromise = resolve
+      }))
+
+      const store = useCharacterBuilderStore()
+      store.characterId = 42
+
+      const promise = store.selectRace(mockRace)
+      expect(store.isLoading).toBe(true)
+
+      resolvePromise!({ data: {} })
+      await promise
+
+      expect(store.isLoading).toBe(false)
+    })
+
+    it('sets error on API failure', async () => {
+      mockApiFetch.mockRejectedValue(new Error('Network error'))
+
+      const store = useCharacterBuilderStore()
+      store.characterId = 42
+
+      await expect(store.selectRace(mockRace)).rejects.toThrow('Network error')
+      expect(store.error).toBe('Failed to save race')
+    })
+  })
+
+  describe('selectClass action', () => {
+    const mockClass: CharacterClass = {
+      id: 1,
+      name: 'Fighter',
+      slug: 'fighter',
+      hit_die: 10,
+      is_base_class: true,
+      spellcasting_ability: null
+    } as CharacterClass
+
+    const mockCasterClass: CharacterClass = {
+      id: 2,
+      name: 'Wizard',
+      slug: 'wizard',
+      hit_die: 6,
+      is_base_class: true,
+      spellcasting_ability: { id: 4, code: 'INT', name: 'Intelligence' }
+    } as CharacterClass
+
+    it('calls API with class_id', async () => {
+      mockApiFetch.mockResolvedValue({ data: {} })
+
+      const store = useCharacterBuilderStore()
+      store.characterId = 42
+
+      await store.selectClass(mockClass)
+
+      expect(mockApiFetch).toHaveBeenCalledWith('/characters/42', {
+        method: 'PATCH',
+        body: { class_id: 1 }
+      })
+    })
+
+    it('updates store state after selection', async () => {
+      mockApiFetch.mockResolvedValue({ data: {} })
+
+      const store = useCharacterBuilderStore()
+      store.characterId = 42
+
+      await store.selectClass(mockClass)
+
+      expect(store.classId).toBe(1)
+      expect(store.selectedClass).toEqual(mockClass)
+    })
+
+    it('isCaster is false for non-caster class', async () => {
+      mockApiFetch.mockResolvedValue({ data: {} })
+
+      const store = useCharacterBuilderStore()
+      store.characterId = 42
+
+      await store.selectClass(mockClass)
+
+      expect(store.isCaster).toBe(false)
+      expect(store.totalSteps).toBe(6)
+    })
+
+    it('isCaster is true for caster class', async () => {
+      mockApiFetch.mockResolvedValue({ data: {} })
+
+      const store = useCharacterBuilderStore()
+      store.characterId = 42
+
+      await store.selectClass(mockCasterClass)
+
+      expect(store.isCaster).toBe(true)
+      expect(store.totalSteps).toBe(7)
+    })
+
+    it('sets loading state during API call', async () => {
+      let resolvePromise: (value: unknown) => void
+      mockApiFetch.mockReturnValue(new Promise((resolve) => {
+        resolvePromise = resolve
+      }))
+
+      const store = useCharacterBuilderStore()
+      store.characterId = 42
+
+      const promise = store.selectClass(mockClass)
+      expect(store.isLoading).toBe(true)
+
+      resolvePromise!({ data: {} })
+      await promise
+
+      expect(store.isLoading).toBe(false)
+    })
+
+    it('sets error on API failure', async () => {
+      mockApiFetch.mockRejectedValue(new Error('Network error'))
+
+      const store = useCharacterBuilderStore()
+      store.characterId = 42
+
+      await expect(store.selectClass(mockClass)).rejects.toThrow('Network error')
+      expect(store.error).toBe('Failed to save class')
     })
   })
 })

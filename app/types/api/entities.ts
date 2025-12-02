@@ -101,7 +101,10 @@ export interface CounterFromAPI {
   }>
 }
 
-export interface CharacterClass extends Omit<CharacterClassFromAPI, 'sources' | 'hit_die' | 'counters' | 'is_base_class' | 'subclass_level'> {
+export interface CharacterClass extends Omit<CharacterClassFromAPI, 'id' | 'sources' | 'hit_die' | 'counters' | 'is_base_class' | 'subclass_level' | 'parent_class_id'> {
+  // Override id as number (OpenAPI says string but character API expects number)
+  id: number
+
   // Override with our custom types that have better structure
   sources?: EntitySource[]
 
@@ -113,6 +116,9 @@ export interface CharacterClass extends Omit<CharacterClassFromAPI, 'sources' | 
 
   // Override subclass_level as number (OpenAPI says string but API returns number)
   subclass_level?: number | null
+
+  // Override parent_class_id as number (OpenAPI says string but API returns number)
+  parent_class_id?: number | null
 
   // Override counters with proper type (OpenAPI has unknown[])
   counters?: CounterFromAPI[]
