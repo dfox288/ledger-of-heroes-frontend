@@ -1,6 +1,6 @@
 # Project Status
 
-**D&D 5e Compendium Frontend** | **Last Updated:** 2025-11-29
+**D&D 5e Compendium Frontend** | **Last Updated:** 2025-12-01
 
 ---
 
@@ -8,12 +8,12 @@
 
 | Metric | Count |
 |--------|-------|
-| Test Files | 133 |
-| Test Cases | ~1,842 |
-| Components | 86 |
-| Pages | 31 |
+| Test Files | 137 |
+| Test Cases | ~1,872 |
+| Components | 95 |
+| Pages | 33 |
 | Composables | 18 |
-| Pinia Stores | 8 |
+| Pinia Stores | 9 |
 | Test Helpers | 8 |
 
 ---
@@ -29,6 +29,22 @@
 | Races | ✅ | ✅ | ✅ | 3 filters | ✅ | ✅ |
 | Backgrounds | ✅ | ✅ | ✅ | 2 filters | ✅ | ✅ |
 | Feats | ✅ | ✅ | ✅ | 3 filters | ✅ | ✅ |
+
+---
+
+## Character Builder (WIP)
+
+| Phase | Description | Status | PR |
+|-------|-------------|--------|-----|
+| 1 | Foundation (store, wizard, Step 1) | ✅ Complete | [#2](https://github.com/dfox288/dnd-rulebook-frontend/pull/2) |
+| 2 | Race & Class Selection | 🔲 Pending | - |
+| 3 | Ability Scores | 🔲 Pending | - |
+| 4 | Background & Spells | 🔲 Pending | - |
+| 5 | Review & Character Sheet | 🔲 Pending | - |
+
+**Wizard Steps:** Name ✅ → Race 🔲 → Class 🔲 → Abilities 🔲 → Background 🔲 → Spells 🔲 → Review 🔲
+
+**Issue:** [#89](https://github.com/dfox288/dnd-rulebook-project/issues/89)
 
 ---
 
@@ -113,6 +129,9 @@
 
 ## Recent Milestones
 
+- **2025-12-01:** Character Builder Phase 1 - Wizard foundation with Step 1 (Name) working, 30 new tests
+- **2025-12-01:** Character list page (`/characters`) with CharacterCard component
+- **2025-12-01:** Nitro server routes for character CRUD operations
 - **2025-11-29:** Optional features display (Invocations, Infusions, Disciplines) across all class views
 - **2025-11-29:** API types sync (+899 lines, `data_tables` rename)
 - **2025-11-29:** Comprehensive D&D 5e rules audit of all 13 classes (6 critical issues found)
