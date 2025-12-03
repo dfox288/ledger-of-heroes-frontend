@@ -49,92 +49,94 @@ function handleClose() {
 </script>
 
 <template>
-  <UModal v-if="open" v-model="isOpen">
-    <div class="flex items-center justify-between w-full mb-4">
-      <h2 class="text-xl font-bold">
-        {{ race?.name }}
-      </h2>
-      <UButton
-        data-testid="close-btn"
-        variant="ghost"
-        icon="i-heroicons-x-mark"
-        @click="handleClose"
-      />
-    </div>
+  <UModal v-model:open="isOpen">
+    <template #body>
+      <div class="flex items-center justify-between w-full mb-4">
+        <h2 class="text-xl font-bold">
+          {{ race?.name }}
+        </h2>
+        <UButton
+          data-testid="close-btn"
+          variant="ghost"
+          icon="i-heroicons-x-mark"
+          @click="handleClose"
+        />
+      </div>
 
-    <div
-      v-if="race"
-      class="space-y-6"
-    >
-      <!-- Description -->
-      <p
-        v-if="race.description"
-        class="text-gray-700 dark:text-gray-300"
+      <div
+        v-if="race"
+        class="space-y-6"
       >
-        {{ race.description }}
-      </p>
+        <!-- Description -->
+        <p
+          v-if="race.description"
+          class="text-gray-700 dark:text-gray-300"
+        >
+          {{ race.description }}
+        </p>
 
-      <!-- Basic Info -->
-      <div class="grid grid-cols-2 gap-4">
-        <div>
-          <h4 class="font-semibold text-gray-900 dark:text-gray-100 mb-1">
-            Size
-          </h4>
-          <p class="text-gray-600 dark:text-gray-400">
-            {{ race.size?.name || 'Unknown' }}
-          </p>
-        </div>
-        <div>
-          <h4 class="font-semibold text-gray-900 dark:text-gray-100 mb-1">
-            Speed
-          </h4>
-          <p class="text-gray-600 dark:text-gray-400">
-            {{ speedDisplay.join(', ') || 'Unknown' }}
-          </p>
-        </div>
-      </div>
-
-      <!-- Ability Score Modifiers -->
-      <div v-if="abilityModifiers.length > 0">
-        <h4 class="font-semibold text-gray-900 dark:text-gray-100 mb-2">
-          Ability Score Increases
-        </h4>
-        <div class="flex flex-wrap gap-2">
-          <UBadge
-            v-for="mod in abilityModifiers"
-            :key="mod.id"
-            color="race"
-            variant="subtle"
-            size="md"
-          >
-            {{ mod.ability_score?.name }} +{{ mod.value }}
-          </UBadge>
-        </div>
-      </div>
-
-      <!-- Racial Traits -->
-      <div v-if="race.traits && race.traits.length > 0">
-        <h4 class="font-semibold text-gray-900 dark:text-gray-100 mb-2">
-          Racial Traits
-        </h4>
-        <div class="space-y-3">
-          <div
-            v-for="trait in race.traits"
-            :key="trait.id"
-            class="bg-gray-50 dark:bg-gray-800 rounded-lg p-3"
-          >
-            <h5 class="font-medium text-gray-900 dark:text-gray-100">
-              {{ trait.name }}
-            </h5>
-            <p
-              v-if="trait.description"
-              class="text-sm text-gray-600 dark:text-gray-400 mt-1"
-            >
-              {{ trait.description }}
+        <!-- Basic Info -->
+        <div class="grid grid-cols-2 gap-4">
+          <div>
+            <h4 class="font-semibold text-gray-900 dark:text-gray-100 mb-1">
+              Size
+            </h4>
+            <p class="text-gray-600 dark:text-gray-400">
+              {{ race.size?.name || 'Unknown' }}
+            </p>
+          </div>
+          <div>
+            <h4 class="font-semibold text-gray-900 dark:text-gray-100 mb-1">
+              Speed
+            </h4>
+            <p class="text-gray-600 dark:text-gray-400">
+              {{ speedDisplay.join(', ') || 'Unknown' }}
             </p>
           </div>
         </div>
+
+        <!-- Ability Score Modifiers -->
+        <div v-if="abilityModifiers.length > 0">
+          <h4 class="font-semibold text-gray-900 dark:text-gray-100 mb-2">
+            Ability Score Increases
+          </h4>
+          <div class="flex flex-wrap gap-2">
+            <UBadge
+              v-for="mod in abilityModifiers"
+              :key="mod.id"
+              color="race"
+              variant="subtle"
+              size="md"
+            >
+              {{ mod.ability_score?.name }} +{{ mod.value }}
+            </UBadge>
+          </div>
+        </div>
+
+        <!-- Racial Traits -->
+        <div v-if="race.traits && race.traits.length > 0">
+          <h4 class="font-semibold text-gray-900 dark:text-gray-100 mb-2">
+            Racial Traits
+          </h4>
+          <div class="space-y-3">
+            <div
+              v-for="trait in race.traits"
+              :key="trait.id"
+              class="bg-gray-50 dark:bg-gray-800 rounded-lg p-3"
+            >
+              <h5 class="font-medium text-gray-900 dark:text-gray-100">
+                {{ trait.name }}
+              </h5>
+              <p
+                v-if="trait.description"
+                class="text-sm text-gray-600 dark:text-gray-400 mt-1"
+              >
+                {{ trait.description }}
+              </p>
+            </div>
+          </div>
+        </div>
       </div>
-    </div>
+    </template>
   </UModal>
 </template>

@@ -1,7 +1,8 @@
 // tests/components/character/builder/ClassDetailModal.test.ts
-import { describe, it, expect, beforeEach } from 'vitest'
+import { describe, it, expect, beforeEach, afterEach } from 'vitest'
 import { mountSuspended } from '@nuxt/test-utils/runtime'
 import { setActivePinia, createPinia } from 'pinia'
+import { h } from 'vue'
 import ClassDetailModal from '~/components/character/builder/ClassDetailModal.vue'
 import type { CharacterClass } from '~/types'
 
@@ -39,35 +40,53 @@ const mockCasterClass: CharacterClass = {
   sources: []
 } as CharacterClass
 
+// Stub UModal to avoid teleport issues in tests
+const UModalStub = {
+  name: 'UModal',
+  props: ['open'],
+  emits: ['update:open'],
+  setup(props: { open: boolean }, { slots, emit }: { slots: Record<string, () => unknown>, emit: (event: string, value: boolean) => void }) {
+    return () => props.open ? h('div', { class: 'modal-stub' }, slots.body ? slots.body() : slots.default?.()) : null
+  }
+}
+
 describe('ClassDetailModal', () => {
   beforeEach(() => {
     setActivePinia(createPinia())
   })
 
+  afterEach(() => {
+    document.body.innerHTML = ''
+  })
+
   it('renders when open is true', async () => {
     const wrapper = await mountSuspended(ClassDetailModal, {
-      props: { characterClass: mockClass, open: true }
+      props: { characterClass: mockClass, open: true },
+      global: { stubs: { UModal: UModalStub } }
     })
     expect(wrapper.text()).toContain('Fighter')
   })
 
   it('shows class description', async () => {
     const wrapper = await mountSuspended(ClassDetailModal, {
-      props: { characterClass: mockClass, open: true }
+      props: { characterClass: mockClass, open: true },
+      global: { stubs: { UModal: UModalStub } }
     })
     expect(wrapper.text()).toContain('master of martial combat')
   })
 
   it('shows hit die', async () => {
     const wrapper = await mountSuspended(ClassDetailModal, {
-      props: { characterClass: mockClass, open: true }
+      props: { characterClass: mockClass, open: true },
+      global: { stubs: { UModal: UModalStub } }
     })
     expect(wrapper.text()).toContain('d10')
   })
 
   it('shows proficiencies', async () => {
     const wrapper = await mountSuspended(ClassDetailModal, {
-      props: { characterClass: mockClass, open: true }
+      props: { characterClass: mockClass, open: true },
+      global: { stubs: { UModal: UModalStub } }
     })
     expect(wrapper.text()).toContain('All Armor')
     expect(wrapper.text()).toContain('Shields')
@@ -75,7 +94,8 @@ describe('ClassDetailModal', () => {
 
   it('shows spellcasting info for caster classes', async () => {
     const wrapper = await mountSuspended(ClassDetailModal, {
-      props: { characterClass: mockCasterClass, open: true }
+      props: { characterClass: mockCasterClass, open: true },
+      global: { stubs: { UModal: UModalStub } }
     })
     expect(wrapper.text()).toContain('Spellcasting')
     expect(wrapper.text()).toContain('Intelligence')
@@ -83,14 +103,16 @@ describe('ClassDetailModal', () => {
 
   it('does not show spellcasting section for non-casters', async () => {
     const wrapper = await mountSuspended(ClassDetailModal, {
-      props: { characterClass: mockClass, open: true }
+      props: { characterClass: mockClass, open: true },
+      global: { stubs: { UModal: UModalStub } }
     })
     expect(wrapper.text()).not.toContain('Spellcasting Ability')
   })
 
   it('emits close when close button is clicked', async () => {
     const wrapper = await mountSuspended(ClassDetailModal, {
-      props: { characterClass: mockClass, open: true }
+      props: { characterClass: mockClass, open: true },
+      global: { stubs: { UModal: UModalStub } }
     })
     await wrapper.find('[data-testid="close-btn"]').trigger('click')
     expect(wrapper.emitted('close')).toBeTruthy()
