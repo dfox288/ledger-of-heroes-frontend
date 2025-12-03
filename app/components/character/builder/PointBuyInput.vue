@@ -42,7 +42,7 @@ const pointsRemaining = computed(() => TOTAL_POINTS - pointsSpent.value)
 
 function getCostForNextIncrease(score: number): number {
   if (score >= MAX_SCORE) return 0
-  return POINT_COSTS[score + 1] - POINT_COSTS[score]
+  return (POINT_COSTS[score + 1] ?? 0) - (POINT_COSTS[score] ?? 0)
 }
 
 function canIncrease(key: AbilityKey): boolean {
