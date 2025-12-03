@@ -49,6 +49,10 @@ export const useCharacterBuilderStore = defineStore('characterBuilder', () => {
   // Key: "choice_group:choice_option:choice_item_index"
   const equipmentItemSelections = ref<Map<string, number>>(new Map())
 
+  // Pending spell selections (local state until saved)
+  // Set of spell IDs the user has selected but not yet saved
+  const pendingSpellIds = ref<Set<number>>(new Set())
+
   // ══════════════════════════════════════════════════════════════
   // FETCHED REFERENCE DATA (for display without re-fetching)
   // ══════════════════════════════════════════════════════════════
@@ -387,70 +391,83 @@ export const useCharacterBuilderStore = defineStore('characterBuilder', () => {
   // ══════════════════════════════════════════════════════════════
 
   /**
-   * Learn a spell (add to character's known/prepared spells)
+   * Toggle spell selection (local state only)
+   * Does NOT call API - selections are saved when moving to next step
    */
-  async function learnSpell(spellId: number): Promise<void> {
-    isLoading.value = true
-    error.value = null
-
-    try {
-      console.log('[Store] learnSpell: Adding spell', spellId, 'to character', characterId.value)
-      const response = await apiFetch<{ data: CharacterSpell }>(`/characters/${characterId.value}/spells`, {
-        method: 'POST',
-        body: { spell_id: spellId }
-      })
-
-      console.log('[Store] learnSpell: Success, response:', response.data)
-      selectedSpells.value = [...selectedSpells.value, response.data]
-      console.log('[Store] learnSpell: selectedSpells now has', selectedSpells.value.length, 'spells')
-    } catch (err: unknown) {
-      console.error('[Store] learnSpell: Failed:', err)
-      error.value = 'Failed to learn spell'
-      throw err
-    } finally {
-      isLoading.value = false
+  function toggleSpell(spellId: number): void {
+    const newSet = new Set(pendingSpellIds.value)
+    if (newSet.has(spellId)) {
+      newSet.delete(spellId)
+    } else {
+      newSet.add(spellId)
     }
+    pendingSpellIds.value = newSet
   }
 
   /**
-   * Unlearn a spell (remove from character's known/prepared spells)
+   * Check if a spell is selected (in pending selections)
    */
-  async function unlearnSpell(spellId: number): Promise<void> {
-    isLoading.value = true
-    error.value = null
-
-    try {
-      await apiFetch(`/characters/${characterId.value}/spells/${spellId}`, {
-        method: 'DELETE'
-      })
-
-      selectedSpells.value = selectedSpells.value.filter(s => s.spell?.id !== spellId)
-    } catch (err: unknown) {
-      error.value = 'Failed to unlearn spell'
-      throw err
-    } finally {
-      isLoading.value = false
-    }
+  function isSpellSelected(spellId: number): boolean {
+    return pendingSpellIds.value.has(spellId)
   }
 
   /**
-   * Fetch character's current spells from API
-   * Used to restore state when navigating back to spell step
+   * Initialize pending spells from character's saved spells
+   * Called when entering the spell step
    */
-  async function fetchSelectedSpells(): Promise<void> {
-    if (!characterId.value) {
-      console.log('[Store] fetchSelectedSpells: No characterId')
-      return
-    }
+  async function initializePendingSpells(): Promise<void> {
+    if (!characterId.value) return
 
     try {
-      console.log('[Store] fetchSelectedSpells: Fetching for character', characterId.value)
       const response = await apiFetch<{ data: CharacterSpell[] }>(`/characters/${characterId.value}/spells`)
-      console.log('[Store] fetchSelectedSpells: Got', response.data?.length ?? 0, 'spells')
-      selectedSpells.value = response.data
+      const spellIds = (response.data ?? [])
+        .map(s => s.spell?.id)
+        .filter((id): id is number => id !== undefined)
+      pendingSpellIds.value = new Set(spellIds)
+    } catch {
+      // No existing spells - start with empty set
+      pendingSpellIds.value = new Set()
+    }
+  }
+
+  /**
+   * Save all pending spell selections to the character
+   * Called when moving from spell step to next step
+   * Clears existing spells first to avoid duplicates (like equipment)
+   */
+  async function saveSpellChoices(): Promise<void> {
+    if (!characterId.value) return
+
+    isLoading.value = true
+    error.value = null
+
+    try {
+      // First, clear existing spells
+      const existingResponse = await apiFetch<{ data: CharacterSpell[] }>(
+        `/characters/${characterId.value}/spells`
+      )
+      const existingSpells = existingResponse?.data ?? []
+
+      for (const spell of existingSpells) {
+        if (spell.spell?.id) {
+          await apiFetch(`/characters/${characterId.value}/spells/${spell.spell.id}`, {
+            method: 'DELETE'
+          })
+        }
+      }
+
+      // Then add all pending spells
+      for (const spellId of pendingSpellIds.value) {
+        await apiFetch(`/characters/${characterId.value}/spells`, {
+          method: 'POST',
+          body: { spell_id: spellId }
+        })
+      }
     } catch (err: unknown) {
-      // Silently fail - spells might not be available yet
-      console.warn('[Store] fetchSelectedSpells: Failed:', err)
+      error.value = 'Failed to save spells'
+      throw err
+    } finally {
+      isLoading.value = false
     }
   }
 
@@ -462,8 +479,36 @@ export const useCharacterBuilderStore = defineStore('characterBuilder', () => {
   }
 
   /**
+   * Clear all existing equipment from character
+   * Used before re-saving equipment to avoid duplicates
+   */
+  async function clearExistingEquipment(): Promise<void> {
+    if (!characterId.value) return
+
+    try {
+      // Fetch current equipment
+      const response = await apiFetch<{ data: Array<{ id: number }> }>(
+        `/characters/${characterId.value}/equipment`
+      )
+
+      // Delete each item (if any exist)
+      const items = response?.data ?? []
+      for (const item of items) {
+        await apiFetch(`/characters/${characterId.value}/equipment/${item.id}`, {
+          method: 'DELETE'
+        })
+      }
+    } catch {
+      // If fetching equipment fails (e.g., no equipment yet), continue with save
+      // This is expected for new characters
+    }
+  }
+
+  /**
    * Save all equipment choices to the character
    * Called when moving from equipment step to next step
+   *
+   * When editing, clears existing equipment first to avoid duplicates
    */
   async function saveEquipmentChoices(): Promise<void> {
     if (!characterId.value) return
@@ -472,6 +517,9 @@ export const useCharacterBuilderStore = defineStore('characterBuilder', () => {
     error.value = null
 
     try {
+      // First, clear any existing equipment to avoid duplicates on re-save
+      await clearExistingEquipment()
+
       const allItems = [...(selectedClass.value?.equipment ?? []), ...(selectedBackground.value?.equipment ?? [])]
 
       for (const [group, optionId] of equipmentChoices.value) {
@@ -515,13 +563,22 @@ export const useCharacterBuilderStore = defineStore('characterBuilder', () => {
       const fixedEquipment = allItems.filter(item => !item.is_choice)
       for (const item of fixedEquipment) {
         if (item.item) {
-          // Database item - save with item_id
+          // Database item at top level - save with item_id
           await apiFetch(`/characters/${characterId.value}/equipment`, {
             method: 'POST',
             body: { item_id: item.item.id, quantity: item.quantity }
           })
+        } else if (item.choice_items?.[0]?.item) {
+          // Database item inside choice_items (e.g., Leather armor, Dagger)
+          // These have item: null at top level but item data in choice_items
+          const choiceItem = item.choice_items[0]
+          const choiceItemRef = choiceItem.item! // Safe - already checked above
+          await apiFetch(`/characters/${characterId.value}/equipment`, {
+            method: 'POST',
+            body: { item_id: choiceItemRef.id, quantity: choiceItem.quantity ?? item.quantity }
+          })
         } else if (item.description) {
-          // Flavor item - save with custom_name
+          // Flavor item - save with custom_name (truly has no item reference)
           await apiFetch(`/characters/${characterId.value}/equipment`, {
             method: 'POST',
             body: { custom_name: item.description, quantity: item.quantity }
@@ -599,9 +656,9 @@ export const useCharacterBuilderStore = defineStore('characterBuilder', () => {
         backgroundId.value = character.background.id
       }
 
-      // 6. Fetch spells if caster
+      // 6. Initialize pending spells if caster
       if (selectedClass.value?.spellcasting_ability) {
-        await fetchSelectedSpells()
+        await initializePendingSpells()
       }
 
       // 7. Determine starting step
@@ -662,6 +719,7 @@ export const useCharacterBuilderStore = defineStore('characterBuilder', () => {
     equipmentChoices.value = new Map()
     raceSpellChoices.value = new Map()
     equipmentItemSelections.value = new Map()
+    pendingSpellIds.value = new Set()
     selectedRace.value = null
     selectedClass.value = null
     selectedBackground.value = null
@@ -723,9 +781,11 @@ export const useCharacterBuilderStore = defineStore('characterBuilder', () => {
     getEquipmentItemSelection,
     clearEquipmentItemSelections,
     saveEquipmentChoices,
-    learnSpell,
-    unlearnSpell,
-    fetchSelectedSpells,
+    pendingSpellIds,
+    toggleSpell,
+    isSpellSelected,
+    initializePendingSpells,
+    saveSpellChoices,
     setRaceSpellChoice,
     loadCharacterForEditing,
     updateName,

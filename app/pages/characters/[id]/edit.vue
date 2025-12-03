@@ -104,15 +104,96 @@ const steps = computed(() => {
 
       <!-- Step Content -->
       <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6">
-        <CharacterBuilderStepName v-if="currentStep === 1" />
-        <CharacterBuilderStepRace v-else-if="currentStep === 2" />
-        <CharacterBuilderStepClass v-else-if="currentStep === 3" />
-        <CharacterBuilderStepAbilities v-else-if="currentStep === 4" />
-        <CharacterBuilderStepBackground v-else-if="currentStep === 5" />
-        <CharacterBuilderStepEquipment v-else-if="currentStep === 6" />
+        <!--
+          Each step is wrapped in its own Suspense boundary because several step
+          components use top-level await (useAsyncData). Without Suspense, Vue
+          resolves all async components in the v-if chain simultaneously, causing
+          all steps to render at once.
+        -->
+        <Suspense v-if="currentStep === 1">
+          <CharacterBuilderStepName />
+          <template #fallback>
+            <div class="flex justify-center py-12">
+              <UIcon
+                name="i-heroicons-arrow-path"
+                class="w-8 h-8 animate-spin text-primary"
+              />
+            </div>
+          </template>
+        </Suspense>
+
+        <Suspense v-else-if="currentStep === 2">
+          <CharacterBuilderStepRace />
+          <template #fallback>
+            <div class="flex justify-center py-12">
+              <UIcon
+                name="i-heroicons-arrow-path"
+                class="w-8 h-8 animate-spin text-primary"
+              />
+            </div>
+          </template>
+        </Suspense>
+
+        <Suspense v-else-if="currentStep === 3">
+          <CharacterBuilderStepClass />
+          <template #fallback>
+            <div class="flex justify-center py-12">
+              <UIcon
+                name="i-heroicons-arrow-path"
+                class="w-8 h-8 animate-spin text-primary"
+              />
+            </div>
+          </template>
+        </Suspense>
+
+        <Suspense v-else-if="currentStep === 4">
+          <CharacterBuilderStepAbilities />
+          <template #fallback>
+            <div class="flex justify-center py-12">
+              <UIcon
+                name="i-heroicons-arrow-path"
+                class="w-8 h-8 animate-spin text-primary"
+              />
+            </div>
+          </template>
+        </Suspense>
+
+        <Suspense v-else-if="currentStep === 5">
+          <CharacterBuilderStepBackground />
+          <template #fallback>
+            <div class="flex justify-center py-12">
+              <UIcon
+                name="i-heroicons-arrow-path"
+                class="w-8 h-8 animate-spin text-primary"
+              />
+            </div>
+          </template>
+        </Suspense>
+
+        <Suspense v-else-if="currentStep === 6">
+          <CharacterBuilderStepEquipment />
+          <template #fallback>
+            <div class="flex justify-center py-12">
+              <UIcon
+                name="i-heroicons-arrow-path"
+                class="w-8 h-8 animate-spin text-primary"
+              />
+            </div>
+          </template>
+        </Suspense>
 
         <template v-else-if="currentStep === 7">
-          <CharacterBuilderStepSpells v-if="isCaster" />
+          <Suspense v-if="isCaster">
+            <CharacterBuilderStepSpells />
+            <template #fallback>
+              <div class="flex justify-center py-12">
+                <UIcon
+                  name="i-heroicons-arrow-path"
+                  class="w-8 h-8 animate-spin text-primary"
+                />
+              </div>
+            </template>
+          </Suspense>
           <CharacterBuilderStepReview v-else />
         </template>
 
