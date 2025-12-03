@@ -1,15 +1,175 @@
-<!-- app/components/character/builder/StepBackground.vue -->
 <script setup lang="ts">
-// Placeholder
+import { storeToRefs } from 'pinia'
+import type { Background } from '~/types'
+import { useCharacterBuilderStore } from '~/stores/characterBuilder'
+
+const store = useCharacterBuilderStore()
+const { selectedBackground, isLoading, error } = storeToRefs(store)
+
+// API client
+const { apiFetch } = useApi()
+
+// Fetch all backgrounds
+const { data: backgrounds, pending: loadingBackgrounds } = await useAsyncData(
+  'builder-backgrounds',
+  () => apiFetch<{ data: Background[] }>('/backgrounds?per_page=100'),
+  { transform: (response: { data: Background[] }) => response.data }
+)
+
+// Local state
+const searchQuery = ref('')
+const localSelectedBackground = ref<Background | null>(null)
+const detailModalOpen = ref(false)
+const detailBackground = ref<Background | null>(null)
+
+// Apply search filter
+const filteredBackgrounds = computed((): Background[] => {
+  if (!backgrounds.value) return []
+  if (!searchQuery.value) return backgrounds.value
+  const query = searchQuery.value.toLowerCase()
+  return backgrounds.value.filter((bg: Background) =>
+    bg.name.toLowerCase().includes(query)
+    || bg.feature_name?.toLowerCase().includes(query)
+  )
+})
+
+// Validation: can proceed if background selected
+const canProceed = computed(() => {
+  return localSelectedBackground.value !== null
+})
+
+/**
+ * Handle background card selection
+ */
+function handleBackgroundSelect(background: Background) {
+  localSelectedBackground.value = background
+}
+
+/**
+ * Open detail modal
+ */
+function handleViewDetails(background: Background) {
+  detailBackground.value = background
+  detailModalOpen.value = true
+}
+
+/**
+ * Close detail modal
+ */
+function handleCloseModal() {
+  detailModalOpen.value = false
+  detailBackground.value = null
+}
+
+/**
+ * Confirm selection and call store action
+ */
+async function confirmSelection() {
+  if (!localSelectedBackground.value) return
+
+  try {
+    await store.selectBackground(localSelectedBackground.value)
+    store.nextStep()
+  } catch (err) {
+    console.error('Failed to save background:', err)
+  }
+}
+
+// Initialize from store if already selected
+onMounted(() => {
+  if (selectedBackground.value) {
+    localSelectedBackground.value = selectedBackground.value
+  }
+})
 </script>
 
 <template>
-  <div>
-    <h2 class="text-xl font-semibold mb-4">
-      Choose Your Background
-    </h2>
-    <p class="text-gray-500">
-      Coming soon...
-    </p>
+  <div class="space-y-6">
+    <!-- Header -->
+    <div class="text-center">
+      <h2 class="text-2xl font-bold text-gray-900 dark:text-white">
+        Choose Your Background
+      </h2>
+      <p class="mt-2 text-gray-600 dark:text-gray-400">
+        Your background reveals where you came from and your place in the world
+      </p>
+    </div>
+
+    <!-- Search -->
+    <div class="max-w-md mx-auto">
+      <UInput
+        v-model="searchQuery"
+        placeholder="Search backgrounds..."
+        icon="i-heroicons-magnifying-glass"
+        size="lg"
+      />
+    </div>
+
+    <!-- Error State -->
+    <UAlert
+      v-if="error"
+      color="error"
+      icon="i-heroicons-exclamation-circle"
+      :title="error"
+    />
+
+    <!-- Loading State -->
+    <div
+      v-if="loadingBackgrounds"
+      class="flex justify-center py-12"
+    >
+      <UIcon
+        name="i-heroicons-arrow-path"
+        class="w-8 h-8 animate-spin text-background-500"
+      />
+    </div>
+
+    <!-- Background Grid -->
+    <div
+      v-else
+      class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4"
+    >
+      <CharacterBuilderBackgroundPickerCard
+        v-for="background in filteredBackgrounds"
+        :key="background.id"
+        :background="background"
+        :selected="localSelectedBackground?.id === background.id"
+        @select="handleBackgroundSelect"
+        @view-details="handleViewDetails(background)"
+      />
+    </div>
+
+    <!-- Empty State -->
+    <div
+      v-if="!loadingBackgrounds && filteredBackgrounds.length === 0"
+      class="text-center py-12"
+    >
+      <UIcon
+        name="i-heroicons-magnifying-glass"
+        class="w-12 h-12 text-gray-400 mx-auto mb-4"
+      />
+      <p class="text-gray-600 dark:text-gray-400">
+        No backgrounds found matching "{{ searchQuery }}"
+      </p>
+    </div>
+
+    <!-- Confirm Button -->
+    <div class="flex justify-center pt-4">
+      <UButton
+        size="lg"
+        :disabled="!canProceed || isLoading"
+        :loading="isLoading"
+        @click="confirmSelection"
+      >
+        {{ isLoading ? 'Saving...' : 'Continue with ' + (localSelectedBackground?.name || 'Selection') }}
+      </UButton>
+    </div>
+
+    <!-- Detail Modal -->
+    <CharacterBuilderBackgroundDetailModal
+      :background="detailBackground"
+      :open="detailModalOpen"
+      @close="handleCloseModal"
+    />
   </div>
 </template>
