@@ -20,6 +20,14 @@ useSeoMeta({
 const store = useCharacterBuilderStore()
 const { currentStep, isFirstStep, isLastStep, isCaster } = storeToRefs(store)
 
+// Reset to step 1 if navigating here without an active character (issue #97)
+// This handles the case where step state persisted from a previous session
+onMounted(() => {
+  if (!store.characterId) {
+    store.goToStep(1)
+  }
+})
+
 // Step definitions
 // Non-caster: Name → Race → Class → Abilities → Background → Equipment → Review (7 steps)
 // Caster: Name → Race → Class → Abilities → Background → Equipment → Spells → Review (8 steps)
