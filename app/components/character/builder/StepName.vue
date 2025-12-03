@@ -31,10 +31,24 @@ async function handleCreate() {
   }
 }
 
-// If character already exists, just proceed
+// Update existing character name and proceed
+async function handleUpdate() {
+  if (!isValid.value) return
+
+  errorMessage.value = null
+
+  try {
+    await store.updateName(name.value.trim())
+    store.nextStep()
+  } catch (err: unknown) {
+    errorMessage.value = err instanceof Error ? err.message : 'Failed to update name'
+  }
+}
+
+// Route to create or update based on edit mode
 function handleNext() {
   if (characterId.value) {
-    store.nextStep()
+    handleUpdate()
   } else {
     handleCreate()
   }
