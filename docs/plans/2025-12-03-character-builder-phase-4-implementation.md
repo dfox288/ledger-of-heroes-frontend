@@ -14,6 +14,29 @@
 
 ---
 
+## Progress Tracker
+
+| Task | Description | Status | Commit |
+|------|-------------|--------|--------|
+| 1 | Store - Add Background Action | ✅ Complete | `01c6ac2` |
+| 2 | Store - Update totalSteps | ✅ Complete | `fe932a5` |
+| 3 | BackgroundPickerCard | ✅ Complete | `dd61fcb` |
+| 4 | BackgroundDetailModal | ✅ Complete | `d59ca4b` |
+| 5 | StepBackground | ✅ Complete | `db31f23` |
+| 6 | EquipmentChoiceGroup | ✅ Complete | `8f1b5ee` |
+| 7 | Store - Equipment State | ✅ Complete | `916b3bf` |
+| 8 | StepEquipment | ✅ Complete | `af47863` |
+| 9 | SpellPickerCard | 🔲 Pending | — |
+| 10 | Store - Spell Actions | 🔲 Pending | — |
+| 11 | StepSpells | 🔲 Pending | — |
+| 12 | StepReview | 🔲 Pending | — |
+| 13 | Update Wizard Page | 🔲 Pending | — |
+| 14 | Integration Tests | 🔲 Pending | — |
+
+**Last Updated:** 2025-12-03
+
+---
+
 ## Task 1: Store - Add Background Action
 
 **Files:**
