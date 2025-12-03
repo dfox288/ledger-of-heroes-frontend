@@ -39,6 +39,9 @@ export const useCharacterBuilderStore = defineStore('characterBuilder', () => {
   })
   const abilityScoreMethod = ref<'standard_array' | 'point_buy' | 'manual'>('manual')
 
+  // Equipment choices (choice_group → selected item_id)
+  const equipmentChoices = ref<Map<string, number>>(new Map())
+
   // ══════════════════════════════════════════════════════════════
   // FETCHED REFERENCE DATA (for display without re-fetching)
   // ══════════════════════════════════════════════════════════════
@@ -72,6 +75,37 @@ export const useCharacterBuilderStore = defineStore('characterBuilder', () => {
   const racialBonuses = computed(() =>
     selectedRace.value?.modifiers?.filter(m => m.modifier_category === 'ability_score') ?? []
   )
+
+  // Combined equipment from class + background
+  const allEquipment = computed(() => [
+    ...(selectedClass.value?.equipment ?? []),
+    ...(selectedBackground.value?.equipment ?? [])
+  ])
+
+  // Equipment grouped by choice_group
+  const equipmentByChoiceGroup = computed(() => {
+    const groups = new Map<string, typeof allEquipment.value>()
+    for (const item of allEquipment.value) {
+      if (item.is_choice && item.choice_group) {
+        const existing = groups.get(item.choice_group) ?? []
+        groups.set(item.choice_group, [...existing, item])
+      }
+    }
+    return groups
+  })
+
+  // Fixed equipment (no choice required)
+  const fixedEquipment = computed(() =>
+    allEquipment.value.filter(item => !item.is_choice)
+  )
+
+  // Validation: all equipment choices made?
+  const allEquipmentChoicesMade = computed(() => {
+    for (const [group] of equipmentByChoiceGroup.value) {
+      if (!equipmentChoices.value.has(group)) return false
+    }
+    return true
+  })
 
   // ══════════════════════════════════════════════════════════════
   // LOADING STATE
@@ -252,6 +286,13 @@ export const useCharacterBuilderStore = defineStore('characterBuilder', () => {
     }
   }
 
+  /**
+   * Set equipment choice (local state only)
+   */
+  function setEquipmentChoice(choiceGroup: string, itemId: number): void {
+    equipmentChoices.value.set(choiceGroup, itemId)
+  }
+
   // ══════════════════════════════════════════════════════════════
   // RESET ACTION
   // ══════════════════════════════════════════════════════════════
@@ -271,6 +312,7 @@ export const useCharacterBuilderStore = defineStore('characterBuilder', () => {
       charisma: 10
     }
     abilityScoreMethod.value = 'manual'
+    equipmentChoices.value = new Map()
     selectedRace.value = null
     selectedClass.value = null
     selectedBackground.value = null
@@ -296,6 +338,7 @@ export const useCharacterBuilderStore = defineStore('characterBuilder', () => {
     backgroundId,
     abilityScores,
     abilityScoreMethod,
+    equipmentChoices,
     selectedRace,
     selectedClass,
     selectedBackground,
@@ -306,6 +349,10 @@ export const useCharacterBuilderStore = defineStore('characterBuilder', () => {
     validationStatus,
     isComplete,
     racialBonuses,
+    allEquipment,
+    equipmentByChoiceGroup,
+    fixedEquipment,
+    allEquipmentChoicesMade,
     isLoading,
     error,
     // Actions
@@ -318,6 +365,7 @@ export const useCharacterBuilderStore = defineStore('characterBuilder', () => {
     selectClass,
     saveAbilityScores,
     selectBackground,
+    setEquipmentChoice,
     reset
   }
 })

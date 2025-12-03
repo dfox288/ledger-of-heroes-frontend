@@ -521,4 +521,40 @@ describe('useCharacterBuilderStore', () => {
       expect(store.totalSteps).toBe(8)
     })
   })
+
+  describe('equipment choices', () => {
+    it('setEquipmentChoice updates local state', () => {
+      const store = useCharacterBuilderStore()
+
+      store.setEquipmentChoice('weapon', 101)
+
+      expect(store.equipmentChoices.get('weapon')).toBe(101)
+    })
+
+    it('allEquipmentChoicesMade returns false when choices pending', () => {
+      const store = useCharacterBuilderStore()
+      store.selectedClass = {
+        equipment: [
+          { is_choice: true, choice_group: 'weapon', item_id: 101 },
+          { is_choice: true, choice_group: 'weapon', item_id: 102 }
+        ]
+      } as any
+
+      expect(store.allEquipmentChoicesMade).toBe(false)
+    })
+
+    it('allEquipmentChoicesMade returns true when all choices made', () => {
+      const store = useCharacterBuilderStore()
+      store.selectedClass = {
+        equipment: [
+          { is_choice: true, choice_group: 'weapon', item_id: 101 },
+          { is_choice: true, choice_group: 'weapon', item_id: 102 }
+        ]
+      } as any
+
+      store.setEquipmentChoice('weapon', 101)
+
+      expect(store.allEquipmentChoicesMade).toBe(true)
+    })
+  })
 })
