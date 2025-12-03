@@ -91,12 +91,11 @@ const selectOptions = computed(() =>
       v-else-if="quantity === 1"
       v-model="singleSelection"
       data-test="item-picker"
-      :options="selectOptions"
+      :items="selectOptions"
       :loading="pending"
       :disabled="disabled"
       placeholder="Select item..."
-      option-attribute="label"
-      value-attribute="value"
+      value-key="value"
       class="w-full"
     />
 
@@ -110,12 +109,11 @@ const selectOptions = computed(() =>
         :key="i"
         :model-value="selectedItems[i - 1] ?? null"
         :data-test="`item-picker-${i}`"
-        :options="selectOptions"
+        :items="selectOptions"
         :loading="pending"
         :disabled="disabled"
         :placeholder="`Select item ${i}...`"
-        option-attribute="label"
-        value-attribute="value"
+        value-key="value"
         class="w-full"
         @update:model-value="(val) => {
           const newSelections = [...selectedItems]

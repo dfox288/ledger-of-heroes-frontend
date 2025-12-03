@@ -97,9 +97,21 @@ const cantripsSelected = computed(() => selectedCantrips.value.length)
 const spellsSelected = computed(() => selectedLeveledSpells.value.length)
 
 // Computed Set of selected spell IDs for reactive template binding
-const selectedSpellIds = computed(() =>
-  new Set(selectedSpells.value.map(s => s.spell?.id).filter((id): id is number => id !== undefined))
-)
+const selectedSpellIds = computed(() => {
+  const ids = selectedSpells.value.map(s => s.spell?.id).filter((id): id is number => id !== undefined)
+  if (import.meta.dev) {
+    console.log('[StepSpells] selectedSpellIds computed:', ids)
+  }
+  return new Set(ids)
+})
+
+// Debug: watch for changes to selectedSpells
+if (import.meta.dev) {
+  watch(selectedSpells, (spells) => {
+    console.log('[StepSpells] selectedSpells changed:', spells?.length ?? 0, 'spells')
+    console.log('[StepSpells] spell IDs:', spells?.map(s => s.spell?.id))
+  }, { immediate: true })
+}
 
 // Check if a spell is already selected
 function isSpellSelected(spellId: number): boolean {
