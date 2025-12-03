@@ -26,9 +26,9 @@
 | 6 | EquipmentChoiceGroup | ✅ Complete | `8f1b5ee` |
 | 7 | Store - Equipment State | ✅ Complete | `916b3bf` |
 | 8 | StepEquipment | ✅ Complete | `af47863` |
-| 9 | SpellPickerCard | 🔲 Pending | — |
-| 10 | Store - Spell Actions | 🔲 Pending | — |
-| 11 | StepSpells | 🔲 Pending | — |
+| 9 | SpellPickerCard | ✅ Complete | `9551f54` |
+| 10 | Store - Spell Actions | ✅ Complete | `1096fed` |
+| 11 | StepSpells | ✅ Complete | `bf12c36` |
 | 12 | StepReview | 🔲 Pending | — |
 | 13 | Update Wizard Page | 🔲 Pending | — |
 | 14 | Integration Tests | 🔲 Pending | — |
