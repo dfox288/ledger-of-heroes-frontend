@@ -30,7 +30,7 @@
 | 10 | Store - Spell Actions | ✅ Complete | `1096fed` |
 | 11 | StepSpells | ✅ Complete | `bf12c36` |
 | 12 | StepReview | 🔲 Pending | — |
-| 13 | Update Wizard Page | 🔲 Pending | — |
+| 13 | Update Wizard Page | ✅ Complete | `31ea55b` |
 | 14 | Integration Tests | 🔲 Pending | — |
 
 **Last Updated:** 2025-12-03
