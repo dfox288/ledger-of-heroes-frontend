@@ -106,10 +106,27 @@ export const useCharacterBuilderStore = defineStore('characterBuilder', () => {
     allEquipment.value.filter(item => !item.is_choice)
   )
 
-  // Validation: all equipment choices made?
+  // Enhanced validation: all equipment choices made including item selections
   const allEquipmentChoicesMade = computed(() => {
+    // Check each choice group has a selection
     for (const [group] of equipmentByChoiceGroup.value) {
       if (!equipmentChoices.value.has(group)) return false
+
+      // Find the selected option
+      const selectedOptionId = equipmentChoices.value.get(group)
+      const allItems = [...(selectedClass.value?.equipment ?? []), ...(selectedBackground.value?.equipment ?? [])]
+      const selectedOption = allItems.find(item => item.id === selectedOptionId)
+
+      if (!selectedOption?.choice_items?.length) continue
+
+      // Check all category items have selections
+      for (const [index, choiceItem] of selectedOption.choice_items.entries()) {
+        // Only category items need selection (proficiency_type set, item not set)
+        if (choiceItem.proficiency_type && !choiceItem.item) {
+          const key = `${group}:${selectedOption.choice_option}:${index}`
+          if (!equipmentItemSelections.value.has(key)) return false
+        }
+      }
     }
     return true
   })
