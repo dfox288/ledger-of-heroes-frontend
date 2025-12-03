@@ -45,6 +45,10 @@ export const useCharacterBuilderStore = defineStore('characterBuilder', () => {
   // Race spell choices (choice_group → selected spell_id)
   const raceSpellChoices = ref<Map<string, number>>(new Map())
 
+  // Equipment item selections within compound choices
+  // Key: "choice_group:choice_option:choice_item_index"
+  const equipmentItemSelections = ref<Map<string, number>>(new Map())
+
   // ══════════════════════════════════════════════════════════════
   // FETCHED REFERENCE DATA (for display without re-fetching)
   // ══════════════════════════════════════════════════════════════
@@ -318,6 +322,49 @@ export const useCharacterBuilderStore = defineStore('characterBuilder', () => {
     equipmentChoices.value.set(choiceGroup, itemId)
   }
 
+  /**
+   * Build selection key for equipment item within a compound choice
+   */
+  function makeEquipmentSelectionKey(choiceGroup: string, choiceOption: number, choiceItemIndex: number): string {
+    return `${choiceGroup}:${choiceOption}:${choiceItemIndex}`
+  }
+
+  /**
+   * Set selected item for a compound choice item
+   */
+  function setEquipmentItemSelection(
+    choiceGroup: string,
+    choiceOption: number,
+    choiceItemIndex: number,
+    itemId: number
+  ): void {
+    const key = makeEquipmentSelectionKey(choiceGroup, choiceOption, choiceItemIndex)
+    equipmentItemSelections.value.set(key, itemId)
+  }
+
+  /**
+   * Get selected item for a compound choice item
+   */
+  function getEquipmentItemSelection(
+    choiceGroup: string,
+    choiceOption: number,
+    choiceItemIndex: number
+  ): number | undefined {
+    const key = makeEquipmentSelectionKey(choiceGroup, choiceOption, choiceItemIndex)
+    return equipmentItemSelections.value.get(key)
+  }
+
+  /**
+   * Clear all item selections for a choice group (when user changes option)
+   */
+  function clearEquipmentItemSelections(choiceGroup: string): void {
+    for (const key of equipmentItemSelections.value.keys()) {
+      if (key.startsWith(`${choiceGroup}:`)) {
+        equipmentItemSelections.value.delete(key)
+      }
+    }
+  }
+
   // ══════════════════════════════════════════════════════════════
   // SPELL ACTIONS
   // ══════════════════════════════════════════════════════════════
@@ -393,6 +440,7 @@ export const useCharacterBuilderStore = defineStore('characterBuilder', () => {
     abilityScoreMethod.value = 'manual'
     equipmentChoices.value = new Map()
     raceSpellChoices.value = new Map()
+    equipmentItemSelections.value = new Map()
     selectedRace.value = null
     selectedClass.value = null
     selectedBackground.value = null
@@ -420,6 +468,7 @@ export const useCharacterBuilderStore = defineStore('characterBuilder', () => {
     abilityScoreMethod,
     equipmentChoices,
     raceSpellChoices,
+    equipmentItemSelections,
     selectedRace,
     selectedClass,
     selectedBackground,
@@ -449,6 +498,9 @@ export const useCharacterBuilderStore = defineStore('characterBuilder', () => {
     saveAbilityScores,
     selectBackground,
     setEquipmentChoice,
+    setEquipmentItemSelection,
+    getEquipmentItemSelection,
+    clearEquipmentItemSelections,
     learnSpell,
     unlearnSpell,
     setRaceSpellChoice,

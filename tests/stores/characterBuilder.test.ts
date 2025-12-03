@@ -719,4 +719,47 @@ describe('useCharacterBuilderStore', () => {
       })
     })
   })
+
+  describe('equipment item selections', () => {
+    it('tracks item selections within compound choices', () => {
+      const store = useCharacterBuilderStore()
+
+      store.setEquipmentItemSelection('choice_2', 1, 0, 42)
+
+      expect(store.getEquipmentItemSelection('choice_2', 1, 0)).toBe(42)
+    })
+
+    it('clears item selections on reset', () => {
+      const store = useCharacterBuilderStore()
+      store.setEquipmentItemSelection('choice_2', 1, 0, 42)
+
+      store.reset()
+
+      expect(store.getEquipmentItemSelection('choice_2', 1, 0)).toBeUndefined()
+    })
+
+    it('builds selection key correctly', () => {
+      const store = useCharacterBuilderStore()
+
+      store.setEquipmentItemSelection('choice_2', 1, 0, 42)
+      store.setEquipmentItemSelection('choice_2', 1, 1, 43) // second item in same choice
+
+      expect(store.equipmentItemSelections.get('choice_2:1:0')).toBe(42)
+      expect(store.equipmentItemSelections.get('choice_2:1:1')).toBe(43)
+    })
+
+    it('clears all item selections for a choice group', () => {
+      const store = useCharacterBuilderStore()
+
+      store.setEquipmentItemSelection('choice_2', 1, 0, 42)
+      store.setEquipmentItemSelection('choice_2', 1, 1, 43)
+      store.setEquipmentItemSelection('choice_3', 1, 0, 44)
+
+      store.clearEquipmentItemSelections('choice_2')
+
+      expect(store.getEquipmentItemSelection('choice_2', 1, 0)).toBeUndefined()
+      expect(store.getEquipmentItemSelection('choice_2', 1, 1)).toBeUndefined()
+      expect(store.getEquipmentItemSelection('choice_3', 1, 0)).toBe(44) // other group unaffected
+    })
+  })
 })
