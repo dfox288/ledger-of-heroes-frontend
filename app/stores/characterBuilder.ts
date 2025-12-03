@@ -16,7 +16,7 @@ export const useCharacterBuilderStore = defineStore('characterBuilder', () => {
   // WIZARD NAVIGATION
   // ══════════════════════════════════════════════════════════════
   const currentStep = ref(1)
-  const totalSteps = computed(() => isCaster.value ? 7 : 6)
+  const totalSteps = computed(() => isCaster.value ? 8 : 7)
   const isFirstStep = computed(() => currentStep.value === 1)
   const isLastStep = computed(() => currentStep.value === totalSteps.value)
 

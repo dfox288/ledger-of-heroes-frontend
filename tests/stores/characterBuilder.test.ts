@@ -46,9 +46,9 @@ describe('useCharacterBuilderStore', () => {
       })
     })
 
-    it('calculates totalSteps as 6 for non-casters', () => {
+    it('calculates totalSteps as 7 for non-casters', () => {
       const store = useCharacterBuilderStore()
-      expect(store.totalSteps).toBe(6)
+      expect(store.totalSteps).toBe(7)
     })
 
     it('isFirstStep is true at step 1', () => {
@@ -71,11 +71,11 @@ describe('useCharacterBuilderStore', () => {
 
     it('nextStep does not exceed totalSteps', () => {
       const store = useCharacterBuilderStore()
-      // Go to last step (6 for non-caster)
+      // Go to last step (7 for non-caster)
       for (let i = 0; i < 10; i++) {
         store.nextStep()
       }
-      expect(store.currentStep).toBe(6)
+      expect(store.currentStep).toBe(7)
     })
 
     it('previousStep decrements currentStep', () => {
@@ -364,7 +364,7 @@ describe('useCharacterBuilderStore', () => {
       await store.selectClass(mockClass)
 
       expect(store.isCaster).toBe(false)
-      expect(store.totalSteps).toBe(6)
+      expect(store.totalSteps).toBe(7)
     })
 
     it('isCaster is true for caster class', async () => {
@@ -376,7 +376,7 @@ describe('useCharacterBuilderStore', () => {
       await store.selectClass(mockCasterClass)
 
       expect(store.isCaster).toBe(true)
-      expect(store.totalSteps).toBe(7)
+      expect(store.totalSteps).toBe(8)
     })
 
     it('sets loading state during API call', async () => {
@@ -495,6 +495,30 @@ describe('useCharacterBuilderStore', () => {
       })
       expect(store.backgroundId).toBe(5)
       expect(store.selectedBackground).toEqual(mockBackground)
+    })
+  })
+
+  describe('totalSteps', () => {
+    it('returns 7 for non-casters', () => {
+      const store = useCharacterBuilderStore()
+      store.selectedClass = {
+        id: 1,
+        name: 'Fighter',
+        spellcasting_ability: null
+      } as any
+
+      expect(store.totalSteps).toBe(7)
+    })
+
+    it('returns 8 for casters', () => {
+      const store = useCharacterBuilderStore()
+      store.selectedClass = {
+        id: 2,
+        name: 'Wizard',
+        spellcasting_ability: { id: 4, code: 'INT', name: 'Intelligence' }
+      } as any
+
+      expect(store.totalSteps).toBe(8)
     })
   })
 })
