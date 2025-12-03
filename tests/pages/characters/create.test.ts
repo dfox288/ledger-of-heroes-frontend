@@ -1,26 +1,51 @@
 // tests/pages/characters/create.test.ts
-import { describe, it, expect, beforeEach } from 'vitest'
+import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { mountSuspended } from '@nuxt/test-utils/runtime'
+import { flushPromises } from '@vue/test-utils'
 import { setActivePinia, createPinia } from 'pinia'
-import CharacterCreatePage from '~/pages/characters/create.vue'
+
+// Mock useApi
+const mockApiFetch = vi.fn()
+vi.mock('~/composables/useApi', () => ({
+  useApi: () => ({
+    apiFetch: mockApiFetch
+  })
+}))
 
 describe('CharacterCreatePage', () => {
   beforeEach(() => {
     setActivePinia(createPinia())
+    mockApiFetch.mockReset()
   })
 
-  it('renders the page title', async () => {
-    const wrapper = await mountSuspended(CharacterCreatePage)
-    expect(wrapper.text()).toContain('Create Your Character')
+  it('calls API to create empty character on mount', async () => {
+    mockApiFetch.mockResolvedValueOnce({ data: { id: 42 } })
+
+    const CharacterCreatePage = await import('~/pages/characters/create.vue')
+    await mountSuspended(CharacterCreatePage.default)
+    await flushPromises()
+
+    expect(mockApiFetch).toHaveBeenCalledWith('/characters', {
+      method: 'POST',
+      body: { name: 'New Character' }
+    })
   })
 
-  it('displays the stepper component', async () => {
-    const wrapper = await mountSuspended(CharacterCreatePage)
-    expect(wrapper.findComponent({ name: 'CharacterBuilderStepper' }).exists()).toBe(true)
+  it('shows loading spinner while creating', async () => {
+    // Don't resolve immediately
+    mockApiFetch.mockReturnValue(new Promise(() => {}))
+
+    const CharacterCreatePage = await import('~/pages/characters/create.vue')
+    const wrapper = await mountSuspended(CharacterCreatePage.default)
+
+    expect(wrapper.text()).toContain('Creating character')
   })
 
-  it('shows step 1 content initially', async () => {
-    const wrapper = await mountSuspended(CharacterCreatePage)
-    expect(wrapper.findComponent({ name: 'CharacterBuilderStepName' }).exists()).toBe(true)
+  it('handles API error gracefully', async () => {
+    mockApiFetch.mockRejectedValueOnce(new Error('Failed'))
+
+    const CharacterCreatePage = await import('~/pages/characters/create.vue')
+    // Should not throw
+    await expect(mountSuspended(CharacterCreatePage.default)).resolves.toBeDefined()
   })
 })
