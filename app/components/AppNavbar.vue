@@ -31,6 +31,7 @@ const isCompendiumActive = computed(() => {
 
 // Tools dropdown items (utility tools and generators)
 const toolsItems = ref([
+  { label: 'Character Builder', to: '/characters', icon: 'i-heroicons-user-plus' },
   { label: 'Spell List Creator', to: '/tools/spell-list', icon: 'i-heroicons-sparkles' }
 ])
 
