@@ -530,6 +530,96 @@ export const useCharacterBuilderStore = defineStore('characterBuilder', () => {
   }
 
   // ══════════════════════════════════════════════════════════════
+  // EDIT MODE ACTIONS
+  // ══════════════════════════════════════════════════════════════
+
+  /**
+   * Load an existing character for editing
+   * Fetches character data and populates all wizard state
+   */
+  async function loadCharacterForEditing(id: number): Promise<void> {
+    isLoading.value = true
+    error.value = null
+
+    try {
+      // 1. Fetch character data
+      const response = await apiFetch<{ data: Character }>(`/characters/${id}`)
+      const character = response.data
+
+      // 2. Check level constraint
+      if (character.level > 1) {
+        throw new Error('Only level 1 characters can be edited')
+      }
+
+      // 3. Populate basic fields
+      characterId.value = character.id
+      name.value = character.name
+
+      // 4. Map ability scores (API uses STR/DEX, store uses strength/dexterity)
+      if (character.ability_scores) {
+        abilityScores.value = {
+          strength: character.ability_scores.STR ?? 10,
+          dexterity: character.ability_scores.DEX ?? 10,
+          constitution: character.ability_scores.CON ?? 10,
+          intelligence: character.ability_scores.INT ?? 10,
+          wisdom: character.ability_scores.WIS ?? 10,
+          charisma: character.ability_scores.CHA ?? 10
+        }
+      }
+
+      // 5. Fetch full reference data if relations exist
+      if (character.race) {
+        const raceResponse = await apiFetch<{ data: Race }>(`/races/${character.race.slug}`)
+        selectedRace.value = raceResponse.data
+        raceId.value = character.race.id
+
+        // Handle subrace detection
+        if (raceResponse.data.parent_race) {
+          subraceId.value = character.race.id
+          raceId.value = raceResponse.data.parent_race.id
+        }
+      }
+
+      if (character.class) {
+        const classResponse = await apiFetch<{ data: CharacterClass }>(`/classes/${character.class.slug}`)
+        selectedClass.value = classResponse.data
+        classId.value = character.class.id
+      }
+
+      if (character.background) {
+        const bgResponse = await apiFetch<{ data: Background }>(`/backgrounds/${character.background.slug}`)
+        selectedBackground.value = bgResponse.data
+        backgroundId.value = character.background.id
+      }
+
+      // 6. Fetch spells if caster
+      if (selectedClass.value?.spellcasting_ability) {
+        await fetchSelectedSpells()
+      }
+
+      // 7. Determine starting step
+      currentStep.value = determineStartingStep(character)
+    } catch (err: unknown) {
+      error.value = err instanceof Error ? err.message : 'Failed to load character'
+      throw err
+    } finally {
+      isLoading.value = false
+    }
+  }
+
+  /**
+   * Determine which step to start on based on what's filled
+   */
+  function determineStartingStep(character: Character): number {
+    if (!character.name) return 1
+    if (!character.race) return 2
+    if (!character.class) return 3
+    if (!character.ability_scores?.STR) return 4
+    if (!character.background) return 5
+    return 6 // Start at equipment for mostly-complete characters
+  }
+
+  // ══════════════════════════════════════════════════════════════
   // RESET ACTION
   // ══════════════════════════════════════════════════════════════
   function reset(): void {
@@ -616,6 +706,7 @@ export const useCharacterBuilderStore = defineStore('characterBuilder', () => {
     unlearnSpell,
     fetchSelectedSpells,
     setRaceSpellChoice,
+    loadCharacterForEditing,
     reset
   }
 })
