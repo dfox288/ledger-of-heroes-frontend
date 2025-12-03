@@ -11,6 +11,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **Character Builder Phase 3: Ability Scores (2025-12-03)** - Complete implementation of Step 4
+  - Store action: `saveAbilityScores()` for persisting ability scores and method to API
+  - `ManualInput` - Direct number inputs with 3-20 range validation
+  - `StandardArrayInput` - Dropdown assignment of 15, 14, 13, 12, 10, 8 with mutual exclusion
+  - `PointBuyInput` - +/- buttons with 27 point budget and cost tracking
+  - `StepAbilities` - Parent component with method selector and racial bonus display
+  - 24 tests covering all new components and store action
+  - Design docs: `docs/plans/2025-12-03-character-builder-phase3-abilities-design.md`
+
 - **Character Builder Phase 2: Race & Class Selection (2025-12-02)** - Complete implementation of Steps 2-3
   - Store actions: `selectRace()`, `selectClass()`, `refreshStats()` with full error handling
   - `RacePickerCard` and `ClassPickerCard` - Click-to-select wrapper components with ring highlight

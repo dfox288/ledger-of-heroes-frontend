@@ -1,6 +1,6 @@
 # Project Status
 
-**D&D 5e Compendium Frontend** | **Last Updated:** 2025-12-02
+**D&D 5e Compendium Frontend** | **Last Updated:** 2025-12-03
 
 ---
 
@@ -37,12 +37,12 @@
 | Phase | Description | Status | PR |
 |-------|-------------|--------|-----|
 | 1 | Foundation (store, wizard, Step 1) | ✅ Complete | [#2](https://github.com/dfox288/dnd-rulebook-frontend/pull/2) |
-| 2 | Race & Class Selection | ✅ Complete | - |
-| 3 | Ability Scores | 🔲 Pending | - |
+| 2 | Race & Class Selection | ✅ Complete | [#3](https://github.com/dfox288/dnd-rulebook-frontend/pull/3) |
+| 3 | Ability Scores | ✅ Complete | [#3](https://github.com/dfox288/dnd-rulebook-frontend/pull/3) |
 | 4 | Background & Spells | 🔲 Pending | - |
 | 5 | Review & Character Sheet | 🔲 Pending | - |
 
-**Wizard Steps:** Name ✅ → Race ✅ → Class ✅ → Abilities 🔲 → Background 🔲 → Spells 🔲 → Review 🔲
+**Wizard Steps:** Name ✅ → Race ✅ → Class ✅ → Abilities ✅ → Background 🔲 → Spells 🔲 → Review 🔲
 
 **Issue:** [#89](https://github.com/dfox288/dnd-rulebook-project/issues/89)
 
