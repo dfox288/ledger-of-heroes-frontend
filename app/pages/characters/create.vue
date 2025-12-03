@@ -22,6 +22,8 @@ onMounted(async () => {
       body: { name: 'New Character' }
     })
 
+    // Pass ?new=true so edit page knows to start at step 1 (Name)
+    // This ensures users can replace the placeholder name
     await navigateTo(`/characters/${response.data.id}/edit?new=true`)
   } catch {
     await navigateTo('/characters')
