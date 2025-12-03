@@ -11,6 +11,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **Proficiency Category Filtering (#108) (2025-12-03)** - EquipmentItemPicker supports new proficiency categories
+  - Musical instruments now filter by `proficiency_category = musical_instrument`
+  - Artisan tools now filter by `proficiency_category = artisan_tools`
+  - Gaming sets now filter by `proficiency_category = gaming_set`
+  - Uses `category` field when `subcategory` is null (non-weapon proficiencies)
+  - 7 new tests for proficiency category filtering
+
 - **Custom Equipment Support (#103) (2025-12-03)** - Support for flavor/freetext equipment items
   - Save flavor items (description-only) to character equipment
   - Improved wizard step rendering and selection UX

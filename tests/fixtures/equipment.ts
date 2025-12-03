@@ -29,6 +29,66 @@ export const mockMartialWeaponsProficiencyType = {
 }
 
 /**
+ * Mock proficiency type for musical instruments (uses category-based filtering)
+ */
+export const mockMusicalInstrumentsProficiencyType = {
+  id: 15,
+  slug: 'musical-instrument',
+  name: 'Musical Instrument',
+  category: 'musical_instrument',
+  subcategory: null
+}
+
+/**
+ * Mock proficiency type for artisan tools (uses category-based filtering)
+ */
+export const mockArtisanToolsProficiencyType = {
+  id: 16,
+  slug: 'artisan-tools',
+  name: 'Artisan\'s Tools',
+  category: 'artisan_tools',
+  subcategory: null
+}
+
+/**
+ * Mock proficiency type for gaming sets (uses category-based filtering)
+ */
+export const mockGamingSetProficiencyType = {
+  id: 17,
+  slug: 'gaming-set',
+  name: 'Gaming Set',
+  category: 'gaming_set',
+  subcategory: null
+}
+
+/**
+ * Mock musical instruments for picker dropdown
+ */
+export const mockMusicalInstruments = [
+  { id: 100, name: 'Lute', slug: 'lute', proficiency_category: 'musical_instrument', is_magic: false },
+  { id: 101, name: 'Drum', slug: 'drum', proficiency_category: 'musical_instrument', is_magic: false },
+  { id: 102, name: 'Flute', slug: 'flute', proficiency_category: 'musical_instrument', is_magic: false },
+  { id: 103, name: 'Bagpipes', slug: 'bagpipes', proficiency_category: 'musical_instrument', is_magic: false }
+]
+
+/**
+ * Mock artisan tools for picker dropdown
+ */
+export const mockArtisanTools = [
+  { id: 110, name: 'Smith\'s Tools', slug: 'smiths-tools', proficiency_category: 'artisan_tools', is_magic: false },
+  { id: 111, name: 'Carpenter\'s Tools', slug: 'carpenters-tools', proficiency_category: 'artisan_tools', is_magic: false },
+  { id: 112, name: 'Brewer\'s Supplies', slug: 'brewers-supplies', proficiency_category: 'artisan_tools', is_magic: false }
+]
+
+/**
+ * Mock gaming sets for picker dropdown
+ */
+export const mockGamingSets = [
+  { id: 120, name: 'Dice Set', slug: 'dice-set', proficiency_category: 'gaming_set', is_magic: false },
+  { id: 121, name: 'Playing Card Set', slug: 'playing-card-set', proficiency_category: 'gaming_set', is_magic: false }
+]
+
+/**
  * Mock item for Shield (auto-included in compound choices)
  */
 export const mockShieldItem = {

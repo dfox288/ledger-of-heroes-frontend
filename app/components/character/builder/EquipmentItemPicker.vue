@@ -23,14 +23,17 @@ const { apiFetch } = useApi()
 
 // Build filter for items matching this proficiency type
 const filterString = computed(() => {
-  const subcategory = props.proficiencyType.subcategory
+  const { subcategory, category } = props.proficiencyType
 
-  // Weapons need both melee and ranged variants
+  // Weapons need both melee and ranged variants (subcategory is 'martial' or 'simple')
   if (subcategory === 'martial' || subcategory === 'simple') {
     return `proficiency_category IN [${subcategory}_melee, ${subcategory}_ranged] AND is_magic = false`
   }
 
-  return `proficiency_category = ${subcategory} AND is_magic = false`
+  // Non-weapon proficiency types (musical_instrument, artisan_tools, gaming_set)
+  // use the category field directly when subcategory is null
+  const filterValue = subcategory || category
+  return `proficiency_category = ${filterValue} AND is_magic = false`
 })
 
 // Fetch matching items
