@@ -35,11 +35,20 @@ if (import.meta.dev) {
   console.log('[StepSpells] leveled:', availableSpells.value?.filter(s => s.level > 0).length ?? 0)
 }
 
-// If we didn't get spells (e.g., due to SSR timing), refresh on mount
+// Fetch existing spells and refresh available spells on mount
 onMounted(async () => {
+  // Always fetch the character's current spells to restore highlighting
+  if (characterId.value) {
+    if (import.meta.dev) {
+      console.log('[StepSpells] Fetching selected spells on mount...')
+    }
+    await store.fetchSelectedSpells()
+  }
+
+  // Refresh available spells if needed
   if (characterId.value && (!availableSpells.value || availableSpells.value.length === 0)) {
     if (import.meta.dev) {
-      console.log('[StepSpells] Refreshing spells on mount...')
+      console.log('[StepSpells] Refreshing available spells on mount...')
     }
     await refreshSpells()
   }

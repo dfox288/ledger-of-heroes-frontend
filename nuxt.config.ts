@@ -16,8 +16,8 @@ export default defineNuxtConfig({
   css: ['./app/assets/css/main.css'],
 
   colorMode: {
-    preference: 'system',
-    fallback: 'light',
+    preference: 'dark',
+    fallback: 'dark',
     classSuffix: ''
   },
 

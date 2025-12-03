@@ -69,9 +69,18 @@ const selectOptions = computed(() =>
 
 <template>
   <div class="equipment-item-picker">
+    <!-- Empty state when no items available -->
+    <div
+      v-if="!pending && selectOptions.length === 0"
+      class="text-sm text-amber-600 dark:text-amber-400 italic"
+      data-test="no-items-message"
+    >
+      No items available (data issue - see console)
+    </div>
+
     <!-- Single selection (quantity = 1) -->
     <USelectMenu
-      v-if="quantity === 1"
+      v-else-if="quantity === 1"
       v-model="singleSelection"
       data-test="item-picker"
       :options="selectOptions"

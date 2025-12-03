@@ -430,6 +430,22 @@ export const useCharacterBuilderStore = defineStore('characterBuilder', () => {
   }
 
   /**
+   * Fetch character's current spells from API
+   * Used to restore state when navigating back to spell step
+   */
+  async function fetchSelectedSpells(): Promise<void> {
+    if (!characterId.value) return
+
+    try {
+      const response = await apiFetch<{ data: CharacterSpell[] }>(`/characters/${characterId.value}/spells`)
+      selectedSpells.value = response.data
+    } catch (err: unknown) {
+      // Silently fail - spells might not be available yet
+      console.warn('Failed to fetch character spells:', err)
+    }
+  }
+
+  /**
    * Set race spell choice (local state only, e.g., High Elf cantrip)
    */
   function setRaceSpellChoice(choiceGroup: string, spellId: number): void {
@@ -589,6 +605,7 @@ export const useCharacterBuilderStore = defineStore('characterBuilder', () => {
     saveEquipmentChoices,
     learnSpell,
     unlearnSpell,
+    fetchSelectedSpells,
     setRaceSpellChoice,
     reset
   }
