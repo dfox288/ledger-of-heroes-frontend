@@ -18,6 +18,75 @@ export const mockEquipmentItem: Equipment = {
 }
 
 /**
+ * Mock proficiency type for martial weapons category
+ */
+export const mockMartialWeaponsProficiencyType = {
+  id: 6,
+  slug: 'martial-weapons',
+  name: 'Martial Weapons',
+  category: 'weapon',
+  subcategory: 'martial'
+}
+
+/**
+ * Mock item for Shield (auto-included in compound choices)
+ */
+export const mockShieldItem = {
+  id: 48,
+  name: 'Shield',
+  slug: 'shield',
+  description: 'A shield provides +2 AC',
+  item_type: { id: 7, name: 'Shield' },
+  is_magic: false,
+  sources: []
+}
+
+/**
+ * Mock choice group with choice_items (Fighter-style compound choices)
+ */
+export const mockCompoundChoiceGroup: Equipment[] = [
+  {
+    id: 36,
+    item_id: null,
+    quantity: 2,
+    is_choice: true,
+    choice_group: 'choice_2',
+    choice_option: 1,
+    choice_description: 'Starting equipment choice',
+    proficiency_subcategory: null,
+    description: 'a martial weapon and a shield',
+    choice_items: [
+      { proficiency_type: mockMartialWeaponsProficiencyType, item: undefined, quantity: 1 },
+      { proficiency_type: undefined, item: mockShieldItem, quantity: 1 }
+    ]
+  },
+  {
+    id: 37,
+    item_id: null,
+    quantity: 2,
+    is_choice: true,
+    choice_group: 'choice_2',
+    choice_option: 2,
+    choice_description: 'Starting equipment choice',
+    proficiency_subcategory: null,
+    description: 'two martial weapons',
+    choice_items: [
+      { proficiency_type: mockMartialWeaponsProficiencyType, item: undefined, quantity: 2 }
+    ]
+  }
+]
+
+/**
+ * Mock items for martial weapon picker dropdown
+ */
+export const mockMartialWeapons = [
+  { id: 42, name: 'Longsword', slug: 'longsword', proficiency_category: 'martial_melee', is_magic: false },
+  { id: 43, name: 'Battleaxe', slug: 'battleaxe', proficiency_category: 'martial_melee', is_magic: false },
+  { id: 44, name: 'Warhammer', slug: 'warhammer', proficiency_category: 'martial_melee', is_magic: false },
+  { id: 45, name: 'Longbow', slug: 'longbow', proficiency_category: 'martial_ranged', is_magic: false }
+]
+
+/**
  * Mock equipment choice item
  */
 export const mockEquipmentChoice: Equipment = {
