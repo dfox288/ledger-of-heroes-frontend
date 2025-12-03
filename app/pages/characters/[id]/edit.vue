@@ -15,7 +15,7 @@ useSeoMeta({
 
 // Store
 const store = useCharacterBuilderStore()
-const { currentStep, isFirstStep, isLastStep, isCaster, hasPendingChoices, isLoading, error, name } = storeToRefs(store)
+const { currentStep, isFirstStep, isLastStep, isCaster, hasSubraces, hasPendingChoices, isLoading, error, name } = storeToRefs(store)
 
 // Load character on mount
 onMounted(async () => {
@@ -38,13 +38,22 @@ onMounted(async () => {
 const steps = computed(() => {
   const stepList: Array<{ id: number, name: string, label: string, icon: string }> = [
     { id: 1, name: 'name', label: 'Name', icon: 'i-heroicons-user' },
-    { id: 2, name: 'race', label: 'Race', icon: 'i-heroicons-globe-alt' },
-    { id: 3, name: 'class', label: 'Class', icon: 'i-heroicons-shield-check' },
-    { id: 4, name: 'abilities', label: 'Abilities', icon: 'i-heroicons-chart-bar' },
-    { id: 5, name: 'background', label: 'Background', icon: 'i-heroicons-book-open' }
+    { id: 2, name: 'race', label: 'Race', icon: 'i-heroicons-globe-alt' }
   ]
 
-  let nextId = 6
+  let nextId = 3
+
+  // Conditional subrace step (only when selected race has subraces)
+  if (hasSubraces.value) {
+    stepList.push({ id: nextId++, name: 'subrace', label: 'Subrace', icon: 'i-heroicons-globe-americas' })
+  }
+
+  // Core steps
+  stepList.push(
+    { id: nextId++, name: 'class', label: 'Class', icon: 'i-heroicons-shield-check' },
+    { id: nextId++, name: 'abilities', label: 'Abilities', icon: 'i-heroicons-chart-bar' },
+    { id: nextId++, name: 'background', label: 'Background', icon: 'i-heroicons-book-open' }
+  )
 
   // Conditional proficiency choices step (after background)
   if (hasPendingChoices.value) {
@@ -139,6 +148,18 @@ const currentStepName = computed(() => {
 
         <Suspense v-else-if="currentStepName === 'race'">
           <CharacterBuilderStepRace />
+          <template #fallback>
+            <div class="flex justify-center py-12">
+              <UIcon
+                name="i-heroicons-arrow-path"
+                class="w-8 h-8 animate-spin text-primary"
+              />
+            </div>
+          </template>
+        </Suspense>
+
+        <Suspense v-else-if="currentStepName === 'subrace'">
+          <CharacterBuilderStepSubrace />
           <template #fallback>
             <div class="flex justify-center py-12">
               <UIcon

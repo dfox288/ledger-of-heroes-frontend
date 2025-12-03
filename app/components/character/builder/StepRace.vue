@@ -5,7 +5,7 @@ import type { Race } from '~/types'
 import { useCharacterBuilderStore } from '~/stores/characterBuilder'
 
 const store = useCharacterBuilderStore()
-const { selectedRace, isLoading, error } = storeToRefs(store)
+const { selectedRace, subraceId, isLoading, error } = storeToRefs(store)
 
 // API client
 const { apiFetch } = useApi()
@@ -20,9 +20,12 @@ const { data: races, pending: loadingRaces } = await useAsyncData(
 // Local state
 const searchQuery = ref('')
 const localSelectedRace = ref<Race | null>(null)
-const localSelectedSubrace = ref<Race | null>(null)
 const detailModalOpen = ref(false)
 const detailRace = ref<Race | null>(null)
+
+// Confirmation modal state
+const confirmChangeModalOpen = ref(false)
+const pendingRaceChange = ref<Race | null>(null)
 
 // Filter to only show base races (not subraces)
 const baseRaces = computed((): Race[] => {
@@ -39,40 +42,41 @@ const filteredRaces = computed((): Race[] => {
   )
 })
 
-// Check if selected race has subraces
-const selectedRaceHasSubraces = computed(() => {
-  return localSelectedRace.value?.subraces && localSelectedRace.value.subraces.length > 0
-})
-
-// Get subraces for selected race (from full race data)
-const availableSubraces = computed((): Race[] => {
-  if (!localSelectedRace.value || !races.value) return []
-  // Find full subrace objects from the races list
-  return races.value.filter((race: Race) =>
-    race.parent_race?.id === localSelectedRace.value?.id
-  )
-})
-
-// Validation: can proceed if race selected (and subrace if needed)
-const canProceed = computed(() => {
-  if (!localSelectedRace.value) return false
-  if (selectedRaceHasSubraces.value && !localSelectedSubrace.value) return false
-  return true
-})
+// Validation: can proceed if race selected
+const canProceed = computed(() => !!localSelectedRace.value)
 
 /**
  * Handle race card selection
+ * Shows confirmation if changing race when subrace was previously selected
  */
 function handleRaceSelect(race: Race) {
+  // If changing race and a subrace was previously selected, show confirmation
+  if (subraceId.value && localSelectedRace.value?.id !== race.id) {
+    pendingRaceChange.value = race
+    confirmChangeModalOpen.value = true
+    return
+  }
   localSelectedRace.value = race
-  localSelectedSubrace.value = null // Reset subrace when race changes
 }
 
 /**
- * Handle subrace selection
+ * Confirm the pending race change (clears subrace)
  */
-function handleSubraceSelect(subrace: Race) {
-  localSelectedSubrace.value = subrace
+function confirmRaceChange() {
+  if (pendingRaceChange.value) {
+    store.clearSubrace()
+    localSelectedRace.value = pendingRaceChange.value
+    pendingRaceChange.value = null
+  }
+  confirmChangeModalOpen.value = false
+}
+
+/**
+ * Cancel the pending race change
+ */
+function cancelRaceChange() {
+  pendingRaceChange.value = null
+  confirmChangeModalOpen.value = false
 }
 
 /**
@@ -98,7 +102,7 @@ async function confirmSelection() {
   if (!localSelectedRace.value) return
 
   try {
-    await store.selectRace(localSelectedRace.value, localSelectedSubrace.value ?? undefined)
+    await store.selectRace(localSelectedRace.value)
     store.nextStep()
   } catch (err) {
     // Error is already set in store
@@ -112,7 +116,6 @@ onMounted(() => {
     // Find the base race if we have a subrace selected
     if (selectedRace.value.parent_race) {
       localSelectedRace.value = baseRaces.value.find((r: Race) => r.id === selectedRace.value?.parent_race?.id) ?? null
-      localSelectedSubrace.value = selectedRace.value
     } else {
       localSelectedRace.value = selectedRace.value
     }
@@ -190,49 +193,6 @@ onMounted(() => {
       </p>
     </div>
 
-    <!-- Subrace Selector (appears when race with subraces is selected) -->
-    <div
-      v-if="selectedRaceHasSubraces && availableSubraces.length > 0"
-      class="bg-race-50 dark:bg-race-900/20 rounded-lg p-4"
-    >
-      <h3 class="font-semibold text-gray-900 dark:text-white mb-3">
-        Choose a Subrace for {{ localSelectedRace?.name }}
-      </h3>
-      <div class="grid grid-cols-2 sm:grid-cols-3 gap-3">
-        <button
-          v-for="subrace in availableSubraces"
-          :key="subrace.id"
-          class="p-3 rounded-lg border-2 transition-all text-left"
-          :class="[
-            localSelectedSubrace?.id === subrace.id
-              ? 'border-race-500 bg-race-100 dark:bg-race-900/40'
-              : 'border-gray-200 dark:border-gray-700 hover:border-race-300'
-          ]"
-          @click="handleSubraceSelect(subrace)"
-        >
-          <div class="flex items-center gap-2">
-            <div
-              class="w-4 h-4 rounded-full border-2 flex items-center justify-center"
-              :class="[
-                localSelectedSubrace?.id === subrace.id
-                  ? 'border-race-500 bg-race-500'
-                  : 'border-gray-400'
-              ]"
-            >
-              <UIcon
-                v-if="localSelectedSubrace?.id === subrace.id"
-                name="i-heroicons-check"
-                class="w-3 h-3 text-white"
-              />
-            </div>
-            <span class="font-medium text-gray-900 dark:text-white">
-              {{ subrace.name }}
-            </span>
-          </div>
-        </button>
-      </div>
-    </div>
-
     <!-- Confirm Button -->
     <div class="flex justify-center pt-4">
       <UButton
@@ -241,7 +201,7 @@ onMounted(() => {
         :loading="isLoading"
         @click="confirmSelection"
       >
-        {{ isLoading ? 'Saving...' : 'Continue with ' + (localSelectedSubrace?.name || localSelectedRace?.name || 'Selection') }}
+        {{ isLoading ? 'Saving...' : 'Continue with ' + (localSelectedRace?.name || 'Selection') }}
       </UButton>
     </div>
 
@@ -251,5 +211,43 @@ onMounted(() => {
       :open="detailModalOpen"
       @close="handleCloseModal"
     />
+
+    <!-- Confirmation Modal for changing race when subrace was selected -->
+    <UModal v-model:open="confirmChangeModalOpen">
+      <template #content>
+        <div class="p-6">
+          <div class="flex items-center gap-3 mb-4">
+            <div class="flex-shrink-0 w-10 h-10 rounded-full bg-amber-100 dark:bg-amber-900/30 flex items-center justify-center">
+              <UIcon
+                name="i-heroicons-exclamation-triangle"
+                class="w-5 h-5 text-amber-600 dark:text-amber-400"
+              />
+            </div>
+            <h3 class="text-lg font-semibold text-gray-900 dark:text-white">
+              Change Race?
+            </h3>
+          </div>
+
+          <p class="text-gray-600 dark:text-gray-400 mb-6">
+            Changing your race will clear your subrace selection. You'll need to choose a new subrace if the new race has subraces.
+          </p>
+
+          <div class="flex justify-end gap-3">
+            <UButton
+              variant="outline"
+              @click="cancelRaceChange"
+            >
+              Cancel
+            </UButton>
+            <UButton
+              color="primary"
+              @click="confirmRaceChange"
+            >
+              Continue
+            </UButton>
+          </div>
+        </div>
+      </template>
+    </UModal>
   </div>
 </template>
