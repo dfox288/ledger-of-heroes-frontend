@@ -1,21 +1,39 @@
 <script setup lang="ts">
 import { storeToRefs } from 'pinia'
+import type { Spell } from '~/types'
 import { useCharacterBuilderStore } from '~/stores/characterBuilder'
 
 const store = useCharacterBuilderStore()
 const {
+  characterId,
   name,
   selectedRace,
   selectedClass,
   selectedBackground,
   abilityScores,
   isCaster,
-  selectedSpells,
+  pendingSpellIds,
   fixedEquipment,
   equipmentByChoiceGroup,
   equipmentChoices,
   isLoading
 } = storeToRefs(store)
+
+// Fetch available spells for display in review (only for casters)
+const { apiFetch } = useApi()
+const { data: availableSpells } = await useAsyncData(
+  `review-available-spells-${characterId.value}`,
+  () => isCaster.value
+    ? apiFetch<{ data: Spell[] }>(`/characters/${characterId.value}/available-spells?max_level=1&include_known=true`)
+    : Promise.resolve({ data: [] }),
+  { transform: (response: { data: Spell[] }) => response.data }
+)
+
+// Get selected spells by filtering available spells by pending IDs
+const selectedSpellsForDisplay = computed(() => {
+  if (!availableSpells.value) return []
+  return availableSpells.value.filter(spell => pendingSpellIds.value.has(spell.id))
+})
 
 /**
  * Get the selected item for a choice group
@@ -263,7 +281,7 @@ const abilityLabels = [
 
       <!-- Spells (for casters) -->
       <div
-        v-if="isCaster && selectedSpells.length > 0"
+        v-if="isCaster && selectedSpellsForDisplay.length > 0"
         class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4"
       >
         <div class="flex items-center justify-between mb-3">
@@ -280,21 +298,21 @@ const abilityLabels = [
         </div>
         <ul class="space-y-1 text-gray-700 dark:text-gray-300">
           <li
-            v-for="charSpell in selectedSpells"
-            :key="charSpell.id"
+            v-for="spell in selectedSpellsForDisplay"
+            :key="spell.id"
             class="flex items-center gap-2"
           >
             <UIcon
               name="i-heroicons-sparkles"
               class="w-4 h-4 text-purple-500"
             />
-            <span>{{ charSpell.spell?.name }}</span>
+            <span>{{ spell.name }}</span>
             <UBadge
               size="xs"
               color="neutral"
               variant="subtle"
             >
-              {{ charSpell.spell?.level === 0 ? 'Cantrip' : `Level ${charSpell.spell?.level}` }}
+              {{ spell.level === 0 ? 'Cantrip' : `Level ${spell.level}` }}
             </UBadge>
           </li>
         </ul>

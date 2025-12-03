@@ -11,6 +11,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **Custom Equipment Support (#103) (2025-12-03)** - Support for flavor/freetext equipment items
+  - Save flavor items (description-only) to character equipment
+  - Improved wizard step rendering and selection UX
+  - Equipment step now properly handles custom items without database references
+
 - **Edit Level 1 Characters (#105) (2025-12-03)** - Allow editing characters still at level 1
   - New `/characters/[id]/edit` page loads existing character into wizard
   - "Create Character" now creates empty character and redirects to edit page (unified flow)

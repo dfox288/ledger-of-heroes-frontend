@@ -8,9 +8,7 @@ const {
   characterId,
   selectedRace,
   selectedClass,
-  selectedSpells,
-  selectedCantrips,
-  selectedLeveledSpells,
+  pendingSpellIds,
   raceSpellChoices,
   isLoading,
   error
@@ -27,11 +25,10 @@ const { data: availableSpells, pending: loadingSpells, refresh: refreshSpells } 
   { transform: (response: { data: Spell[] }) => response.data }
 )
 
-// Fetch existing spells and refresh available spells on mount
+// Initialize pending spells from saved character spells on mount
 onMounted(async () => {
-  // Always fetch the character's current spells to restore highlighting
   if (characterId.value) {
-    await store.fetchSelectedSpells()
+    await store.initializePendingSpells()
   }
 
   // Refresh available spells if needed
@@ -78,25 +75,24 @@ const spellsLimit = computed(() => {
   return level1?.spells_known ?? 0
 })
 
-// Current selection counts
-const cantripsSelected = computed(() => selectedCantrips.value.length)
-const spellsSelected = computed(() => selectedLeveledSpells.value.length)
-
-// Computed Set of selected spell IDs for reactive template binding
-// Note: Explicitly convert to Number() to handle potential string IDs from API
-const selectedSpellIds = computed(() => {
-  const ids = selectedSpells.value
-    .map(s => s.spell?.id)
-    .filter((id): id is number => id !== undefined)
-    .map(id => Number(id))
-  return new Set(ids)
+// Current selection counts - computed from pending selections and available spell data
+const cantripsSelected = computed(() => {
+  let count = 0
+  for (const spellId of pendingSpellIds.value) {
+    const spell = availableCantrips.value.find(s => s.id === spellId)
+    if (spell) count++
+  }
+  return count
 })
 
-// Check if a spell is already selected
-function isSpellSelected(spellId: number): boolean {
-  // Ensure consistent type comparison by converting to number
-  return selectedSpellIds.value.has(Number(spellId))
-}
+const spellsSelected = computed(() => {
+  let count = 0
+  for (const spellId of pendingSpellIds.value) {
+    const spell = availableLeveledSpells.value.find(s => s.id === spellId)
+    if (spell) count++
+  }
+  return count
+})
 
 // Check if selection is at limit for cantrips
 const cantripsAtLimit = computed(() =>
@@ -127,17 +123,15 @@ const canProceed = computed(() => {
 })
 
 /**
- * Toggle spell selection
+ * Toggle spell selection (local state only - no API call)
  */
-async function handleSpellToggle(spell: Spell) {
-  if (selectedSpellIds.value.has(spell.id)) {
-    await store.unlearnSpell(spell.id)
-  } else {
-    // Don't allow selecting more than limit
+function handleSpellToggle(spell: Spell) {
+  // Don't allow selecting more than limit
+  if (!store.isSpellSelected(spell.id)) {
     if (spell.level === 0 && cantripsAtLimit.value) return
     if (spell.level > 0 && spellsAtLimit.value) return
-    await store.learnSpell(spell.id)
   }
+  store.toggleSpell(spell.id)
 }
 
 /**
@@ -148,9 +142,10 @@ function handleRaceSpellChoice(choiceGroup: string, spellId: number) {
 }
 
 /**
- * Continue to next step
+ * Save spells and continue to next step
  */
-function handleContinue() {
+async function handleContinue() {
+  await store.saveSpellChoices()
   store.nextStep()
 }
 
@@ -297,8 +292,8 @@ function handleCloseModal() {
             v-for="spell in availableCantrips"
             :key="spell.id"
             :spell="spell"
-            :selected="isSpellSelected(spell.id)"
-            :disabled="!isSpellSelected(spell.id) && cantripsAtLimit"
+            :selected="store.isSpellSelected(spell.id)"
+            :disabled="!store.isSpellSelected(spell.id) && cantripsAtLimit"
             @toggle="handleSpellToggle"
             @view-details="handleViewDetails(spell)"
           />
@@ -328,8 +323,8 @@ function handleCloseModal() {
             v-for="spell in availableLeveledSpells"
             :key="spell.id"
             :spell="spell"
-            :selected="isSpellSelected(spell.id)"
-            :disabled="!isSpellSelected(spell.id) && spellsAtLimit"
+            :selected="store.isSpellSelected(spell.id)"
+            :disabled="!store.isSpellSelected(spell.id) && spellsAtLimit"
             @toggle="handleSpellToggle"
             @view-details="handleViewDetails(spell)"
           />

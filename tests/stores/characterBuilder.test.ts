@@ -583,94 +583,97 @@ describe('useCharacterBuilderStore', () => {
   })
 
   describe('spell actions', () => {
-    describe('learnSpell', () => {
-      it('calls API to learn spell and updates selectedSpells', async () => {
+    describe('toggleSpell', () => {
+      it('adds spell ID to pendingSpellIds when not selected', () => {
+        const store = useCharacterBuilderStore()
+
+        store.toggleSpell(42)
+
+        expect(store.pendingSpellIds.has(42)).toBe(true)
+      })
+
+      it('removes spell ID from pendingSpellIds when already selected', () => {
+        const store = useCharacterBuilderStore()
+        store.pendingSpellIds = new Set([42, 43])
+
+        store.toggleSpell(42)
+
+        expect(store.pendingSpellIds.has(42)).toBe(false)
+        expect(store.pendingSpellIds.has(43)).toBe(true)
+      })
+    })
+
+    describe('isSpellSelected', () => {
+      it('returns true when spell is in pendingSpellIds', () => {
+        const store = useCharacterBuilderStore()
+        store.pendingSpellIds = new Set([42])
+
+        expect(store.isSpellSelected(42)).toBe(true)
+      })
+
+      it('returns false when spell is not in pendingSpellIds', () => {
+        const store = useCharacterBuilderStore()
+        store.pendingSpellIds = new Set([43])
+
+        expect(store.isSpellSelected(42)).toBe(false)
+      })
+    })
+
+    describe('initializePendingSpells', () => {
+      it('populates pendingSpellIds from existing character spells', async () => {
         const store = useCharacterBuilderStore()
         store.characterId = 1
 
-        const mockSpellResponse = {
-          id: 100,
-          spell_id: 42,
-          spell: {
-            id: 42,
-            slug: 'fireball',
-            name: 'Fireball',
-            level: 3
-          },
-          source: 'class'
-        }
+        mockApiFetch.mockResolvedValue({
+          data: [
+            { id: 100, spell: { id: 42 } },
+            { id: 101, spell: { id: 43 } }
+          ]
+        })
 
-        mockApiFetch.mockResolvedValue({ data: mockSpellResponse })
+        await store.initializePendingSpells()
 
-        await store.learnSpell(42)
+        expect(store.pendingSpellIds.has(42)).toBe(true)
+        expect(store.pendingSpellIds.has(43)).toBe(true)
+      })
 
+      it('handles empty spell list gracefully', async () => {
+        const store = useCharacterBuilderStore()
+        store.characterId = 1
+
+        mockApiFetch.mockResolvedValue({ data: [] })
+
+        await store.initializePendingSpells()
+
+        expect(store.pendingSpellIds.size).toBe(0)
+      })
+    })
+
+    describe('saveSpellChoices', () => {
+      it('clears existing spells and saves new selections', async () => {
+        const store = useCharacterBuilderStore()
+        store.characterId = 1
+        store.pendingSpellIds = new Set([42, 43])
+
+        // Mock: GET existing spells, DELETE each, then POST new ones
+        mockApiFetch
+          .mockResolvedValueOnce({ data: [{ spell: { id: 99 } }] }) // GET existing
+          .mockResolvedValueOnce({}) // DELETE 99
+          .mockResolvedValueOnce({}) // POST 42
+          .mockResolvedValueOnce({}) // POST 43
+
+        await store.saveSpellChoices()
+
+        expect(mockApiFetch).toHaveBeenCalledWith('/characters/1/spells')
+        expect(mockApiFetch).toHaveBeenCalledWith('/characters/1/spells/99', { method: 'DELETE' })
         expect(mockApiFetch).toHaveBeenCalledWith('/characters/1/spells', {
           method: 'POST',
           body: { spell_id: 42 }
         })
-        expect(store.selectedSpells).toContainEqual(mockSpellResponse)
-      })
-
-      it('sets loading state during API call', async () => {
-        let resolvePromise: (value: unknown) => void
-        mockApiFetch.mockReturnValue(new Promise((resolve) => {
-          resolvePromise = resolve
-        }))
-
-        const store = useCharacterBuilderStore()
-        store.characterId = 1
-
-        const promise = store.learnSpell(42)
-        expect(store.isLoading).toBe(true)
-
-        resolvePromise!({ data: { id: 100, spell_id: 42, spell: { id: 42 }, source: 'class' } })
-        await promise
-
-        expect(store.isLoading).toBe(false)
-      })
-
-      it('sets error on API failure', async () => {
-        mockApiFetch.mockRejectedValue(new Error('Network error'))
-
-        const store = useCharacterBuilderStore()
-        store.characterId = 1
-
-        await expect(store.learnSpell(42)).rejects.toThrow('Network error')
-        expect(store.error).toBe('Failed to learn spell')
-      })
-    })
-
-    describe('unlearnSpell', () => {
-      it('calls API to unlearn spell and removes from selectedSpells', async () => {
-        const store = useCharacterBuilderStore()
-        store.characterId = 1
-        store.selectedSpells = [
-          { id: 100, spell_id: 42, spell: { id: 42, name: 'Fireball' }, source: 'class' } as any,
-          { id: 101, spell_id: 43, spell: { id: 43, name: 'Magic Missile' }, source: 'class' } as any
-        ]
-
-        mockApiFetch.mockResolvedValue({})
-
-        await store.unlearnSpell(42)
-
-        expect(mockApiFetch).toHaveBeenCalledWith('/characters/1/spells/42', {
-          method: 'DELETE'
+        expect(mockApiFetch).toHaveBeenCalledWith('/characters/1/spells', {
+          method: 'POST',
+          body: { spell_id: 43 }
         })
-        expect(store.selectedSpells).toHaveLength(1)
-        expect(store.selectedSpells[0].spell_id).toBe(43)
-      })
-
-      it('sets error on API failure', async () => {
-        mockApiFetch.mockRejectedValue(new Error('Network error'))
-
-        const store = useCharacterBuilderStore()
-        store.characterId = 1
-        store.selectedSpells = [
-          { id: 100, spell_id: 42, spell: { id: 42 }, source: 'class' } as any
-        ]
-
-        await expect(store.unlearnSpell(42)).rejects.toThrow('Network error')
-        expect(store.error).toBe('Failed to unlearn spell')
       })
     })
 
@@ -690,32 +693,6 @@ describe('useCharacterBuilderStore', () => {
         store.setRaceSpellChoice('high-elf-cantrip', 456)
 
         expect(store.raceSpellChoices.get('high-elf-cantrip')).toBe(456)
-      })
-    })
-
-    describe('spell computed properties', () => {
-      it('selectedCantrips returns only cantrips from selectedSpells', () => {
-        const store = useCharacterBuilderStore()
-        store.selectedSpells = [
-          { id: 1, spell_id: 10, spell: { id: 10, name: 'Fire Bolt', level: 0 }, source: 'class' } as any,
-          { id: 2, spell_id: 20, spell: { id: 20, name: 'Fireball', level: 3 }, source: 'class' } as any,
-          { id: 3, spell_id: 30, spell: { id: 30, name: 'Light', level: 0 }, source: 'class' } as any
-        ]
-
-        expect(store.selectedCantrips).toHaveLength(2)
-        expect(store.selectedCantrips.every(s => s.spell?.level === 0)).toBe(true)
-      })
-
-      it('selectedLeveledSpells returns only non-cantrip spells', () => {
-        const store = useCharacterBuilderStore()
-        store.selectedSpells = [
-          { id: 1, spell_id: 10, spell: { id: 10, name: 'Fire Bolt', level: 0 }, source: 'class' } as any,
-          { id: 2, spell_id: 20, spell: { id: 20, name: 'Fireball', level: 3 }, source: 'class' } as any,
-          { id: 3, spell_id: 30, spell: { id: 30, name: 'Magic Missile', level: 1 }, source: 'class' } as any
-        ]
-
-        expect(store.selectedLeveledSpells).toHaveLength(2)
-        expect(store.selectedLeveledSpells.every(s => (s.spell?.level ?? 0) > 0)).toBe(true)
       })
     })
   })
@@ -863,6 +840,72 @@ describe('useCharacterBuilderStore', () => {
       expect(store.getEquipmentItemSelection('choice_2', 1, 0)).toBeUndefined()
       expect(store.getEquipmentItemSelection('choice_2', 1, 1)).toBeUndefined()
       expect(store.getEquipmentItemSelection('choice_3', 1, 0)).toBe(44) // other group unaffected
+    })
+  })
+
+  describe('saveEquipmentChoices', () => {
+    it('saves fixed equipment with item_id', async () => {
+      const store = useCharacterBuilderStore()
+      store.characterId = 42
+      store.selectedClass = {
+        name: 'Fighter',
+        equipment: [
+          { id: 1, item: { id: 100, name: 'Chain Mail' }, quantity: 1, is_choice: false }
+        ]
+      } as any
+      store.selectedBackground = { name: 'Soldier', equipment: [] } as any
+
+      // Mock returns empty equipment list for clearing, then success for POST
+      mockApiFetch.mockResolvedValue({ data: [] })
+
+      await store.saveEquipmentChoices()
+
+      // First call fetches existing equipment for clearing
+      expect(mockApiFetch).toHaveBeenCalledWith('/characters/42/equipment')
+
+      // Then saves the equipment
+      expect(mockApiFetch).toHaveBeenCalledWith('/characters/42/equipment', {
+        method: 'POST',
+        body: { item_id: 100, quantity: 1 }
+      })
+    })
+
+    it('saves flavor equipment without item_id using custom_name', async () => {
+      const store = useCharacterBuilderStore()
+      store.characterId = 42
+      store.selectedClass = { name: 'Fighter', equipment: [] } as any
+      store.selectedBackground = {
+        name: 'Acolyte',
+        equipment: [
+          // Flavor item - no item_id, just description
+          { id: 118, item: null, description: 'holy symbol (a gift to you when you entered the priesthood)', quantity: 1, is_choice: false },
+          // Regular item with item_id
+          { id: 121, item: { id: 455, name: 'Cloth-of-gold vestments' }, quantity: 1, is_choice: false }
+        ]
+      } as any
+
+      // Mock returns empty equipment list for clearing, then success for POSTs
+      mockApiFetch.mockResolvedValue({ data: [] })
+
+      await store.saveEquipmentChoices()
+
+      // Should: 1) GET to check existing equipment, 2) POST flavor item, 3) POST regular item
+      expect(mockApiFetch).toHaveBeenCalledTimes(3)
+
+      // First call fetches existing equipment for clearing
+      expect(mockApiFetch).toHaveBeenCalledWith('/characters/42/equipment')
+
+      // Flavor item saved with custom_name
+      expect(mockApiFetch).toHaveBeenCalledWith('/characters/42/equipment', {
+        method: 'POST',
+        body: { custom_name: 'holy symbol (a gift to you when you entered the priesthood)', quantity: 1 }
+      })
+
+      // Regular item saved with item_id
+      expect(mockApiFetch).toHaveBeenCalledWith('/characters/42/equipment', {
+        method: 'POST',
+        body: { item_id: 455, quantity: 1 }
+      })
     })
   })
 })
