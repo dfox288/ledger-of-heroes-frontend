@@ -81,6 +81,7 @@ const steps = computed(() => {
         :steps="steps"
         :current-step="currentStep"
         class="mb-8"
+        @step-click="store.goToStep"
       />
 
       <!-- Step Content -->
