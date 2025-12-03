@@ -394,13 +394,17 @@ export const useCharacterBuilderStore = defineStore('characterBuilder', () => {
     error.value = null
 
     try {
+      console.log('[Store] learnSpell: Adding spell', spellId, 'to character', characterId.value)
       const response = await apiFetch<{ data: CharacterSpell }>(`/characters/${characterId.value}/spells`, {
         method: 'POST',
         body: { spell_id: spellId }
       })
 
+      console.log('[Store] learnSpell: Success, response:', response.data)
       selectedSpells.value = [...selectedSpells.value, response.data]
+      console.log('[Store] learnSpell: selectedSpells now has', selectedSpells.value.length, 'spells')
     } catch (err: unknown) {
+      console.error('[Store] learnSpell: Failed:', err)
       error.value = 'Failed to learn spell'
       throw err
     } finally {
@@ -434,14 +438,19 @@ export const useCharacterBuilderStore = defineStore('characterBuilder', () => {
    * Used to restore state when navigating back to spell step
    */
   async function fetchSelectedSpells(): Promise<void> {
-    if (!characterId.value) return
+    if (!characterId.value) {
+      console.log('[Store] fetchSelectedSpells: No characterId')
+      return
+    }
 
     try {
+      console.log('[Store] fetchSelectedSpells: Fetching for character', characterId.value)
       const response = await apiFetch<{ data: CharacterSpell[] }>(`/characters/${characterId.value}/spells`)
+      console.log('[Store] fetchSelectedSpells: Got', response.data?.length ?? 0, 'spells')
       selectedSpells.value = response.data
     } catch (err: unknown) {
       // Silently fail - spells might not be available yet
-      console.warn('Failed to fetch character spells:', err)
+      console.warn('[Store] fetchSelectedSpells: Failed:', err)
     }
   }
 

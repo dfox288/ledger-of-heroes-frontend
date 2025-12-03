@@ -44,6 +44,14 @@ const { data: itemsResponse, pending } = await useAsyncData(
 
 const items = computed(() => itemsResponse.value?.data ?? [])
 
+// Debug: log items when they change
+if (import.meta.dev) {
+  watch(itemsResponse, (response) => {
+    console.log('[EquipmentItemPicker] Response:', response)
+    console.log('[EquipmentItemPicker] Items count:', response?.data?.length ?? 0)
+  }, { immediate: true })
+}
+
 // For quantity > 1, we need multiple selections
 const selectedItems = computed({
   get: () => props.modelValue,
