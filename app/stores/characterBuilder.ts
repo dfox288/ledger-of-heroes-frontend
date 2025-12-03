@@ -356,7 +356,7 @@ export const useCharacterBuilderStore = defineStore('characterBuilder', () => {
         method: 'DELETE'
       })
 
-      selectedSpells.value = selectedSpells.value.filter(s => s.spell_id !== spellId)
+      selectedSpells.value = selectedSpells.value.filter(s => s.spell?.id !== spellId)
     } catch (err: unknown) {
       error.value = 'Failed to unlearn spell'
       throw err

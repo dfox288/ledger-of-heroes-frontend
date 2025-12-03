@@ -50,13 +50,20 @@ const raceSpellChoiceGroups = computed(() => {
   return groups
 })
 
-// Spell limits from characterStats
-const cantripsLimit = computed(() =>
-  characterStats.value?.spellcasting?.cantrips_known ?? 0
-)
-const spellsLimit = computed(() =>
-  characterStats.value?.spellcasting?.spells_known ?? 0
-)
+// Spell limits from class level progression
+// These values come from the class's level_progression data at level 1
+const cantripsLimit = computed(() => {
+  const progression = selectedClass.value?.level_progression
+  if (!progression || progression.length === 0) return 0
+  const level1 = progression.find(p => p.level === 1)
+  return level1?.cantrips_known ?? 0
+})
+const spellsLimit = computed(() => {
+  const progression = selectedClass.value?.level_progression
+  if (!progression || progression.length === 0) return 0
+  const level1 = progression.find(p => p.level === 1)
+  return level1?.spells_known ?? 0
+})
 
 // Current selection counts
 const cantripsSelected = computed(() => selectedCantrips.value.length)
@@ -64,7 +71,7 @@ const spellsSelected = computed(() => selectedLeveledSpells.value.length)
 
 // Check if a spell is already selected
 function isSpellSelected(spellId: number): boolean {
-  return selectedSpells.value.some(s => s.spell_id === spellId)
+  return selectedSpells.value.some(s => s.spell?.id === spellId)
 }
 
 // Check if selection is at limit for cantrips
