@@ -424,6 +424,24 @@ describe('useCharacterBuilderStore', () => {
         charisma: 8
       })
 
+      // Verify API call parameters
+      expect(mockApiFetch).toHaveBeenCalledWith('/characters/1', {
+        method: 'PATCH',
+        body: {
+          ability_score_method: 'point_buy',
+          strength: 14,
+          dexterity: 12,
+          constitution: 15,
+          intelligence: 10,
+          wisdom: 13,
+          charisma: 8
+        }
+      })
+
+      // Verify refreshStats was called
+      expect(mockApiFetch).toHaveBeenCalledWith('/characters/1/stats')
+
+      // Verify state was updated
       expect(store.abilityScores).toEqual({
         strength: 14,
         dexterity: 12,
