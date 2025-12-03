@@ -19,6 +19,7 @@ export const useCharacterBuilderStore = defineStore('characterBuilder', () => {
   const currentStep = ref(1)
   const totalSteps = computed(() => {
     let steps = 7 // Base: Name, Race, Class, Abilities, Background, Equipment, Review
+    if (hasSubraces.value) steps++ // Subrace step (after Race)
     if (hasPendingChoices.value) steps++
     if (isCaster.value) steps++
     return steps
@@ -102,6 +103,11 @@ export const useCharacterBuilderStore = defineStore('characterBuilder', () => {
 
     return cantrips > 0 || spells > 0
   })
+
+  // Does the selected race have subraces?
+  const hasSubraces = computed(() =>
+    (selectedRace.value?.subraces?.length ?? 0) > 0
+  )
 
   // Does this character have any proficiency choice groups?
   // Returns true if ANY choice groups exist (whether or not choices have been made)
@@ -288,8 +294,8 @@ export const useCharacterBuilderStore = defineStore('characterBuilder', () => {
   }
 
   /**
-   * Step 2: Select race (and optional subrace)
-   * API expects race_id to be the subrace ID when a subrace is selected
+   * Step 2: Select race (base race only, subrace selected in separate step)
+   * API expects race_id to be the base race ID at this point
    */
   async function selectRace(race: Race, subrace?: Race): Promise<void> {
     isLoading.value = true
@@ -312,6 +318,39 @@ export const useCharacterBuilderStore = defineStore('characterBuilder', () => {
     } finally {
       isLoading.value = false
     }
+  }
+
+  /**
+   * Step 2b: Select subrace (separate step after race selection)
+   * API receives the subrace ID as race_id (overwrites base race)
+   */
+  async function selectSubrace(subrace: Race): Promise<void> {
+    isLoading.value = true
+    error.value = null
+
+    try {
+      await apiFetch(`/characters/${characterId.value}`, {
+        method: 'PATCH',
+        body: { race_id: subrace.id }
+      })
+
+      subraceId.value = subrace.id
+      selectedRace.value = subrace
+
+      await refreshStats()
+    } catch (err: unknown) {
+      error.value = 'Failed to save subrace'
+      throw err
+    } finally {
+      isLoading.value = false
+    }
+  }
+
+  /**
+   * Clear subrace selection (used when user changes race)
+   */
+  function clearSubrace(): void {
+    subraceId.value = null
   }
 
   /**
@@ -786,13 +825,20 @@ export const useCharacterBuilderStore = defineStore('characterBuilder', () => {
       // 5. Fetch full reference data if relations exist
       if (character.race) {
         const raceResponse = await apiFetch<{ data: Race }>(`/races/${character.race.slug}`)
-        selectedRace.value = raceResponse.data
-        raceId.value = character.race.id
+        const loadedRace = raceResponse.data
 
-        // Handle subrace detection
-        if (raceResponse.data.parent_race) {
-          subraceId.value = character.race.id
-          raceId.value = raceResponse.data.parent_race.id
+        // Handle subrace detection - need to fetch parent race for hasSubraces to work
+        if (loadedRace.parent_race) {
+          // This is a subrace - fetch parent race so hasSubraces computed works
+          const parentResponse = await apiFetch<{ data: Race }>(`/races/${loadedRace.parent_race.slug}`)
+          selectedRace.value = parentResponse.data // Store parent race (has subraces array)
+          subraceId.value = loadedRace.id
+          raceId.value = loadedRace.parent_race.id
+        } else {
+          // Base race - store as-is
+          selectedRace.value = loadedRace
+          raceId.value = loadedRace.id
+          subraceId.value = null
         }
       }
 
@@ -914,6 +960,7 @@ export const useCharacterBuilderStore = defineStore('characterBuilder', () => {
     characterData,
     characterStats,
     isCaster,
+    hasSubraces,
     validationStatus,
     isComplete,
     racialBonuses,
@@ -937,6 +984,8 @@ export const useCharacterBuilderStore = defineStore('characterBuilder', () => {
     createDraft,
     refreshStats,
     selectRace,
+    selectSubrace,
+    clearSubrace,
     selectClass,
     saveAbilityScores,
     selectBackground,

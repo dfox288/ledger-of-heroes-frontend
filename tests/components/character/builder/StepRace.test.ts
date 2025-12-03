@@ -71,11 +71,11 @@ describe('StepRace', () => {
     expect(wrapper.text()).toContain('Human')
   })
 
-  it('shows subrace selector when race with subraces is selected', async () => {
+  it('does not show inline subrace selector (subraces now in separate step)', async () => {
     const wrapper = await mountSuspended(StepRace)
-    // Find and click the Dwarf card
-    const cards = wrapper.findAllComponents({ name: 'CharacterBuilderRacePickerCard' })
-    expect(cards.length).toBeGreaterThan(0)
+    // Subrace selection has been moved to a separate step
+    // The StepRace component should not contain "Choose a Subrace" text
+    expect(wrapper.text()).not.toContain('Choose a Subrace')
   })
 
   it('filters races by search query', async () => {
