@@ -8,9 +8,9 @@
 
 | Metric | Count |
 |--------|-------|
-| Test Files | 137 |
-| Test Cases | ~1,872 |
-| Components | 95 |
+| Test Files | 198 |
+| Test Cases | ~2,754 |
+| Components | 110 |
 | Pages | 33 |
 | Composables | 18 |
 | Pinia Stores | 9 |
@@ -39,10 +39,15 @@
 | 1 | Foundation (store, wizard, Step 1) | ✅ Complete | [#2](https://github.com/dfox288/dnd-rulebook-frontend/pull/2) |
 | 2 | Race & Class Selection | ✅ Complete | [#3](https://github.com/dfox288/dnd-rulebook-frontend/pull/3) |
 | 3 | Ability Scores | ✅ Complete | [#3](https://github.com/dfox288/dnd-rulebook-frontend/pull/3) |
-| 4 | Background & Spells | 🔲 Pending | - |
-| 5 | Review & Character Sheet | 🔲 Pending | - |
+| 4 | Background, Equipment, Spells & Review | ✅ Complete | main |
+| 5 | Character Sheet & Polish | 🔲 Pending | - |
 
-**Wizard Steps:** Name ✅ → Race ✅ → Class ✅ → Abilities ✅ → Background 🔲 → Spells 🔲 → Review 🔲
+**Wizard Steps:** Name ✅ → Race ✅ → Class ✅ → Abilities ✅ → Background ✅ → Equipment ✅ → Spells ✅ → Review ✅
+
+**Components:** 19 character builder components (pickers, modals, step components)
+**Tests:** 170 tests across 20 test files
+
+**Pending Enhancement:** [#96](https://github.com/dfox288/dnd-rulebook-project/issues/96) - Structured item type data for equipment category choices
 
 **Issue:** [#89](https://github.com/dfox288/dnd-rulebook-project/issues/89)
 

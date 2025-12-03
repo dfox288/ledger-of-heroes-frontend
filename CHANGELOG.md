@@ -11,6 +11,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **Character Builder Phase 4: Background, Equipment, Spells & Review (2025-12-03)** - Complete implementation of Steps 5-8
+  - `BackgroundPickerCard` and `BackgroundDetailModal` - Background selection with feature preview
+  - `StepBackground` - Background grid with search and feature display
+  - `EquipmentChoiceGroup` - Radio-style equipment choice selection (fixed + choice items)
+  - `StepEquipment` - Equipment step combining class + background gear with choice groups
+  - `SpellPickerCard` - Spell selection card with level/school badges
+  - `StepSpells` - Cantrip and leveled spell selection with limits from class progression
+  - `StepReview` - Full character summary with edit buttons for each section
+  - Store actions: `selectBackground()`, `setEquipmentChoice()`, `learnSpell()`, `unlearnSpell()`
+  - 170 tests across 20 test files covering all character builder functionality
+  - 26 integration tests for wizard flow, equipment choices, spell tracking
+  - Created [#96](https://github.com/dfox288/dnd-rulebook-project/issues/96) for backend structured equipment data
+
 - **Character Builder Phase 3: Ability Scores (2025-12-03)** - Complete implementation of Step 4
   - Store action: `saveAbilityScores()` for persisting ability scores and method to API
   - `ManualInput` - Direct number inputs with 3-20 range validation

@@ -1,1 +1,1 @@
-handovers/SESSION-HANDOVER-2025-11-30-feat-detail-redesign.md
+handovers/SESSION-HANDOVER-2025-12-03-phase4-complete.md
