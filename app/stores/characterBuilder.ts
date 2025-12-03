@@ -551,13 +551,18 @@ export const useCharacterBuilderStore = defineStore('characterBuilder', () => {
     const key = `${source}:${choiceGroup}`
     const current = pendingProficiencySelections.value.get(key) ?? new Set<number>()
 
-    if (current.has(skillId)) {
-      current.delete(skillId)
+    // Create new Set to ensure Vue reactivity triggers
+    const updated = new Set(current)
+    if (updated.has(skillId)) {
+      updated.delete(skillId)
     } else {
-      current.add(skillId)
+      updated.add(skillId)
     }
 
-    pendingProficiencySelections.value.set(key, current)
+    // Create new Map to ensure reactivity
+    const newMap = new Map(pendingProficiencySelections.value)
+    newMap.set(key, updated)
+    pendingProficiencySelections.value = newMap
   }
 
   /**
