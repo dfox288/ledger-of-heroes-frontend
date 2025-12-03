@@ -8,10 +8,16 @@ const mockItems = [
   { id: 3, item_id: 103, item: { id: 103, name: 'Two Shortswords' }, quantity: 2, is_choice: true, choice_group: 'weapon', choice_option: 3 }
 ]
 
+// Items without item reference (compound choices like "martial weapon + shield")
+const mockCompoundItems = [
+  { id: 10, item_id: null, item: null, quantity: 1, is_choice: true, choice_group: 'choice_2', choice_option: 1, description: 'a martial weapon and a shield' },
+  { id: 11, item_id: null, item: null, quantity: 2, is_choice: true, choice_group: 'choice_2', choice_option: 2, description: 'two martial weapons' }
+]
+
 describe('EquipmentChoiceGroup', () => {
   it('displays group label', async () => {
     const wrapper = await mountSuspended(EquipmentChoiceGroup, {
-      props: { groupName: 'Weapon Choice', items: mockItems, selectedItemId: null }
+      props: { groupName: 'Weapon Choice', items: mockItems, selectedId: null }
     })
 
     expect(wrapper.text()).toContain('Weapon Choice')
@@ -19,7 +25,7 @@ describe('EquipmentChoiceGroup', () => {
 
   it('displays all item options', async () => {
     const wrapper = await mountSuspended(EquipmentChoiceGroup, {
-      props: { groupName: 'Weapon Choice', items: mockItems, selectedItemId: null }
+      props: { groupName: 'Weapon Choice', items: mockItems, selectedId: null }
     })
 
     expect(wrapper.text()).toContain('Longsword')
@@ -27,23 +33,43 @@ describe('EquipmentChoiceGroup', () => {
     expect(wrapper.text()).toContain('Two Shortswords')
   })
 
-  it('shows selected state for chosen item', async () => {
+  it('shows selected state for chosen item using pivot id', async () => {
     const wrapper = await mountSuspended(EquipmentChoiceGroup, {
-      props: { groupName: 'Weapon Choice', items: mockItems, selectedItemId: 101 }
+      props: { groupName: 'Weapon Choice', items: mockItems, selectedId: 1 } // pivot id, not item_id
     })
 
-    const selected = wrapper.find('[data-test="option-101"]')
+    const selected = wrapper.find('[data-test="option-1"]')
     expect(selected.classes()).toContain('ring-2')
   })
 
-  it('emits select event when option clicked', async () => {
+  it('emits select event with pivot id when option clicked', async () => {
     const wrapper = await mountSuspended(EquipmentChoiceGroup, {
-      props: { groupName: 'Weapon Choice', items: mockItems, selectedItemId: null }
+      props: { groupName: 'Weapon Choice', items: mockItems, selectedId: null }
     })
 
-    await wrapper.find('[data-test="option-102"]').trigger('click')
+    await wrapper.find('[data-test="option-2"]').trigger('click') // pivot id
 
     expect(wrapper.emitted('select')).toBeTruthy()
-    expect(wrapper.emitted('select')![0]).toEqual([102])
+    expect(wrapper.emitted('select')![0]).toEqual([2]) // pivot id, not item_id
+  })
+
+  it('displays description for compound choices without item', async () => {
+    const wrapper = await mountSuspended(EquipmentChoiceGroup, {
+      props: { groupName: 'Equipment Choice 2', items: mockCompoundItems, selectedId: null }
+    })
+
+    expect(wrapper.text()).toContain('a martial weapon and a shield')
+    expect(wrapper.text()).toContain('two martial weapons')
+  })
+
+  it('can select compound choices without item_id', async () => {
+    const wrapper = await mountSuspended(EquipmentChoiceGroup, {
+      props: { groupName: 'Equipment Choice 2', items: mockCompoundItems, selectedId: null }
+    })
+
+    await wrapper.find('[data-test="option-10"]').trigger('click')
+
+    expect(wrapper.emitted('select')).toBeTruthy()
+    expect(wrapper.emitted('select')![0]).toEqual([10])
   })
 })

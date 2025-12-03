@@ -45,17 +45,24 @@ const backgroundChoiceGroups = computed(() => {
 
 /**
  * Handle equipment choice selection
+ * Uses pivot record ID (not item_id) for reliable selection
  */
-function handleChoiceSelect(choiceGroup: string, itemId: number) {
-  store.setEquipmentChoice(choiceGroup, itemId)
+function handleChoiceSelect(choiceGroup: string, id: number) {
+  store.setEquipmentChoice(choiceGroup, id)
 }
 
 /**
  * Format choice group name for display
+ * Converts "choice_1" to "Equipment Choice 1"
  */
 function formatGroupName(group: string): string {
+  // Extract number from "choice_1", "choice_2", etc.
+  const match = group.match(/choice[_-]?(\d+)/i)
+  if (match) {
+    return `Equipment Choice ${match[1]}`
+  }
   return group
-    .replace(/-/g, ' ')
+    .replace(/[_-]/g, ' ')
     .replace(/\b\w/g, l => l.toUpperCase())
 }
 
@@ -116,8 +123,8 @@ function handleContinue() {
         :key="group"
         :group-name="formatGroupName(group)"
         :items="items"
-        :selected-item-id="equipmentChoices.get(group) ?? null"
-        @select="(itemId) => handleChoiceSelect(group, itemId)"
+        :selected-id="equipmentChoices.get(group) ?? null"
+        @select="(id) => handleChoiceSelect(group, id)"
       />
     </div>
 
@@ -158,8 +165,8 @@ function handleContinue() {
         :key="group"
         :group-name="formatGroupName(group)"
         :items="items"
-        :selected-item-id="equipmentChoices.get(group) ?? null"
-        @select="(itemId) => handleChoiceSelect(group, itemId)"
+        :selected-id="equipmentChoices.get(group) ?? null"
+        @select="(id) => handleChoiceSelect(group, id)"
       />
     </div>
 
