@@ -17,6 +17,12 @@ export interface WizardStep {
  */
 export const stepRegistry: WizardStep[] = [
   {
+    name: 'sourcebooks',
+    label: 'Sourcebooks',
+    icon: 'i-heroicons-book-open',
+    visible: () => true
+  },
+  {
     name: 'name',
     label: 'Name',
     icon: 'i-heroicons-user',
@@ -99,12 +105,12 @@ export const stepRegistry: WizardStep[] = [
 /**
  * Extract step name from route path
  * Handles both /characters/42/edit/race and /characters/42/edit/race?query=param
- * Returns 'name' as default if no step found
+ * Returns 'sourcebooks' as default if no step found (first step)
  */
 function extractStepFromPath(path: string): string {
   // Match pattern: /characters/{id}/edit/{step}
   const match = path.match(/\/characters\/\d+\/edit\/([^/?]+)/)
-  return match?.[1] || 'name'
+  return match?.[1] || 'sourcebooks'
 }
 
 /**

@@ -1754,4 +1754,195 @@ describe('useCharacterBuilderStore', () => {
       expect(store.totalSteps).toBe(9)
     })
   })
+
+  describe('sourcebook selection', () => {
+    it('has empty selectedSources initially', () => {
+      const store = useCharacterBuilderStore()
+      expect(store.selectedSources).toEqual([])
+    })
+
+    it('setSelectedSources updates the selectedSources array', () => {
+      const store = useCharacterBuilderStore()
+      store.setSelectedSources(['PHB', 'XGE', 'TCE'])
+      expect(store.selectedSources).toEqual(['PHB', 'XGE', 'TCE'])
+    })
+
+    it('initializeSourcesFromApi sets all sources when selectedSources is empty', () => {
+      const store = useCharacterBuilderStore()
+      const allSources = [
+        { id: 1, code: 'PHB', name: 'Player\'s Handbook' },
+        { id: 2, code: 'XGE', name: 'Xanathar\'s Guide to Everything' },
+        { id: 3, code: 'TCE', name: 'Tasha\'s Cauldron of Everything' }
+      ]
+      store.initializeSourcesFromApi(allSources)
+      expect(store.selectedSources).toEqual(['PHB', 'XGE', 'TCE'])
+    })
+
+    it('initializeSourcesFromApi preserves existing selection when selectedSources has values', () => {
+      const store = useCharacterBuilderStore()
+      store.setSelectedSources(['PHB'])
+
+      const allSources = [
+        { id: 1, code: 'PHB', name: 'Player\'s Handbook' },
+        { id: 2, code: 'XGE', name: 'Xanathar\'s Guide to Everything' }
+      ]
+      store.initializeSourcesFromApi(allSources)
+
+      // Should NOT overwrite existing selection
+      expect(store.selectedSources).toEqual(['PHB'])
+    })
+
+    it('sourceFilterString returns empty string when no sources selected', () => {
+      const store = useCharacterBuilderStore()
+      expect(store.sourceFilterString).toBe('')
+    })
+
+    it('sourceFilterString returns correct Meilisearch filter syntax', () => {
+      const store = useCharacterBuilderStore()
+      store.setSelectedSources(['PHB', 'XGE'])
+      expect(store.sourceFilterString).toBe('source_codes IN ["PHB", "XGE"]')
+    })
+
+    it('sourceFilterString handles single source correctly', () => {
+      const store = useCharacterBuilderStore()
+      store.setSelectedSources(['PHB'])
+      expect(store.sourceFilterString).toBe('source_codes IN ["PHB"]')
+    })
+
+    it('reset clears selectedSources to empty array', () => {
+      const store = useCharacterBuilderStore()
+      store.setSelectedSources(['PHB', 'XGE', 'TCE'])
+
+      store.reset()
+
+      expect(store.selectedSources).toEqual([])
+    })
+
+    describe('cascade clearing', () => {
+      it('clears race when its source is no longer selected', () => {
+        const store = useCharacterBuilderStore()
+        // Set up a race with PHB source
+        store.selectedBaseRace = {
+          id: 1,
+          name: 'Human',
+          slug: 'human',
+          sources: [{ code: 'PHB', name: 'Player\'s Handbook', pages: '29-31' }]
+        } as unknown as Race
+        store.raceId = 1
+
+        // Initially have PHB selected
+        store.setSelectedSources(['PHB', 'XGE'])
+
+        // Remove PHB
+        const result = store.setSelectedSources(['XGE'])
+
+        expect(result.cleared).toContain('race')
+        expect(store.selectedBaseRace).toBeNull()
+        expect(store.raceId).toBeNull()
+      })
+
+      it('clears class when its source is no longer selected', () => {
+        const store = useCharacterBuilderStore()
+        // Set up a class with XGE source
+        store.characterClasses = [{
+          classId: 1,
+          subclassId: null,
+          level: 1,
+          isPrimary: true,
+          order: 0,
+          classData: {
+            id: 1,
+            name: 'Fighter',
+            slug: 'fighter',
+            sources: [{ code: 'XGE', name: 'Xanathar\'s Guide', pages: '1-10' }]
+          } as unknown as CharacterClass
+        }]
+
+        // Initially have XGE selected
+        store.setSelectedSources(['PHB', 'XGE'])
+
+        // Remove XGE
+        const result = store.setSelectedSources(['PHB'])
+
+        expect(result.cleared).toContain('class')
+        expect(store.characterClasses).toEqual([])
+      })
+
+      it('does not clear selections when sources still valid', () => {
+        const store = useCharacterBuilderStore()
+        // Set up a race with PHB source
+        store.selectedBaseRace = {
+          id: 1,
+          name: 'Human',
+          slug: 'human',
+          sources: [{ code: 'PHB', name: 'Player\'s Handbook', pages: '29-31' }]
+        } as unknown as Race
+        store.raceId = 1
+
+        // Initially have multiple sources
+        store.setSelectedSources(['PHB', 'XGE', 'TCE'])
+
+        // Remove XGE but keep PHB
+        const result = store.setSelectedSources(['PHB', 'TCE'])
+
+        expect(result.cleared).toEqual([])
+        expect(store.selectedBaseRace).not.toBeNull()
+        expect(store.raceId).toBe(1)
+      })
+
+      it('returns correct cleared array when multiple selections are cleared', () => {
+        const store = useCharacterBuilderStore()
+        // Set up race (PHB) and class (XGE)
+        store.selectedBaseRace = {
+          id: 1,
+          name: 'Human',
+          slug: 'human',
+          sources: [{ code: 'PHB', name: 'Player\'s Handbook', pages: '29-31' }]
+        } as unknown as Race
+        store.raceId = 1
+
+        store.characterClasses = [{
+          classId: 1,
+          subclassId: null,
+          level: 1,
+          isPrimary: true,
+          order: 0,
+          classData: {
+            id: 1,
+            name: 'Fighter',
+            slug: 'fighter',
+            sources: [{ code: 'XGE', name: 'Xanathar\'s Guide', pages: '1-10' }]
+          } as unknown as CharacterClass
+        }]
+
+        // Initially have both sources
+        store.setSelectedSources(['PHB', 'XGE'])
+
+        // Remove both sources
+        const result = store.setSelectedSources(['TCE'])
+
+        expect(result.cleared).toContain('race')
+        expect(result.cleared).toContain('class')
+        expect(store.selectedBaseRace).toBeNull()
+        expect(store.characterClasses).toEqual([])
+      })
+
+      it('handles entities without sources array gracefully', () => {
+        const store = useCharacterBuilderStore()
+        // Set up a race without sources
+        store.selectedBaseRace = {
+          id: 1,
+          name: 'Human',
+          slug: 'human'
+        } as unknown as Race
+        store.raceId = 1
+
+        // Change sources - should not clear race with missing sources
+        const result = store.setSelectedSources(['XGE'])
+
+        expect(result.cleared).toEqual([])
+        expect(store.selectedBaseRace).not.toBeNull()
+      })
+    })
+  })
 })

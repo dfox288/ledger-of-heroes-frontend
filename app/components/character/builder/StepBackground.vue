@@ -5,17 +5,26 @@ import { useCharacterBuilderStore } from '~/stores/characterBuilder'
 import { useWizardNavigation } from '~/composables/useWizardSteps'
 
 const store = useCharacterBuilderStore()
-const { selectedBackground, isLoading, error } = storeToRefs(store)
+const { selectedBackground, isLoading, error, sourceFilterString } = storeToRefs(store)
 const { nextStep } = useWizardNavigation()
 
 // API client
 const { apiFetch } = useApi()
 
-// Fetch all backgrounds
+// Fetch backgrounds filtered by selected sourcebooks
 const { data: backgrounds, pending: loadingBackgrounds } = await useAsyncData(
-  'builder-backgrounds',
-  () => apiFetch<{ data: Background[] }>('/backgrounds?per_page=100'),
-  { transform: (response: { data: Background[] }) => response.data }
+  `builder-backgrounds-${sourceFilterString.value}`,
+  () => {
+    const filter = sourceFilterString.value
+    const url = filter
+      ? `/backgrounds?per_page=100&filter=${encodeURIComponent(filter)}`
+      : '/backgrounds?per_page=100'
+    return apiFetch<{ data: Background[] }>(url)
+  },
+  {
+    transform: (response: { data: Background[] }) => response.data,
+    watch: [sourceFilterString]
+  }
 )
 
 // Local state
