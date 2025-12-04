@@ -3,6 +3,7 @@ import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import type { AbilityScores, Character, CharacterStats, Race, CharacterClass, Background, CharacterSpell, CharacterClassEntry, CharacterAlignment } from '~/types'
 import type { ProficiencyChoicesResponse } from '~/types/proficiencies'
+import type { LanguageChoicesResponse } from '~/types/languageChoices'
 
 /**
  * Character Builder Wizard Store
@@ -75,6 +76,12 @@ export const useCharacterBuilderStore = defineStore('characterBuilder', () => {
 
   // User's pending proficiency selections: Map<"source:choice_group", Set<skillId>>
   const pendingProficiencySelections = ref<Map<string, Set<number>>>(new Map())
+
+  // Language choices from API
+  const languageChoices = ref<LanguageChoicesResponse | null>(null)
+
+  // User's pending language selections: Map<"race" | "background", Set<languageId>>
+  const pendingLanguageSelections = ref<Map<string, Set<number>>>(new Map())
 
   // ══════════════════════════════════════════════════════════════
   // FETCHED REFERENCE DATA (for display without re-fetching)
@@ -192,6 +199,49 @@ export const useCharacterBuilderStore = defineStore('characterBuilder', () => {
 
     for (const [groupName, group] of Object.entries(background)) {
       if (!isGroupComplete('background', groupName, group)) return false
+    }
+
+    return true
+  })
+
+  // Does this character have any language choice groups?
+  // Returns true if race OR background has choices to make
+  // This determines if the Language step appears in the wizard
+  const hasLanguageChoices = computed(() => {
+    if (!languageChoices.value) return false
+    const { race, background } = languageChoices.value.data
+
+    return race.choices !== null || background.choices !== null
+  })
+
+  // Are all required language choices complete?
+  // Checks both race and background have their required quantities selected
+  const allLanguageChoicesComplete = computed(() => {
+    if (!languageChoices.value) return true
+    if (!hasLanguageChoices.value) return true
+
+    const { race, background } = languageChoices.value.data
+
+    // Check race choices
+    if (race.choices) {
+      const pendingCount = pendingLanguageSelections.value.get('race')?.size ?? 0
+      const savedCount = race.choices.selected.length
+
+      // Complete if pending selections match quantity (user is actively selecting)
+      // OR if already saved and no pending changes
+      if (pendingCount !== race.choices.quantity && savedCount !== race.choices.quantity) {
+        return false
+      }
+    }
+
+    // Check background choices
+    if (background.choices) {
+      const pendingCount = pendingLanguageSelections.value.get('background')?.size ?? 0
+      const savedCount = background.choices.selected.length
+
+      if (pendingCount !== background.choices.quantity && savedCount !== background.choices.quantity) {
+        return false
+      }
     }
 
     return true
@@ -759,6 +809,97 @@ export const useCharacterBuilderStore = defineStore('characterBuilder', () => {
     }
   }
 
+  // ══════════════════════════════════════════════════════════════
+  // LANGUAGE CHOICE ACTIONS
+  // ══════════════════════════════════════════════════════════════
+
+  /**
+   * Fetch pending language choices from API
+   */
+  async function fetchLanguageChoices(): Promise<void> {
+    if (!characterId.value) return
+
+    const response = await apiFetch<LanguageChoicesResponse>(
+      `/characters/${characterId.value}/language-choices`
+    )
+    languageChoices.value = response
+  }
+
+  /**
+   * Toggle a language selection in pending state
+   */
+  function toggleLanguageSelection(
+    source: 'race' | 'background',
+    languageId: number
+  ): void {
+    const current = pendingLanguageSelections.value.get(source) ?? new Set<number>()
+
+    // Create new Set to ensure Vue reactivity triggers
+    const updated = new Set(current)
+    if (updated.has(languageId)) {
+      updated.delete(languageId)
+    } else {
+      updated.add(languageId)
+    }
+
+    // Create new Map to ensure reactivity
+    const newMap = new Map(pendingLanguageSelections.value)
+    newMap.set(source, updated)
+    pendingLanguageSelections.value = newMap
+  }
+
+  /**
+   * Initialize pending language selections from API's selected array
+   * Used when editing existing character - pre-populates selections
+   */
+  function initializeLanguageSelections(): void {
+    if (!languageChoices.value) return
+
+    const { race, background } = languageChoices.value.data
+    const newMap = new Map<string, Set<number>>()
+
+    if (race.choices && race.choices.selected.length > 0) {
+      newMap.set('race', new Set(race.choices.selected))
+    }
+
+    if (background.choices && background.choices.selected.length > 0) {
+      newMap.set('background', new Set(background.choices.selected))
+    }
+
+    pendingLanguageSelections.value = newMap
+  }
+
+  /**
+   * Save all pending language selections to API
+   */
+  async function saveLanguageChoices(): Promise<void> {
+    if (!characterId.value) return
+
+    isLoading.value = true
+    error.value = null
+
+    try {
+      const raceSelections = pendingLanguageSelections.value.get('race')
+      const backgroundSelections = pendingLanguageSelections.value.get('background')
+
+      await apiFetch(`/characters/${characterId.value}/language-choices`, {
+        method: 'POST',
+        body: {
+          race_language_ids: raceSelections ? [...raceSelections] : [],
+          background_language_ids: backgroundSelections ? [...backgroundSelections] : []
+        }
+      })
+
+      // Refresh choices to update remaining counts
+      await fetchLanguageChoices()
+    } catch (err: unknown) {
+      error.value = 'Failed to save language choices'
+      throw err
+    } finally {
+      isLoading.value = false
+    }
+  }
+
   /**
    * Clear all existing equipment from character
    * Used before re-saving equipment to avoid duplicates
@@ -1031,6 +1172,8 @@ export const useCharacterBuilderStore = defineStore('characterBuilder', () => {
     pendingSpellIds.value = new Set()
     proficiencyChoices.value = null
     pendingProficiencySelections.value = new Map()
+    languageChoices.value = null
+    pendingLanguageSelections.value = new Map()
     selectedBaseRace.value = null
     selectedRace.value = null
     selectedBackground.value = null
@@ -1088,6 +1231,11 @@ export const useCharacterBuilderStore = defineStore('characterBuilder', () => {
     pendingProficiencySelections,
     hasPendingChoices,
     allProficiencyChoicesComplete,
+    // Language choices
+    languageChoices,
+    pendingLanguageSelections,
+    hasLanguageChoices,
+    allLanguageChoicesComplete,
     // Actions
     nextStep,
     previousStep,
@@ -1115,6 +1263,10 @@ export const useCharacterBuilderStore = defineStore('characterBuilder', () => {
     toggleProficiencySelection,
     initializeProficiencySelections,
     saveProficiencyChoices,
+    fetchLanguageChoices,
+    toggleLanguageSelection,
+    initializeLanguageSelections,
+    saveLanguageChoices,
     loadCharacterForEditing,
     updateName,
     reset

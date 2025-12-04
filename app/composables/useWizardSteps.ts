@@ -56,6 +56,15 @@ export const stepRegistry: WizardStep[] = [
     visible: () => true
   },
   {
+    name: 'languages',
+    label: 'Languages',
+    icon: 'i-heroicons-language',
+    visible: () => {
+      const store = useCharacterBuilderStore()
+      return store.hasLanguageChoices
+    }
+  },
+  {
     name: 'proficiencies',
     label: 'Proficiencies',
     icon: 'i-heroicons-academic-cap',

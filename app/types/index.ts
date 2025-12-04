@@ -32,6 +32,9 @@ export type { SearchResult, SearchResultData, EntityType, SearchOptions, SearchE
 // Character types
 export * from './character'
 
+// Language choices types
+export * from './languageChoices'
+
 // API Response types
 export interface ApiListResponse<T = unknown> {
   data: T[]

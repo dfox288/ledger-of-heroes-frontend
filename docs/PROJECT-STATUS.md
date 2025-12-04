@@ -8,10 +8,10 @@
 
 | Metric | Count |
 |--------|-------|
-| Test Files | 198 |
-| Test Cases | ~2,754 |
-| Components | 110 |
-| Pages | 33 |
+| Test Files | 207 |
+| Test Cases | ~2,835 |
+| Components | 157 |
+| Pages | 50 |
 | Composables | 18 |
 | Pinia Stores | 9 |
 | Test Helpers | 8 |
@@ -42,10 +42,16 @@
 | 4 | Background, Equipment, Spells & Review | ✅ Complete | main |
 | 5 | Character Sheet & Polish | 🔲 Pending | - |
 
-**Wizard Steps:** Name ✅ → Race ✅ → Class ✅ → Abilities ✅ → Background ✅ → Equipment ✅ → Spells ✅ → Review ✅
+**Wizard Steps:** Name ✅ → Race ✅ → Subrace ✅ → Class ✅ → Abilities ✅ → Background ✅ → Proficiencies ✅ → Equipment ✅ → Spells ✅ → Languages ⏸️ → Review ✅
 
-**Components:** 19 character builder components (pickers, modals, step components)
-**Tests:** 170 tests across 20 test files
+**Components:** 25+ character builder components (pickers, modals, step components)
+**Tests:** 200+ tests across 25+ test files
+
+**Recent Enhancements:**
+- Route-based wizard navigation (#136) - step names in URL
+- Alignment selector (#125) - inline with name input
+- Equipment pack contents (#133) - shows what's in packs
+- Language choices step (#131) - ⏸️ waiting on backend endpoint #139
 
 **Pending Enhancement:** [#96](https://github.com/dfox288/dnd-rulebook-project/issues/96) - Structured item type data for equipment category choices
 
@@ -84,7 +90,7 @@
 | Reference | 7 | ~70 | ~10s | `npm run test:reference` |
 | UI | 48 | ~500 | ~52s | `npm run test:ui` |
 | Core | 15 | ~150 | ~18s | `npm run test:core` |
-| **Full Suite** | 133 | ~1,842 | ~152s | `npm run test` |
+| **Full Suite** | 207 | ~2,835 | ~250s | `npm run test` |
 
 ---
 
@@ -133,6 +139,13 @@
 
 ## Recent Milestones
 
+- **2025-12-04:** Language choices wizard step (#131) - partial, blocked on backend endpoint #139
+- **2025-12-04:** Equipment pack contents (#133) - shows `choice_items` pack contents structure
+- **2025-12-04:** Alignment selector (#125) - inline with name input, 10 new tests
+- **2025-12-04:** Route-based wizard navigation (#136) - step names in URL, middleware guards
+- **2025-12-03:** Character Builder Phase 4 complete - Background, Equipment, Spells & Review
+- **2025-12-03:** Edit level 1 characters (#105) - unified create/edit flow
+- **2025-12-03:** Proficiency choices (#106) - conditional wizard step, skill selection UI
 - **2025-12-02:** Character Builder Phase 2 - Race & Class Selection complete (74 tests, 8 new components)
 - **2025-12-02:** Store actions: `selectRace()`, `selectClass()`, `refreshStats()`
 - **2025-12-02:** Picker cards with click-to-select + View Details modal pattern
