@@ -1,5 +1,7 @@
 // app/types/character.ts
 
+import type { CharacterClass } from './api/entities'
+
 /**
  * Ability scores for character creation
  */
@@ -10,6 +12,22 @@ export interface AbilityScores {
   intelligence: number
   wisdom: number
   charisma: number
+}
+
+/**
+ * Character class entry for multiclass support
+ * Stores class info and cached full data for UI
+ */
+export interface CharacterClassEntry {
+  classId: number
+  subclassId: number | null
+  level: number
+  isPrimary: boolean
+  order: number
+  /** Cached full class data for UI display */
+  classData: CharacterClass | null
+  /** Cached subclass data if selected */
+  subclassData?: CharacterClass | null
 }
 
 /**
