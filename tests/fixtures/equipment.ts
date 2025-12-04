@@ -412,6 +412,88 @@ export const mockFixedPackEquipment: Equipment = {
 } as Equipment
 
 /**
+ * Mock choice group with pack contents inside choice_items
+ * This matches the real API structure where packs in equipment choices
+ * have contents nested in choice_items[0].item.contents
+ *
+ * Example: Bard class equipment "(a) diplomat's pack or (b) entertainer's pack"
+ */
+export const mockChoiceItemsWithPackContents: Equipment[] = [
+  {
+    id: 70,
+    item_id: null, // null for choice items
+    item: null, // null - data is in choice_items
+    quantity: 1,
+    is_choice: true,
+    choice_group: 'choice_2',
+    choice_option: 1,
+    choice_description: 'Starting equipment choice',
+    proficiency_subcategory: null,
+    description: 'a diplomat\'s pack',
+    choice_items: [
+      {
+        proficiency_type: null,
+        quantity: 1,
+        item: {
+          id: 174,
+          name: 'Diplomat\'s Pack',
+          slug: 'diplomats-pack',
+          item_type_id: 8,
+          item_type: { id: 8, code: 'G', name: 'Adventuring Gear', description: null },
+          cost_cp: 3900,
+          weight: '36.00',
+          is_magic: false,
+          contents: [
+            { quantity: 1, item: { id: 153, name: 'Chest', slug: 'chest', weight: '25.00', cost_cp: 500 } },
+            { quantity: 2, item: { id: 247, name: 'Map or Scroll Case', slug: 'map-or-scroll-case', weight: '1.00', cost_cp: 100 } },
+            { quantity: 1, item: { id: 189, name: 'Fine Clothes', slug: 'fine-clothes', weight: '6.00', cost_cp: 1500 } },
+            { quantity: 1, item: { id: 216, name: 'Ink (1-ounce bottle)', slug: 'ink-1-ounce-bottle', weight: null, cost_cp: 1000 } },
+            { quantity: 5, item: { id: 268, name: 'Paper (one sheet)', slug: 'paper-one-sheet', weight: null, cost_cp: 20 } }
+          ]
+        }
+      }
+    ]
+  } as Equipment,
+  {
+    id: 71,
+    item_id: null,
+    item: null,
+    quantity: 1,
+    is_choice: true,
+    choice_group: 'choice_2',
+    choice_option: 2,
+    choice_description: 'Starting equipment choice',
+    proficiency_subcategory: null,
+    description: 'an entertainer\'s pack',
+    choice_items: [
+      {
+        proficiency_type: null,
+        quantity: 1,
+        item: {
+          id: 185,
+          name: 'Entertainer\'s Pack',
+          slug: 'entertainers-pack',
+          item_type_id: 8,
+          item_type: { id: 8, code: 'G', name: 'Adventuring Gear', description: null },
+          cost_cp: 4000,
+          weight: '38.00',
+          is_magic: false,
+          contents: [
+            { quantity: 1, item: { id: 121, name: 'Backpack', slug: 'backpack', weight: '5.00', cost_cp: 200 } },
+            { quantity: 1, item: { id: 129, name: 'Bedroll', slug: 'bedroll', weight: '7.00', cost_cp: 100 } },
+            { quantity: 2, item: { id: 168, name: 'Costume Clothes', slug: 'costume-clothes', weight: '4.00', cost_cp: 500 } },
+            { quantity: 5, item: { id: 143, name: 'Candle', slug: 'candle', weight: null, cost_cp: 1 } },
+            { quantity: 5, item: { id: 286, name: 'Rations (1 day)', slug: 'rations-1-day', weight: '2.00', cost_cp: 50 } },
+            { quantity: 1, item: { id: 331, name: 'Waterskin', slug: 'waterskin', weight: '5.00', cost_cp: 20 } },
+            { quantity: 1, item: { id: 175, name: 'Disguise Kit', slug: 'disguise-kit', weight: '3.00', cost_cp: 2500 } }
+          ]
+        }
+      }
+    ]
+  } as Equipment
+]
+
+/**
  * Representative equipment array for general testing
  */
 export const mockEquipmentArray: Equipment[] = [
