@@ -1,3 +1,4 @@
+<!-- app/components/character/builder/SpellPickerCard.vue -->
 <script setup lang="ts">
 import type { Spell } from '~/types'
 
@@ -12,8 +13,8 @@ const props = withDefaults(defineProps<Props>(), {
 })
 
 const emit = defineEmits<{
-  toggle: [spell: Spell]
-  viewDetails: []
+  'toggle': [spell: Spell]
+  'view-details': []
 }>()
 
 /**
@@ -50,13 +51,13 @@ function handleClick() {
 
 function handleViewDetails(event: Event) {
   event.stopPropagation()
-  emit('viewDetails')
+  emit('view-details')
 }
 </script>
 
 <template>
   <div
-    data-test="spell-card"
+    data-testid="spell-card"
     class="relative p-3 rounded-lg border-2 transition-all cursor-pointer"
     :class="[
       disabled ? 'opacity-50 cursor-not-allowed' : '',
@@ -69,7 +70,7 @@ function handleViewDetails(event: Event) {
     <!-- Selected Checkmark -->
     <div
       v-if="selected"
-      data-test="selected-check"
+      data-testid="selected-check"
       class="absolute top-2 right-2 w-5 h-5 bg-spell-500 rounded-full flex items-center justify-center"
     >
       <UIcon
@@ -121,7 +122,7 @@ function handleViewDetails(event: Event) {
 
       <!-- View Details link -->
       <button
-        data-test="view-details-btn"
+        data-testid="view-details-btn"
         type="button"
         class="text-xs text-spell-600 dark:text-spell-400 hover:underline self-start"
         @click="handleViewDetails"
