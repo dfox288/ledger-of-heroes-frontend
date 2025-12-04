@@ -14,9 +14,15 @@ export const useCharacterBuilderStore = defineStore('characterBuilder', () => {
   // API client
   const { apiFetch } = useApi()
   // ══════════════════════════════════════════════════════════════
-  // WIZARD NAVIGATION
+  // WIZARD NAVIGATION (DEPRECATED)
+  // These are deprecated - use useWizardNavigation() composable instead.
+  // The URL is now the source of truth for current step (route-based navigation).
+  // Kept for backward compatibility with existing tests.
+  // TODO: Remove in future cleanup when tests are updated to use useWizardNavigation
   // ══════════════════════════════════════════════════════════════
+  /** @deprecated Use useWizardNavigation().currentStepName instead */
   const currentStep = ref(1)
+  /** @deprecated Use useWizardNavigation().activeSteps.length instead */
   const totalSteps = computed(() => {
     let steps = 7 // Base: Name, Race, Class, Abilities, Background, Equipment, Review
     if (needsSubrace.value) steps++ // Subrace step (after Race)
@@ -24,7 +30,9 @@ export const useCharacterBuilderStore = defineStore('characterBuilder', () => {
     if (isCaster.value) steps++
     return steps
   })
+  /** @deprecated Use useWizardNavigation().isFirstStep instead */
   const isFirstStep = computed(() => currentStep.value === 1)
+  /** @deprecated Use useWizardNavigation().isLastStep instead */
   const isLastStep = computed(() => currentStep.value === totalSteps.value)
 
   // ══════════════════════════════════════════════════════════════
@@ -269,20 +277,25 @@ export const useCharacterBuilderStore = defineStore('characterBuilder', () => {
   const error = ref<string | null>(null)
 
   // ══════════════════════════════════════════════════════════════
-  // NAVIGATION ACTIONS
+  // NAVIGATION ACTIONS (DEPRECATED)
+  // Use useWizardNavigation() composable instead for route-based navigation.
+  // Kept for backward compatibility with existing tests.
   // ══════════════════════════════════════════════════════════════
+  /** @deprecated Use useWizardNavigation().nextStep() instead */
   function nextStep(): void {
     if (currentStep.value < totalSteps.value) {
       currentStep.value++
     }
   }
 
+  /** @deprecated Use useWizardNavigation().previousStep() instead */
   function previousStep(): void {
     if (currentStep.value > 1) {
       currentStep.value--
     }
   }
 
+  /** @deprecated Use useWizardNavigation().goToStep(stepName) instead */
   function goToStep(step: number): void {
     if (step >= 1 && step <= totalSteps.value) {
       currentStep.value = step

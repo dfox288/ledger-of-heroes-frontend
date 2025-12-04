@@ -8,9 +8,10 @@ const route = useRoute()
 const characterId = route.params.id
 
 // Preserve query params (like ?new=true) during redirect
-const query = route.query
-await navigateTo(`/characters/${characterId}/edit/name`, {
-  replace: true,
-  query
+const queryString = Object.keys(route.query).length > 0
+  ? '?' + new URLSearchParams(route.query as Record<string, string>).toString()
+  : ''
+await navigateTo(`/characters/${characterId}/edit/name${queryString}`, {
+  replace: true
 })
 </script>

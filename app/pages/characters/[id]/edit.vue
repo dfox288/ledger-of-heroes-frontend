@@ -23,11 +23,12 @@ useSeoMeta({
 const store = useCharacterBuilderStore()
 const { isLoading, error, name } = storeToRefs(store)
 
-// Wizard navigation (uses route params, not store state)
+// Wizard navigation (uses route path, not store state)
 const {
   activeSteps,
   currentStep,
   currentStepIndex,
+  currentStepName,
   isFirstStep,
   isLastStep,
   nextStep,
@@ -43,7 +44,7 @@ onMounted(async () => {
     await store.loadCharacterForEditing(characterId.value)
 
     // For new characters, redirect to name step if not already there
-    if (isNewCharacter.value && route.params.step !== 'name') {
+    if (isNewCharacter.value && currentStepName.value !== 'name') {
       await navigateTo(`/characters/${characterId.value}/edit/name`)
     }
   } catch {

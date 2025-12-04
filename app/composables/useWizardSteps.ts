@@ -88,8 +88,19 @@ export const stepRegistry: WizardStep[] = [
 ]
 
 /**
+ * Extract step name from route path
+ * Handles both /characters/42/edit/race and /characters/42/edit/race?query=param
+ * Returns 'name' as default if no step found
+ */
+function extractStepFromPath(path: string): string {
+  // Match pattern: /characters/{id}/edit/{step}
+  const match = path.match(/\/characters\/\d+\/edit\/([^/?]+)/)
+  return match?.[1] || 'name'
+}
+
+/**
  * Composable for wizard navigation
- * Uses route params to track current step instead of store state
+ * Uses route path to track current step instead of store state
  *
  * This composable should be used in the wizard parent layout to manage
  * navigation between steps. Each step becomes a nested route.
@@ -103,9 +114,10 @@ export function useWizardNavigation() {
     stepRegistry.filter(step => step.visible())
   )
 
-  // Current step name from route params
+  // Current step name extracted from route path (not params)
+  // This works with static nested route files like edit/race.vue, edit/name.vue
   const currentStepName = computed(() =>
-    (route.params.step as string) || 'name'
+    extractStepFromPath(route.path)
   )
 
   // Current step index within active steps
@@ -126,16 +138,16 @@ export function useWizardNavigation() {
   // Navigation functions
   async function nextStep() {
     const nextIndex = currentStepIndex.value + 1
-    if (nextIndex < activeSteps.value.length) {
-      const next = activeSteps.value[nextIndex]
+    const next = activeSteps.value[nextIndex]
+    if (next) {
       await navigateTo(`/characters/${store.characterId}/edit/${next.name}`)
     }
   }
 
   async function previousStep() {
     const prevIndex = currentStepIndex.value - 1
-    if (prevIndex >= 0) {
-      const prev = activeSteps.value[prevIndex]
+    const prev = activeSteps.value[prevIndex]
+    if (prev) {
       await navigateTo(`/characters/${store.characterId}/edit/${prev.name}`)
     }
   }

@@ -135,7 +135,6 @@ const selectedSkillNames = computed(() => {
   return skills
 })
 
-
 /**
  * Check if there are any saved proficiency choices (remaining < quantity)
  */

@@ -1,12 +1,55 @@
-import { describe, it, expect, beforeEach } from 'vitest'
+import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { mountSuspended } from '@nuxt/test-utils/runtime'
 import { setActivePinia, createPinia } from 'pinia'
+import { computed } from 'vue'
 import StepReview from '~/components/character/builder/StepReview.vue'
 import { useCharacterBuilderStore } from '~/stores/characterBuilder'
+
+// Mock navigateTo
+const mockNavigateTo = vi.fn()
+vi.mock('#app', async () => {
+  const actual = await vi.importActual('#app')
+  return {
+    ...actual,
+    navigateTo: (...args: unknown[]) => mockNavigateTo(...args)
+  }
+})
+
+// Mock middleware to prevent infinite redirects
+vi.mock('~/middleware/wizard-step', () => ({
+  default: vi.fn(),
+  isStepAccessible: vi.fn(() => true)
+}))
+
+// Mock goToStep from useWizardNavigation
+const mockGoToStep = vi.fn()
+vi.mock('~/composables/useWizardSteps', () => ({
+  useWizardNavigation: () => ({
+    goToStep: mockGoToStep,
+    activeSteps: computed(() => [
+      { name: 'name', label: 'Name', icon: 'i-heroicons-user', visible: () => true },
+      { name: 'race', label: 'Race', icon: 'i-heroicons-globe-alt', visible: () => true },
+      { name: 'class', label: 'Class', icon: 'i-heroicons-shield-check', visible: () => true },
+      { name: 'abilities', label: 'Abilities', icon: 'i-heroicons-chart-bar', visible: () => true },
+      { name: 'background', label: 'Background', icon: 'i-heroicons-book-open', visible: () => true },
+      { name: 'equipment', label: 'Equipment', icon: 'i-heroicons-briefcase', visible: () => true },
+      { name: 'review', label: 'Review', icon: 'i-heroicons-check-circle', visible: () => true }
+    ]),
+    currentStep: computed(() => ({ name: 'review', label: 'Review' })),
+    currentStepIndex: computed(() => 6),
+    isFirstStep: computed(() => false),
+    isLastStep: computed(() => true),
+    nextStep: vi.fn(),
+    previousStep: vi.fn()
+  }),
+  stepRegistry: []
+}))
 
 describe('StepReview', () => {
   beforeEach(() => {
     setActivePinia(createPinia())
+    mockGoToStep.mockReset()
+    mockNavigateTo.mockReset()
   })
 
   async function setupStore(wrapper: Awaited<ReturnType<typeof mountSuspended>>) {
@@ -201,11 +244,11 @@ describe('StepReview', () => {
 
     it('navigates to correct step when edit clicked', async () => {
       const wrapper = await mountSuspended(StepReview)
-      const store = useCharacterBuilderStore()
 
       await wrapper.find('[data-test="edit-name"]').trigger('click')
 
-      expect(store.currentStep).toBe(1)
+      // With route-based navigation, goToStep is called with step name
+      expect(mockGoToStep).toHaveBeenCalledWith('name')
     })
   })
 })
