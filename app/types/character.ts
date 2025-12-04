@@ -33,12 +33,13 @@ export interface CharacterClassEntry {
 
 /**
  * Character alignment values (D&D 5e standard alignments)
+ *
+ * Uses the alignment enum from the OpenAPI spec (CharacterStoreRequest).
+ * The API defines all valid D&D 5e alignments including 'Unaligned'.
+ *
+ * @see {components['schemas']['CharacterStoreRequest']['alignment']} for API type
  */
-export type CharacterAlignment
-  = 'Lawful Good' | 'Neutral Good' | 'Chaotic Good'
-    | 'Lawful Neutral' | 'True Neutral' | 'Chaotic Neutral'
-    | 'Lawful Evil' | 'Neutral Evil' | 'Chaotic Evil'
-    | 'Unaligned'
+export type CharacterAlignment = NonNullable<components['schemas']['CharacterStoreRequest']['alignment']>
 
 /**
  * Ability score codes used by the API
