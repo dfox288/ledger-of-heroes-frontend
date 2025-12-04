@@ -23,8 +23,8 @@ export function useDetailModal<T>() {
   }
 
   return {
-    open: readonly(open),
-    item: readonly(item),
+    open,
+    item,
     show,
     close
   }

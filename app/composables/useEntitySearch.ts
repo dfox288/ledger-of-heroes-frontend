@@ -28,7 +28,7 @@ interface SearchOptions<T> {
  * )
  */
 export function useEntitySearch<T extends { name: string }>(
-  items: Ref<T[] | null>,
+  items: Ref<T[] | null | undefined>,
   predicateOrOptions?: SearchPredicate<T> | SearchOptions<T>
 ) {
   const searchQuery = ref('')
@@ -48,7 +48,7 @@ export function useEntitySearch<T extends { name: string }>(
     if (predicateOrOptions?.searchableFields) {
       const fields = predicateOrOptions.searchableFields
       return items.value.filter(item =>
-        fields.some(field => {
+        fields.some((field) => {
           const value = item[field]
           return typeof value === 'string' && value.toLowerCase().includes(query)
         })
@@ -63,6 +63,6 @@ export function useEntitySearch<T extends { name: string }>(
 
   return {
     searchQuery,
-    filtered: readonly(filtered)
+    filtered
   }
 }

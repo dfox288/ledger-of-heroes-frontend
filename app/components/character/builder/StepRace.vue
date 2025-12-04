@@ -4,6 +4,8 @@ import { storeToRefs } from 'pinia'
 import type { Race } from '~/types'
 import { useCharacterBuilderStore } from '~/stores/characterBuilder'
 import { useWizardNavigation } from '~/composables/useWizardSteps'
+import { useDetailModal } from '~/composables/useDetailModal'
+import { useEntitySearch } from '~/composables/useEntitySearch'
 
 const store = useCharacterBuilderStore()
 const { selectedBaseRace, subraceId, isLoading, error, sourceFilterString } = storeToRefs(store)
@@ -29,10 +31,10 @@ const { data: races, pending: loadingRaces } = await useAsyncData(
 )
 
 // Local state
-const searchQuery = ref('')
 const localSelectedRace = ref<Race | null>(null)
-const detailModalOpen = ref(false)
-const detailRace = ref<Race | null>(null)
+
+// Detail modal
+const { open: detailModalOpen, item: detailRace, show: showDetails, close: closeDetails } = useDetailModal<Race>()
 
 // Confirmation modal state
 const confirmChangeModalOpen = ref(false)
@@ -44,14 +46,8 @@ const baseRaces = computed((): Race[] => {
   return races.value.filter((race: Race) => !race.parent_race)
 })
 
-// Apply search filter
-const filteredRaces = computed((): Race[] => {
-  if (!searchQuery.value) return baseRaces.value
-  const query = searchQuery.value.toLowerCase()
-  return baseRaces.value.filter((race: Race) =>
-    race.name.toLowerCase().includes(query)
-  )
-})
+// Search functionality
+const { searchQuery, filtered: filteredRaces } = useEntitySearch(baseRaces)
 
 // Validation: can proceed if race selected
 const canProceed = computed(() => localSelectedRace.value !== null)
@@ -88,22 +84,6 @@ function confirmRaceChange() {
 function cancelRaceChange() {
   pendingRaceChange.value = null
   confirmChangeModalOpen.value = false
-}
-
-/**
- * Open detail modal
- */
-function handleViewDetails(race: Race) {
-  detailRace.value = race
-  detailModalOpen.value = true
-}
-
-/**
- * Close detail modal
- */
-function handleCloseModal() {
-  detailModalOpen.value = false
-  detailRace.value = null
 }
 
 /**
@@ -184,7 +164,7 @@ onMounted(() => {
         :race="race"
         :selected="localSelectedRace?.id === race.id"
         @select="handleRaceSelect"
-        @view-details="handleViewDetails(race)"
+        @view-details="showDetails(race)"
       />
     </div>
 
@@ -218,7 +198,7 @@ onMounted(() => {
     <CharacterBuilderRaceDetailModal
       :race="detailRace"
       :open="detailModalOpen"
-      @close="handleCloseModal"
+      @close="closeDetails"
     />
 
     <!-- Confirmation Modal for changing race when subrace was selected -->

@@ -3,6 +3,8 @@ import { storeToRefs } from 'pinia'
 import type { Background } from '~/types'
 import { useCharacterBuilderStore } from '~/stores/characterBuilder'
 import { useWizardNavigation } from '~/composables/useWizardSteps'
+import { useDetailModal } from '~/composables/useDetailModal'
+import { useEntitySearch } from '~/composables/useEntitySearch'
 
 const store = useCharacterBuilderStore()
 const { selectedBackground, isLoading, error, sourceFilterString } = storeToRefs(store)
@@ -28,20 +30,20 @@ const { data: backgrounds, pending: loadingBackgrounds } = await useAsyncData(
 )
 
 // Local state
-const searchQuery = ref('')
 const localSelectedBackground = ref<Background | null>(null)
-const detailModalOpen = ref(false)
-const detailBackground = ref<Background | null>(null)
 
-// Apply search filter
-const filteredBackgrounds = computed((): Background[] => {
+// Detail modal
+const { open: detailModalOpen, item: detailBackground, show: showDetails, close: closeDetails } = useDetailModal<Background>()
+
+// Create a computed that ensures we have a proper type for useEntitySearch
+const backgroundsList = computed((): Background[] => {
   if (!backgrounds.value) return []
-  if (!searchQuery.value) return backgrounds.value
-  const query = searchQuery.value.toLowerCase()
-  return backgrounds.value.filter((bg: Background) =>
-    bg.name.toLowerCase().includes(query)
-    || bg.feature_name?.toLowerCase().includes(query)
-  )
+  return backgrounds.value
+})
+
+// Search filter
+const { searchQuery, filtered: filteredBackgrounds } = useEntitySearch(backgroundsList, {
+  searchableFields: ['name', 'feature_name']
 })
 
 // Validation: can proceed if background selected
@@ -54,22 +56,6 @@ const canProceed = computed(() => {
  */
 function handleBackgroundSelect(background: Background) {
   localSelectedBackground.value = background
-}
-
-/**
- * Open detail modal
- */
-function handleViewDetails(background: Background) {
-  detailBackground.value = background
-  detailModalOpen.value = true
-}
-
-/**
- * Close detail modal
- */
-function handleCloseModal() {
-  detailModalOpen.value = false
-  detailBackground.value = null
 }
 
 /**
@@ -146,7 +132,7 @@ onMounted(() => {
         :background="background"
         :selected="localSelectedBackground?.id === background.id"
         @select="handleBackgroundSelect"
-        @view-details="handleViewDetails(background)"
+        @view-details="showDetails(background)"
       />
     </div>
 
@@ -180,7 +166,7 @@ onMounted(() => {
     <CharacterBuilderBackgroundDetailModal
       :background="detailBackground"
       :open="detailModalOpen"
-      @close="handleCloseModal"
+      @close="closeDetails"
     />
   </div>
 </template>
