@@ -99,9 +99,11 @@ function isPackExpanded(itemId: number): boolean {
 
 /**
  * Format pack content item display with quantity
+ * Handles string quantities from API, with NaN fallback to 1
  */
 function formatPackContentItem(content: PackContentResource): string {
-  const quantity = Number.parseInt(content.quantity, 10)
+  const parsed = Number.parseInt(content.quantity, 10)
+  const quantity = Number.isNaN(parsed) ? 1 : parsed
   const name = content.item?.name ?? 'Unknown'
   if (quantity > 1) {
     return `${quantity} ${name}`
@@ -166,6 +168,8 @@ function formatPackContentItem(content: PackContentResource): string {
             v-if="hasPackContents(item)"
             :data-test="`pack-contents-toggle-${item.id}`"
             type="button"
+            :aria-expanded="isPackExpanded(item.id)"
+            :aria-label="`${isPackExpanded(item.id) ? 'Hide' : 'Show'} contents of ${getItemDisplayName(item)}`"
             class="flex items-center gap-1 text-sm text-primary-600 dark:text-primary-400 hover:text-primary-700 dark:hover:text-primary-300 px-2 py-1 rounded transition-colors"
             @click.stop="togglePackContents(item.id)"
           >
