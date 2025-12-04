@@ -96,6 +96,8 @@ export interface Character {
   temp_hit_points: number
   armor_class: number | null
   alignment: CharacterAlignment | null
+  /** Whether character currently has inspiration (DM awarded) */
+  has_inspiration: boolean
   race: { id: number, name: string, slug: string } | null
   /** @deprecated Legacy field for primary class. Use classes array instead */
   class: { id: number, name: string, slug: string } | null
