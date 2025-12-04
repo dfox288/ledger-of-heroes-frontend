@@ -336,6 +336,50 @@ describe('useCharacterBuilderStore', () => {
       await expect(store.selectRace(mockRace)).rejects.toThrow('Network error')
       expect(store.error).toBe('Failed to save race')
     })
+
+    it('fetches full race detail to get subraces array', async () => {
+      // Race from list endpoint - has subraces: null (or undefined)
+      const raceFromList: Race = {
+        id: 5,
+        name: 'Elf',
+        slug: 'elf',
+        speed: 30
+        // Note: no subraces array - this is what the list endpoint returns
+      } as Race
+
+      // Full race detail - includes subraces
+      const fullRaceDetail: Race = {
+        id: 5,
+        name: 'Elf',
+        slug: 'elf',
+        speed: 30,
+        subraces: [
+          { id: 6, name: 'High Elf', slug: 'high-elf' },
+          { id: 7, name: 'Wood Elf', slug: 'wood-elf' }
+        ]
+      } as Race
+
+      // Mock: PATCH to save race, then GET full detail, then GET stats
+      mockApiFetch
+        .mockResolvedValueOnce({ data: {} }) // PATCH /characters/42
+        .mockResolvedValueOnce({ data: fullRaceDetail }) // GET /races/elf
+        .mockResolvedValueOnce({ data: {} }) // refreshStats
+
+      const store = useCharacterBuilderStore()
+      store.characterId = 42
+
+      await store.selectRace(raceFromList)
+
+      // Should have fetched the full race detail
+      expect(mockApiFetch).toHaveBeenCalledWith('/races/elf')
+
+      // selectedRace should have the subraces from the full detail
+      expect(store.selectedRace?.subraces).toBeDefined()
+      expect(store.selectedRace?.subraces?.length).toBe(2)
+
+      // hasSubraces should now be true
+      expect(store.hasSubraces).toBe(true)
+    })
   })
 
   describe('selectClass action', () => {

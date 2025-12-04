@@ -331,6 +331,7 @@ export const useCharacterBuilderStore = defineStore('characterBuilder', () => {
   /**
    * Step 2: Select race (base race only, subrace selected in separate step)
    * API expects race_id to be the base race ID at this point
+   * Fetches full race detail to get subraces array (for hasSubraces computed)
    */
   async function selectRace(race: Race, subrace?: Race): Promise<void> {
     isLoading.value = true
