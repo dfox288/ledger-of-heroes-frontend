@@ -2,38 +2,10 @@ import { describe, it, expect } from 'vitest'
 import { mountSuspended } from '@nuxt/test-utils/runtime'
 import type { CharacterClass } from '~/types'
 import ClassCard from '~/components/class/ClassCard.vue'
+import { createMockClass } from '../../helpers/mockFactories'
 
 describe('ClassCard', () => {
-  const mockClass: CharacterClass = {
-    id: 1,
-    name: 'Wizard',
-    slug: 'wizard',
-    hit_die: 6,
-    is_base_class: true, // API returns boolean
-    parent_class_id: null,
-    primary_ability: {
-      id: 4,
-      code: 'INT',
-      name: 'Intelligence'
-    },
-    spellcasting_ability: {
-      id: 4,
-      code: 'INT',
-      name: 'Intelligence'
-    },
-    subclasses: [
-      { id: 2, name: 'School of Evocation' },
-      { id: 3, name: 'School of Abjuration' }
-    ],
-    proficiencies: [
-      { id: 1, name: 'Daggers' },
-      { id: 2, name: 'Quarterstaffs' }
-    ],
-    description: 'Wizards are supreme magic-users, defined and united as a class by the spells they cast.',
-    sources: [
-      { code: 'PHB', name: 'Player\'s Handbook', pages: '112' }
-    ]
-  }
+  const mockClass = createMockClass()
 
   // Class-specific tests (domain logic)
   it('truncates descriptions to 150 characters', async () => {

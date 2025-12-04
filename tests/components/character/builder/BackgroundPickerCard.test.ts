@@ -1,76 +1,38 @@
 import { describe, it, expect } from 'vitest'
 import { mountSuspended } from '@nuxt/test-utils/runtime'
 import BackgroundPickerCard from '~/components/character/builder/BackgroundPickerCard.vue'
+import { createMockBackground } from '../../../helpers/mockFactories'
+import { testPickerCardBehavior } from '../../../helpers/pickerCardBehavior'
 
-const mockBackground = {
-  id: 1,
-  slug: 'acolyte',
-  name: 'Acolyte',
-  feature_name: 'Shelter of the Faithful',
-  feature_description: 'As an acolyte, you command respect...',
-  proficiencies: [
-    { proficiency_type: 'skill', skill: { name: 'Insight' } },
-    { proficiency_type: 'skill', skill: { name: 'Religion' } }
-  ],
-  languages: [
-    { language: { name: 'Celestial' } },
-    { language: { name: 'Infernal' } }
-  ],
-  equipment: []
-}
+const mockBackground = createMockBackground()
+// Uses default Acolyte with Insight, Religion skills; 2 languages
 
 describe('BackgroundPickerCard', () => {
-  it('displays background name', async () => {
-    const wrapper = await mountSuspended(BackgroundPickerCard, {
-      props: { background: mockBackground, selected: false }
-    })
-
-    expect(wrapper.text()).toContain('Acolyte')
+  // Test common picker card behavior
+  testPickerCardBehavior({
+    component: BackgroundPickerCard,
+    mockEntity: mockBackground,
+    entityName: 'Acolyte',
+    propName: 'background'
   })
 
-  it('displays feature name badge', async () => {
-    const wrapper = await mountSuspended(BackgroundPickerCard, {
-      props: { background: mockBackground, selected: false }
+  // Background-specific tests
+  describe('Background-specific behavior', () => {
+    it('displays feature name badge', async () => {
+      const wrapper = await mountSuspended(BackgroundPickerCard, {
+        props: { background: mockBackground, selected: false }
+      })
+
+      expect(wrapper.text()).toContain('Shelter of the Faithful')
     })
 
-    expect(wrapper.text()).toContain('Shelter of the Faithful')
-  })
+    it('displays skill proficiencies', async () => {
+      const wrapper = await mountSuspended(BackgroundPickerCard, {
+        props: { background: mockBackground, selected: false }
+      })
 
-  it('displays skill proficiencies', async () => {
-    const wrapper = await mountSuspended(BackgroundPickerCard, {
-      props: { background: mockBackground, selected: false }
+      expect(wrapper.text()).toContain('Insight')
+      expect(wrapper.text()).toContain('Religion')
     })
-
-    expect(wrapper.text()).toContain('Insight')
-    expect(wrapper.text()).toContain('Religion')
-  })
-
-  it('shows checkmark when selected', async () => {
-    const wrapper = await mountSuspended(BackgroundPickerCard, {
-      props: { background: mockBackground, selected: true }
-    })
-
-    expect(wrapper.find('[data-test="selected-check"]').exists()).toBe(true)
-  })
-
-  it('emits select event on click', async () => {
-    const wrapper = await mountSuspended(BackgroundPickerCard, {
-      props: { background: mockBackground, selected: false }
-    })
-
-    await wrapper.find('[data-test="picker-card"]').trigger('click')
-
-    expect(wrapper.emitted('select')).toBeTruthy()
-    expect(wrapper.emitted('select')![0]).toEqual([mockBackground])
-  })
-
-  it('emits viewDetails event on details button click', async () => {
-    const wrapper = await mountSuspended(BackgroundPickerCard, {
-      props: { background: mockBackground, selected: false }
-    })
-
-    await wrapper.find('[data-test="view-details-btn"]').trigger('click')
-
-    expect(wrapper.emitted('viewDetails')).toBeTruthy()
   })
 })

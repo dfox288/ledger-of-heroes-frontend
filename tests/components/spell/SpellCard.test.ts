@@ -2,6 +2,7 @@ import { describe, it, expect } from 'vitest'
 import { mountSuspended } from '@nuxt/test-utils/runtime'
 import SpellCard from '~/components/spell/SpellCard.vue'
 import { createMockSpell } from '../../helpers/mockFactories'
+import { testBadgeVisibility } from '../../helpers/badgeVisibilityBehavior'
 
 describe('SpellCard', () => {
   const mockSpell = createMockSpell()
@@ -92,39 +93,11 @@ describe('SpellCard', () => {
     expect(wrapper.text()).toContain('A bright streak flashes')
   })
 
-  it('shows concentration badge when needs_concentration is true', async () => {
-    const concentrationSpell = { ...mockSpell, needs_concentration: true }
-    const wrapper = await mountSuspended(SpellCard, {
-      props: { spell: concentrationSpell }
-    })
-
-    expect(wrapper.text()).toContain('Concentration')
-  })
-
-  it('hides concentration badge when needs_concentration is false', async () => {
-    const wrapper = await mountSuspended(SpellCard, {
-      props: { spell: mockSpell }
-    })
-
-    expect(wrapper.text()).not.toContain('Concentration')
-  })
-
-  it('shows ritual badge when is_ritual is true', async () => {
-    const ritualSpell = { ...mockSpell, is_ritual: true }
-    const wrapper = await mountSuspended(SpellCard, {
-      props: { spell: ritualSpell }
-    })
-
-    expect(wrapper.text()).toContain('Ritual')
-  })
-
-  it('hides ritual badge when is_ritual is false', async () => {
-    const wrapper = await mountSuspended(SpellCard, {
-      props: { spell: mockSpell }
-    })
-
-    expect(wrapper.text()).not.toContain('Ritual')
-  })
+  // Badge visibility tests (consolidated via helper)
+  testBadgeVisibility(SpellCard, createMockSpell, 'spell', [
+    { badgeText: 'Concentration', propField: 'needs_concentration' },
+    { badgeText: 'Ritual', propField: 'is_ritual' }
+  ])
 
   it('handles spells with all badges (concentration + ritual)', async () => {
     const fullSpell = {

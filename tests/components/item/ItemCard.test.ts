@@ -2,6 +2,7 @@ import { describe, it, expect } from 'vitest'
 import { mountSuspended } from '@nuxt/test-utils/runtime'
 import ItemCard from '~/components/item/ItemCard.vue'
 import { createMockItem } from '../../helpers/mockFactories'
+import { testBadgeVisibility } from '../../helpers/badgeVisibilityBehavior'
 
 describe('ItemCard', () => {
   const mockItem = createMockItem()
@@ -114,39 +115,11 @@ describe('ItemCard', () => {
     expect(wrapper.text()).not.toContain('lb')
   })
 
-  it('shows magic badge when is_magic is true', async () => {
-    const magicItem = { ...mockItem, is_magic: true }
-    const wrapper = await mountSuspended(ItemCard, {
-      props: { item: magicItem }
-    })
-
-    expect(wrapper.text()).toContain('Magic')
-  })
-
-  it('hides magic badge when is_magic is false', async () => {
-    const wrapper = await mountSuspended(ItemCard, {
-      props: { item: mockItem }
-    })
-
-    expect(wrapper.text()).not.toContain('Magic')
-  })
-
-  it('shows attunement badge when requires_attunement is true', async () => {
-    const attunementItem = { ...mockItem, requires_attunement: true }
-    const wrapper = await mountSuspended(ItemCard, {
-      props: { item: attunementItem }
-    })
-
-    expect(wrapper.text()).toContain('Attunement')
-  })
-
-  it('hides attunement badge when requires_attunement is false', async () => {
-    const wrapper = await mountSuspended(ItemCard, {
-      props: { item: mockItem }
-    })
-
-    expect(wrapper.text()).not.toContain('Attunement')
-  })
+  // Badge visibility tests (consolidated via helper)
+  testBadgeVisibility(ItemCard, createMockItem, 'item', [
+    { badgeText: 'Magic', propField: 'is_magic' },
+    { badgeText: 'Attunement', propField: 'requires_attunement' }
+  ])
 
   it('handles items with both magic and attunement', async () => {
     const specialItem = {
