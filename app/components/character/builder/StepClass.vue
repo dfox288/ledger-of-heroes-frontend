@@ -4,6 +4,8 @@ import { storeToRefs } from 'pinia'
 import type { CharacterClass } from '~/types'
 import { useCharacterBuilderStore } from '~/stores/characterBuilder'
 import { useWizardNavigation } from '~/composables/useWizardSteps'
+import { useDetailModal } from '~/composables/useDetailModal'
+import { useEntitySearch } from '~/composables/useEntitySearch'
 
 const store = useCharacterBuilderStore()
 const { selectedClass, isLoading, error, sourceFilterString } = storeToRefs(store)
@@ -31,20 +33,13 @@ const { data: classes, pending: loadingClasses } = await useAsyncData(
 )
 
 // Local state
-const searchQuery = ref('')
 const localSelectedClass = ref<CharacterClass | null>(null)
-const detailModalOpen = ref(false)
-const detailClass = ref<CharacterClass | null>(null)
 
-// Apply search filter
-const filteredClasses = computed(() => {
-  if (!classes.value) return []
-  if (!searchQuery.value) return classes.value
-  const query = searchQuery.value.toLowerCase()
-  return classes.value.filter(cls =>
-    cls.name.toLowerCase().includes(query)
-  )
-})
+// Modal state
+const { open: detailModalOpen, item: detailClass, show: showDetails, close: closeDetails } = useDetailModal<CharacterClass>()
+
+// Search functionality
+const { searchQuery, filtered: filteredClasses } = useEntitySearch(classes)
 
 // Validation: can proceed if class selected
 const canProceed = computed(() => {
@@ -56,22 +51,6 @@ const canProceed = computed(() => {
  */
 function handleClassSelect(cls: CharacterClass) {
   localSelectedClass.value = cls
-}
-
-/**
- * Open detail modal
- */
-function handleViewDetails(cls: CharacterClass) {
-  detailClass.value = cls
-  detailModalOpen.value = true
-}
-
-/**
- * Close detail modal
- */
-function handleCloseModal() {
-  detailModalOpen.value = false
-  detailClass.value = null
 }
 
 /**
@@ -149,7 +128,7 @@ onMounted(() => {
         :character-class="cls"
         :selected="localSelectedClass?.id === cls.id"
         @select="handleClassSelect"
-        @view-details="handleViewDetails(cls)"
+        @view-details="showDetails(cls)"
       />
     </div>
 
@@ -200,7 +179,7 @@ onMounted(() => {
     <CharacterBuilderClassDetailModal
       :character-class="detailClass"
       :open="detailModalOpen"
-      @close="handleCloseModal"
+      @close="closeDetails"
     />
   </div>
 </template>

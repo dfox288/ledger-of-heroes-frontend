@@ -1,3 +1,4 @@
+<!-- app/components/character/builder/BackgroundPickerCard.vue -->
 <script setup lang="ts">
 import type { Background } from '~/types'
 
@@ -9,8 +10,8 @@ interface Props {
 const props = defineProps<Props>()
 
 const emit = defineEmits<{
-  select: [background: Background]
-  viewDetails: []
+  'select': [background: Background]
+  'view-details': []
 }>()
 
 // Get background image path (256px variant)
@@ -39,13 +40,13 @@ function handleSelect() {
 
 function handleViewDetails(event: Event) {
   event.stopPropagation()
-  emit('viewDetails')
+  emit('view-details')
 }
 </script>
 
 <template>
   <div
-    data-test="picker-card"
+    data-testid="picker-card"
     class="relative cursor-pointer transition-all"
     :class="[
       selected ? 'ring-2 ring-background-500 ring-offset-2' : ''
@@ -63,7 +64,7 @@ function handleViewDetails(event: Event) {
       <!-- Selected Checkmark -->
       <div
         v-if="selected"
-        data-test="selected-check"
+        data-testid="selected-check"
         class="absolute top-2 right-2 z-20"
       >
         <UBadge
@@ -126,7 +127,7 @@ function handleViewDetails(event: Event) {
         <!-- View Details Button -->
         <div class="mt-4 pt-3 border-t border-gray-200 dark:border-gray-700">
           <UButton
-            data-test="view-details-btn"
+            data-testid="view-details-btn"
             variant="ghost"
             color="background"
             size="sm"
