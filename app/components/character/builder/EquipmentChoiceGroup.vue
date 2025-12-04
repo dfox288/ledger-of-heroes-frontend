@@ -38,8 +38,14 @@ function handleItemSelect(choiceOption: number, choiceItemIndex: number, itemIds
 
 /**
  * Get display name for equipment item
+ * Checks choice_items for fixed items (packs), then item, then description
  */
 function getItemDisplayName(item: EntityItemResource): string {
+  // For choice options with a single fixed item (like packs), use its name
+  const firstChoiceItem = item.choice_items?.[0]
+  if (item.choice_items?.length === 1 && firstChoiceItem?.item?.name) {
+    return firstChoiceItem.item.name
+  }
   if (item.item?.name) {
     return item.item.name
   }
@@ -67,16 +73,38 @@ function getItemSelection(choiceOption: number, index: number): number[] {
 
 /**
  * Check if an item has pack contents
+ * For choice items, contents are in choice_items[0].item.contents
+ * For fixed items, contents are in item.contents
  */
 function hasPackContents(item: EntityItemResource): boolean {
-  return Boolean(item.item?.contents && item.item.contents.length > 0)
+  // Check direct item contents first
+  if (item.item?.contents && item.item.contents.length > 0) {
+    return true
+  }
+  // Check choice_items - if there's exactly one fixed item, check its contents
+  const firstChoiceItem = item.choice_items?.[0]
+  if (item.choice_items?.length === 1 && firstChoiceItem?.item?.contents) {
+    return firstChoiceItem.item.contents.length > 0
+  }
+  return false
 }
 
 /**
  * Get pack contents for an item
+ * For choice items, contents are in choice_items[0].item.contents
+ * For fixed items, contents are in item.contents
  */
 function getPackContents(item: EntityItemResource): PackContentResource[] {
-  return item.item?.contents ?? []
+  // Check direct item contents first
+  if (item.item?.contents && item.item.contents.length > 0) {
+    return item.item.contents
+  }
+  // Check choice_items - if there's exactly one fixed item, get its contents
+  const firstChoiceItem = item.choice_items?.[0]
+  if (item.choice_items?.length === 1 && firstChoiceItem?.item?.contents) {
+    return firstChoiceItem.item.contents
+  }
+  return []
 }
 
 /**
