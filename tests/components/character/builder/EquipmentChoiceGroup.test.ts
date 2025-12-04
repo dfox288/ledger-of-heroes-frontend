@@ -1,7 +1,7 @@
 import { describe, it, expect, vi } from 'vitest'
 import { mountSuspended } from '@nuxt/test-utils/runtime'
 import EquipmentChoiceGroup from '~/components/character/builder/EquipmentChoiceGroup.vue'
-import { mockCompoundChoiceGroup, mockMartialWeapons } from '../../../fixtures/equipment'
+import { mockCompoundChoiceGroup, mockMartialWeapons, mockPackChoiceGroup } from '../../../fixtures/equipment'
 
 // Mock useApi composable
 vi.mock('~/composables/useApi', () => ({
@@ -138,5 +138,100 @@ describe('EquipmentChoiceGroup with choice_items', () => {
     // Component should emit itemSelect events
     // Exact mechanism depends on implementation
     expect(wrapper.emitted).toBeDefined()
+  })
+})
+
+describe('EquipmentChoiceGroup with pack contents', () => {
+  it('shows pack contents indicator for items with contents', async () => {
+    const wrapper = await mountSuspended(EquipmentChoiceGroup, {
+      props: {
+        groupName: 'Pack Choice',
+        items: mockPackChoiceGroup,
+        selectedId: null
+      }
+    })
+
+    // Should show pack contents toggle/indicator for items with contents
+    expect(wrapper.find('[data-test="pack-contents-toggle-50"]').exists()).toBe(true)
+    expect(wrapper.find('[data-test="pack-contents-toggle-51"]').exists()).toBe(true)
+  })
+
+  it('displays pack contents when expanded', async () => {
+    const wrapper = await mountSuspended(EquipmentChoiceGroup, {
+      props: {
+        groupName: 'Pack Choice',
+        items: mockPackChoiceGroup,
+        selectedId: null
+      }
+    })
+
+    // Click to expand pack contents
+    await wrapper.find('[data-test="pack-contents-toggle-50"]').trigger('click')
+    await wrapper.vm.$nextTick()
+
+    // Should show pack contents list
+    const contentsList = wrapper.find('[data-test="pack-contents-list-50"]')
+    expect(contentsList.exists()).toBe(true)
+    expect(contentsList.text()).toContain('Backpack')
+    expect(contentsList.text()).toContain('Crowbar')
+    expect(contentsList.text()).toContain('10 Torch')
+  })
+
+  it('shows quantity for pack contents items', async () => {
+    const wrapper = await mountSuspended(EquipmentChoiceGroup, {
+      props: {
+        groupName: 'Pack Choice',
+        items: mockPackChoiceGroup,
+        selectedId: null
+      }
+    })
+
+    // Expand contents
+    await wrapper.find('[data-test="pack-contents-toggle-50"]').trigger('click')
+    await wrapper.vm.$nextTick()
+
+    const contentsList = wrapper.find('[data-test="pack-contents-list-50"]')
+    // Should show quantities for items with quantity > 1
+    expect(contentsList.text()).toMatch(/10.*Torch|Torch.*×10|10×.*Torch/)
+    expect(contentsList.text()).toMatch(/10.*Piton|Piton.*×10|10×.*Piton/)
+  })
+
+  it('collapses pack contents when toggle clicked again', async () => {
+    const wrapper = await mountSuspended(EquipmentChoiceGroup, {
+      props: {
+        groupName: 'Pack Choice',
+        items: mockPackChoiceGroup,
+        selectedId: null
+      }
+    })
+
+    // Expand
+    await wrapper.find('[data-test="pack-contents-toggle-50"]').trigger('click')
+    await wrapper.vm.$nextTick()
+    expect(wrapper.find('[data-test="pack-contents-list-50"]').exists()).toBe(true)
+
+    // Collapse
+    await wrapper.find('[data-test="pack-contents-toggle-50"]').trigger('click')
+    await wrapper.vm.$nextTick()
+    expect(wrapper.find('[data-test="pack-contents-list-50"]').exists()).toBe(false)
+  })
+
+  it('does not show pack contents toggle for items without contents', async () => {
+    // Use regular items without contents
+    const itemsWithoutContents = [
+      { id: 1, item_id: 101, item: { id: 101, name: 'Longsword' }, quantity: 1, is_choice: true, choice_group: 'weapon', choice_option: 1 },
+      { id: 2, item_id: 102, item: { id: 102, name: 'Rapier' }, quantity: 1, is_choice: true, choice_group: 'weapon', choice_option: 2 }
+    ]
+
+    const wrapper = await mountSuspended(EquipmentChoiceGroup, {
+      props: {
+        groupName: 'Weapon Choice',
+        items: itemsWithoutContents,
+        selectedId: null
+      }
+    })
+
+    expect(wrapper.find('[data-test="pack-contents-toggle-1"]').exists()).toBe(false)
+    expect(wrapper.find('[data-test="pack-contents-toggle-2"]').exists()).toBe(false)
   })
 })

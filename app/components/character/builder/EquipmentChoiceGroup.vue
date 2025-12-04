@@ -3,6 +3,7 @@ import type { components } from '~/types/api/generated'
 
 type EntityItemResource = components['schemas']['EntityItemResource']
 type EquipmentChoiceItemResource = components['schemas']['EquipmentChoiceItemResource']
+type PackContentResource = components['schemas']['PackContentResource']
 
 interface Props {
   groupName: string
@@ -19,6 +20,9 @@ const emit = defineEmits<{
   select: [id: number]
   itemSelect: [choiceOption: number, choiceItemIndex: number, itemId: number]
 }>()
+
+// Track which pack contents are expanded (by item.id)
+const expandedPacks = ref<Set<number>>(new Set())
 
 function handleSelect(id: number) {
   emit('select', id)
@@ -46,13 +50,6 @@ function getItemDisplayName(item: EntityItemResource): string {
 }
 
 /**
- * Get the selected option object
- */
-const selectedOption = computed(() =>
-  props.items.find(item => item.id === props.selectedId)
-)
-
-/**
  * Check if a choice_item needs a picker (has proficiency_type, no fixed item)
  */
 function needsPicker(choiceItem: EquipmentChoiceItemResource): boolean {
@@ -66,6 +63,52 @@ function getItemSelection(choiceOption: number, index: number): number[] {
   const key = `${choiceOption}:${index}`
   const selected = props.itemSelections?.get(key)
   return selected ? [selected] : []
+}
+
+/**
+ * Check if an item has pack contents
+ */
+function hasPackContents(item: EntityItemResource): boolean {
+  return Boolean(item.item?.contents && item.item.contents.length > 0)
+}
+
+/**
+ * Get pack contents for an item
+ */
+function getPackContents(item: EntityItemResource): PackContentResource[] {
+  return item.item?.contents ?? []
+}
+
+/**
+ * Toggle pack contents visibility
+ */
+function togglePackContents(itemId: number) {
+  if (expandedPacks.value.has(itemId)) {
+    expandedPacks.value.delete(itemId)
+  } else {
+    expandedPacks.value.add(itemId)
+  }
+}
+
+/**
+ * Check if pack contents are expanded
+ */
+function isPackExpanded(itemId: number): boolean {
+  return expandedPacks.value.has(itemId)
+}
+
+/**
+ * Format pack content item display with quantity
+ * Handles string quantities from API, with NaN fallback to 1
+ */
+function formatPackContentItem(content: PackContentResource): string {
+  const parsed = Number.parseInt(content.quantity, 10)
+  const quantity = Number.isNaN(parsed) ? 1 : parsed
+  const name = content.item?.name ?? 'Unknown'
+  if (quantity > 1) {
+    return `${quantity} ${name}`
+  }
+  return name
 }
 </script>
 
@@ -108,7 +151,7 @@ function getItemSelection(choiceOption: number, index: number): number[] {
           </div>
 
           <!-- Item info -->
-          <div>
+          <div class="flex-1">
             <span class="font-medium text-gray-900 dark:text-white">
               {{ getItemDisplayName(item) }}
             </span>
@@ -119,7 +162,48 @@ function getItemSelection(choiceOption: number, index: number): number[] {
               (×{{ item.quantity }})
             </span>
           </div>
+
+          <!-- Pack contents toggle (only if item has contents) -->
+          <button
+            v-if="hasPackContents(item)"
+            :data-test="`pack-contents-toggle-${item.id}`"
+            type="button"
+            :aria-expanded="isPackExpanded(item.id)"
+            :aria-label="`${isPackExpanded(item.id) ? 'Hide' : 'Show'} contents of ${getItemDisplayName(item)}`"
+            class="flex items-center gap-1 text-sm text-primary-600 dark:text-primary-400 hover:text-primary-700 dark:hover:text-primary-300 px-2 py-1 rounded transition-colors"
+            @click.stop="togglePackContents(item.id)"
+          >
+            <UIcon
+              :name="isPackExpanded(item.id) ? 'i-heroicons-chevron-up' : 'i-heroicons-chevron-down'"
+              class="w-4 h-4"
+            />
+            <span>{{ isPackExpanded(item.id) ? 'Hide' : 'Show' }} contents</span>
+          </button>
         </button>
+
+        <!-- Pack contents list (when expanded) -->
+        <div
+          v-if="hasPackContents(item) && isPackExpanded(item.id)"
+          :data-test="`pack-contents-list-${item.id}`"
+          class="ml-8 mt-2 p-3 bg-gray-50 dark:bg-gray-800/50 rounded-lg border border-gray-200 dark:border-gray-700"
+        >
+          <p class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-2">
+            Pack Contents
+          </p>
+          <ul class="space-y-1">
+            <li
+              v-for="(content, idx) in getPackContents(item)"
+              :key="idx"
+              class="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300"
+            >
+              <UIcon
+                name="i-heroicons-cube"
+                class="w-4 h-4 text-gray-400 flex-shrink-0"
+              />
+              <span>{{ formatPackContentItem(content) }}</span>
+            </li>
+          </ul>
+        </div>
 
         <!-- Inline choice_items pickers (only for selected option) -->
         <div

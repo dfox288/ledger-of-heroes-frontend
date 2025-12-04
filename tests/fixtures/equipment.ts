@@ -316,6 +316,102 @@ export const mockMultipleChoiceGroups: Equipment[] = [
 ]
 
 /**
+ * Mock equipment pack with contents (e.g., Explorer's Pack)
+ */
+export const mockExplorersPack = {
+  id: 999,
+  name: 'Explorer\'s Pack',
+  slug: 'explorers-pack',
+  description: 'Includes a backpack, a bedroll, a mess kit, a tinderbox, 10 torches, 10 days of rations, and a waterskin. The pack also has 50 feet of hempen rope strapped to the side of it.',
+  item_type_id: 4,
+  item_type: { id: 4, code: 'EG', name: 'Equipment', description: null },
+  cost_cp: 1000,
+  weight: '59',
+  is_magic: false,
+  requires_attunement: false,
+  rarity: null,
+  proficiency_category: 'none',
+  contents: [
+    { quantity: '1', item: { id: 1, name: 'Backpack', slug: 'backpack', weight: '5', cost_cp: '200' } },
+    { quantity: '1', item: { id: 2, name: 'Bedroll', slug: 'bedroll', weight: '7', cost_cp: '100' } },
+    { quantity: '1', item: { id: 3, name: 'Mess Kit', slug: 'mess-kit', weight: '1', cost_cp: '20' } },
+    { quantity: '1', item: { id: 4, name: 'Tinderbox', slug: 'tinderbox', weight: '1', cost_cp: '50' } },
+    { quantity: '10', item: { id: 5, name: 'Torch', slug: 'torch', weight: '1', cost_cp: '1' } },
+    { quantity: '10', item: { id: 6, name: 'Rations (1 day)', slug: 'rations-1-day', weight: '2', cost_cp: '50' } },
+    { quantity: '1', item: { id: 7, name: 'Waterskin', slug: 'waterskin', weight: '5', cost_cp: '20' } },
+    { quantity: '50', item: { id: 8, name: 'Hempen Rope (50 feet)', slug: 'hempen-rope-50-feet', weight: '10', cost_cp: '100' } }
+  ],
+  sources: []
+}
+
+/**
+ * Mock equipment choice group with a pack option
+ * Represents a choice like "(a) a dungeoneer's pack or (b) an explorer's pack"
+ */
+export const mockPackChoiceGroup: Equipment[] = [
+  {
+    id: 50,
+    item_id: 998,
+    quantity: 1,
+    is_choice: true,
+    choice_group: 'choice_pack',
+    choice_option: 1,
+    choice_description: 'Starting equipment choice',
+    proficiency_subcategory: null,
+    description: null,
+    item: {
+      id: 998,
+      name: 'Dungeoneer\'s Pack',
+      slug: 'dungeoneers-pack',
+      description: 'Includes basic dungeoneering gear',
+      item_type_id: 4,
+      item_type: { id: 4, code: 'EG', name: 'Equipment', description: null },
+      cost_cp: 1200,
+      weight: '61.5',
+      is_magic: false,
+      contents: [
+        { quantity: '1', item: { id: 1, name: 'Backpack', slug: 'backpack', weight: '5', cost_cp: '200' } },
+        { quantity: '1', item: { id: 9, name: 'Crowbar', slug: 'crowbar', weight: '5', cost_cp: '200' } },
+        { quantity: '1', item: { id: 10, name: 'Hammer', slug: 'hammer', weight: '3', cost_cp: '100' } },
+        { quantity: '10', item: { id: 11, name: 'Piton', slug: 'piton', weight: '0.25', cost_cp: '5' } },
+        { quantity: '10', item: { id: 5, name: 'Torch', slug: 'torch', weight: '1', cost_cp: '1' } },
+        { quantity: '10', item: { id: 6, name: 'Rations (1 day)', slug: 'rations-1-day', weight: '2', cost_cp: '50' } },
+        { quantity: '1', item: { id: 7, name: 'Waterskin', slug: 'waterskin', weight: '5', cost_cp: '20' } },
+        { quantity: '50', item: { id: 8, name: 'Hempen Rope (50 feet)', slug: 'hempen-rope-50-feet', weight: '10', cost_cp: '100' } }
+      ]
+    }
+  } as Equipment,
+  {
+    id: 51,
+    item_id: 999,
+    quantity: 1,
+    is_choice: true,
+    choice_group: 'choice_pack',
+    choice_option: 2,
+    choice_description: 'Starting equipment choice',
+    proficiency_subcategory: null,
+    description: null,
+    item: mockExplorersPack
+  } as Equipment
+]
+
+/**
+ * Mock fixed equipment with a pack (non-choice)
+ */
+export const mockFixedPackEquipment: Equipment = {
+  id: 60,
+  item_id: 999,
+  quantity: 1,
+  is_choice: false,
+  choice_group: null,
+  choice_option: null,
+  choice_description: null,
+  proficiency_subcategory: null,
+  description: null,
+  item: mockExplorersPack
+} as Equipment
+
+/**
  * Representative equipment array for general testing
  */
 export const mockEquipmentArray: Equipment[] = [
