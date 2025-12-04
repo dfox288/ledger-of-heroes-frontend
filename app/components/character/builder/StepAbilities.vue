@@ -4,8 +4,29 @@ import type { AbilityScores } from '~/types'
 import { useWizardNavigation } from '~/composables/useWizardSteps'
 
 const store = useCharacterBuilderStore()
-const { selectedRace, abilityScores, abilityScoreMethod, isLoading, error } = storeToRefs(store)
+const {
+  selectedRace,
+  abilityScores,
+  abilityScoreMethod,
+  isLoading,
+  error,
+  racialAbilityChoices,
+  racialAbilityChoiceModifiers,
+  fixedRacialBonuses,
+  allRacialAbilityChoicesMade
+} = storeToRefs(store)
+const { toggleRacialAbilityChoice } = store
 const { nextStep } = useWizardNavigation()
+
+// All 6 ability scores for the choice UI
+const allAbilities = [
+  { code: 'STR', name: 'Strength' },
+  { code: 'DEX', name: 'Dexterity' },
+  { code: 'CON', name: 'Constitution' },
+  { code: 'INT', name: 'Intelligence' },
+  { code: 'WIS', name: 'Wisdom' },
+  { code: 'CHA', name: 'Charisma' }
+]
 
 type Method = 'standard_array' | 'point_buy' | 'manual'
 
@@ -27,15 +48,7 @@ const nullableScores = ref<Record<keyof AbilityScores, number | null>>({
 // Track validity from child components
 const isInputValid = ref(false)
 
-// Racial ability bonuses
-const racialBonuses = computed(() => {
-  if (!selectedRace.value?.modifiers) return []
-  return selectedRace.value.modifiers.filter(
-    m => m.modifier_category === 'ability_score' && m.ability_score
-  )
-})
-
-// Calculate final scores with racial bonuses
+// Calculate final scores with racial bonuses (both fixed and choice-based)
 const finalScores = computed(() => {
   const base = selectedMethod.value === 'standard_array'
     ? nullableScores.value
@@ -51,9 +64,22 @@ const finalScores = computed(() => {
 
   for (const ability of abilities) {
     const baseScore = base[ability]
-    const bonus = racialBonuses.value
+
+    // Fixed racial bonuses
+    let bonus = fixedRacialBonuses.value
       .filter(m => codeMap[m.ability_score?.code ?? ''] === ability)
       .reduce((sum, m) => sum + Number(m.value), 0)
+
+    // Choice-based racial bonuses
+    for (const mod of racialAbilityChoiceModifiers.value) {
+      const selected = racialAbilityChoices.value.get(mod.id)
+      if (selected) {
+        const abilityCode = Object.entries(codeMap).find(([, v]) => v === ability)?.[0]
+        if (abilityCode && selected.has(abilityCode)) {
+          bonus += Number(mod.value.replace('+', ''))
+        }
+      }
+    }
 
     result[ability] = {
       base: baseScore,
@@ -67,7 +93,10 @@ const finalScores = computed(() => {
 
 const canSave = computed(() => {
   if (isLoading.value) return false
-  return isInputValid.value
+  if (!isInputValid.value) return false
+  // If there are ability score choices to make, require them all to be completed
+  if (racialAbilityChoiceModifiers.value.length > 0 && !allRacialAbilityChoicesMade.value) return false
+  return true
 })
 
 async function saveAndContinue() {
@@ -166,9 +195,49 @@ watch(selectedMethod, (newMethod) => {
       />
     </div>
 
-    <!-- Racial Bonuses -->
+    <!-- Racial Ability Score Choices (e.g., Human Variant) -->
     <div
-      v-if="racialBonuses.length > 0"
+      v-if="racialAbilityChoiceModifiers.length > 0"
+      class="p-4 bg-race-50 dark:bg-race-900/20 rounded-lg"
+    >
+      <h3 class="font-semibold text-gray-900 dark:text-gray-100 mb-2">
+        Racial Ability Choices ({{ selectedRace?.name }})
+      </h3>
+      <div
+        v-for="mod in racialAbilityChoiceModifiers"
+        :key="mod.id"
+        class="mt-3"
+      >
+        <p class="text-sm text-gray-600 dark:text-gray-400 mb-2">
+          Choose {{ mod.choice_count }} {{ mod.choice_constraint === 'different' ? 'different ' : '' }}abilities for {{ mod.value }}
+        </p>
+        <div class="flex flex-wrap gap-2">
+          <UButton
+            v-for="ability in allAbilities"
+            :key="ability.code"
+            :data-testid="`ability-choice-${ability.code}`"
+            :variant="racialAbilityChoices.get(mod.id)?.has(ability.code) ? 'solid' : 'outline'"
+            :disabled="!racialAbilityChoices.get(mod.id)?.has(ability.code)
+              && (racialAbilityChoices.get(mod.id)?.size ?? 0) >= (mod.choice_count ?? 0)"
+            color="race"
+            size="sm"
+            @click="toggleRacialAbilityChoice(mod.id, ability.code, mod.choice_count ?? 0)"
+          >
+            {{ ability.name }} {{ mod.value }}
+          </UButton>
+        </div>
+        <p
+          v-if="(racialAbilityChoices.get(mod.id)?.size ?? 0) < (mod.choice_count ?? 0)"
+          class="text-xs text-amber-600 dark:text-amber-400 mt-2"
+        >
+          {{ (mod.choice_count ?? 0) - (racialAbilityChoices.get(mod.id)?.size ?? 0) }} more selection(s) required
+        </p>
+      </div>
+    </div>
+
+    <!-- Fixed Racial Bonuses -->
+    <div
+      v-if="fixedRacialBonuses.length > 0"
       class="p-4 bg-race-50 dark:bg-race-900/20 rounded-lg"
     >
       <h3 class="font-semibold text-gray-900 dark:text-gray-100 mb-2">
@@ -176,7 +245,7 @@ watch(selectedMethod, (newMethod) => {
       </h3>
       <div class="flex flex-wrap gap-2">
         <UBadge
-          v-for="bonus in racialBonuses"
+          v-for="bonus in fixedRacialBonuses"
           :key="bonus.id"
           color="race"
           variant="subtle"

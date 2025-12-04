@@ -83,6 +83,10 @@ export const useCharacterBuilderStore = defineStore('characterBuilder', () => {
   // User's pending language selections: Map<"race" | "background", Set<languageId>>
   const pendingLanguageSelections = ref<Map<string, Set<number>>>(new Map())
 
+  // Racial ability score choices: Map<modifierId, Set<abilityCode>>
+  // Example: { 2480: Set(['STR', 'DEX']) } for Human Variant choosing STR and DEX
+  const racialAbilityChoices = ref<Map<number, Set<string>>>(new Map())
+
   // ══════════════════════════════════════════════════════════════
   // SOURCEBOOK SELECTION
   // ══════════════════════════════════════════════════════════════
@@ -273,6 +277,29 @@ export const useCharacterBuilderStore = defineStore('characterBuilder', () => {
   const racialBonuses = computed(() =>
     selectedRace.value?.modifiers?.filter(m => m.modifier_category === 'ability_score') ?? []
   )
+
+  // Choice-based ability score modifiers (e.g., Human Variant's "choose 2 different abilities")
+  const racialAbilityChoiceModifiers = computed(() =>
+    selectedRace.value?.modifiers?.filter(
+      m => m.modifier_category === 'ability_score' && m.is_choice
+    ) ?? []
+  )
+
+  // Fixed racial ability bonuses (with predetermined ability_score)
+  const fixedRacialBonuses = computed(() =>
+    selectedRace.value?.modifiers?.filter(
+      m => m.modifier_category === 'ability_score' && !m.is_choice && m.ability_score
+    ) ?? []
+  )
+
+  // Check if all racial ability choices have been made
+  const allRacialAbilityChoicesMade = computed(() => {
+    for (const mod of racialAbilityChoiceModifiers.value) {
+      const selected = racialAbilityChoices.value.get(mod.id)
+      if (!selected || selected.size < (mod.choice_count ?? 0)) return false
+    }
+    return true
+  })
 
   // Combined equipment from class + background
   const allEquipment = computed(() => [
@@ -470,6 +497,32 @@ export const useCharacterBuilderStore = defineStore('characterBuilder', () => {
       isLoading.value = false
     }
   }
+
+  /**
+   * Toggle a racial ability score choice for a choice-based modifier
+   * @param modifierId - The modifier ID (e.g., 2480 for Human Variant)
+   * @param abilityCode - The ability code to toggle (e.g., 'STR', 'DEX')
+   * @param maxCount - Maximum number of selections allowed (from choice_count)
+   */
+  function toggleRacialAbilityChoice(modifierId: number, abilityCode: string, maxCount: number): void {
+    const current = racialAbilityChoices.value.get(modifierId) ?? new Set<string>()
+
+    if (current.has(abilityCode)) {
+      // Deselect
+      current.delete(abilityCode)
+    } else if (current.size < maxCount) {
+      // Select (only if under max)
+      current.add(abilityCode)
+    }
+
+    // Update the map (trigger reactivity)
+    racialAbilityChoices.value = new Map(racialAbilityChoices.value.set(modifierId, current))
+  }
+
+  // Clear racial ability choices when race changes
+  watch(selectedRace, () => {
+    racialAbilityChoices.value = new Map()
+  })
 
   /**
    * Clear subrace selection (used when user changes race)
@@ -1307,6 +1360,11 @@ export const useCharacterBuilderStore = defineStore('characterBuilder', () => {
     validationStatus,
     isComplete,
     racialBonuses,
+    racialAbilityChoices,
+    racialAbilityChoiceModifiers,
+    fixedRacialBonuses,
+    allRacialAbilityChoicesMade,
+    toggleRacialAbilityChoice,
     allEquipment,
     equipmentByChoiceGroup,
     fixedEquipment,
