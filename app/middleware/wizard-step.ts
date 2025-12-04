@@ -27,7 +27,8 @@ export default defineNuxtRouteMiddleware((to) => {
   const characterId = to.params.id
 
   if (!isStepAccessible(stepName)) {
-    return navigateTo(`/characters/${characterId}/edit/name`)
+    // Redirect to first step (sourcebooks) when step is not accessible
+    return navigateTo(`/characters/${characterId}/edit/sourcebooks`)
   }
 
   // Step exists and is visible - allow navigation

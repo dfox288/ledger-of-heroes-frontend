@@ -43,9 +43,9 @@ onMounted(async () => {
   try {
     await store.loadCharacterForEditing(characterId.value)
 
-    // For new characters, redirect to name step if not already there
-    if (isNewCharacter.value && currentStepName.value !== 'name') {
-      await navigateTo(`/characters/${characterId.value}/edit/name`)
+    // For new characters, redirect to sourcebooks step (step 1) if not already there
+    if (isNewCharacter.value && currentStepName.value !== 'sourcebooks') {
+      await navigateTo(`/characters/${characterId.value}/edit/sourcebooks`)
     }
   } catch {
     await navigateTo(`/characters/${characterId.value}`)

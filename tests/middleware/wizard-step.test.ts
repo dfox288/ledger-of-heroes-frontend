@@ -3,12 +3,14 @@ import { setActivePinia, createPinia } from 'pinia'
 
 // Mock the step registry with controllable visibility functions
 const mockStepVisibility: Record<string, boolean> = {
+  sourcebooks: true,
   name: true,
   race: true,
   subrace: false,
   class: true,
   abilities: true,
   background: true,
+  languages: false,
   proficiencies: false,
   equipment: true,
   spells: false,
@@ -17,12 +19,14 @@ const mockStepVisibility: Record<string, boolean> = {
 
 vi.mock('~/composables/useWizardSteps', () => ({
   stepRegistry: [
+    { name: 'sourcebooks', label: 'Sourcebooks', icon: 'i-heroicons-book-open', visible: () => mockStepVisibility.sourcebooks },
     { name: 'name', label: 'Name', icon: 'i-heroicons-user', visible: () => mockStepVisibility.name },
     { name: 'race', label: 'Race', icon: 'i-heroicons-globe-alt', visible: () => mockStepVisibility.race },
     { name: 'subrace', label: 'Subrace', icon: 'i-heroicons-sparkles', visible: () => mockStepVisibility.subrace },
     { name: 'class', label: 'Class', icon: 'i-heroicons-shield-check', visible: () => mockStepVisibility.class },
     { name: 'abilities', label: 'Abilities', icon: 'i-heroicons-chart-bar', visible: () => mockStepVisibility.abilities },
     { name: 'background', label: 'Background', icon: 'i-heroicons-book-open', visible: () => mockStepVisibility.background },
+    { name: 'languages', label: 'Languages', icon: 'i-heroicons-language', visible: () => mockStepVisibility.languages },
     { name: 'proficiencies', label: 'Proficiencies', icon: 'i-heroicons-academic-cap', visible: () => mockStepVisibility.proficiencies },
     { name: 'equipment', label: 'Equipment', icon: 'i-heroicons-briefcase', visible: () => mockStepVisibility.equipment },
     { name: 'spells', label: 'Spells', icon: 'i-heroicons-sparkles', visible: () => mockStepVisibility.spells },
@@ -41,12 +45,14 @@ describe('wizard-step middleware', () => {
     setActivePinia(createPinia())
 
     // Reset all step visibility to defaults
+    mockStepVisibility.sourcebooks = true
     mockStepVisibility.name = true
     mockStepVisibility.race = true
     mockStepVisibility.subrace = false
     mockStepVisibility.class = true
     mockStepVisibility.abilities = true
     mockStepVisibility.background = true
+    mockStepVisibility.languages = false
     mockStepVisibility.proficiencies = false
     mockStepVisibility.equipment = true
     mockStepVisibility.spells = false
@@ -55,6 +61,11 @@ describe('wizard-step middleware', () => {
 
   describe('isStepAccessible', () => {
     describe('always-visible steps', () => {
+      it('returns true for sourcebooks step', async () => {
+        const { isStepAccessible } = await import('~/middleware/wizard-step')
+        expect(isStepAccessible('sourcebooks')).toBe(true)
+      })
+
       it('returns true for name step', async () => {
         const { isStepAccessible } = await import('~/middleware/wizard-step')
         expect(isStepAccessible('name')).toBe(true)
@@ -116,6 +127,20 @@ describe('wizard-step middleware', () => {
         mockStepVisibility.proficiencies = true
         const { isStepAccessible } = await import('~/middleware/wizard-step')
         expect(isStepAccessible('proficiencies')).toBe(true)
+      })
+    })
+
+    describe('conditional languages step', () => {
+      it('returns false when no language choices', async () => {
+        mockStepVisibility.languages = false
+        const { isStepAccessible } = await import('~/middleware/wizard-step')
+        expect(isStepAccessible('languages')).toBe(false)
+      })
+
+      it('returns true when has language choices', async () => {
+        mockStepVisibility.languages = true
+        const { isStepAccessible } = await import('~/middleware/wizard-step')
+        expect(isStepAccessible('languages')).toBe(true)
       })
     })
 

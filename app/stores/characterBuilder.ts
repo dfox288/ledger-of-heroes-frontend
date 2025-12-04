@@ -584,6 +584,9 @@ export const useCharacterBuilderStore = defineStore('characterBuilder', () => {
       // Fetch proficiency choices now that all sources (race, class, background) are selected
       // This determines if the Proficiency Choices step will appear
       await fetchProficiencyChoices()
+
+      // Fetch language choices - determines if Languages step will appear
+      await fetchLanguageChoices()
     } catch (err: unknown) {
       error.value = 'Failed to save background'
       throw err
