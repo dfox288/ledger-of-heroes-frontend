@@ -94,6 +94,7 @@ function formatAbilityScore(score: number | null): string {
             color="warning"
             variant="solid"
             size="lg"
+            aria-label="Character has inspiration"
           >
             <UIcon
               name="i-heroicons-star"
