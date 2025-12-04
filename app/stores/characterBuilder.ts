@@ -953,13 +953,39 @@ export const useCharacterBuilderStore = defineStore('characterBuilder', () => {
       const raceSelections = pendingLanguageSelections.value.get('race')
       const backgroundSelections = pendingLanguageSelections.value.get('background')
 
-      await apiFetch(`/characters/${characterId.value}/language-choices`, {
-        method: 'POST',
-        body: {
-          race_language_ids: raceSelections ? [...raceSelections] : [],
-          background_language_ids: backgroundSelections ? [...backgroundSelections] : []
-        }
-      })
+      // Backend expects one request per source with format:
+      // { source: "race"|"background"|"feat", language_ids: [1, 2, 3] }
+      // Only send requests for sources that have selections (minItems: 1 required)
+      const requests: Promise<unknown>[] = []
+
+      if (raceSelections && raceSelections.size > 0) {
+        requests.push(
+          apiFetch(`/characters/${characterId.value}/language-choices`, {
+            method: 'POST',
+            body: {
+              source: 'race',
+              language_ids: [...raceSelections]
+            }
+          })
+        )
+      }
+
+      if (backgroundSelections && backgroundSelections.size > 0) {
+        requests.push(
+          apiFetch(`/characters/${characterId.value}/language-choices`, {
+            method: 'POST',
+            body: {
+              source: 'background',
+              language_ids: [...backgroundSelections]
+            }
+          })
+        )
+      }
+
+      // Execute all requests in parallel
+      if (requests.length > 0) {
+        await Promise.all(requests)
+      }
 
       // Refresh choices to update remaining counts
       await fetchLanguageChoices()
