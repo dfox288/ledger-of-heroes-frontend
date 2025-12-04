@@ -34,6 +34,19 @@ const { data: availableSpells } = await useAsyncData(
   { transform: (response: { data: Spell[] }) => response.data }
 )
 
+// Fetch character data for speed/size display
+interface CharacterBasicData {
+  speed: number | null
+  size: string | null
+  speeds: { walk: number | null, fly: number | null, swim: number | null, climb: number | null } | null
+}
+
+const { data: characterData } = await useAsyncData(
+  `review-character-${characterId.value}`,
+  () => apiFetch<{ data: CharacterBasicData }>(`/characters/${characterId.value}`),
+  { transform: (response: { data: CharacterBasicData }) => response.data }
+)
+
 // Fetch saved proficiencies for display (skill names)
 interface CharacterProficiency {
   id: number
@@ -228,7 +241,10 @@ const hasFeatures = computed(() => {
       </div>
 
       <!-- Race -->
-      <div class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4">
+      <div
+        data-test="race-section"
+        class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4"
+      >
         <div class="flex items-center justify-between">
           <div>
             <h3 class="text-sm font-medium text-gray-500 dark:text-gray-400">
@@ -237,6 +253,32 @@ const hasFeatures = computed(() => {
             <p class="mt-1 text-lg font-semibold text-gray-900 dark:text-white">
               {{ selectedRace?.name ?? 'Not selected' }}
             </p>
+            <!-- Speed and Size from race -->
+            <div
+              v-if="characterData?.speed || characterData?.size"
+              class="mt-1 flex items-center gap-3 text-sm text-gray-500 dark:text-gray-400"
+            >
+              <span
+                v-if="characterData?.size"
+                class="flex items-center gap-1"
+              >
+                <UIcon
+                  name="i-heroicons-arrows-pointing-out"
+                  class="w-4 h-4"
+                />
+                {{ characterData.size }}
+              </span>
+              <span
+                v-if="characterData?.speed"
+                class="flex items-center gap-1"
+              >
+                <UIcon
+                  name="i-heroicons-bolt"
+                  class="w-4 h-4"
+                />
+                {{ characterData.speed }} ft
+              </span>
+            </div>
           </div>
           <UButton
             data-test="edit-race"
