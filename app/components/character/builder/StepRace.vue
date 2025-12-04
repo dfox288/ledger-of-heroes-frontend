@@ -6,17 +6,26 @@ import { useCharacterBuilderStore } from '~/stores/characterBuilder'
 import { useWizardNavigation } from '~/composables/useWizardSteps'
 
 const store = useCharacterBuilderStore()
-const { selectedBaseRace, subraceId, isLoading, error } = storeToRefs(store)
+const { selectedBaseRace, subraceId, isLoading, error, sourceFilterString } = storeToRefs(store)
 const { nextStep } = useWizardNavigation()
 
 // API client
 const { apiFetch } = useApi()
 
-// Fetch all races
+// Fetch races filtered by selected sourcebooks
 const { data: races, pending: loadingRaces } = await useAsyncData(
-  'builder-races',
-  () => apiFetch<{ data: Race[] }>('/races?per_page=100'),
-  { transform: (response: { data: Race[] }) => response.data }
+  `builder-races-${sourceFilterString.value}`,
+  () => {
+    const filter = sourceFilterString.value
+    const url = filter
+      ? `/races?per_page=100&filter=${encodeURIComponent(filter)}`
+      : '/races?per_page=100'
+    return apiFetch<{ data: Race[] }>(url)
+  },
+  {
+    transform: (response: { data: Race[] }) => response.data,
+    watch: [sourceFilterString]
+  }
 )
 
 // Local state

@@ -6,17 +6,28 @@ import { useCharacterBuilderStore } from '~/stores/characterBuilder'
 import { useWizardNavigation } from '~/composables/useWizardSteps'
 
 const store = useCharacterBuilderStore()
-const { selectedClass, isLoading, error } = storeToRefs(store)
+const { selectedClass, isLoading, error, sourceFilterString } = storeToRefs(store)
 const { nextStep } = useWizardNavigation()
 
 // Get API client
 const { apiFetch } = useApi()
 
-// Fetch base classes only
+// Fetch base classes filtered by selected sourcebooks
 const { data: classes, pending: loadingClasses } = await useAsyncData(
-  'builder-classes',
-  () => apiFetch<{ data: CharacterClass[] }>('/classes?filter=is_base_class=true&per_page=50'),
-  { transform: (response: { data: CharacterClass[] }) => response.data }
+  `builder-classes-${sourceFilterString.value}`,
+  () => {
+    // Combine base class filter with source filter
+    const baseFilter = 'is_base_class=true'
+    const sourceFilter = sourceFilterString.value
+    const combinedFilter = sourceFilter
+      ? `${baseFilter} AND ${sourceFilter}`
+      : baseFilter
+    return apiFetch<{ data: CharacterClass[] }>(`/classes?filter=${encodeURIComponent(combinedFilter)}&per_page=50`)
+  },
+  {
+    transform: (response: { data: CharacterClass[] }) => response.data,
+    watch: [sourceFilterString]
+  }
 )
 
 // Local state

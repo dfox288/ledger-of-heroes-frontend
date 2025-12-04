@@ -84,6 +84,21 @@ export const useCharacterBuilderStore = defineStore('characterBuilder', () => {
   const pendingLanguageSelections = ref<Map<string, Set<number>>>(new Map())
 
   // ══════════════════════════════════════════════════════════════
+  // SOURCEBOOK SELECTION
+  // ══════════════════════════════════════════════════════════════
+
+  // Selected source codes (e.g., ['PHB', 'XGE', 'TCE'])
+  // These filter available races, classes, backgrounds, etc.
+  const selectedSources = ref<string[]>([])
+
+  // Computed filter string for Meilisearch API calls
+  const sourceFilterString = computed(() => {
+    if (selectedSources.value.length === 0) return ''
+    const codes = selectedSources.value.map(s => `"${s}"`).join(', ')
+    return `source_codes IN [${codes}]`
+  })
+
+  // ══════════════════════════════════════════════════════════════
   // FETCHED REFERENCE DATA (for display without re-fetching)
   // ══════════════════════════════════════════════════════════════
   const selectedBaseRace = ref<Race | null>(null) // Always the base race (e.g., Elf)
@@ -900,6 +915,76 @@ export const useCharacterBuilderStore = defineStore('characterBuilder', () => {
     }
   }
 
+  // ══════════════════════════════════════════════════════════════
+  // SOURCEBOOK SELECTION ACTIONS
+  // ══════════════════════════════════════════════════════════════
+
+  /**
+   * Check if an entity has at least one source in the selected sources
+   * Returns true if entity has no sources array (safe default)
+   */
+  function entityHasValidSource(
+    entity: { sources?: Array<{ code: string }> } | null,
+    selectedSourceCodes: string[]
+  ): boolean {
+    if (!entity) return true // No entity = nothing to validate
+    if (!entity.sources || entity.sources.length === 0) return true // No sources = safe default
+    return entity.sources.some(s => selectedSourceCodes.includes(s.code))
+  }
+
+  /**
+   * Set selected sourcebook codes
+   * Validates existing selections and clears any that are no longer valid
+   * @param sources Array of source codes (e.g., ['PHB', 'XGE'])
+   * @returns Object indicating what was cleared
+   */
+  function setSelectedSources(sources: string[]): { cleared: ('race' | 'class' | 'background')[] } {
+    const cleared: ('race' | 'class' | 'background')[] = []
+
+    // Validate race selection
+    if (selectedBaseRace.value && !entityHasValidSource(selectedBaseRace.value, sources)) {
+      // Clear race and subrace
+      selectedBaseRace.value = null
+      selectedRace.value = null
+      raceId.value = null
+      subraceId.value = null
+      cleared.push('race')
+    }
+
+    // Validate class selection
+    if (selectedClass.value && !entityHasValidSource(selectedClass.value, sources)) {
+      // Clear class
+      characterClasses.value = []
+      cleared.push('class')
+    }
+
+    // Validate background selection
+    if (selectedBackground.value && !entityHasValidSource(selectedBackground.value, sources)) {
+      // Clear background
+      selectedBackground.value = null
+      backgroundId.value = null
+      proficiencyChoices.value = null
+      pendingProficiencySelections.value = new Map()
+      cleared.push('background')
+    }
+
+    // Update selected sources
+    selectedSources.value = sources
+
+    return { cleared }
+  }
+
+  /**
+   * Initialize sourcebook selection from API response
+   * Only sets if selectedSources is empty (preserves user's saved selection)
+   * @param allSources Array of source objects with 'code' property
+   */
+  function initializeSourcesFromApi(allSources: Array<{ code: string }>): void {
+    if (selectedSources.value.length === 0) {
+      selectedSources.value = allSources.map(s => s.code)
+    }
+  }
+
   /**
    * Clear all existing equipment from character
    * Used before re-saving equipment to avoid duplicates
@@ -1174,6 +1259,7 @@ export const useCharacterBuilderStore = defineStore('characterBuilder', () => {
     pendingProficiencySelections.value = new Map()
     languageChoices.value = null
     pendingLanguageSelections.value = new Map()
+    selectedSources.value = []
     selectedBaseRace.value = null
     selectedRace.value = null
     selectedBackground.value = null
@@ -1236,6 +1322,11 @@ export const useCharacterBuilderStore = defineStore('characterBuilder', () => {
     pendingLanguageSelections,
     hasLanguageChoices,
     allLanguageChoicesComplete,
+    // Sourcebook selection
+    selectedSources,
+    sourceFilterString,
+    setSelectedSources,
+    initializeSourcesFromApi,
     // Actions
     nextStep,
     previousStep,
