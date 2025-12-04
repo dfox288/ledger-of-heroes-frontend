@@ -86,13 +86,30 @@ function formatAbilityScore(score: number | null): string {
             <span v-if="character.class">{{ character.class.name }}</span>
           </p>
         </div>
-        <UBadge
-          :color="character.is_complete ? 'success' : 'warning'"
-          variant="subtle"
-          size="lg"
-        >
-          {{ character.is_complete ? 'Complete' : 'Draft' }}
-        </UBadge>
+        <div class="flex items-center gap-2">
+          <!-- Inspiration Badge (DM awarded) -->
+          <UBadge
+            v-if="character.has_inspiration"
+            data-test="inspiration-badge"
+            color="warning"
+            variant="solid"
+            size="lg"
+            aria-label="Character has inspiration"
+          >
+            <UIcon
+              name="i-heroicons-star"
+              class="w-4 h-4 mr-1"
+            />
+            Inspired
+          </UBadge>
+          <UBadge
+            :color="character.is_complete ? 'success' : 'warning'"
+            variant="subtle"
+            size="lg"
+          >
+            {{ character.is_complete ? 'Complete' : 'Draft' }}
+          </UBadge>
+        </div>
       </div>
 
       <!-- Validation Status (for drafts) -->

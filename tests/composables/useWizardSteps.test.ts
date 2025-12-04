@@ -187,7 +187,7 @@ describe('useWizardSteps', () => {
       expect(nav.totalSteps.value).toBe(7)
 
       // stepRegistry should be exported
-      expect(stepRegistry.length).toBe(10) // All steps including conditional ones
+      expect(stepRegistry.length).toBe(11) // All steps including conditional ones (+ languages step)
 
       // Check step names are correct in registry
       expect(stepRegistry.map(s => s.name)).toContain('subrace')

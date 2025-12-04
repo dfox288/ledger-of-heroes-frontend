@@ -112,7 +112,7 @@ export interface Character {
   size: string | null
   /** All movement types (from race) */
   speeds: CharacterSpeeds | null
-  /** Whether character currently has inspiration */
+  /** Whether character currently has inspiration (DM awarded) */
   has_inspiration: boolean
   race: { id: number, name: string, slug: string } | null
   /** @deprecated Legacy field for primary class. Use classes array instead */
