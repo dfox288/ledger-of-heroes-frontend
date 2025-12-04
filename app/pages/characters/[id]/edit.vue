@@ -1,7 +1,13 @@
 <!-- app/pages/characters/[id]/edit.vue -->
+<!--
+  This page is now a layout wrapper for the wizard steps.
+  Each step is a nested route under /characters/[id]/edit/[step].
+  The <NuxtPage /> component renders the current step based on the URL.
+-->
 <script setup lang="ts">
 import { storeToRefs } from 'pinia'
 import { useCharacterBuilderStore } from '~/stores/characterBuilder'
+import { useWizardNavigation } from '~/composables/useWizardSteps'
 
 const route = useRoute()
 const characterId = computed(() => Number(route.params.id))
@@ -15,7 +21,19 @@ useSeoMeta({
 
 // Store
 const store = useCharacterBuilderStore()
-const { currentStep, isFirstStep, isLastStep, isCaster, needsSubrace, hasPendingChoices, isLoading, error, name } = storeToRefs(store)
+const { isLoading, error, name } = storeToRefs(store)
+
+// Wizard navigation (uses route params, not store state)
+const {
+  activeSteps,
+  currentStep,
+  currentStepIndex,
+  isFirstStep,
+  isLastStep,
+  nextStep,
+  previousStep,
+  goToStep
+} = useWizardNavigation()
 
 // Load character on mount
 onMounted(async () => {
@@ -24,59 +42,19 @@ onMounted(async () => {
   try {
     await store.loadCharacterForEditing(characterId.value)
 
-    // For new characters, always start at step 1 (Name)
-    // This allows users to replace the placeholder "New Character" name
-    if (isNewCharacter.value) {
-      store.goToStep(1)
+    // For new characters, redirect to name step if not already there
+    if (isNewCharacter.value && route.params.step !== 'name') {
+      await navigateTo(`/characters/${characterId.value}/edit/name`)
     }
   } catch {
     await navigateTo(`/characters/${characterId.value}`)
   }
 })
 
-// Step definitions - dynamically built based on character state
-const steps = computed(() => {
-  const stepList: Array<{ id: number, name: string, label: string, icon: string }> = [
-    { id: 1, name: 'name', label: 'Name', icon: 'i-heroicons-user' },
-    { id: 2, name: 'race', label: 'Race', icon: 'i-heroicons-globe-alt' }
-  ]
-
-  let nextId = 3
-
-  // Conditional subrace step (only if selected race has subraces)
-  if (needsSubrace.value) {
-    stepList.push({ id: nextId++, name: 'subrace', label: 'Subrace', icon: 'i-heroicons-sparkles' })
-  }
-
-  // Core steps (always present)
-  stepList.push({ id: nextId++, name: 'class', label: 'Class', icon: 'i-heroicons-shield-check' })
-  stepList.push({ id: nextId++, name: 'abilities', label: 'Abilities', icon: 'i-heroicons-chart-bar' })
-  stepList.push({ id: nextId++, name: 'background', label: 'Background', icon: 'i-heroicons-book-open' })
-
-  // Conditional proficiency choices step (after background)
-  if (hasPendingChoices.value) {
-    stepList.push({ id: nextId++, name: 'proficiencies', label: 'Proficiencies', icon: 'i-heroicons-academic-cap' })
-  }
-
-  // Equipment step (always present)
-  stepList.push({ id: nextId++, name: 'equipment', label: 'Equipment', icon: 'i-heroicons-briefcase' })
-
-  // Conditional spells step (casters only)
-  if (isCaster.value) {
-    stepList.push({ id: nextId++, name: 'spells', label: 'Spells', icon: 'i-heroicons-sparkles' })
-  }
-
-  // Review step (always last)
-  stepList.push({ id: nextId, name: 'review', label: 'Review', icon: 'i-heroicons-check-circle' })
-
-  return stepList
-})
-
-// Helper to get step name by current step number
-const currentStepName = computed(() => {
-  const step = steps.value.find(s => s.id === currentStep.value)
-  return step?.name ?? 'unknown'
-})
+// Handle progress bar step click
+function handleStepClick(stepName: string) {
+  goToStep(stepName)
+}
 </script>
 
 <template>
@@ -104,7 +82,7 @@ const currentStepName = computed(() => {
     <!-- Wizard Content -->
     <template v-else>
       <!-- Page Header -->
-      <div class="text-center mb-8">
+      <div class="text-center mb-6">
         <h1 class="text-3xl font-bold text-gray-900 dark:text-white">
           Edit Character
         </h1>
@@ -113,134 +91,18 @@ const currentStepName = computed(() => {
         </p>
       </div>
 
-      <!-- Stepper Navigation -->
-      <CharacterBuilderStepper
-        :steps="steps"
-        :current-step="currentStep"
+      <!-- Compact Progress Bar -->
+      <CharacterBuilderProgressBar
+        :steps="activeSteps"
+        :current-index="currentStepIndex"
+        :current-label="currentStep?.label ?? ''"
         class="mb-8"
-        @step-click="store.goToStep"
+        @step-click="handleStepClick"
       />
 
-      <!-- Step Content -->
+      <!-- Step Content (nested route) -->
       <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6">
-        <!--
-          Each step is wrapped in its own Suspense boundary because several step
-          components use top-level await (useAsyncData). Without Suspense, Vue
-          resolves all async components in the v-if chain simultaneously, causing
-          all steps to render at once.
-
-          Steps are rendered by name (not number) to handle conditional steps
-          like Proficiencies (appears only when choices exist) and Spells (casters only).
-        -->
-        <Suspense v-if="currentStepName === 'name'">
-          <CharacterBuilderStepName />
-          <template #fallback>
-            <div class="flex justify-center py-12">
-              <UIcon
-                name="i-heroicons-arrow-path"
-                class="w-8 h-8 animate-spin text-primary"
-              />
-            </div>
-          </template>
-        </Suspense>
-
-        <Suspense v-else-if="currentStepName === 'race'">
-          <CharacterBuilderStepRace />
-          <template #fallback>
-            <div class="flex justify-center py-12">
-              <UIcon
-                name="i-heroicons-arrow-path"
-                class="w-8 h-8 animate-spin text-primary"
-              />
-            </div>
-          </template>
-        </Suspense>
-
-        <Suspense v-else-if="currentStepName === 'subrace'">
-          <CharacterBuilderStepSubrace />
-          <template #fallback>
-            <div class="flex justify-center py-12">
-              <UIcon
-                name="i-heroicons-arrow-path"
-                class="w-8 h-8 animate-spin text-primary"
-              />
-            </div>
-          </template>
-        </Suspense>
-
-        <Suspense v-else-if="currentStepName === 'class'">
-          <CharacterBuilderStepClass />
-          <template #fallback>
-            <div class="flex justify-center py-12">
-              <UIcon
-                name="i-heroicons-arrow-path"
-                class="w-8 h-8 animate-spin text-primary"
-              />
-            </div>
-          </template>
-        </Suspense>
-
-        <Suspense v-else-if="currentStepName === 'abilities'">
-          <CharacterBuilderStepAbilities />
-          <template #fallback>
-            <div class="flex justify-center py-12">
-              <UIcon
-                name="i-heroicons-arrow-path"
-                class="w-8 h-8 animate-spin text-primary"
-              />
-            </div>
-          </template>
-        </Suspense>
-
-        <Suspense v-else-if="currentStepName === 'background'">
-          <CharacterBuilderStepBackground />
-          <template #fallback>
-            <div class="flex justify-center py-12">
-              <UIcon
-                name="i-heroicons-arrow-path"
-                class="w-8 h-8 animate-spin text-primary"
-              />
-            </div>
-          </template>
-        </Suspense>
-
-        <Suspense v-else-if="currentStepName === 'proficiencies'">
-          <CharacterBuilderStepProficiencies />
-          <template #fallback>
-            <div class="flex justify-center py-12">
-              <UIcon
-                name="i-heroicons-arrow-path"
-                class="w-8 h-8 animate-spin text-primary"
-              />
-            </div>
-          </template>
-        </Suspense>
-
-        <Suspense v-else-if="currentStepName === 'equipment'">
-          <CharacterBuilderStepEquipment />
-          <template #fallback>
-            <div class="flex justify-center py-12">
-              <UIcon
-                name="i-heroicons-arrow-path"
-                class="w-8 h-8 animate-spin text-primary"
-              />
-            </div>
-          </template>
-        </Suspense>
-
-        <Suspense v-else-if="currentStepName === 'spells'">
-          <CharacterBuilderStepSpells />
-          <template #fallback>
-            <div class="flex justify-center py-12">
-              <UIcon
-                name="i-heroicons-arrow-path"
-                class="w-8 h-8 animate-spin text-primary"
-              />
-            </div>
-          </template>
-        </Suspense>
-
-        <CharacterBuilderStepReview v-else-if="currentStepName === 'review'" />
+        <NuxtPage />
       </div>
 
       <!-- Navigation Buttons -->
@@ -249,7 +111,7 @@ const currentStepName = computed(() => {
           v-if="!isFirstStep"
           variant="outline"
           icon="i-heroicons-arrow-left"
-          @click="store.previousStep()"
+          @click="previousStep()"
         >
           Back
         </UButton>
@@ -259,7 +121,7 @@ const currentStepName = computed(() => {
           v-if="!isLastStep"
           icon="i-heroicons-arrow-right"
           trailing
-          @click="store.nextStep()"
+          @click="nextStep()"
         >
           Next
         </UButton>
