@@ -9,6 +9,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- **Test Suite Consolidation (PR #19) (2025-12-04)** - Comprehensive audit and cleanup to eliminate duplication
+  - Deleted 10 redundant reference card test files (covered by parameterized `ReferenceCards.test.ts`)
+  - Deleted 6 hollow page index tests that only verified `wrapper.exists()`
+  - Created `tests/helpers/pickerCardBehavior.ts` - Shared tests for picker card components (6 common behaviors)
+  - Created `tests/helpers/badgeVisibilityBehavior.ts` - Generates show/hide tests for boolean badge props
+  - Updated 4 component tests to use mock factories instead of inline data
+  - Refactored SpellCard and ItemCard tests to use badge visibility helper
+  - **Net reduction:** 1,142 lines of test code (-16 files)
+  - **Zero coverage loss:** All 2,848 tests still pass
+
 ### Added
 
 - **Character Alignment (#125) (2025-12-04)** - Add alignment selector to character builder Name step

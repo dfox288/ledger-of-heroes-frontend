@@ -2,7 +2,7 @@
 
 **A production-ready D&D 5e reference application built with Nuxt 4 and NuxtUI 4.**
 
-[![Tests](https://img.shields.io/badge/tests-1061%2F1088%20passing-success)](./tests)
+[![Tests](https://img.shields.io/badge/tests-2848%20passing-success)](./tests)
 [![TypeScript](https://img.shields.io/badge/TypeScript-strict-blue)](./tsconfig.json)
 [![Nuxt](https://img.shields.io/badge/Nuxt-4.x-00DC82)](https://nuxt.com)
 [![NuxtUI](https://img.shields.io/badge/NuxtUI-4.x-00DC82)](https://ui.nuxt.com)
@@ -28,7 +28,7 @@ A comprehensive D&D 5th Edition reference tool featuring **7 complete entity typ
 - **3D Dice Animation:** Stunning polyhedral dice background with physics
 - **Dark Mode:** Complete dark theme support via NuxtUI
 - **Mobile Responsive:** 375px - 1440px+ viewports
-- **97.5% Test Coverage:** 1061/1088 passing tests (Vitest + Playwright E2E)
+- **100% Test Pass Rate:** 2,848 passing tests across 193 test files (Vitest + Playwright E2E)
 
 ### 🆕 Latest: Complete Meilisearch Filter Migration (2025-11-25)
 
@@ -163,9 +163,9 @@ docker compose exec nuxt npm run test:coverage
 ```
 
 **Current Test Stats:**
-- **Tests:** 611/611 passing (100% pass rate)
-- **Coverage:** Comprehensive component, composable, and utility coverage
-- **Test Helpers:** Reusable helpers for card behavior, source display, descriptions
+- **Tests:** 2,848 passing (100% pass rate)
+- **Test Files:** 193 (consolidated from 207)
+- **Test Helpers:** 10 reusable helpers (pickerCardBehavior, badgeVisibilityBehavior, mockFactories, etc.)
 
 ## 🎨 Component Patterns
 
@@ -308,8 +308,8 @@ cd ../frontend-agent-1
 Ability Scores, Conditions, Damage Types, Item Types, Languages, Proficiency Types, Sizes, Skills, Spell Schools, Sources
 
 **Quality Metrics:**
-- Tests: 611/611 passing (100%)
-- TypeScript: 13 errors (pre-existing, unrelated to features)
+- Tests: 2,848 passing across 193 files (100%)
+- TypeScript: Strict mode enabled
 - ESLint: 0 errors
 - Dark Mode: Full support
 - Responsive: 375px - 1440px+

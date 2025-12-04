@@ -8,13 +8,13 @@
 
 | Metric | Count |
 |--------|-------|
-| Test Files | 207 |
-| Test Cases | ~2,835 |
+| Test Files | 193 |
+| Test Cases | ~2,848 |
 | Components | 157 |
 | Pages | 50 |
 | Composables | 18 |
 | Pinia Stores | 9 |
-| Test Helpers | 8 |
+| Test Helpers | 10 |
 
 ---
 
@@ -87,10 +87,10 @@
 | Races | 5 | ~100 | ~10s | `npm run test:races` |
 | Backgrounds | 5 | ~90 | ~10s | `npm run test:backgrounds` |
 | Feats | 4 | ~80 | ~8s | `npm run test:feats` |
-| Reference | 7 | ~70 | ~10s | `npm run test:reference` |
+| Reference | 1 | ~70 | ~10s | `npm run test:reference` |
 | UI | 48 | ~500 | ~52s | `npm run test:ui` |
 | Core | 15 | ~150 | ~18s | `npm run test:core` |
-| **Full Suite** | 207 | ~2,835 | ~250s | `npm run test` |
+| **Full Suite** | 193 | ~2,848 | ~235s | `npm run test` |
 
 ---
 
@@ -139,6 +139,7 @@
 
 ## Recent Milestones
 
+- **2025-12-04:** Test suite consolidation (PR #19) - removed 16 redundant test files, created 2 new helpers
 - **2025-12-04:** Language choices wizard step (#131) - partial, blocked on backend endpoint #139
 - **2025-12-04:** Equipment pack contents (#133) - shows `choice_items` pack contents structure
 - **2025-12-04:** Alignment selector (#125) - inline with name input, 10 new tests

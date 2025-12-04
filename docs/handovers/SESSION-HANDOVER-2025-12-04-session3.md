@@ -1,47 +1,76 @@
-# Session Handover - 2025-12-04 (Session 4)
+# Session Handover - 2025-12-04 (Session 5)
 
 ## Summary
 
-**Language Choices Step Blocked** - Issue #131 (language choices wizard step) is waiting on backend endpoint (Issue #139). Current branch has partial work committed.
+**Test Suite Consolidation Complete** - Comprehensive audit and cleanup of the test suite, removing 16 redundant test files and creating 2 new reusable test helpers. All 2,848 tests still pass with zero coverage loss.
 
 ## What Was Accomplished
 
-### Issue #131 - Language Choices Wizard Step (Partially Complete)
+### Test Suite Consolidation (PR #19 - Merged)
 
-| Task | Description | Status |
-|------|-------------|--------|
-| 1 | Create StepLanguages component | ✅ Committed |
-| 2 | Add languages step to wizard registry | ✅ Committed |
-| 3 | Create step page file | ✅ Committed |
-| 4 | Wire up API endpoint | ⏸️ Blocked |
-| 5 | Full integration testing | ⏸️ Blocked |
+| Change | Impact |
+|--------|--------|
+| Delete 10 redundant reference card tests | -670 lines (covered by `ReferenceCards.test.ts`) |
+| Delete 6 hollow page index tests | -182 lines (only tested `wrapper.exists()`) |
+| Create `pickerCardBehavior.ts` helper | +98 lines (6 shared picker card tests) |
+| Create `badgeVisibilityBehavior.ts` helper | +69 lines (boolean badge show/hide tests) |
+| Update 4 tests to use mock factories | -155 lines (single source of truth) |
+| **Net reduction** | **-1,142 lines** |
 
-**Blocker**: Backend endpoint `/api/characters/{id}/language-choices` doesn't exist yet.
-- Created GitHub Issue #139 to track backend work
-- Created GitHub Issue #140 for feat language parsing (Linguist, etc.)
+### New Test Helpers Created
 
-### Today's Completed PRs (Merged to Main)
+**`tests/helpers/pickerCardBehavior.ts`** (98 lines)
+- Tests 6 common behaviors for picker cards
+- Used by: RacePickerCard, ClassPickerCard, BackgroundPickerCard
 
-| PR | Issue | Description |
-|----|-------|-------------|
-| #14 | #133 | Equipment pack contents - `choice_items` support |
-| #13 | #133 | Equipment pack contents - display component |
-| #12 | #125 | Character alignment selector |
-| #11 | #136 | Wizard stepper refactor (route-based navigation) |
+**`tests/helpers/badgeVisibilityBehavior.ts`** (69 lines)
+- Generates show/hide test pairs for boolean badge props
+- Used by: SpellCard (Concentration, Ritual), ItemCard (Magic, Attunement)
 
 ### Test Status
 
-- **207 test files**
-- **~2,835 tests passing** (from last run with b82904)
+- **193 test files** (down from 207)
+- **2,848 tests passing** (up from 2,835)
 - **TypeScript passes** ✅
 
 ## Current Branch
 
 ```
-feature/issue-131-language-choices (clean, up to date with main)
+main (clean, up to date)
 ```
 
-## Blocked Work
+## Files Deleted (16 total)
+
+### Reference Card Tests (10 files)
+- `tests/components/ability-score/AbilityScoreCard.test.ts`
+- `tests/components/condition/ConditionCard.test.ts`
+- `tests/components/damage-type/DamageTypeCard.test.ts`
+- `tests/components/item-type/ItemTypeCard.test.ts`
+- `tests/components/language/LanguageCard.test.ts`
+- `tests/components/proficiency-type/ProficiencyTypeCard.test.ts`
+- `tests/components/size/SizeCard.test.ts`
+- `tests/components/skill/SkillCard.test.ts`
+- `tests/components/source/SourceCard.test.ts`
+- `tests/components/spell-school/SpellSchoolCard.test.ts`
+
+### Hollow Page Index Tests (6 files)
+- `tests/pages/spells/index.test.ts`
+- `tests/pages/items/index.test.ts`
+- `tests/pages/monsters/index.test.ts`
+- `tests/pages/races/index.test.ts`
+- `tests/pages/classes/index.test.ts`
+- `tests/pages/feats/index.test.ts`
+
+## Files Modified (6 total)
+
+- `tests/components/character/builder/BackgroundPickerCard.test.ts` - Uses helper + factory
+- `tests/components/character/builder/ClassPickerCard.test.ts` - Uses helper + factory
+- `tests/components/character/builder/RacePickerCard.test.ts` - Uses helper + factory
+- `tests/components/class/ClassCard.test.ts` - Uses mock factory
+- `tests/components/spell/SpellCard.test.ts` - Uses badge visibility helper
+- `tests/components/item/ItemCard.test.ts` - Uses badge visibility helper
+
+## Blocked Work (From Previous Session)
 
 ### Issue #131 - Language Choices
 **Depends on**: Issue #139 (backend endpoint)
@@ -65,18 +94,13 @@ Missing: API integration (waiting on backend)
 | #18 | Monster encounter builder | High |
 | #4 | E2E tests expansion | Medium |
 
-## Recommended Next Steps
-
-1. **Issue #126** - Quick win: add speed/size display to Review step
-2. **Issue #127** - Quick win: inspiration toggle in character display
-3. **Issue #132** - Check if sources endpoint exists, add sourcebook selection
-
 ## Project Metrics
 
 | Metric | Count |
 |--------|-------|
-| Test Files | 207 |
-| Test Cases | ~2,835 |
+| Test Files | 193 |
+| Test Cases | ~2,848 |
+| Test Helpers | 10 |
 | Components | 157 |
 | Pages | 50 |
 | Composables | 18 |
@@ -100,15 +124,16 @@ gh issue list --repo dfox288/dnd-rulebook-project --label "frontend" --state ope
 
 ## Key Design Decisions
 
-1. **Language choices follow proficiency pattern** - Similar UI to skill choices
-2. **Conditional step** - Only shown when character has language choices
-3. **API-driven** - Backend calculates available languages based on race/background
+1. **Parameterized tests over individual files** - `ReferenceCards.test.ts` uses `describe.each()` to test all 10 reference card types
+2. **Behavior helpers over copy-paste** - Extract shared patterns (picker cards, badge visibility) into reusable functions
+3. **Mock factories over inline data** - Single source of truth in `mockFactories.ts`
+4. **Hollow tests removed** - Tests that only verify `wrapper.exists()` provide no value
 
 ## GitHub Issues Status
 
 ### Frontend (Open)
 - #131 - Language choices step (blocked on #139)
-- #132 - Sourcebook selection
+- #132 - Sourcebook selection (complete)
 - #127 - Inspiration toggle
 - #126 - Speed/size display
 - #89 - Character builder (parent issue)
