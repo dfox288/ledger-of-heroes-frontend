@@ -6,7 +6,19 @@ import type { ProficiencyChoicesResponse } from '~/types/proficiencies'
 import type { LanguageChoicesResponse } from '~/types/languageChoices'
 
 /**
- * Character Builder Wizard Store
+ * @deprecated This store is being phased out in favor of useCharacterWizardStore.
+ *
+ * MIGRATION STATUS:
+ * - New character creation: Use /characters/new/[step] with useCharacterWizardStore
+ * - Character editing: Still uses this store via /characters/[id]/edit (backward compatibility)
+ * - Old builder components: app/components/character/builder/* still depend on this store
+ *
+ * FUTURE CLEANUP:
+ * - Once character editing is migrated to the new wizard architecture, this store can be removed
+ * - The old builder components (app/components/character/builder/*) will be removed at that time
+ * - The edit page (/characters/[id]/edit) will be refactored to use the new store
+ *
+ * Character Builder Wizard Store (Legacy)
  *
  * Manages state for the multi-step character creation wizard.
  * Character is created as draft on step 1, updated as user progresses.

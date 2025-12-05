@@ -1,42 +1,35 @@
 <!-- app/pages/characters/create.vue -->
 <script setup lang="ts">
 /**
- * Character Creation - Redirect Page
+ * DEPRECATED - Character Creation Redirect
  *
- * Creates an empty character in the database and redirects to the edit page.
- * This implements the "unified edit page" architecture where all character
- * building happens on /characters/[id]/edit.
+ * This page redirects to the new character wizard at /characters/new/sourcebooks.
+ * The new wizard uses a cleaner URL structure and improved architecture.
+ *
+ * Old flow: /characters/create → API POST → /characters/:id/edit
+ * New flow: /characters/new/sourcebooks → wizard steps
+ *
+ * @deprecated Use /characters/new instead
  */
-const { apiFetch } = useApi()
+
+definePageMeta({
+  middleware: () => navigateTo('/characters/new/sourcebooks', { redirectCode: 301 })
+})
 
 useSeoMeta({
   title: 'Create Character',
-  description: 'Start building your D&D 5e character'
-})
-
-// Create empty character and redirect to edit
-onMounted(async () => {
-  try {
-    const response = await apiFetch<{ data: { id: number } }>('/characters', {
-      method: 'POST',
-      body: { name: 'New Character' }
-    })
-
-    // Pass ?new=true so edit page knows to start at step 1 (Name)
-    // This ensures users can replace the placeholder name
-    await navigateTo(`/characters/${response.data.id}/edit?new=true`)
-  } catch {
-    await navigateTo('/characters')
-  }
+  description: 'Redirecting to new character wizard...'
 })
 </script>
 
 <template>
-  <div class="flex justify-center items-center min-h-[50vh]">
+  <div class="flex flex-col justify-center items-center min-h-[50vh]">
     <UIcon
       name="i-heroicons-arrow-path"
       class="w-8 h-8 animate-spin text-primary"
     />
-    <span class="ml-3 text-gray-600 dark:text-gray-400">Creating character...</span>
+    <span class="ml-3 text-gray-600 dark:text-gray-400">
+      Redirecting to new character wizard...
+    </span>
   </div>
 </template>
