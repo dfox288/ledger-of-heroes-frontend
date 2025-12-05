@@ -21,7 +21,7 @@ function formatModifier(value: number | null): string {
         HP
       </div>
       <div class="text-2xl font-bold text-gray-900 dark:text-white">
-        {{ stats.hit_points?.current ?? stats.hit_points?.max ?? '—' }}
+        {{ stats.hit_points?.current ?? '—' }}
         <span class="text-lg text-gray-400">/</span>
         {{ stats.hit_points?.max ?? '—' }}
       </div>

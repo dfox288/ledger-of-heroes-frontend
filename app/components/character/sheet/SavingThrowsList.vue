@@ -24,6 +24,8 @@ function formatModifier(mod: number): string {
       >
         <!-- Proficiency indicator -->
         <div
+          role="img"
+          :aria-label="save.proficient ? 'Proficient' : 'Not proficient'"
           class="w-3 h-3 rounded-full border-2"
           :class="save.proficient
             ? 'bg-success-500 border-success-500'

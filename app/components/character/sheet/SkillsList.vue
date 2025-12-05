@@ -24,6 +24,8 @@ function formatModifier(mod: number): string {
       >
         <!-- Proficiency/Expertise indicator -->
         <div
+          role="img"
+          :aria-label="skill.expertise ? 'Expertise' : (skill.proficient ? 'Proficient' : 'Not proficient')"
           class="w-3 h-3 rounded-full border-2 flex-shrink-0"
           :class="{
             'bg-primary-500 border-primary-500': skill.expertise,
