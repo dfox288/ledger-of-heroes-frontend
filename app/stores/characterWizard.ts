@@ -379,9 +379,8 @@ export const useCharacterWizardStore = defineStore('characterWizard', () => {
 
   /**
    * Select class
-   * Note: Backend doesn't allow deleting the only class, so we skip API call
-   * if re-selecting the same class. Changing to a different class requires
-   * backend support (see issue #217).
+   * If character already has a class, uses PUT to replace it.
+   * If no class exists, uses POST to add it.
    */
   async function selectClass(cls: CharacterClass): Promise<void> {
     if (!characterId.value) return
@@ -395,26 +394,29 @@ export const useCharacterWizardStore = defineStore('characterWizard', () => {
     error.value = null
 
     try {
-      // TODO: Backend doesn't support replacing class yet (issue #217)
-      // For now, only allow selecting class if none exists
-      // Once backend adds PUT endpoint, we can replace existing class
-
       if (selections.value.class) {
-        // Cannot change class - backend limitation
-        // For now, just update local state and refetch to keep in sync
-        console.warn('Changing class not yet supported by backend - see issue #217')
+        // Replace existing class using PUT endpoint
+        await apiFetch(`/characters/${characterId.value}/classes/${selections.value.class.id}`, {
+          method: 'PUT',
+          body: { class_id: cls.id }
+        })
+      } else {
+        // Add new class using POST endpoint
+        await apiFetch(`/characters/${characterId.value}/classes`, {
+          method: 'POST',
+          body: { class_id: cls.id }
+        })
       }
-
-      // Add the new class (only works if no class exists yet)
-      await apiFetch(`/characters/${characterId.value}/classes`, {
-        method: 'POST',
-        body: { class_id: cls.id }
-      })
 
       // Fetch full class data
       const classDetail = await apiFetch<{ data: CharacterClass }>(`/classes/${cls.slug}`)
       selections.value.class = classDetail.data
       selections.value.subclass = null // Clear subclass when class changes
+
+      // Clear any pending choices that depend on class
+      pendingChoices.value.proficiencies = new Map()
+      pendingChoices.value.equipment = new Map()
+      pendingChoices.value.spells = new Set()
 
       await syncWithBackend()
     } catch (err) {

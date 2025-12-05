@@ -105,9 +105,9 @@ interface ProficiencyGroup {
   items: string[]
 }
 
-// Define display order and labels
+// Define display order and labels for proficiency types
+// Note: Saving throws are displayed separately via SavingThrowsCard component
 const typeConfig: Record<string, { label: string, icon: string }> = {
-  saving_throw: { label: 'Saving Throws', icon: 'i-heroicons-heart' },
   armor: { label: 'Armor', icon: 'i-heroicons-shield-check' },
   weapon: { label: 'Weapons', icon: 'i-heroicons-bolt' },
   tool: { label: 'Tools', icon: 'i-heroicons-wrench-screwdriver' },
@@ -115,6 +115,12 @@ const typeConfig: Record<string, { label: string, icon: string }> = {
   other: { label: 'Other', icon: 'i-heroicons-check-circle' }
 }
 
+/**
+ * Group proficiencies by type for display
+ * The /proficiencies endpoint now returns ALL proficiencies (skills, armor, weapons, tools)
+ * from all sources (class, race, background), so we only need to process that response.
+ * Note: Saving throw proficiencies are displayed separately via the SavingThrowsCard component.
+ */
 const proficiencyGroups = computed<ProficiencyGroup[]>(() => {
   const grouped = new Map<string, Set<string>>()
 
@@ -125,52 +131,24 @@ const proficiencyGroups = computed<ProficiencyGroup[]>(() => {
     grouped.set(type, existing)
   }
 
-  // 1. Add skill proficiencies from backend (chosen skills)
+  // Process all proficiencies from the unified endpoint
   if (proficiencies.value) {
     for (const prof of proficiencies.value) {
       if (prof.skill) {
+        // Skill proficiency
         let name = prof.skill.name
         if (prof.expertise) name += ' (Expertise)'
         addProficiency('skill', name)
       } else if (prof.proficiency_type) {
+        // Non-skill proficiency (armor, weapon, tool, etc.)
         const type = prof.proficiency_type.category || 'other'
         addProficiency(type, prof.proficiency_type.name)
       }
     }
   }
 
-  // 2. Add granted proficiencies from class (armor, weapons, saving throws, etc.)
-  const classProficiencies = store.selections.class?.proficiencies ?? []
-  for (const prof of classProficiencies) {
-    if (!prof.is_choice && prof.grants) {
-      const type = prof.proficiency_type || 'other'
-      const name = prof.proficiency_name || prof.proficiency_type_detail?.name || 'Unknown'
-      addProficiency(type, name)
-    }
-  }
-
-  // 3. Add granted proficiencies from race
-  const raceProficiencies = store.selections.race?.proficiencies ?? []
-  for (const prof of raceProficiencies) {
-    if (!prof.is_choice && prof.grants) {
-      const type = prof.proficiency_type || 'other'
-      const name = prof.proficiency_name || prof.proficiency_type_detail?.name || 'Unknown'
-      addProficiency(type, name)
-    }
-  }
-
-  // 4. Add granted proficiencies from background
-  const backgroundProficiencies = store.selections.background?.proficiencies ?? []
-  for (const prof of backgroundProficiencies) {
-    if (!prof.is_choice && prof.grants) {
-      const type = prof.proficiency_type || 'other'
-      const name = prof.proficiency_name || prof.proficiency_type_detail?.name || 'Unknown'
-      addProficiency(type, name)
-    }
-  }
-
   // Build result array in display order
-  const typeOrder = ['saving_throw', 'armor', 'weapon', 'tool', 'skill', 'other']
+  const typeOrder = ['armor', 'weapon', 'tool', 'skill', 'other']
   const result: ProficiencyGroup[] = []
 
   for (const type of typeOrder) {
@@ -437,7 +415,7 @@ function getOrdinalSuffix(n: number): string {
             class="w-4 h-4 text-gray-400 flex-shrink-0"
           />
           <span class="text-gray-700 dark:text-gray-300">
-            {{ item.item?.name || item.description || 'Unknown item' }}
+            {{ item.custom_name || item.item?.name || item.description || 'Unknown item' }}
           </span>
           <span
             v-if="item.quantity > 1"
