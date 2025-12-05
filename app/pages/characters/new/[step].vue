@@ -1,4 +1,7 @@
 <script setup lang="ts">
+import type { Component } from 'vue'
+import WizardLayout from '~/components/character/wizard/WizardLayout.vue'
+
 /**
  * Character Creation Wizard - Dynamic Step Router
  *
@@ -11,23 +14,23 @@
 // ════════════════════════════════════════════════════════════════
 
 /**
- * Map step URL segments to their corresponding component names
- * Components are auto-imported by Nuxt
+ * Map step URL segments to their corresponding components
+ * Using defineAsyncComponent for lazy loading each step
  */
-const stepComponents: Record<string, string> = {
-  sourcebooks: 'CharacterWizardStepSourcebooks',
-  race: 'CharacterWizardStepRace',
-  subrace: 'CharacterWizardStepSubrace',
-  class: 'CharacterWizardStepClass',
-  subclass: 'CharacterWizardStepSubclass',
-  background: 'CharacterWizardStepBackground',
-  abilities: 'CharacterWizardStepAbilities',
-  proficiencies: 'CharacterWizardStepProficiencies',
-  languages: 'CharacterWizardStepLanguages',
-  equipment: 'CharacterWizardStepEquipment',
-  spells: 'CharacterWizardStepSpells',
-  details: 'CharacterWizardStepDetails',
-  review: 'CharacterWizardStepReview',
+const stepComponents: Record<string, Component> = {
+  sourcebooks: defineAsyncComponent(() => import('~/components/character/wizard/StepSourcebooks.vue')),
+  race: defineAsyncComponent(() => import('~/components/character/wizard/StepRace.vue')),
+  subrace: defineAsyncComponent(() => import('~/components/character/wizard/StepSubrace.vue')),
+  class: defineAsyncComponent(() => import('~/components/character/wizard/StepClass.vue')),
+  subclass: defineAsyncComponent(() => import('~/components/character/wizard/StepSubclass.vue')),
+  background: defineAsyncComponent(() => import('~/components/character/wizard/StepBackground.vue')),
+  abilities: defineAsyncComponent(() => import('~/components/character/wizard/StepAbilities.vue')),
+  proficiencies: defineAsyncComponent(() => import('~/components/character/wizard/StepProficiencies.vue')),
+  languages: defineAsyncComponent(() => import('~/components/character/wizard/StepLanguages.vue')),
+  equipment: defineAsyncComponent(() => import('~/components/character/wizard/StepEquipment.vue')),
+  spells: defineAsyncComponent(() => import('~/components/character/wizard/StepSpells.vue')),
+  details: defineAsyncComponent(() => import('~/components/character/wizard/StepDetails.vue')),
+  review: defineAsyncComponent(() => import('~/components/character/wizard/StepReview.vue')),
 }
 
 // ════════════════════════════════════════════════════════════════
@@ -44,10 +47,7 @@ const stepName = computed(() => route.params.step as string)
 /**
  * Resolved component for the current step
  */
-const stepComponent = computed(() => {
-  const componentName = stepComponents[stepName.value]
-  return componentName ? resolveComponent(componentName) : null
-})
+const stepComponent = computed(() => stepComponents[stepName.value] ?? null)
 
 /**
  * Handle invalid step - throw 404 error
@@ -76,7 +76,7 @@ useSeoMeta({
 </script>
 
 <template>
-  <CharacterWizardWizardLayout>
+  <WizardLayout>
     <component :is="stepComponent" />
-  </CharacterWizardWizardLayout>
+  </WizardLayout>
 </template>

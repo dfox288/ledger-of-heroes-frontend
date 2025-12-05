@@ -2,7 +2,7 @@
 <script setup lang="ts">
 import type { AbilityScores } from '~/types'
 import { useCharacterWizardStore } from '~/stores/characterWizard'
-import { useWizardNavigation } from '~/composables/useWizardSteps'
+import { useCharacterWizard } from '~/composables/useCharacterWizard'
 import type { AbilityMethod } from '~/stores/characterWizard'
 
 const store = useCharacterWizardStore()
@@ -13,7 +13,7 @@ const {
   effectiveRace,
   racialBonuses
 } = storeToRefs(store)
-const { nextStep } = useWizardNavigation()
+const { nextStep } = useCharacterWizard()
 
 // All 6 ability scores for the choice UI
 const allAbilities = [

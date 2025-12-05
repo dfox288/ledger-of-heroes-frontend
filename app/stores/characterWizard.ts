@@ -313,11 +313,20 @@ export const useCharacterWizardStore = defineStore('characterWizard', () => {
     try {
       if (!characterId.value) {
         // First save - create character with race
+        // Provide a default name that can be changed later in Details step
+        const defaultName = selections.value.name || `New ${race.name}`
         const response = await apiFetch<{ data: { id: number } }>('/characters', {
           method: 'POST',
-          body: { race_id: race.id },
+          body: {
+            name: defaultName,
+            race_id: race.id,
+          },
         })
         characterId.value = response.data.id
+        // Store the default name in selections
+        if (!selections.value.name) {
+          selections.value.name = defaultName
+        }
       } else {
         // Update existing character
         await apiFetch(`/characters/${characterId.value}`, {

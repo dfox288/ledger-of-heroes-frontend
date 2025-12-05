@@ -3,11 +3,11 @@
 import { storeToRefs } from 'pinia'
 import type { Race } from '~/types'
 import { useCharacterWizardStore } from '~/stores/characterWizard'
-import { useWizardNavigation } from '~/composables/useWizardSteps'
+import { useCharacterWizard } from '~/composables/useCharacterWizard'
 
 const store = useCharacterWizardStore()
 const { selections, isLoading, error, isSubraceRequired } = storeToRefs(store)
-const { nextStep } = useWizardNavigation()
+const { nextStep } = useCharacterWizard()
 
 // API client for fetching full subrace details
 const { apiFetch } = useApi()

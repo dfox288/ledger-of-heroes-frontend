@@ -1,7 +1,7 @@
 <!-- app/components/character/wizard/StepLanguages.vue -->
 <script setup lang="ts">
 import type { LanguageOption } from '~/types/languageChoices'
-import { useWizardNavigation } from '~/composables/useWizardSteps'
+import { useCharacterWizard } from '~/composables/useCharacterWizard'
 import { useCharacterWizardStore } from '~/stores/characterWizard'
 
 const store = useCharacterWizardStore()
@@ -11,7 +11,7 @@ const {
   pendingChoices,
   isLoading
 } = storeToRefs(store)
-const { nextStep } = useWizardNavigation()
+const { nextStep } = useCharacterWizard()
 
 // ══════════════════════════════════════════════════════════════
 // Fetch language choices from backend

@@ -2,7 +2,7 @@
 <script setup lang="ts">
 import type { ProficiencyOption, ProficiencyTypeOption, ProficiencyTypeLookupResponse } from '~/types/proficiencies'
 import type { components } from '~/types/api/generated'
-import { useWizardNavigation } from '~/composables/useWizardSteps'
+import { useCharacterWizard } from '~/composables/useCharacterWizard'
 import { useCharacterWizardStore } from '~/stores/characterWizard'
 
 type ProficiencyResource = components['schemas']['ProficiencyResource']
@@ -10,7 +10,7 @@ type ProficiencyResource = components['schemas']['ProficiencyResource']
 const store = useCharacterWizardStore()
 const { apiFetch } = useApi()
 const { selections, pendingChoices, isLoading } = storeToRefs(store)
-const { nextStep } = useWizardNavigation()
+const { nextStep } = useCharacterWizard()
 
 // ══════════════════════════════════════════════════════════════
 // Fetch proficiency choices from backend

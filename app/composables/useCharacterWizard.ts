@@ -276,14 +276,26 @@ export function useCharacterWizard(options: UseCharacterWizardOptions = {}) {
   // ══════════════════════════════════════════════════════════════
 
   /**
+   * Determine if we're in "new character" mode based on current URL
+   */
+  const isNewCharacterMode = computed(() =>
+    route.path.includes('/characters/new/')
+  )
+
+  /**
    * Build the URL for a step
+   * Uses current route to determine mode (new vs edit)
    */
   function getStepUrl(stepName: string): string {
+    // Stay in the same mode we're currently in
+    if (isNewCharacterMode.value) {
+      return `/characters/new/${stepName}`
+    }
+    // Edit mode - use character ID in URL
     if (store.characterId) {
-      // Edit mode - use character ID in URL
       return `/characters/${store.characterId}/edit/${stepName}`
     }
-    // New character mode
+    // Fallback to new mode
     return `/characters/new/${stepName}`
   }
 

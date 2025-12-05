@@ -3,13 +3,13 @@
 import { storeToRefs } from 'pinia'
 import type { Background } from '~/types'
 import { useCharacterWizardStore } from '~/stores/characterWizard'
-import { useWizardNavigation } from '~/composables/useWizardSteps'
+import { useCharacterWizard } from '~/composables/useCharacterWizard'
 import { useDetailModal } from '~/composables/useDetailModal'
 import { useEntitySearch } from '~/composables/useEntitySearch'
 
 const store = useCharacterWizardStore()
 const { selections, isLoading, error, sourceFilterString } = storeToRefs(store)
-const { nextStep } = useWizardNavigation()
+const { nextStep } = useCharacterWizard()
 
 // API client
 const { apiFetch } = useApi()

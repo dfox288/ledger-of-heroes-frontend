@@ -7,12 +7,12 @@ import WizardLayout from '~/components/character/wizard/WizardLayout.vue'
 // Mock navigateTo for child components
 vi.stubGlobal('navigateTo', vi.fn())
 
-// Define stubs for child components
+// Define stubs for child components (using explicit import names)
 const stubs = {
-  CharacterWizardWizardSidebar: {
+  WizardSidebar: {
     template: '<aside data-test="sidebar">Sidebar</aside>'
   },
-  CharacterWizardWizardFooter: {
+  WizardFooter: {
     template: '<footer data-test="footer">Footer</footer>'
   }
 }
@@ -71,7 +71,7 @@ describe('WizardLayout', () => {
       expect(wrapper.classes()).toContain('flex')
     })
 
-    it('has min-height to fill viewport', async () => {
+    it('has fixed height to fill viewport', async () => {
       const wrapper = await mountSuspended(WizardLayout, {
         slots: {
           default: () => h('div', 'Content')
@@ -79,7 +79,7 @@ describe('WizardLayout', () => {
         global: { stubs }
       })
 
-      expect(wrapper.classes()).toContain('min-h-screen')
+      expect(wrapper.classes()).toContain('h-screen')
     })
   })
 })

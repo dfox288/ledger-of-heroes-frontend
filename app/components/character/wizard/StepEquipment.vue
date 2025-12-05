@@ -3,7 +3,7 @@
 import { storeToRefs } from 'pinia'
 import type { components } from '~/types/api/generated'
 import { useCharacterWizardStore } from '~/stores/characterWizard'
-import { useWizardNavigation } from '~/composables/useWizardSteps'
+import { useCharacterWizard } from '~/composables/useCharacterWizard'
 
 type EntityItemResource = components['schemas']['EntityItemResource']
 type PackContentResource = components['schemas']['PackContentResource']
@@ -14,7 +14,7 @@ const {
   pendingChoices,
   isLoading
 } = storeToRefs(store)
-const { nextStep } = useWizardNavigation()
+const { nextStep } = useCharacterWizard()
 
 // Track which fixed pack contents are expanded (by item.id)
 const expandedFixedPacks = ref<Set<number>>(new Set())

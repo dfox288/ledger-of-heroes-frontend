@@ -1,5 +1,8 @@
 <!-- app/components/character/wizard/WizardLayout.vue -->
 <script setup lang="ts">
+import WizardSidebar from './WizardSidebar.vue'
+import WizardFooter from './WizardFooter.vue'
+
 /**
  * Layout wrapper for the character builder wizard v2.
  *
@@ -11,18 +14,18 @@
 </script>
 
 <template>
-  <div class="min-h-screen flex bg-gray-50 dark:bg-gray-900">
+  <div class="h-screen flex bg-gray-50 dark:bg-gray-900">
     <!-- Sidebar -->
-    <CharacterWizardWizardSidebar class="w-64 flex-shrink-0 hidden lg:block" />
+    <WizardSidebar class="w-64 flex-shrink-0 hidden lg:block" />
 
     <!-- Main content -->
-    <div class="flex-1 flex flex-col min-w-0">
+    <div class="flex-1 flex flex-col min-w-0 overflow-hidden">
       <main class="flex-1 p-6 overflow-y-auto">
         <slot />
       </main>
 
-      <!-- Footer -->
-      <CharacterWizardWizardFooter />
+      <!-- Footer - always visible at bottom -->
+      <WizardFooter class="flex-shrink-0" />
     </div>
   </div>
 </template>

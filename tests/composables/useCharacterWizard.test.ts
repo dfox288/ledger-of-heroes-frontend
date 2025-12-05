@@ -281,13 +281,24 @@ describe('useCharacterWizard', () => {
       expect(getStepUrl('race')).toBe('/characters/new/race')
     })
 
-    it('returns /edit/ path when characterId is set', () => {
+    it('returns /edit/ path when in edit mode', () => {
       const store = useCharacterWizardStore()
       store.characterId = 42
 
-      const route = createMockRoute()
+      // Use edit mode path to test edit mode behavior
+      const route = createMockRoute('/characters/42/edit/sourcebooks')
       const { getStepUrl } = useCharacterWizard({ route })
       expect(getStepUrl('race')).toBe('/characters/42/edit/race')
+    })
+
+    it('stays in /new/ mode even when characterId is set', () => {
+      const store = useCharacterWizardStore()
+      store.characterId = 42
+
+      // In new character flow, stay in /new/ path even after character is created
+      const route = createMockRoute('/characters/new/race')
+      const { getStepUrl } = useCharacterWizard({ route })
+      expect(getStepUrl('class')).toBe('/characters/new/class')
     })
   })
 

@@ -29,7 +29,7 @@ async function handleBack() {
 </script>
 
 <template>
-  <footer class="border-t border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 px-6 py-4">
+  <footer class="border-t border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 px-6 py-4 min-h-[72px]">
     <div class="flex justify-between items-center max-w-4xl mx-auto">
       <!-- Back Button -->
       <UButton

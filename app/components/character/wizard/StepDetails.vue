@@ -125,21 +125,7 @@ const alignmentOptions = [
           value-key="value"
           size="lg"
           data-testid="alignment-select"
-        >
-          <template #label>
-            <span v-if="alignment">{{ alignment }}</span>
-            <span
-              v-else
-              class="text-gray-500"
-            >Select alignment (optional)</span>
-          </template>
-          <template #option="{ item }">
-            <div class="flex flex-col">
-              <span class="font-medium">{{ item.label }}</span>
-              <span class="text-xs text-gray-500 dark:text-gray-400">{{ item.description }}</span>
-            </div>
-          </template>
-        </USelect>
+        />
       </UFormField>
     </div>
 

@@ -3,7 +3,7 @@
 import { storeToRefs } from 'pinia'
 import type { Spell } from '~/types'
 import { useCharacterWizardStore } from '~/stores/characterWizard'
-import { useWizardNavigation } from '~/composables/useWizardSteps'
+import { useCharacterWizard } from '~/composables/useCharacterWizard'
 
 const store = useCharacterWizardStore()
 const {
@@ -14,7 +14,7 @@ const {
   isLoading,
   error
 } = storeToRefs(store)
-const { nextStep } = useWizardNavigation()
+const { nextStep } = useCharacterWizard()
 
 // API client
 const { apiFetch } = useApi()
