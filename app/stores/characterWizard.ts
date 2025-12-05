@@ -613,34 +613,110 @@ export const useCharacterWizardStore = defineStore('characterWizard', () => {
   }
 
   /**
+   * Clear existing equipment before re-saving
+   * Used to avoid duplicates when saving equipment choices
+   */
+  async function clearExistingEquipment(): Promise<void> {
+    if (!characterId.value) return
+
+    try {
+      const response = await apiFetch<{ data: Array<{ id: number }> }>(
+        `/characters/${characterId.value}/equipment`
+      )
+
+      const items = response?.data ?? []
+      for (const item of items) {
+        await apiFetch(`/characters/${characterId.value}/equipment/${item.id}`, {
+          method: 'DELETE'
+        })
+      }
+    } catch {
+      // If fetching equipment fails (e.g., no equipment yet), continue with save
+    }
+  }
+
+  /**
    * Save equipment choices to backend
-   * Sends selected equipment option IDs to the backend
+   * Iterates through selected equipment options and saves each item individually
    */
   async function saveEquipmentChoices(): Promise<void> {
     if (!characterId.value) return
-    if (pendingChoices.value.equipment.size === 0) return
 
     isLoading.value = true
     error.value = null
 
     try {
-      // Transform Map<string, number> to API format
-      // API expects: { choices: { [choiceGroup]: optionId } }
-      const choices: Record<string, number> = {}
+      // First, clear any existing equipment to avoid duplicates on re-save
+      await clearExistingEquipment()
+
+      // Combine equipment from class and background
+      const allItems = [
+        ...(selections.value.class?.equipment ?? []),
+        ...(selections.value.background?.equipment ?? [])
+      ]
+
+      // Process choice equipment
       for (const [group, optionId] of pendingChoices.value.equipment) {
-        choices[group] = optionId
+        const selectedOption = allItems.find(item => item.id === optionId)
+        if (!selectedOption) continue
+
+        // If option has choice_items, process each
+        if (selectedOption.choice_items?.length) {
+          for (const [index, choiceItem] of selectedOption.choice_items.entries()) {
+            let itemId: number | undefined
+            const quantity = choiceItem.quantity
+
+            if (choiceItem.item) {
+              // Fixed item - use directly
+              itemId = choiceItem.item.id
+            } else if (choiceItem.proficiency_type) {
+              // Category item - get user's selection
+              const key = `${group}:${selectedOption.choice_option}:${index}`
+              itemId = pendingChoices.value.equipmentItems.get(key)
+              if (!itemId) continue
+            } else {
+              continue
+            }
+
+            await apiFetch(`/characters/${characterId.value}/equipment`, {
+              method: 'POST',
+              body: { item_id: itemId, quantity }
+            })
+          }
+        } else if (selectedOption.item) {
+          // Simple choice with direct item reference
+          await apiFetch(`/characters/${characterId.value}/equipment`, {
+            method: 'POST',
+            body: { item_id: selectedOption.item.id, quantity: selectedOption.quantity }
+          })
+        }
       }
 
-      // Also include item selections for compound choices
-      const itemSelections: Record<string, number> = {}
-      for (const [key, itemId] of pendingChoices.value.equipmentItems) {
-        itemSelections[key] = itemId
+      // Also add fixed equipment (both database items and flavor items)
+      const fixedEquipment = allItems.filter(item => !item.is_choice)
+      for (const item of fixedEquipment) {
+        if (item.item) {
+          // Database item at top level - save with item_id
+          await apiFetch(`/characters/${characterId.value}/equipment`, {
+            method: 'POST',
+            body: { item_id: item.item.id, quantity: item.quantity }
+          })
+        } else if (item.choice_items?.[0]?.item) {
+          // Database item inside choice_items (e.g., Leather armor, Dagger)
+          const choiceItem = item.choice_items[0]
+          const choiceItemRef = choiceItem.item!
+          await apiFetch(`/characters/${characterId.value}/equipment`, {
+            method: 'POST',
+            body: { item_id: choiceItemRef.id, quantity: choiceItem.quantity ?? item.quantity }
+          })
+        } else if (item.description) {
+          // Flavor item - save with custom_name
+          await apiFetch(`/characters/${characterId.value}/equipment`, {
+            method: 'POST',
+            body: { custom_name: item.description, quantity: item.quantity }
+          })
+        }
       }
-
-      await apiFetch(`/characters/${characterId.value}/equipment`, {
-        method: 'POST',
-        body: { choices, item_selections: itemSelections }
-      })
 
       // Clear pending choices after successful save
       pendingChoices.value.equipment = new Map()
