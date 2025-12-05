@@ -864,7 +864,37 @@ export const useCharacterBuilderStore = defineStore('characterBuilder', () => {
   }
 
   /**
+   * Determine if a choice group expects skill_ids or proficiency_type_ids
+   * Based on the proficiency_type field or options type in the choice data
+   */
+  function isSkillChoice(source: string, choiceGroup: string): boolean {
+    if (!proficiencyChoices.value) return true // Default to skill if no data
+
+    const sourceData = proficiencyChoices.value.data[source as 'class' | 'race' | 'background']
+    if (!sourceData) return true
+
+    const group = sourceData[choiceGroup]
+    if (!group) return true
+
+    // If proficiency_type is explicitly 'skill', it's a skill choice
+    if (group.proficiency_type === 'skill') return true
+
+    // If proficiency_type is set to something else (e.g., 'tool'), it's NOT a skill choice
+    if (group.proficiency_type && group.proficiency_type !== 'skill') return false
+
+    // Fall back to checking options type
+    const firstOption = group.options[0]
+    if (firstOption) {
+      return firstOption.type === 'skill'
+    }
+
+    // Default to skill if we can't determine
+    return true
+  }
+
+  /**
    * Save all pending proficiency selections to API
+   * Sends skill_ids for skill choices, proficiency_type_ids for tool/other choices
    */
   async function saveProficiencyChoices(): Promise<void> {
     if (!characterId.value) return
@@ -873,17 +903,30 @@ export const useCharacterBuilderStore = defineStore('characterBuilder', () => {
     error.value = null
 
     try {
-      for (const [key, skillIds] of pendingProficiencySelections.value) {
-        if (skillIds.size === 0) continue
+      for (const [key, selectedIds] of pendingProficiencySelections.value) {
+        if (selectedIds.size === 0) continue
 
-        const [source, choiceGroup] = key.split(':')
+        const parts = key.split(':')
+        const source = parts[0]
+        const choiceGroup = parts[1]
+        if (!source || !choiceGroup) continue
+
+        // Determine whether to send skill_ids or proficiency_type_ids
+        const useSkillIds = isSkillChoice(source, choiceGroup)
+        const body: Record<string, unknown> = {
+          source,
+          choice_group: choiceGroup
+        }
+
+        if (useSkillIds) {
+          body.skill_ids = [...selectedIds]
+        } else {
+          body.proficiency_type_ids = [...selectedIds]
+        }
+
         await apiFetch(`/characters/${characterId.value}/proficiency-choices`, {
           method: 'POST',
-          body: {
-            source,
-            choice_group: choiceGroup,
-            skill_ids: [...skillIds]
-          }
+          body
         })
       }
 

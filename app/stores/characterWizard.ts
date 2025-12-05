@@ -54,6 +54,8 @@ export interface WizardSelections {
 
 export interface PendingChoices {
   proficiencies: Map<string, Set<number>>
+  /** Tracks whether each proficiency choice key uses skill_ids or proficiency_type_ids */
+  proficiencyChoiceTypes: Map<string, 'skill' | 'proficiency_type'>
   languages: Map<string, Set<number>>
   equipment: Map<string, number>
   equipmentItems: Map<string, number>
@@ -109,6 +111,7 @@ function defaultSelections(): WizardSelections {
 function defaultPendingChoices(): PendingChoices {
   return {
     proficiencies: new Map(),
+    proficiencyChoiceTypes: new Map(),
     languages: new Map(),
     equipment: new Map(),
     equipmentItems: new Map(),
@@ -555,7 +558,7 @@ export const useCharacterWizardStore = defineStore('characterWizard', () => {
   /**
    * Save proficiency choices to backend
    * Makes separate API calls for each source:choice_group
-   * API expects: { source, choice_group, skill_ids: number[] }
+   * Sends skill_ids for skill choices, proficiency_type_ids for tool/other choices
    */
   async function saveProficiencyChoices(): Promise<void> {
     if (!characterId.value) return
@@ -566,22 +569,33 @@ export const useCharacterWizardStore = defineStore('characterWizard', () => {
 
     try {
       // Key format is "source:choiceGroup" (e.g., "class:skill_choice_1")
-      for (const [key, skillIds] of pendingChoices.value.proficiencies) {
-        if (skillIds.size === 0) continue
+      for (const [key, selectedIds] of pendingChoices.value.proficiencies) {
+        if (selectedIds.size === 0) continue
 
         const [source, choiceGroup] = key.split(':')
+
+        // Determine whether to send skill_ids or proficiency_type_ids
+        const choiceType = pendingChoices.value.proficiencyChoiceTypes.get(key) ?? 'skill'
+        const body: Record<string, unknown> = {
+          source,
+          choice_group: choiceGroup
+        }
+
+        if (choiceType === 'skill') {
+          body.skill_ids = Array.from(selectedIds)
+        } else {
+          body.proficiency_type_ids = Array.from(selectedIds)
+        }
+
         await apiFetch(`/characters/${characterId.value}/proficiency-choices`, {
           method: 'POST',
-          body: {
-            source,
-            choice_group: choiceGroup,
-            skill_ids: Array.from(skillIds)
-          }
+          body
         })
       }
 
       // Clear pending choices after successful save
       pendingChoices.value.proficiencies = new Map()
+      pendingChoices.value.proficiencyChoiceTypes = new Map()
 
       await syncWithBackend()
     } catch (err) {
@@ -793,8 +807,11 @@ export const useCharacterWizardStore = defineStore('characterWizard', () => {
 
   /**
    * Toggle a proficiency selection
+   * @param key - The choice key in format "source:choiceGroup"
+   * @param id - The skill ID or proficiency_type ID
+   * @param choiceType - Whether this is a 'skill' or 'proficiency_type' choice (defaults to 'skill')
    */
-  function toggleProficiencyChoice(key: string, id: number): void {
+  function toggleProficiencyChoice(key: string, id: number, choiceType: 'skill' | 'proficiency_type' = 'skill'): void {
     const current = pendingChoices.value.proficiencies.get(key) ?? new Set()
     const updated = new Set(current)
 
@@ -806,6 +823,11 @@ export const useCharacterWizardStore = defineStore('characterWizard', () => {
 
     pendingChoices.value.proficiencies = new Map(
       pendingChoices.value.proficiencies.set(key, updated)
+    )
+
+    // Track the choice type for this key
+    pendingChoices.value.proficiencyChoiceTypes = new Map(
+      pendingChoices.value.proficiencyChoiceTypes.set(key, choiceType)
     )
   }
 

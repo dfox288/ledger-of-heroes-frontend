@@ -34,7 +34,7 @@ interface ProficiencyChoicesResponse {
   }
 }
 
-const { data: proficiencyChoices, pending: loadingChoices } = await useAsyncData(
+const { data: proficiencyChoices, pending: _loadingChoices } = await useAsyncData(
   `wizard-proficiency-choices-${store.characterId}`,
   () => apiFetch<ProficiencyChoicesResponse>(`/characters/${store.characterId}/proficiency-choices`),
   { watch: [() => store.characterId] }
@@ -341,14 +341,14 @@ function isSkillSelected(source: string, groupName: string, skillId: number): bo
   return pendingChoices.value.proficiencies.get(key)?.has(skillId) ?? false
 }
 
-function handleSkillToggle(source: 'class' | 'race' | 'background', groupName: string, skillId: number, quantity: number) {
+function handleSkillToggle(source: 'class' | 'race' | 'background', groupName: string, optionId: number, quantity: number, optionType: 'skill' | 'proficiency_type') {
   const key = `${source}:${groupName}`
   const current = getSelectedCount(source, groupName)
-  const isSelected = isSkillSelected(source, groupName, skillId)
+  const isSelected = isSkillSelected(source, groupName, optionId)
 
   if (!isSelected && current >= quantity) return
 
-  store.toggleProficiencyChoice(key, skillId)
+  store.toggleProficiencyChoice(key, optionId, optionType)
 }
 
 function getOptionName(option: ProficiencyOption): string {
@@ -559,7 +559,7 @@ async function handleContinue() {
                 'border-primary bg-primary/10': isSkillSelected(sourceData.source, group.groupName, getOptionId(option)),
                 'border-gray-200 dark:border-gray-700 hover:border-primary/50': !isSkillSelected(sourceData.source, group.groupName, getOptionId(option))
               }"
-              @click="handleSkillToggle(sourceData.source, group.groupName, getOptionId(option), group.quantity)"
+              @click="handleSkillToggle(sourceData.source, group.groupName, getOptionId(option), group.quantity, option.type)"
             >
               <div class="flex items-center gap-2">
                 <UIcon
