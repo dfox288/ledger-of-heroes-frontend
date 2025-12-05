@@ -10,9 +10,25 @@ const {
   selections,
   isLoading,
   error,
-  effectiveRace,
-  racialBonuses
+  effectiveRace
 } = storeToRefs(store)
+
+// Get all racial ability score modifiers
+const allRacialModifiers = computed(() => {
+  const race = effectiveRace.value
+  if (!race?.modifiers) return []
+  return race.modifiers.filter(m => m.modifier_category === 'ability_score')
+})
+
+// Fixed bonuses have ability_score set (e.g., +2 CHA)
+const fixedBonuses = computed(() =>
+  allRacialModifiers.value.filter(m => !m.is_choice && m.ability_score)
+)
+
+// Choice bonuses require user selection (e.g., Half-Elf's "choose 2 different")
+const choiceBonuses = computed(() =>
+  allRacialModifiers.value.filter(m => m.is_choice)
+)
 const { nextStep } = useCharacterWizard()
 
 // All 6 ability scores for the choice UI
@@ -60,8 +76,8 @@ const finalScores = computed(() => {
   for (const ability of abilities) {
     const baseScore = base[ability]
 
-    // Fixed racial bonuses
-    const bonus = racialBonuses.value
+    // Only fixed racial bonuses (not choices - those need user selection)
+    const bonus = fixedBonuses.value
       .filter(m => codeMap[m.ability_score?.code ?? ''] === ability)
       .reduce((sum, m) => sum + Number(m.value), 0)
 
@@ -178,17 +194,22 @@ watch(selectedMethod, (newMethod) => {
       />
     </div>
 
-    <!-- Fixed Racial Bonuses -->
+    <!-- Racial Bonuses -->
     <div
-      v-if="racialBonuses.length > 0"
-      class="p-4 bg-race-50 dark:bg-race-900/20 rounded-lg"
+      v-if="allRacialModifiers.length > 0"
+      class="p-4 bg-race-50 dark:bg-race-900/20 rounded-lg space-y-3"
     >
-      <h3 class="font-semibold text-gray-900 dark:text-gray-100 mb-2">
+      <h3 class="font-semibold text-gray-900 dark:text-gray-100">
         Racial Bonuses ({{ effectiveRace?.name }})
       </h3>
-      <div class="flex flex-wrap gap-2">
+
+      <!-- Fixed Bonuses -->
+      <div
+        v-if="fixedBonuses.length > 0"
+        class="flex flex-wrap gap-2"
+      >
         <UBadge
-          v-for="bonus in racialBonuses"
+          v-for="bonus in fixedBonuses"
           :key="bonus.id"
           color="race"
           variant="subtle"
@@ -197,6 +218,25 @@ watch(selectedMethod, (newMethod) => {
           {{ bonus.ability_score?.name }} +{{ bonus.value }}
         </UBadge>
       </div>
+
+      <!-- Choice Bonuses (not yet implemented) -->
+      <UAlert
+        v-if="choiceBonuses.length > 0"
+        color="warning"
+        icon="i-heroicons-exclamation-triangle"
+        variant="subtle"
+      >
+        <template #title>
+          Ability Score Choices Not Yet Available
+        </template>
+        <template #description>
+          <p class="text-sm">
+            {{ effectiveRace?.name }} allows you to choose
+            {{ choiceBonuses[0]?.choice_count }} different ability scores to increase by +{{ choiceBonuses[0]?.value }}.
+            This feature is coming soon (Issue #219).
+          </p>
+        </template>
+      </UAlert>
     </div>
 
     <!-- Final Scores Summary -->
