@@ -105,63 +105,95 @@ interface ProficiencyGroup {
   items: string[]
 }
 
+// Define display order and labels
+const typeConfig: Record<string, { label: string, icon: string }> = {
+  saving_throw: { label: 'Saving Throws', icon: 'i-heroicons-heart' },
+  armor: { label: 'Armor', icon: 'i-heroicons-shield-check' },
+  weapon: { label: 'Weapons', icon: 'i-heroicons-bolt' },
+  tool: { label: 'Tools', icon: 'i-heroicons-wrench-screwdriver' },
+  skill: { label: 'Skills', icon: 'i-heroicons-academic-cap' },
+  other: { label: 'Other', icon: 'i-heroicons-check-circle' }
+}
+
 const proficiencyGroups = computed<ProficiencyGroup[]>(() => {
-  if (!proficiencies.value || proficiencies.value.length === 0) return []
+  const grouped = new Map<string, Set<string>>()
 
-  const grouped = new Map<string, string[]>()
+  // Helper to add a proficiency to the grouped map
+  const addProficiency = (type: string, name: string) => {
+    const existing = grouped.get(type) ?? new Set()
+    existing.add(name)
+    grouped.set(type, existing)
+  }
 
-  for (const prof of proficiencies.value) {
-    // Determine type and name
-    let type = 'other'
-    let name = 'Unknown'
-
-    if (prof.skill) {
-      type = 'skill'
-      name = prof.skill.name
-      if (prof.expertise) name += ' (Expertise)'
-    } else if (prof.proficiency_type) {
-      type = prof.proficiency_type.category || 'other'
-      name = prof.proficiency_type.name
+  // 1. Add skill proficiencies from backend (chosen skills)
+  if (proficiencies.value) {
+    for (const prof of proficiencies.value) {
+      if (prof.skill) {
+        let name = prof.skill.name
+        if (prof.expertise) name += ' (Expertise)'
+        addProficiency('skill', name)
+      } else if (prof.proficiency_type) {
+        const type = prof.proficiency_type.category || 'other'
+        addProficiency(type, prof.proficiency_type.name)
+      }
     }
-
-    const existing = grouped.get(type) ?? []
-    grouped.set(type, [...existing, name])
   }
 
-  // Define display order and labels
-  const typeConfig: Record<string, { label: string, icon: string }> = {
-    saving_throw: { label: 'Saving Throws', icon: 'i-heroicons-heart' },
-    armor: { label: 'Armor', icon: 'i-heroicons-shield-check' },
-    weapon: { label: 'Weapons', icon: 'i-heroicons-bolt' },
-    tool: { label: 'Tools', icon: 'i-heroicons-wrench-screwdriver' },
-    skill: { label: 'Skills', icon: 'i-heroicons-academic-cap' },
-    other: { label: 'Other', icon: 'i-heroicons-check-circle' }
+  // 2. Add granted proficiencies from class (armor, weapons, saving throws, etc.)
+  const classProficiencies = store.selections.class?.proficiencies ?? []
+  for (const prof of classProficiencies) {
+    if (!prof.is_choice && prof.grants) {
+      const type = prof.proficiency_type || 'other'
+      const name = prof.proficiency_name || prof.proficiency_type_detail?.name || 'Unknown'
+      addProficiency(type, name)
+    }
   }
 
+  // 3. Add granted proficiencies from race
+  const raceProficiencies = store.selections.race?.proficiencies ?? []
+  for (const prof of raceProficiencies) {
+    if (!prof.is_choice && prof.grants) {
+      const type = prof.proficiency_type || 'other'
+      const name = prof.proficiency_name || prof.proficiency_type_detail?.name || 'Unknown'
+      addProficiency(type, name)
+    }
+  }
+
+  // 4. Add granted proficiencies from background
+  const backgroundProficiencies = store.selections.background?.proficiencies ?? []
+  for (const prof of backgroundProficiencies) {
+    if (!prof.is_choice && prof.grants) {
+      const type = prof.proficiency_type || 'other'
+      const name = prof.proficiency_name || prof.proficiency_type_detail?.name || 'Unknown'
+      addProficiency(type, name)
+    }
+  }
+
+  // Build result array in display order
   const typeOrder = ['saving_throw', 'armor', 'weapon', 'tool', 'skill', 'other']
   const result: ProficiencyGroup[] = []
 
   for (const type of typeOrder) {
     const items = grouped.get(type)
-    if (items && items.length > 0) {
+    if (items && items.size > 0) {
       const config = typeConfig[type] || typeConfig.other!
       result.push({
         type,
         label: config.label,
         icon: config.icon,
-        items: items.sort()
+        items: Array.from(items).sort()
       })
     }
   }
 
   // Add any remaining types not in typeOrder
   for (const [type, items] of grouped) {
-    if (!typeOrder.includes(type) && items.length > 0) {
+    if (!typeOrder.includes(type) && items.size > 0) {
       result.push({
         type,
         label: type.charAt(0).toUpperCase() + type.slice(1),
         icon: 'i-heroicons-check-circle',
-        items: items.sort()
+        items: Array.from(items).sort()
       })
     }
   }
