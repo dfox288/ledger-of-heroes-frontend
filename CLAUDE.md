@@ -79,6 +79,7 @@ docker compose exec nuxt npm run types:sync # Sync API types from backend
 
 | Working On | Test Suite | Runtime |
 |------------|------------|---------|
+| **Character builder, wizard steps** | `npm run test:character` | ~40s |
 | Spells page, SpellCard, filters | `npm run test:spells` | ~14s |
 | Items page, ItemCard, filters | `npm run test:items` | ~12s |
 | Monsters page, filters | `npm run test:monsters` | ~12s |
@@ -87,9 +88,11 @@ docker compose exec nuxt npm run types:sync # Sync API types from backend
 | Backgrounds page, filters | `npm run test:backgrounds` | ~10s |
 | Feats page, filters | `npm run test:feats` | ~8s |
 | Reference entities (sizes, skills) | `npm run test:reference` | ~10s |
-| Shared UI components | `npm run test:ui` | ~52s |
-| Composables, utils, server API | `npm run test:core` | ~18s |
-| CI, pre-commit, final check | `npm run test` | ~125s |
+| Shared UI components, cards | `npm run test:ui` | ~55s |
+| Composables, utils, server API | `npm run test:core` | ~20s |
+| All page tests | `npm run test:pages` | ~60s |
+| All Pinia stores | `npm run test:stores` | ~15s |
+| CI, pre-commit, final check | `npm run test` | ~250s |
 
 ---
 
