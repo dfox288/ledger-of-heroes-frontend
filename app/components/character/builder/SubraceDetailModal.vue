@@ -86,6 +86,48 @@ const inheritedTraits = computed(() => {
   return props.parentRace?.traits ?? []
 })
 
+/**
+ * Get subrace-specific languages
+ */
+const subraceLanguages = computed(() => {
+  return props.subrace?.languages ?? []
+})
+
+/**
+ * Get inherited languages from parent race
+ */
+const inheritedLanguages = computed(() => {
+  // Check inherited_data first (if subrace was loaded with parent)
+  const inherited = props.subrace?.inherited_data?.languages
+  if (inherited && inherited.length > 0) {
+    return inherited
+  }
+
+  // Fall back to parent race languages
+  return props.parentRace?.languages ?? []
+})
+
+/**
+ * Get subrace-specific proficiencies
+ */
+const subraceProficiencies = computed(() => {
+  return props.subrace?.proficiencies ?? []
+})
+
+/**
+ * Get inherited proficiencies from parent race
+ */
+const inheritedProficiencies = computed(() => {
+  // Check inherited_data first (if subrace was loaded with parent)
+  const inherited = props.subrace?.inherited_data?.proficiencies
+  if (inherited && inherited.length > 0) {
+    return inherited
+  }
+
+  // Fall back to parent race proficiencies
+  return props.parentRace?.proficiencies ?? []
+})
+
 // handleClose function defined for potential future use in template
 // Currently the modal uses v-model:open which handles close automatically
 function _handleClose() {
@@ -213,14 +255,35 @@ function _handleClose() {
           </div>
         </div>
 
-        <!-- Proficiencies (if any) -->
-        <div v-if="subrace.proficiencies && subrace.proficiencies.length > 0">
+        <!-- Inherited Proficiencies (from base race) -->
+        <div v-if="inheritedProficiencies.length > 0">
           <h4 class="font-semibold text-gray-900 dark:text-gray-100 mb-2">
-            Proficiencies
+            Base Race Proficiencies
+            <span class="text-sm font-normal text-gray-500 dark:text-gray-400">
+              (from {{ parentRace?.name || 'parent race' }})
+            </span>
           </h4>
           <div class="flex flex-wrap gap-2">
             <UBadge
-              v-for="prof in subrace.proficiencies"
+              v-for="prof in inheritedProficiencies"
+              :key="prof.id"
+              color="neutral"
+              variant="subtle"
+              size="md"
+            >
+              {{ prof.proficiency_name || prof.skill?.name || prof.item?.name || prof.proficiency_type }}
+            </UBadge>
+          </div>
+        </div>
+
+        <!-- Subrace Proficiencies -->
+        <div v-if="subraceProficiencies.length > 0">
+          <h4 class="font-semibold text-gray-900 dark:text-gray-100 mb-2">
+            Subrace Proficiencies
+          </h4>
+          <div class="flex flex-wrap gap-2">
+            <UBadge
+              v-for="prof in subraceProficiencies"
               :key="prof.id"
               color="neutral"
               variant="outline"
@@ -231,14 +294,35 @@ function _handleClose() {
           </div>
         </div>
 
-        <!-- Languages -->
-        <div v-if="subrace.languages && subrace.languages.length > 0">
+        <!-- Inherited Languages (from base race) -->
+        <div v-if="inheritedLanguages.length > 0">
           <h4 class="font-semibold text-gray-900 dark:text-gray-100 mb-2">
-            Languages
+            Base Race Languages
+            <span class="text-sm font-normal text-gray-500 dark:text-gray-400">
+              (from {{ parentRace?.name || 'parent race' }})
+            </span>
           </h4>
           <div class="flex flex-wrap gap-2">
             <UBadge
-              v-for="(lang, index) in subrace.languages"
+              v-for="(lang, index) in inheritedLanguages"
+              :key="lang.language?.id ?? index"
+              color="neutral"
+              variant="subtle"
+              size="md"
+            >
+              {{ lang.language?.name || 'Language Choice' }}
+            </UBadge>
+          </div>
+        </div>
+
+        <!-- Subrace Languages -->
+        <div v-if="subraceLanguages.length > 0">
+          <h4 class="font-semibold text-gray-900 dark:text-gray-100 mb-2">
+            Subrace Languages
+          </h4>
+          <div class="flex flex-wrap gap-2">
+            <UBadge
+              v-for="(lang, index) in subraceLanguages"
               :key="lang.language?.id ?? index"
               color="neutral"
               variant="outline"
