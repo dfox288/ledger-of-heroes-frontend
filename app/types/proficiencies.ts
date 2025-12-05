@@ -21,13 +21,17 @@ export interface ProficiencyTypeOption {
 export type ProficiencyOption = SkillOption | ProficiencyTypeOption
 
 export interface ProficiencyChoice {
+  /** The category of proficiency (e.g., 'skill', 'tool') */
+  proficiency_type: string | null
+  /** The subcategory for lookup-based choices (e.g., 'artisan' for artisan tools) */
+  proficiency_subcategory: string | null
   quantity: number
   remaining: number
   /** IDs of skills already selected for this choice group */
   selected_skills: number[]
   /** IDs of proficiency types already selected for this choice group */
   selected_proficiency_types: number[]
-  /** All available options (no longer filtered by selection) */
+  /** All available options - may be empty if proficiency_subcategory is set (fetch from lookup) */
   options: ProficiencyOption[]
 }
 
@@ -65,4 +69,22 @@ export interface ProficienciesResponse {
 
 export interface FeaturesResponse {
   data: CharacterFeature[]
+}
+
+/**
+ * Proficiency type lookup item from /proficiency-types?category=X&subcategory=Y
+ */
+export interface ProficiencyTypeLookupItem {
+  id: number
+  slug: string
+  name: string
+  category: string
+  subcategory: string | null
+}
+
+/**
+ * Response from /proficiency-types lookup endpoint
+ */
+export interface ProficiencyTypeLookupResponse {
+  data: ProficiencyTypeLookupItem[]
 }

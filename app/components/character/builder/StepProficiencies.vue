@@ -1,14 +1,83 @@
 <!-- app/components/character/builder/StepProficiencies.vue -->
 <script setup lang="ts">
-import type { ProficiencyOption, ProficiencyTypeOption } from '~/types/proficiencies'
+import type { ProficiencyOption, ProficiencyTypeOption, ProficiencyTypeLookupResponse } from '~/types/proficiencies'
 import type { components } from '~/types/api/generated'
 import { useWizardNavigation } from '~/composables/useWizardSteps'
 
 type ProficiencyResource = components['schemas']['ProficiencyResource']
 
 const store = useCharacterBuilderStore()
+const { apiFetch } = useApi()
 const { proficiencyChoices, pendingProficiencySelections, allProficiencyChoicesComplete, isLoading, selectedClass, selectedRace, selectedBackground } = storeToRefs(store)
 const { nextStep } = useWizardNavigation()
+
+// ══════════════════════════════════════════════════════════════
+// Subcategory Options Fetching
+// ══════════════════════════════════════════════════════════════
+
+/**
+ * Cache for fetched subcategory options
+ * Key: "{category}:{subcategory}" -> ProficiencyOption[]
+ */
+const subcategoryOptionsCache = ref<Map<string, ProficiencyOption[]>>(new Map())
+const loadingSubcategories = ref<Set<string>>(new Set())
+
+/**
+ * Fetch options for a subcategory-based choice
+ */
+async function fetchSubcategoryOptions(category: string, subcategory: string): Promise<ProficiencyOption[]> {
+  const cacheKey = `${category}:${subcategory}`
+
+  // Return cached if available
+  if (subcategoryOptionsCache.value.has(cacheKey)) {
+    return subcategoryOptionsCache.value.get(cacheKey)!
+  }
+
+  // Mark as loading
+  loadingSubcategories.value.add(cacheKey)
+
+  try {
+    const response = await apiFetch<ProficiencyTypeLookupResponse>('/proficiency-types', {
+      query: { category, subcategory }
+    })
+
+    // Handle case where response.data might be undefined (in tests, etc.)
+    if (!response?.data) {
+      return []
+    }
+
+    // Transform lookup response to ProficiencyOption format
+    const options: ProficiencyOption[] = response.data.map(item => ({
+      type: 'proficiency_type' as const,
+      proficiency_type_id: item.id,
+      proficiency_type: {
+        id: item.id,
+        name: item.name,
+        slug: item.slug
+      }
+    }))
+
+    // Cache the result
+    subcategoryOptionsCache.value.set(cacheKey, options)
+    return options
+  }
+  catch {
+    // API errors (test environment, network issues) - return empty array
+    console.warn(`Failed to fetch proficiency types for ${category}:${subcategory}`)
+    return []
+  }
+  finally {
+    loadingSubcategories.value.delete(cacheKey)
+  }
+}
+
+/**
+ * Check if a subcategory is currently loading
+ */
+function isSubcategoryLoading(category: string | null, subcategory: string | null): boolean {
+  if (!category || !subcategory) return false
+  return loadingSubcategories.value.has(`${category}:${subcategory}`)
+}
 
 // ══════════════════════════════════════════════════════════════
 // Granted Proficiencies (non-choice, automatically assigned)
@@ -166,39 +235,50 @@ const hasAnyChoices = computed(() => {
     || Object.keys(background).length > 0
 })
 
+// Extended group interface with subcategory support
+interface ChoiceGroup {
+  groupName: string
+  quantity: number
+  remaining: number
+  selectedSkills: number[]
+  selectedProficiencyTypes: number[]
+  options: ProficiencyOption[]
+  proficiencyType: string | null
+  proficiencySubcategory: string | null
+}
+
+interface ChoiceSource {
+  source: 'class' | 'race' | 'background'
+  label: string
+  entityName: string
+  groups: ChoiceGroup[]
+}
+
 // Organize choices by source for display
-const choicesBySource = computed(() => {
+const choicesBySource = computed<ChoiceSource[]>(() => {
   if (!proficiencyChoices.value) return []
 
-  const sources: Array<{
-    source: 'class' | 'race' | 'background'
-    label: string
-    entityName: string
-    groups: Array<{
-      groupName: string
-      quantity: number
-      remaining: number
-      selectedSkills: number[]
-      selectedProficiencyTypes: number[]
-      options: ProficiencyOption[]
-    }>
-  }> = []
-
+  const sources: ChoiceSource[] = []
   const { class: cls, race, background } = proficiencyChoices.value.data
+
+  const mapGroups = (groups: typeof cls): ChoiceGroup[] =>
+    Object.entries(groups).map(([groupName, group]) => ({
+      groupName,
+      quantity: group.quantity,
+      remaining: group.remaining,
+      selectedSkills: group.selected_skills ?? [],
+      selectedProficiencyTypes: group.selected_proficiency_types ?? [],
+      options: group.options,
+      proficiencyType: group.proficiency_type ?? null,
+      proficiencySubcategory: group.proficiency_subcategory ?? null
+    }))
 
   if (Object.keys(cls).length > 0) {
     sources.push({
       source: 'class',
       label: 'From Class',
       entityName: selectedClass.value?.name ?? 'Unknown',
-      groups: Object.entries(cls).map(([groupName, group]) => ({
-        groupName,
-        quantity: group.quantity,
-        remaining: group.remaining,
-        selectedSkills: group.selected_skills ?? [],
-        selectedProficiencyTypes: group.selected_proficiency_types ?? [],
-        options: group.options
-      }))
+      groups: mapGroups(cls)
     })
   }
 
@@ -207,14 +287,7 @@ const choicesBySource = computed(() => {
       source: 'race',
       label: 'From Race',
       entityName: selectedRace.value?.name ?? 'Unknown',
-      groups: Object.entries(race).map(([groupName, group]) => ({
-        groupName,
-        quantity: group.quantity,
-        remaining: group.remaining,
-        selectedSkills: group.selected_skills ?? [],
-        selectedProficiencyTypes: group.selected_proficiency_types ?? [],
-        options: group.options
-      }))
+      groups: mapGroups(race)
     })
   }
 
@@ -223,19 +296,61 @@ const choicesBySource = computed(() => {
       source: 'background',
       label: 'From Background',
       entityName: selectedBackground.value?.name ?? 'Unknown',
-      groups: Object.entries(background).map(([groupName, group]) => ({
-        groupName,
-        quantity: group.quantity,
-        remaining: group.remaining,
-        selectedSkills: group.selected_skills ?? [],
-        selectedProficiencyTypes: group.selected_proficiency_types ?? [],
-        options: group.options
-      }))
+      groups: mapGroups(background)
     })
   }
 
   return sources
 })
+
+/**
+ * Get effective options for a choice group
+ * If the group has a subcategory and no inline options, fetch from lookup
+ */
+function getEffectiveOptions(group: ChoiceGroup): ProficiencyOption[] {
+  // If options are provided inline, use them
+  if (group.options.length > 0) {
+    return group.options
+  }
+
+  // If subcategory is set, check cache
+  if (group.proficiencyType && group.proficiencySubcategory) {
+    const cacheKey = `${group.proficiencyType}:${group.proficiencySubcategory}`
+    return subcategoryOptionsCache.value.get(cacheKey) ?? []
+  }
+
+  return []
+}
+
+/**
+ * Trigger fetch for subcategory options when needed
+ */
+async function loadSubcategoryOptionsIfNeeded(group: ChoiceGroup): Promise<void> {
+  if (group.options.length === 0 && group.proficiencyType && group.proficiencySubcategory) {
+    const cacheKey = `${group.proficiencyType}:${group.proficiencySubcategory}`
+    if (!subcategoryOptionsCache.value.has(cacheKey) && !loadingSubcategories.value.has(cacheKey)) {
+      await fetchSubcategoryOptions(group.proficiencyType, group.proficiencySubcategory)
+    }
+  }
+}
+
+// Fetch subcategory options on mount for any groups that need them
+onMounted(async () => {
+  for (const source of choicesBySource.value) {
+    for (const group of source.groups) {
+      await loadSubcategoryOptionsIfNeeded(group)
+    }
+  }
+})
+
+// Re-fetch if choices change
+watch(choicesBySource, async (sources) => {
+  for (const source of sources) {
+    for (const group of source.groups) {
+      await loadSubcategoryOptionsIfNeeded(group)
+    }
+  }
+}, { immediate: false })
 
 /**
  * Initialize pending selections from API's selected_skills/selected_proficiency_types
@@ -332,10 +447,39 @@ function getOptionId(option: ProficiencyOption): number {
 }
 
 /**
- * Get the label for a choice group based on option types
+ * Get human-readable label for a proficiency type category
+ */
+function getLabelForProficiencyType(type: string, quantity: number): string {
+  switch (type) {
+    case 'skill':
+      return `Choose ${quantity} skill${quantity > 1 ? 's' : ''}`
+    case 'tool':
+      return `Choose ${quantity} tool${quantity > 1 ? 's' : ''}`
+    case 'weapon':
+      return `Choose ${quantity} weapon${quantity > 1 ? 's' : ''}`
+    case 'armor':
+      return `Choose ${quantity} armor type${quantity > 1 ? 's' : ''}`
+    case 'language':
+      return `Choose ${quantity} language${quantity > 1 ? 's' : ''}`
+    default:
+      return `Choose ${quantity} proficienc${quantity > 1 ? 'ies' : 'y'}`
+  }
+}
+
+/**
+ * Get the label for a choice group based on option types or proficiency_type field
  * Returns "skill", "proficiency", or the specific type name
  */
-function getChoiceLabel(options: ProficiencyOption[], quantity: number): string {
+function getChoiceLabel(group: ChoiceGroup): string {
+  const options = getEffectiveOptions(group)
+  const quantity = group.quantity
+
+  // If we have a proficiency_type set from the API, use it directly
+  // This handles subcategory-based choices where options may be empty initially
+  if (group.proficiencyType) {
+    return getLabelForProficiencyType(group.proficiencyType, quantity)
+  }
+
   const firstOption = options[0]
   if (!firstOption) return `Choose ${quantity}`
 
@@ -465,7 +609,7 @@ async function handleContinue() {
         >
           <div class="flex items-center justify-between mb-3">
             <span class="text-sm font-medium">
-              {{ getChoiceLabel(group.options, group.quantity) }}:
+              {{ getChoiceLabel(group) }}:
             </span>
             <UBadge
               :color="getSelectedCount(sourceData.source, group.groupName) === group.quantity ? 'success' : 'neutral'"
@@ -475,10 +619,25 @@ async function handleContinue() {
             </UBadge>
           </div>
 
+          <!-- Loading state for subcategory options -->
+          <div
+            v-if="isSubcategoryLoading(group.proficiencyType, group.proficiencySubcategory)"
+            class="flex items-center gap-2 p-4 text-gray-500"
+          >
+            <UIcon
+              name="i-heroicons-arrow-path"
+              class="w-5 h-5 animate-spin"
+            />
+            <span>Loading options...</span>
+          </div>
+
           <!-- Skill options grid -->
-          <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+          <div
+            v-else
+            class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3"
+          >
             <button
-              v-for="option in group.options"
+              v-for="option in getEffectiveOptions(group)"
               :key="getOptionId(option)"
               type="button"
               class="skill-option p-3 rounded-lg border text-left transition-all"
