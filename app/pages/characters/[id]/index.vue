@@ -1,44 +1,52 @@
-<!-- app/pages/characters/[id].vue -->
+<!-- app/pages/characters/[id]/index.vue -->
 <script setup lang="ts">
-import type { Character } from '~/types'
-
 /**
- * Character Detail Page
+ * Character View Page - Full Character Sheet
  *
- * Displays a single character's information.
- * This is a placeholder that will evolve into a full character sheet.
+ * Displays comprehensive D&D 5e character sheet with all data sections.
+ * Uses useCharacterSheet composable for parallel data fetching.
  */
 
 const route = useRoute()
 const characterId = computed(() => route.params.id as string)
 
-const { apiFetch } = useApi()
-
-const { data, pending, error } = await useAsyncData(
-  `character-${characterId.value}`,
-  () => apiFetch<{ data: Character }>(`/characters/${characterId.value}`)
-)
-
-const character = computed(() => data.value?.data)
+const {
+  character,
+  stats,
+  proficiencies,
+  features,
+  equipment,
+  spells,
+  languages,
+  skills,
+  savingThrows,
+  loading,
+  error
+} = useCharacterSheet(characterId)
 
 useSeoMeta({
-  title: () => character.value?.name ?? 'Character',
-  description: () => `View ${character.value?.name ?? 'character'} details`
+  title: () => character.value?.name ?? 'Character Sheet',
+  description: () => `View ${character.value?.name ?? 'character'} - D&D 5e Character Sheet`
 })
 
-/**
- * Format ability score with modifier
- */
-function formatAbilityScore(score: number | null): string {
-  if (score === null) return '—'
-  const modifier = Math.floor((score - 10) / 2)
-  const sign = modifier >= 0 ? '+' : ''
-  return `${score} (${sign}${modifier})`
-}
+// Tab items for bottom section
+const tabItems = computed(() => {
+  const items = [
+    { label: 'Features', slot: 'features', icon: 'i-heroicons-star' },
+    { label: 'Proficiencies', slot: 'proficiencies', icon: 'i-heroicons-academic-cap' },
+    { label: 'Equipment', slot: 'equipment', icon: 'i-heroicons-briefcase' },
+    { label: 'Languages', slot: 'languages', icon: 'i-heroicons-language' }
+  ]
+  // Only show Spells tab for casters
+  if (stats.value?.spellcasting) {
+    items.splice(3, 0, { label: 'Spells', slot: 'spells', icon: 'i-heroicons-sparkles' })
+  }
+  return items
+})
 </script>
 
 <template>
-  <div class="container mx-auto px-4 py-8 max-w-4xl">
+  <div class="container mx-auto px-4 py-8 max-w-5xl">
     <!-- Back Link -->
     <UButton
       to="/characters"
@@ -51,13 +59,17 @@ function formatAbilityScore(score: number | null): string {
 
     <!-- Loading State -->
     <div
-      v-if="pending"
-      class="flex justify-center py-12"
+      v-if="loading"
+      class="space-y-6"
     >
-      <UIcon
-        name="i-heroicons-arrow-path"
-        class="w-8 h-8 animate-spin text-gray-400"
-      />
+      <USkeleton class="h-20 w-full" />
+      <div class="grid lg:grid-cols-[200px_1fr] gap-6">
+        <USkeleton class="h-80" />
+        <div class="space-y-4">
+          <USkeleton class="h-32" />
+          <USkeleton class="h-48" />
+        </div>
+      </div>
     </div>
 
     <!-- Error State -->
@@ -69,186 +81,64 @@ function formatAbilityScore(score: number | null): string {
       :description="error.message"
     />
 
-    <!-- Character Info -->
+    <!-- Character Sheet -->
     <div
-      v-else-if="character"
+      v-else-if="character && stats"
       class="space-y-6"
     >
       <!-- Header -->
-      <div class="flex items-center justify-between">
-        <div>
-          <h1 class="text-3xl font-bold text-gray-900 dark:text-white">
-            {{ character.name }}
-          </h1>
-          <p class="mt-1 text-gray-600 dark:text-gray-400">
-            Level {{ character.level }}
-            <span v-if="character.race">{{ character.race.name }}</span>
-            <span v-if="character.class">{{ character.class.name }}</span>
-          </p>
-        </div>
-        <div class="flex items-center gap-2">
-          <!-- Inspiration Badge (DM awarded) -->
-          <UBadge
-            v-if="character.has_inspiration"
-            data-test="inspiration-badge"
-            color="warning"
-            variant="solid"
-            size="lg"
-            aria-label="Character has inspiration"
-          >
-            <UIcon
-              name="i-heroicons-star"
-              class="w-4 h-4 mr-1"
-            />
-            Inspired
-          </UBadge>
-          <UBadge
-            :color="character.is_complete ? 'success' : 'warning'"
-            variant="subtle"
-            size="lg"
-          >
-            {{ character.is_complete ? 'Complete' : 'Draft' }}
-          </UBadge>
+      <CharacterSheetHeader :character="character" />
+
+      <!-- Main Grid: Abilities sidebar + Stats/Skills -->
+      <div class="grid lg:grid-cols-[200px_1fr] gap-6">
+        <!-- Left Sidebar: Ability Scores -->
+        <CharacterSheetAbilityScoreBlock :stats="stats" />
+
+        <!-- Right: Combat Stats + Saves/Skills -->
+        <div class="space-y-6">
+          <!-- Combat Stats Grid -->
+          <CharacterSheetCombatStatsGrid
+            :character="character"
+            :stats="stats"
+          />
+
+          <!-- Saving Throws and Skills -->
+          <div class="grid md:grid-cols-2 gap-6">
+            <CharacterSheetSavingThrowsList :saving-throws="savingThrows" />
+            <CharacterSheetSkillsList :skills="skills" />
+          </div>
         </div>
       </div>
 
-      <!-- Validation Status (for drafts) -->
-      <UAlert
-        v-if="!character.is_complete && character.validation_status?.missing?.length"
-        color="warning"
-        icon="i-heroicons-exclamation-triangle"
-        title="Character Incomplete"
+      <!-- Bottom Tabs -->
+      <UTabs
+        :items="tabItems"
+        class="mt-8"
       >
-        <template #description>
-          <p>Missing: {{ character.validation_status.missing.join(', ') }}</p>
-          <UButton
-            to="/characters/create"
-            size="sm"
-            class="mt-2"
-          >
-            Continue Building
-          </UButton>
+        <template #features>
+          <CharacterSheetFeaturesPanel :features="features" />
         </template>
-      </UAlert>
 
-      <!-- Core Info Cards -->
-      <div class="grid md:grid-cols-3 gap-4">
-        <!-- Race -->
-        <UCard>
-          <template #header>
-            <h3 class="font-semibold">
-              Race
-            </h3>
-          </template>
-          <p v-if="character.race">
-            {{ character.race.name }}
-          </p>
-          <p
-            v-else
-            class="text-gray-400 italic"
-          >
-            Not selected
-          </p>
-        </UCard>
-
-        <!-- Class -->
-        <UCard>
-          <template #header>
-            <h3 class="font-semibold">
-              Class
-            </h3>
-          </template>
-          <p v-if="character.class">
-            {{ character.class.name }}
-          </p>
-          <p
-            v-else
-            class="text-gray-400 italic"
-          >
-            Not selected
-          </p>
-        </UCard>
-
-        <!-- Background -->
-        <UCard>
-          <template #header>
-            <h3 class="font-semibold">
-              Background
-            </h3>
-          </template>
-          <p v-if="character.background">
-            {{ character.background.name }}
-          </p>
-          <p
-            v-else
-            class="text-gray-400 italic"
-          >
-            Not selected
-          </p>
-        </UCard>
-      </div>
-
-      <!-- Ability Scores -->
-      <UCard>
-        <template #header>
-          <h3 class="font-semibold">
-            Ability Scores
-          </h3>
+        <template #proficiencies>
+          <CharacterSheetProficienciesPanel :proficiencies="proficiencies" />
         </template>
-        <div class="grid grid-cols-3 md:grid-cols-6 gap-4 text-center">
-          <div
-            v-for="(score, ability) in character.ability_scores"
-            :key="ability"
-            class="p-3 bg-gray-50 dark:bg-gray-800 rounded-lg"
-          >
-            <div class="text-xs font-medium text-gray-500 uppercase">
-              {{ ability }}
-            </div>
-            <div class="text-lg font-bold mt-1">
-              {{ formatAbilityScore(score) }}
-            </div>
-          </div>
-        </div>
-      </UCard>
 
-      <!-- Combat Stats (if available) -->
-      <div
-        v-if="character.max_hit_points || character.armor_class"
-        class="grid md:grid-cols-3 gap-4"
-      >
-        <UCard v-if="character.max_hit_points">
-          <template #header>
-            <h3 class="font-semibold">
-              Hit Points
-            </h3>
-          </template>
-          <div class="text-2xl font-bold">
-            {{ character.current_hit_points ?? character.max_hit_points }} / {{ character.max_hit_points }}
-          </div>
-        </UCard>
+        <template #equipment>
+          <CharacterSheetEquipmentPanel :equipment="equipment" />
+        </template>
 
-        <UCard v-if="character.armor_class">
-          <template #header>
-            <h3 class="font-semibold">
-              Armor Class
-            </h3>
-          </template>
-          <div class="text-2xl font-bold">
-            {{ character.armor_class }}
-          </div>
-        </UCard>
+        <template #spells>
+          <CharacterSheetSpellsPanel
+            v-if="stats.spellcasting"
+            :spells="spells"
+            :stats="stats"
+          />
+        </template>
 
-        <UCard>
-          <template #header>
-            <h3 class="font-semibold">
-              Proficiency Bonus
-            </h3>
-          </template>
-          <div class="text-2xl font-bold">
-            +{{ character.proficiency_bonus }}
-          </div>
-        </UCard>
-      </div>
+        <template #languages>
+          <CharacterSheetLanguagesPanel :languages="languages" />
+        </template>
+      </UTabs>
     </div>
   </div>
 </template>

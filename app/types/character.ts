@@ -133,21 +133,141 @@ export interface CharacterStats {
   level: number
   proficiency_bonus: number
   ability_scores: Record<AbilityScoreCode, { score: number, modifier: number }>
-  saving_throws: Record<AbilityScoreCode, { modifier: number, proficient: boolean }>
+  saving_throws: Record<AbilityScoreCode, number>
   armor_class: number | null
   hit_points: {
     max: number | null
     current: number | null
     temporary: number
   }
+  initiative_bonus: number
+  passive_perception: number
   spellcasting: {
     ability: AbilityScoreCode
-    save_dc: number
-    attack_bonus: number
+    spell_save_dc: number
+    spell_attack_bonus: number
   } | null
   spell_slots: Record<string, number>
   preparation_limit: number | null
   prepared_spell_count: number
+}
+
+/**
+ * Skill with computed modifier for character sheet display
+ */
+export interface CharacterSkill {
+  id: number
+  name: string
+  slug: string
+  ability_code: AbilityScoreCode
+  modifier: number
+  proficient: boolean
+  expertise: boolean
+}
+
+/**
+ * Saving throw with computed values for character sheet display
+ */
+export interface CharacterSavingThrow {
+  ability: AbilityScoreCode
+  modifier: number
+  proficient: boolean
+}
+
+/**
+ * Character feature from API
+ */
+export interface CharacterFeature {
+  id: number
+  source: 'class' | 'race' | 'background'
+  level_acquired: number
+  feature_type: string
+  uses_remaining: number | null
+  max_uses: number | null
+  has_limited_uses: boolean
+  feature: {
+    id: number
+    name: string
+    description: string
+    category: string | null
+  }
+}
+
+/**
+ * Character equipment item from API
+ */
+export interface CharacterEquipment {
+  id: number
+  item: {
+    id: number
+    name: string
+    slug: string
+  } | null
+  quantity: number
+  equipped: boolean
+  description: string | null
+}
+
+/**
+ * Character language from API
+ */
+export interface CharacterLanguage {
+  id: number
+  source: string
+  language: {
+    id: number
+    name: string
+    slug: string
+    script: string
+  }
+}
+
+/**
+ * Character spell from API
+ */
+export interface CharacterSpell {
+  id: number
+  spell: {
+    id: number
+    name: string
+    slug: string
+    level: number
+    school: string
+  }
+  prepared: boolean
+  always_prepared: boolean
+  source: string
+}
+
+/**
+ * Character proficiency from API (skill or tool)
+ */
+export interface CharacterProficiency {
+  id: number
+  source: string
+  expertise: boolean
+  skill?: {
+    id: number
+    name: string
+    slug: string
+    ability_code: AbilityScoreCode
+  }
+  proficiency_type?: {
+    id: number
+    name: string
+    slug: string
+    category: string
+  }
+}
+
+/**
+ * Skill reference data from /skills endpoint
+ */
+export interface SkillReference {
+  id: number
+  name: string
+  slug: string
+  ability_code: AbilityScoreCode
 }
 
 /**
