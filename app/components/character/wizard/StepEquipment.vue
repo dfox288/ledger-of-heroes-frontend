@@ -330,8 +330,8 @@ function formatPackContentItem(content: PackContentResource): string {
         :items="items"
         :selected-id="pendingChoices.equipment.get(group) ?? null"
         :item-selections="buildItemSelectionsMap(group)"
-        @select="(id) => handleChoiceSelect(group, id)"
-        @item-select="(opt, idx, itemId) => handleItemSelect(group, opt, idx, itemId)"
+        @select="(id: number) => handleChoiceSelect(group, id)"
+        @item-select="(opt: number, idx: number, itemId: number) => handleItemSelect(group, opt, idx, itemId)"
       />
     </div>
 
@@ -416,8 +416,8 @@ function formatPackContentItem(content: PackContentResource): string {
         :items="items"
         :selected-id="pendingChoices.equipment.get(group) ?? null"
         :item-selections="buildItemSelectionsMap(group)"
-        @select="(id) => handleChoiceSelect(group, id)"
-        @item-select="(opt, idx, itemId) => handleItemSelect(group, opt, idx, itemId)"
+        @select="(id: number) => handleChoiceSelect(group, id)"
+        @item-select="(opt: number, idx: number, itemId: number) => handleItemSelect(group, opt, idx, itemId)"
       />
     </div>
 

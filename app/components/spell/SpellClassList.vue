@@ -17,7 +17,7 @@ const groupedClasses = computed(() => {
   const subclasses: ClassResource[] = []
 
   for (const cls of props.classes) {
-    if (cls.is_base_class === '1') {
+    if (cls.is_base_class) {
       baseClasses.push(cls)
     } else {
       subclasses.push(cls)

@@ -195,8 +195,7 @@ export function useSpellDetail(slug: Ref<string> | string): UseSpellDetailReturn
     const subclasses: ClassResource[] = []
 
     for (const cls of classes) {
-      // is_base_class is a string "0" or "1" in the API
-      if (cls.is_base_class === '1') {
+      if (cls.is_base_class) {
         baseClasses.push(cls)
       } else {
         subclasses.push(cls)

@@ -2,9 +2,11 @@
 <script setup lang="ts">
 import type { CharacterFeature } from '~/types/character'
 
-const props = defineProps<{
-  features: CharacterFeature[]
-}>()
+const props = withDefaults(defineProps<{
+  features?: CharacterFeature[]
+}>(), {
+  features: () => []
+})
 
 const featuresBySource = computed(() => {
   const grouped: Record<string, CharacterFeature[]> = {
@@ -12,7 +14,12 @@ const featuresBySource = computed(() => {
     race: [],
     background: []
   }
-  for (const feature of props.features) {
+  // Defensive check for async mounting scenarios
+  const featuresList = props.features
+  if (!featuresList || !Array.isArray(featuresList)) {
+    return grouped
+  }
+  for (const feature of featuresList) {
     const list = grouped[feature.source]
     if (list) {
       list.push(feature)
@@ -31,7 +38,7 @@ const sourceLabels: Record<string, string> = {
 <template>
   <div class="space-y-6">
     <div
-      v-if="features.length === 0"
+      v-if="!features || features.length === 0"
       class="text-center text-gray-500 dark:text-gray-400 py-8"
     >
       No features yet

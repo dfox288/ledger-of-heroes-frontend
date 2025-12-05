@@ -5,7 +5,7 @@ interface Props {
     id: number
     name: string
     slug: string
-    source?: { code: string, name?: string }
+    source?: { code: string, name: string }
     description?: string
   }
   selected?: boolean

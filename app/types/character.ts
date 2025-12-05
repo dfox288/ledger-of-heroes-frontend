@@ -206,6 +206,8 @@ export interface CharacterEquipment {
   quantity: number
   equipped: boolean
   description: string | null
+  /** Custom name override for the item (e.g., "Flame Tongue" instead of "Longsword") */
+  custom_name?: string | null
 }
 
 /**

@@ -55,7 +55,7 @@ export interface Item extends Omit<ItemFromAPI, 'sources' | 'item_type' | 'damag
  */
 type RaceFromAPI = components['schemas']['RaceResource']
 
-export interface Race extends Omit<RaceFromAPI, 'sources' | 'modifiers' | 'size' | 'is_subrace'> {
+export interface Race extends Omit<RaceFromAPI, 'sources' | 'modifiers' | 'size' | 'is_subrace' | 'subrace_required'> {
   // Override with our custom types that have better structure
   description?: string
   size?: {
@@ -70,6 +70,7 @@ export interface Race extends Omit<RaceFromAPI, 'sources' | 'modifiers' | 'size'
   is_subrace?: boolean
 
   // Flag to indicate if selecting a subrace is mandatory (Issue #184)
+  // Made optional since not all race responses include this field
   subrace_required?: boolean
 
   // fly_speed, swim_speed, and inherited_data now properly typed in generated.ts
