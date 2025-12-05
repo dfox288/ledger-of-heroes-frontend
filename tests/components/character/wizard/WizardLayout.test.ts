@@ -1,22 +1,21 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest'
+import { h } from 'vue'
 import { mountSuspended } from '@nuxt/test-utils/runtime'
 import { setActivePinia, createPinia } from 'pinia'
 import WizardLayout from '~/components/character/wizard/WizardLayout.vue'
 
-// Mock the child components
-vi.mock('~/components/character/wizard/WizardSidebar.vue', () => ({
-  default: {
-    name: 'CharacterWizardWizardSidebar',
-    template: '<aside data-test="sidebar">Sidebar</aside>'
-  }
-}))
+// Mock navigateTo for child components
+vi.stubGlobal('navigateTo', vi.fn())
 
-vi.mock('~/components/character/wizard/WizardFooter.vue', () => ({
-  default: {
-    name: 'CharacterWizardWizardFooter',
+// Define stubs for child components
+const stubs = {
+  CharacterWizardWizardSidebar: {
+    template: '<aside data-test="sidebar">Sidebar</aside>'
+  },
+  CharacterWizardWizardFooter: {
     template: '<footer data-test="footer">Footer</footer>'
   }
-}))
+}
 
 describe('WizardLayout', () => {
   beforeEach(() => {
@@ -27,8 +26,9 @@ describe('WizardLayout', () => {
     it('renders the sidebar', async () => {
       const wrapper = await mountSuspended(WizardLayout, {
         slots: {
-          default: '<div data-test="content">Test Content</div>'
-        }
+          default: () => h('div', { 'data-test': 'content' }, 'Test Content')
+        },
+        global: { stubs }
       })
 
       expect(wrapper.find('[data-test="sidebar"]').exists()).toBe(true)
@@ -37,8 +37,9 @@ describe('WizardLayout', () => {
     it('renders the footer', async () => {
       const wrapper = await mountSuspended(WizardLayout, {
         slots: {
-          default: '<div data-test="content">Test Content</div>'
-        }
+          default: () => h('div', { 'data-test': 'content' }, 'Test Content')
+        },
+        global: { stubs }
       })
 
       expect(wrapper.find('[data-test="footer"]').exists()).toBe(true)
@@ -47,8 +48,9 @@ describe('WizardLayout', () => {
     it('renders slot content in main area', async () => {
       const wrapper = await mountSuspended(WizardLayout, {
         slots: {
-          default: '<div data-test="content">Test Content</div>'
-        }
+          default: () => h('div', { 'data-test': 'content' }, 'Test Content')
+        },
+        global: { stubs }
       })
 
       expect(wrapper.find('[data-test="content"]').exists()).toBe(true)
@@ -60,8 +62,9 @@ describe('WizardLayout', () => {
     it('uses flex layout for sidebar and content', async () => {
       const wrapper = await mountSuspended(WizardLayout, {
         slots: {
-          default: '<div>Content</div>'
-        }
+          default: () => h('div', 'Content')
+        },
+        global: { stubs }
       })
 
       // Root element should have flex
@@ -71,8 +74,9 @@ describe('WizardLayout', () => {
     it('has min-height to fill viewport', async () => {
       const wrapper = await mountSuspended(WizardLayout, {
         slots: {
-          default: '<div>Content</div>'
-        }
+          default: () => h('div', 'Content')
+        },
+        global: { stubs }
       })
 
       expect(wrapper.classes()).toContain('min-h-screen')

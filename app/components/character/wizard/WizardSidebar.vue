@@ -59,7 +59,6 @@ function handleStepClick(stepName: string, stepIndex: number) {
           <button
             type="button"
             :data-test="`step-item-${step.name}`"
-            data-test="step-item"
             class="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-left transition-colors"
             :class="{
               'bg-primary-50 dark:bg-primary-900/20 text-primary-700 dark:text-primary-300': getStepStatus(index) === 'current',
