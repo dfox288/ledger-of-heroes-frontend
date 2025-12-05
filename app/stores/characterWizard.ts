@@ -379,23 +379,33 @@ export const useCharacterWizardStore = defineStore('characterWizard', () => {
 
   /**
    * Select class
+   * Note: Backend doesn't allow deleting the only class, so we skip API call
+   * if re-selecting the same class. Changing to a different class requires
+   * backend support (see issue #217).
    */
   async function selectClass(cls: CharacterClass): Promise<void> {
     if (!characterId.value) return
+
+    // Skip if selecting the same class (user went back and clicked same option)
+    if (selections.value.class?.id === cls.id) {
+      return
+    }
 
     isLoading.value = true
     error.value = null
 
     try {
-      // Clear existing class first (level 1 = single class)
-      // This handles re-selection when user goes back in wizard
+      // TODO: Backend doesn't support replacing class yet (issue #217)
+      // For now, only allow selecting class if none exists
+      // Once backend adds PUT endpoint, we can replace existing class
+
       if (selections.value.class) {
-        await apiFetch(`/characters/${characterId.value}/classes/${selections.value.class.id}`, {
-          method: 'DELETE'
-        })
+        // Cannot change class - backend limitation
+        // For now, just update local state and refetch to keep in sync
+        console.warn('Changing class not yet supported by backend - see issue #217')
       }
 
-      // Add the new class
+      // Add the new class (only works if no class exists yet)
       await apiFetch(`/characters/${characterId.value}/classes`, {
         method: 'POST',
         body: { class_id: cls.id }
