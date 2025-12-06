@@ -1,150 +1,167 @@
 <!-- app/components/character/wizard/StepLanguages.vue -->
 <script setup lang="ts">
-import type { LanguageOption } from '~/types/languageChoices'
+import type { components } from '~/types/api/generated'
 import { useCharacterWizard } from '~/composables/useCharacterWizard'
 import { useCharacterWizardStore } from '~/stores/characterWizard'
 
+type PendingChoice = components['schemas']['PendingChoiceResource']
+
 const store = useCharacterWizardStore()
-const { apiFetch } = useApi()
 const {
-  selections,
-  pendingChoices,
   isLoading
 } = storeToRefs(store)
 const { nextStep } = useCharacterWizard()
 
 // ══════════════════════════════════════════════════════════════
-// Fetch language choices from backend
+// Fetch language choices using unified API
 // ══════════════════════════════════════════════════════════════
 
-interface LanguageChoicesResponse {
-  data: {
-    race: {
-      known: Array<{ id: number, name: string }>
-      choices: {
-        quantity: number
-        selected: number[]
-        options: LanguageOption[]
-      } | null
-    }
-    background: {
-      known: Array<{ id: number, name: string }>
-      choices: {
-        quantity: number
-        selected: number[]
-        options: LanguageOption[]
-      } | null
-    }
+const {
+  choicesByType,
+  pending,
+  fetchChoices,
+  resolveChoice
+} = useUnifiedChoices(computed(() => store.characterId))
+
+// Fetch language choices on mount
+onMounted(async () => {
+  await fetchChoices('language')
+})
+
+// Local selections: Map<choiceId, Set<number>>
+const localSelections = ref<Map<string, Set<number>>>(new Map())
+
+// Get language choices grouped by source
+const languageChoicesBySource = computed(() => {
+  const choices = choicesByType.value.languages
+  return {
+    race: choices.filter(c => c.source === 'race'),
+    background: choices.filter(c => c.source === 'background')
   }
-}
+})
 
-const { data: languageChoices } = await useAsyncData(
-  `wizard-language-choices-${store.characterId}`,
-  () => apiFetch<LanguageChoicesResponse>(`/characters/${store.characterId}/language-choices`),
-  { watch: [() => store.characterId] }
-)
-
-// Check if there are any choices to make (must have quantity > 0)
+// Check if there are any choices to make
 const hasAnyChoices = computed(() => {
-  if (!languageChoices.value) return false
-  const { race, background } = languageChoices.value.data
-  const raceHasChoices = race.choices !== null && race.choices.quantity > 0
-  const backgroundHasChoices = background.choices !== null && background.choices.quantity > 0
-  return raceHasChoices || backgroundHasChoices
+  return choicesByType.value.languages.length > 0
 })
 
 // Organize data by source for display
-const sourceData = computed(() => {
-  if (!languageChoices.value) return []
+interface SourceDisplayData {
+  choice: PendingChoice
+  label: string
+  entityName: string
+  knownLanguages: Array<{ id: number, name: string }>
+}
 
-  const sources: Array<{
-    source: 'race' | 'background'
-    label: string
-    entityName: string
-    known: Array<{ id: number, name: string }>
-    choices: {
-      quantity: number
-      selected: number[]
-      options: LanguageOption[]
-    } | null
-  }> = []
+const sourceData = computed((): SourceDisplayData[] => {
+  const sources: SourceDisplayData[] = []
 
-  const { race, background } = languageChoices.value.data
-
-  // Race source (only show if has language choices to make with quantity > 0)
-  if (race.choices && race.choices.quantity > 0) {
+  // Race choices
+  for (const choice of languageChoicesBySource.value.race) {
     sources.push({
-      source: 'race',
+      choice,
       label: 'From Race',
-      entityName: selections.value.race?.name ?? 'Unknown',
-      known: race.known,
-      choices: race.choices
+      entityName: choice.source_name,
+      knownLanguages: choice.selected.map((id) => {
+        const option = (choice.options as Array<{ id: number, name: string }>)?.find(o => o.id === Number(id))
+        return option ?? { id: Number(id), name: `Language ${id}` }
+      })
     })
   }
 
-  // Background source (only show if has choices with quantity > 0)
-  if (background.choices && background.choices.quantity > 0) {
+  // Background choices
+  for (const choice of languageChoicesBySource.value.background) {
     sources.push({
-      source: 'background',
+      choice,
       label: 'From Background',
-      entityName: selections.value.background?.name ?? 'Unknown',
-      known: background.known,
-      choices: background.choices
+      entityName: choice.source_name,
+      knownLanguages: choice.selected.map((id) => {
+        const option = (choice.options as Array<{ id: number, name: string }>)?.find(o => o.id === Number(id))
+        return option ?? { id: Number(id), name: `Language ${id}` }
+      })
     })
   }
 
   return sources
 })
 
-// Get selected count for a source
-function getSelectedCount(source: 'race' | 'background'): number {
-  return pendingChoices.value.languages.get(source)?.size ?? 0
+// Get selected count for a choice
+function getSelectedCount(choiceId: string): number {
+  return localSelections.value.get(choiceId)?.size ?? 0
 }
 
-// Check if a language is selected (pending state)
-function isLanguageSelected(source: 'race' | 'background', languageId: number): boolean {
-  return pendingChoices.value.languages.get(source)?.has(languageId) ?? false
+// Check if a language is selected in this choice
+function isLanguageSelected(choiceId: string, languageId: number): boolean {
+  return localSelections.value.get(choiceId)?.has(languageId) ?? false
 }
 
-// Check if a language is selected in a DIFFERENT source (cross-source conflict)
-function isLanguageSelectedElsewhere(source: 'race' | 'background', languageId: number): boolean {
-  const otherSource = source === 'race' ? 'background' : 'race'
-  return pendingChoices.value.languages.get(otherSource)?.has(languageId) ?? false
+// Check if a language is selected in ANY OTHER choice (cross-choice conflict)
+function isLanguageSelectedElsewhere(choiceId: string, languageId: number): boolean {
+  for (const [otherChoiceId, selectedIds] of localSelections.value.entries()) {
+    if (otherChoiceId !== choiceId && selectedIds.has(languageId)) {
+      return true
+    }
+  }
+  return false
 }
 
 // Handle language toggle
-function handleLanguageToggle(source: 'race' | 'background', languageId: number, quantity: number) {
-  const current = getSelectedCount(source)
-  const isSelected = isLanguageSelected(source, languageId)
+function handleLanguageToggle(choice: PendingChoice, languageId: number) {
+  const current = getSelectedCount(choice.id)
+  const isSelected = isLanguageSelected(choice.id, languageId)
 
   // Don't allow selecting more than quantity (unless deselecting)
-  if (!isSelected && current >= quantity) return
+  if (!isSelected && current >= choice.quantity) return
 
-  // Don't allow selecting a language already chosen from another source
-  if (!isSelected && isLanguageSelectedElsewhere(source, languageId)) return
+  // Don't allow selecting a language already chosen from another choice
+  if (!isSelected && isLanguageSelectedElsewhere(choice.id, languageId)) return
 
-  store.toggleLanguageChoice(source, languageId)
+  // Toggle the selection
+  const selections = localSelections.value.get(choice.id) ?? new Set<number>()
+  const updated = new Set(selections)
+
+  if (updated.has(languageId)) {
+    updated.delete(languageId)
+  } else {
+    updated.add(languageId)
+  }
+
+  localSelections.value.set(choice.id, updated)
 }
 
 // Check if all language choices are complete
 const allLanguageChoicesComplete = computed(() => {
-  if (!languageChoices.value) return true
-
   for (const data of sourceData.value) {
-    if (data.choices && getSelectedCount(data.source) < data.choices.quantity) {
+    if (getSelectedCount(data.choice.id) < data.choice.quantity) {
       return false
     }
   }
-
   return true
 })
 
 /**
- * Continue to next step
+ * Continue to next step - resolve all choices
  */
 async function handleContinue() {
-  await store.saveLanguageChoices()
-  nextStep()
+  isLoading.value = true
+
+  try {
+    // Resolve each choice
+    for (const [choiceId, selectedIds] of localSelections.value.entries()) {
+      if (selectedIds.size > 0) {
+        await resolveChoice(choiceId, {
+          selected: Array.from(selectedIds)
+        })
+      }
+    }
+
+    // Clear local selections
+    localSelections.value.clear()
+
+    nextStep()
+  } finally {
+    isLoading.value = false
+  }
 }
 </script>
 
@@ -183,7 +200,7 @@ async function handleContinue() {
     >
       <div
         v-for="data in sourceData"
-        :key="data.source"
+        :key="data.choice.id"
         class="choice-source"
       >
         <!-- Source header -->
@@ -191,18 +208,18 @@ async function handleContinue() {
           {{ data.label }}: {{ data.entityName }}
         </h3>
 
-        <!-- Known languages (automatic) -->
+        <!-- Known languages (already selected/resolved) -->
         <div
-          v-if="data.known.length > 0"
+          v-if="data.knownLanguages.length > 0"
           data-test="known-languages"
           class="mb-4"
         >
           <p class="text-sm text-gray-600 dark:text-gray-400 mb-2">
-            Automatic languages:
+            Already selected:
           </p>
           <div class="flex flex-wrap gap-2">
             <UBadge
-              v-for="lang in data.known"
+              v-for="lang in data.knownLanguages"
               :key="lang.id"
               color="success"
               variant="subtle"
@@ -218,58 +235,55 @@ async function handleContinue() {
         </div>
 
         <!-- Language choices -->
-        <div
-          v-if="data.choices"
-          class="mb-6"
-        >
+        <div class="mb-6">
           <div class="flex items-center justify-between mb-3">
             <span class="text-sm font-medium">
-              Choose {{ data.choices.quantity }} language{{ data.choices.quantity > 1 ? 's' : '' }}:
+              Choose {{ data.choice.quantity }} language{{ data.choice.quantity > 1 ? 's' : '' }}:
             </span>
             <UBadge
-              :color="getSelectedCount(data.source) === data.choices.quantity ? 'success' : 'neutral'"
+              :color="getSelectedCount(data.choice.id) === data.choice.quantity ? 'success' : 'neutral'"
               size="md"
             >
-              {{ getSelectedCount(data.source) }}/{{ data.choices.quantity }} selected
+              {{ getSelectedCount(data.choice.id) }}/{{ data.choice.quantity }} selected
             </UBadge>
           </div>
 
           <!-- Language options grid -->
           <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
             <button
-              v-for="option in data.choices.options"
+              v-for="option in (data.choice.options as Array<{ id: number, name: string, script?: string }>)"
               :key="option.id"
               type="button"
               class="language-option p-3 rounded-lg border text-left transition-all"
               :class="{
-                'border-primary bg-primary/10': isLanguageSelected(data.source, option.id),
-                'border-gray-200 dark:border-gray-700 hover:border-primary/50': !isLanguageSelected(data.source, option.id) && !isLanguageSelectedElsewhere(data.source, option.id),
-                'border-gray-200 dark:border-gray-700 opacity-50 cursor-not-allowed': isLanguageSelectedElsewhere(data.source, option.id)
+                'border-primary bg-primary/10': isLanguageSelected(data.choice.id, option.id),
+                'border-gray-200 dark:border-gray-700 hover:border-primary/50': !isLanguageSelected(data.choice.id, option.id) && !isLanguageSelectedElsewhere(data.choice.id, option.id),
+                'border-gray-200 dark:border-gray-700 opacity-50 cursor-not-allowed': isLanguageSelectedElsewhere(data.choice.id, option.id)
               }"
-              :disabled="isLanguageSelectedElsewhere(data.source, option.id)"
-              @click="handleLanguageToggle(data.source, option.id, data.choices!.quantity)"
+              :disabled="isLanguageSelectedElsewhere(data.choice.id, option.id)"
+              @click="handleLanguageToggle(data.choice, option.id)"
             >
               <div class="flex items-center gap-2">
                 <UIcon
-                  :name="isLanguageSelectedElsewhere(data.source, option.id)
+                  :name="isLanguageSelectedElsewhere(data.choice.id, option.id)
                     ? 'i-heroicons-no-symbol'
-                    : isLanguageSelected(data.source, option.id)
+                    : isLanguageSelected(data.choice.id, option.id)
                       ? 'i-heroicons-check-circle-solid'
                       : 'i-heroicons-circle'"
                   class="w-5 h-5"
                   :class="{
-                    'text-primary': isLanguageSelected(data.source, option.id),
-                    'text-gray-400': !isLanguageSelected(data.source, option.id) && !isLanguageSelectedElsewhere(data.source, option.id),
-                    'text-gray-300 dark:text-gray-600': isLanguageSelectedElsewhere(data.source, option.id)
+                    'text-primary': isLanguageSelected(data.choice.id, option.id),
+                    'text-gray-400': !isLanguageSelected(data.choice.id, option.id) && !isLanguageSelectedElsewhere(data.choice.id, option.id),
+                    'text-gray-300 dark:text-gray-600': isLanguageSelectedElsewhere(data.choice.id, option.id)
                   }"
                 />
                 <span class="font-medium">{{ option.name }}</span>
               </div>
               <p
-                v-if="isLanguageSelectedElsewhere(data.source, option.id)"
+                v-if="isLanguageSelectedElsewhere(data.choice.id, option.id)"
                 class="text-xs text-gray-400 dark:text-gray-500 mt-1 ml-7"
               >
-                Already selected from {{ data.source === 'race' ? 'background' : 'race' }}
+                Already selected from {{ data.choice.source === 'race' ? 'background' : 'race' }}
               </p>
               <p
                 v-else-if="option.script"
@@ -288,8 +302,8 @@ async function handleContinue() {
       <UButton
         data-test="continue-btn"
         size="lg"
-        :disabled="!allLanguageChoicesComplete || isLoading"
-        :loading="isLoading"
+        :disabled="!allLanguageChoicesComplete || pending || isLoading"
+        :loading="pending || isLoading"
         @click="handleContinue"
       >
         Continue with Languages

@@ -5,32 +5,79 @@ import { setActivePinia, createPinia } from 'pinia'
 import StepLanguages from '~/components/character/wizard/StepLanguages.vue'
 import { useCharacterWizardStore } from '~/stores/characterWizard'
 import type { Race, Background } from '~/types'
-import {
-  mockHumanAcolyteLanguageChoices,
-  mockNoLanguageChoices
-} from '../../../fixtures/languageChoices'
+import type { components } from '~/types/api/generated'
+
+type PendingChoice = components['schemas']['PendingChoiceResource']
+
+// Standard language options
+const standardLanguageOptions = [
+  { id: 2, name: 'Dwarvish', slug: 'dwarvish', script: 'Dwarvish' },
+  { id: 3, name: 'Elvish', slug: 'elvish', script: 'Elvish' },
+  { id: 4, name: 'Giant', slug: 'giant', script: 'Dwarvish' },
+  { id: 5, name: 'Gnomish', slug: 'gnomish', script: 'Dwarvish' }
+]
+
+// Mock pending choices responses
+const mockHumanAcolyteChoices: PendingChoice[] = [
+  {
+    id: 'language:race:1:1:language_choice_1',
+    type: 'language',
+    subtype: null,
+    source: 'race',
+    source_name: 'Human',
+    level_granted: 1,
+    required: true,
+    quantity: 1,
+    remaining: 1,
+    selected: [],
+    options: standardLanguageOptions,
+    options_endpoint: null,
+    metadata: []
+  },
+  {
+    id: 'language:background:1:1:language_choice_1',
+    type: 'language',
+    subtype: null,
+    source: 'background',
+    source_name: 'Acolyte',
+    level_granted: 1,
+    required: true,
+    quantity: 2,
+    remaining: 2,
+    selected: [],
+    options: standardLanguageOptions,
+    options_endpoint: null,
+    metadata: []
+  }
+]
+
+const mockNoLanguageChoices: PendingChoice[] = []
 
 // Create a mock for the current test
-let currentMockData = mockHumanAcolyteLanguageChoices
+let currentMockChoices = mockHumanAcolyteChoices
 
-// Mock useAsyncData to return language choices
-mockNuxtImport('useAsyncData', () => {
+// Mock useUnifiedChoices composable
+mockNuxtImport('useUnifiedChoices', () => {
   return vi.fn(() => {
     return {
-      data: ref(currentMockData),
+      choices: ref(currentMockChoices),
+      choicesByType: computed(() => ({
+        languages: currentMockChoices.filter(c => c.type === 'language'),
+        proficiencies: [],
+        equipment: [],
+        spells: [],
+        subclass: null,
+        asiOrFeat: [],
+        optionalFeatures: []
+      })),
+      summary: ref(null),
       pending: ref(false),
       error: ref(null),
-      refresh: () => Promise.resolve(),
-      execute: () => Promise.resolve(),
-      status: ref('success')
+      allRequiredComplete: computed(() => false),
+      fetchChoices: vi.fn().mockResolvedValue(undefined),
+      resolveChoice: vi.fn().mockResolvedValue(undefined),
+      undoChoice: vi.fn().mockResolvedValue(undefined)
     }
-  })
-})
-
-// Mock useApi
-mockNuxtImport('useApi', () => {
-  return () => ({
-    apiFetch: vi.fn().mockResolvedValue(currentMockData)
   })
 })
 
@@ -40,15 +87,13 @@ function setupStore() {
   store.characterId = 1
   store.selections.race = { id: 1, name: 'Human' } as Partial<Race> as Race
   store.selections.background = { id: 1, name: 'Acolyte' } as Partial<Background> as Background
-  // Reset pending choices to ensure clean state
-  store.pendingChoices.languages = new Map()
   return store
 }
 
 describe('StepLanguages', () => {
   beforeEach(() => {
     setActivePinia(createPinia())
-    currentMockData = mockHumanAcolyteLanguageChoices
+    currentMockChoices = mockHumanAcolyteChoices
     setupStore()
   })
 
@@ -59,100 +104,38 @@ describe('StepLanguages', () => {
     })
 
     it('shows message when no language choices are needed', async () => {
-      currentMockData = mockNoLanguageChoices
+      currentMockChoices = mockNoLanguageChoices
       const wrapper = await mountSuspended(StepLanguages)
       expect(wrapper.text()).toContain('No language choices needed')
     })
-  })
 
-  describe('known languages display', () => {
-    it('displays known languages from race', async () => {
+    it('displays source headers with entity names', async () => {
       const wrapper = await mountSuspended(StepLanguages)
-      expect(wrapper.text()).toContain('Common')
-      const knownSection = wrapper.find('[data-test="known-languages"]')
-      expect(knownSection.exists()).toBe(true)
+      expect(wrapper.text()).toContain('From Race: Human')
+      expect(wrapper.text()).toContain('From Background: Acolyte')
     })
   })
 
-  describe('duplicate language prevention (store-level)', () => {
-    // Note: These tests verify the store-level logic for duplicate prevention.
-    // The component's handleLanguageToggle includes the cross-source check.
-    // Full UI integration testing requires browser testing.
-
-    it('store allows same language in different sources (by design)', () => {
-      // The store itself doesn't prevent duplicates - that's the component's job
-      const store = setupStore()
-
-      store.toggleLanguageChoice('race', 3) // Elvish
-      store.toggleLanguageChoice('background', 3) // Elvish again
-
-      // Store allows this (component handler prevents it)
-      expect(store.pendingChoices.languages.get('race')?.has(3)).toBe(true)
-      expect(store.pendingChoices.languages.get('background')?.has(3)).toBe(true)
+  describe('language options display', () => {
+    it('displays language options for selection', async () => {
+      const wrapper = await mountSuspended(StepLanguages)
+      expect(wrapper.text()).toContain('Dwarvish')
+      expect(wrapper.text()).toContain('Elvish')
+      expect(wrapper.text()).toContain('Giant')
     })
 
-    it('tracks selections independently per source', () => {
-      const store = setupStore()
-
-      store.toggleLanguageChoice('race', 3) // Elvish
-      store.toggleLanguageChoice('background', 2) // Dwarvish
-      store.toggleLanguageChoice('background', 4) // Giant
-
-      expect(store.pendingChoices.languages.get('race')?.size).toBe(1)
-      expect(store.pendingChoices.languages.get('background')?.size).toBe(2)
-    })
-
-    it('toggles language off when selected again', () => {
-      const store = setupStore()
-
-      store.toggleLanguageChoice('race', 3)
-      expect(store.pendingChoices.languages.get('race')?.has(3)).toBe(true)
-
-      store.toggleLanguageChoice('race', 3)
-      expect(store.pendingChoices.languages.get('race')?.has(3)).toBe(false)
-    })
-
-    it('allows selecting different languages from each source', () => {
-      const store = setupStore()
-
-      // Select Elvish (id: 3) from race
-      store.toggleLanguageChoice('race', 3)
-      // Select Dwarvish (id: 2) and Giant (id: 4) from background
-      store.toggleLanguageChoice('background', 2)
-      store.toggleLanguageChoice('background', 4)
-
-      // All three should be selected
-      expect(store.pendingChoices.languages.get('race')?.has(3)).toBe(true)
-      expect(store.pendingChoices.languages.get('background')?.has(2)).toBe(true)
-      expect(store.pendingChoices.languages.get('background')?.has(4)).toBe(true)
+    it('shows quantity badges for each choice', async () => {
+      const wrapper = await mountSuspended(StepLanguages)
+      expect(wrapper.text()).toContain('Choose 1 language')
+      expect(wrapper.text()).toContain('Choose 2 languages')
     })
   })
 
   describe('continue button', () => {
     it('is disabled when choices incomplete', async () => {
       const wrapper = await mountSuspended(StepLanguages)
-
       const continueBtn = wrapper.find('[data-test="continue-btn"]')
       expect(continueBtn.attributes('disabled')).toBeDefined()
-    })
-
-    it('completion validation works correctly in store', () => {
-      // Test the completion logic at the store level since
-      // component reactivity in tests doesn't update the DOM
-      const store = setupStore()
-
-      // Initially no selections - not complete
-      expect(store.pendingChoices.languages.get('race')?.size ?? 0).toBe(0)
-      expect(store.pendingChoices.languages.get('background')?.size ?? 0).toBe(0)
-
-      // Make all selections (1 race + 2 background = 3 total)
-      store.toggleLanguageChoice('race', 3) // Elvish
-      store.toggleLanguageChoice('background', 2) // Dwarvish
-      store.toggleLanguageChoice('background', 4) // Giant
-
-      // Verify correct selections are made
-      expect(store.pendingChoices.languages.get('race')?.size).toBe(1)
-      expect(store.pendingChoices.languages.get('background')?.size).toBe(2)
     })
   })
 })

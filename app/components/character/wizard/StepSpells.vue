@@ -2,29 +2,103 @@
 <script setup lang="ts">
 import { storeToRefs } from 'pinia'
 import type { Spell } from '~/types'
+import type { components } from '~/types/api/generated'
 import { useCharacterWizardStore } from '~/stores/characterWizard'
 import { useCharacterWizard } from '~/composables/useCharacterWizard'
+
+type PendingChoice = components['schemas']['PendingChoiceResource']
 
 const store = useCharacterWizardStore()
 const {
   characterId,
   selections,
-  pendingChoices,
   stats,
   isLoading,
-  error
+  error: storeError
 } = storeToRefs(store)
 const { nextStep } = useCharacterWizard()
 
 // API client
 const { apiFetch } = useApi()
 
-// Fetch available spells for this character
-const { data: availableSpells, pending: loadingSpells } = await useAsyncData(
-  `wizard-available-spells-${characterId.value}`,
-  () => apiFetch<{ data: Spell[] }>(`/characters/${characterId.value}/available-spells?max_level=1&include_known=true`),
-  { transform: (response: { data: Spell[] }) => response.data }
+// Use unified choices composable
+const {
+  choicesByType,
+  pending: loadingChoices,
+  error: choicesError,
+  fetchChoices,
+  resolveChoice
+} = useUnifiedChoices(computed(() => characterId.value))
+
+// Fetch spell choices on mount
+onMounted(async () => {
+  await fetchChoices('spell')
+})
+
+// Combined error state
+const error = computed(() => storeError.value || choicesError.value)
+
+// Local tracking for selected spells per choice
+// Map<choiceId, Set<spellId>>
+const selectedSpells = ref<Map<string, Set<number>>>(new Map())
+
+// Local cache for fetched spell options
+// Map<choiceId, Spell[]>
+const spellOptions = ref<Map<string, Spell[]>>(new Map())
+
+// Spell choices grouped by subtype
+const cantripChoices = computed(() =>
+  choicesByType.value.spells.filter(c => c.subtype === 'cantrip')
 )
+
+const spellsKnownChoices = computed(() =>
+  choicesByType.value.spells.filter(c => c.subtype === 'spells_known')
+)
+
+const raceSpellChoices = computed(() =>
+  choicesByType.value.spells.filter(c => c.source === 'race')
+)
+
+// Fetch options for a choice if not already fetched
+async function fetchSpellOptionsForChoice(choice: PendingChoice) {
+  if (!choice.options_endpoint || spellOptions.value.has(choice.id)) return
+
+  try {
+    const response = await apiFetch<{ data: Spell[] }>(choice.options_endpoint)
+    spellOptions.value.set(choice.id, response.data)
+  } catch (e) {
+    console.error(`Failed to fetch spell options for ${choice.id}:`, e)
+  }
+}
+
+// Get available spells for a choice
+function getAvailableSpells(choice: PendingChoice): Spell[] {
+  // If options are provided inline, use them
+  if (choice.options && Array.isArray(choice.options)) {
+    return choice.options as Spell[]
+  }
+  // Otherwise, use fetched options
+  return spellOptions.value.get(choice.id) ?? []
+}
+
+// Fetch options for all spell choices when they load
+watch(choicesByType, async (newVal) => {
+  const allSpellChoices = newVal.spells
+  for (const choice of allSpellChoices) {
+    await fetchSpellOptionsForChoice(choice)
+
+    // Initialize selected set from choice.selected
+    if (!selectedSpells.value.has(choice.id)) {
+      const selected = new Set<number>()
+      for (const spellId of choice.selected) {
+        // Convert string to number if needed
+        const numId = typeof spellId === 'string' ? parseInt(spellId, 10) : spellId
+        selected.add(numId)
+      }
+      selectedSpells.value.set(choice.id, selected)
+    }
+  }
+}, { immediate: true })
 
 // Spellcasting display from stats
 const spellcasting = computed(() => {
@@ -49,122 +123,73 @@ const spellcasting = computed(() => {
   }
 })
 
-// Split available spells into cantrips and leveled spells
-const availableCantrips = computed(() =>
-  availableSpells.value?.filter(s => s.level === 0) ?? []
-)
-
-const availableLeveledSpells = computed(() =>
-  availableSpells.value?.filter(s => s.level > 0) ?? []
-)
-
-// Race spell data (if any)
-const raceSpells = computed(() => selections.value.race?.spells ?? [])
-const fixedRaceSpells = computed(() => raceSpells.value.filter(s => !s.is_choice))
-const raceSpellChoiceGroups = computed(() => {
-  const groups = new Map<string, typeof raceSpells.value>()
-  for (const spell of raceSpells.value) {
-    if (spell.is_choice && spell.choice_group) {
-      const existing = groups.get(spell.choice_group) ?? []
-      groups.set(spell.choice_group, [...existing, spell])
-    }
-  }
-  return groups
-})
-
-// Spell limits from class level progression
+// Calculate total cantrips and spells limits from choices
 const cantripsLimit = computed(() => {
-  const progression = selections.value.class?.level_progression
-  if (!progression || progression.length === 0) return 0
-  const level1 = progression.find(p => p.level === 1)
-  return level1?.cantrips_known ?? 0
+  return cantripChoices.value.reduce((sum, choice) => sum + choice.quantity, 0)
 })
 
 const spellsLimit = computed(() => {
-  const progression = selections.value.class?.level_progression
-  if (!progression || progression.length === 0) return 0
-  const level1 = progression.find(p => p.level === 1)
-  return level1?.spells_known ?? 0
+  return spellsKnownChoices.value.reduce((sum, choice) => sum + choice.quantity, 0)
 })
 
-// Current selection counts
-const cantripsSelected = computed(() => {
-  let count = 0
-  for (const spellId of pendingChoices.value.spells) {
-    const spell = availableCantrips.value.find(s => s.id === spellId)
-    if (spell) count++
-  }
-  return count
-})
-
-const spellsSelected = computed(() => {
-  let count = 0
-  for (const spellId of pendingChoices.value.spells) {
-    const spell = availableLeveledSpells.value.find(s => s.id === spellId)
-    if (spell) count++
-  }
-  return count
-})
-
-// Check if selection is at limit
-const cantripsAtLimit = computed(() =>
-  cantripsSelected.value >= cantripsLimit.value
+// Race spell data (fixed spells from race selection)
+const fixedRaceSpells = computed(() =>
+  selections.value.race?.spells?.filter(s => !s.is_choice) ?? []
 )
 
-const spellsAtLimit = computed(() =>
-  spellsSelected.value >= spellsLimit.value
-)
+// Get count of selected spells for a choice
+function getSelectedCount(choiceId: string): number {
+  return selectedSpells.value.get(choiceId)?.size ?? 0
+}
 
-// Race spell choices tracking
-const raceSpellChoices = ref<Map<string, number>>(new Map())
+// Check if a spell is selected in a choice
+function isSpellSelected(choiceId: string, spellId: number): boolean {
+  return selectedSpells.value.get(choiceId)?.has(spellId) ?? false
+}
 
-// Check if a spell is selected
-function isSpellSelected(spellId: number): boolean {
-  return pendingChoices.value.spells.has(spellId)
+// Check if a choice is at limit
+function isChoiceAtLimit(choice: PendingChoice): boolean {
+  return getSelectedCount(choice.id) >= choice.quantity
+}
+
+// Toggle spell selection for a choice
+function handleSpellToggle(choice: PendingChoice, spell: Spell) {
+  const selected = selectedSpells.value.get(choice.id) ?? new Set<number>()
+
+  if (selected.has(spell.id)) {
+    // Deselect
+    selected.delete(spell.id)
+  } else {
+    // Don't allow selecting more than limit
+    if (selected.size >= choice.quantity) return
+    selected.add(spell.id)
+  }
+
+  selectedSpells.value.set(choice.id, selected)
 }
 
 // Validation: all requirements met?
-const allRaceSpellChoicesMade = computed(() => {
-  for (const [group] of raceSpellChoiceGroups.value) {
-    if (!raceSpellChoices.value.has(group)) return false
-  }
-  return true
-})
-
 const canProceed = computed(() => {
-  // Must have selected correct number of cantrips (if class has any)
-  if (cantripsLimit.value > 0 && cantripsSelected.value < cantripsLimit.value) return false
-  // Must have selected correct number of spells (if class has any)
-  if (spellsLimit.value > 0 && spellsSelected.value < spellsLimit.value) return false
-  // Must have made all race spell choices (if any)
-  if (!allRaceSpellChoicesMade.value) return false
+  // All required spell choices must be complete
+  const requiredChoices = choicesByType.value.spells.filter(c => c.required)
+  for (const choice of requiredChoices) {
+    const selectedCount = getSelectedCount(choice.id)
+    if (selectedCount < choice.quantity) return false
+  }
   return true
 })
-
-/**
- * Toggle spell selection
- */
-function handleSpellToggle(spell: Spell) {
-  // Don't allow selecting more than limit
-  if (!isSpellSelected(spell.id)) {
-    if (spell.level === 0 && cantripsAtLimit.value) return
-    if (spell.level > 0 && spellsAtLimit.value) return
-  }
-  store.toggleSpellChoice(spell.id)
-}
-
-/**
- * Handle race spell choice
- */
-function handleRaceSpellChoice(choiceGroup: string, spellId: number) {
-  raceSpellChoices.value.set(choiceGroup, spellId)
-}
 
 /**
  * Save spells and continue to next step
  */
 async function handleContinue() {
-  await store.saveSpellChoices()
+  // Resolve all spell choices
+  for (const choice of choicesByType.value.spells) {
+    const selected = selectedSpells.value.get(choice.id)
+    if (selected && selected.size > 0) {
+      await resolveChoice(choice.id, { selected: Array.from(selected) })
+    }
+  }
   nextStep()
 }
 
@@ -264,7 +289,7 @@ function handleCloseModal() {
 
     <!-- Loading State -->
     <div
-      v-if="loadingSpells"
+      v-if="loadingChoices"
       class="flex justify-center py-12"
     >
       <UIcon
@@ -274,20 +299,16 @@ function handleCloseModal() {
     </div>
 
     <template v-else>
-      <!-- Racial Spells Section -->
+      <!-- Fixed Racial Spells (if any) -->
       <div
-        v-if="raceSpells.length > 0"
+        v-if="fixedRaceSpells.length > 0"
         class="space-y-4"
       >
         <h3 class="text-lg font-semibold text-gray-900 dark:text-white border-b pb-2">
           Racial Spells ({{ selections.race?.name }})
         </h3>
 
-        <!-- Fixed Race Spells -->
-        <div
-          v-if="fixedRaceSpells.length > 0"
-          class="space-y-2"
-        >
+        <div class="space-y-2">
           <p class="text-sm text-gray-500 dark:text-gray-400">
             You automatically know these spells from your race:
           </p>
@@ -303,92 +324,99 @@ function handleCloseModal() {
             </UBadge>
           </div>
         </div>
-
-        <!-- Race Spell Choices -->
-        <div
-          v-for="[group, spells] in raceSpellChoiceGroups"
-          :key="group"
-          class="space-y-2"
-        >
-          <p class="text-sm font-medium text-gray-700 dark:text-gray-300">
-            Choose one cantrip:
-          </p>
-          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
-            <button
-              v-for="raceSpell in spells"
-              :key="raceSpell.id"
-              type="button"
-              class="p-3 rounded-lg border-2 transition-all text-left"
-              :class="[
-                raceSpellChoices.get(group) === raceSpell.spell_id
-                  ? 'ring-2 ring-spell-500 border-spell-500 bg-spell-50 dark:bg-spell-900/30'
-                  : 'border-gray-200 dark:border-gray-700 hover:border-spell-300'
-              ]"
-              @click="handleRaceSpellChoice(group, raceSpell.spell_id!)"
-            >
-              <span class="font-medium">{{ raceSpell.spell?.name }}</span>
-            </button>
-          </div>
-        </div>
       </div>
 
-      <!-- Cantrips Section -->
+      <!-- Race Spell Choices (from unified choices) -->
       <div
-        v-if="availableCantrips.length > 0"
+        v-for="choice in raceSpellChoices"
+        :key="choice.id"
         class="space-y-4"
       >
         <div class="flex items-center justify-between border-b pb-2">
           <h3 class="text-lg font-semibold text-gray-900 dark:text-white">
-            Cantrips ({{ selections.class?.name }})
+            {{ choice.source_name }} - {{ choice.subtype || 'Spells' }}
           </h3>
           <UBadge
-            :color="cantripsSelected >= cantripsLimit ? 'success' : 'warning'"
+            :color="getSelectedCount(choice.id) >= choice.quantity ? 'success' : 'warning'"
             variant="subtle"
             size="md"
           >
-            {{ cantripsSelected }} of {{ cantripsLimit }}
+            {{ getSelectedCount(choice.id) }} of {{ choice.quantity }}
           </UBadge>
         </div>
 
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-          <CharacterBuilderSpellPickerCard
-            v-for="spell in availableCantrips"
+          <CharacterPickerSpellPickerCard
+            v-for="spell in getAvailableSpells(choice)"
             :key="spell.id"
             :spell="spell"
-            :selected="isSpellSelected(spell.id)"
-            :disabled="!isSpellSelected(spell.id) && cantripsAtLimit"
-            @toggle="handleSpellToggle"
+            :selected="isSpellSelected(choice.id, spell.id)"
+            :disabled="!isSpellSelected(choice.id, spell.id) && isChoiceAtLimit(choice)"
+            @toggle="handleSpellToggle(choice, spell)"
             @view-details="handleViewDetails(spell)"
           />
         </div>
       </div>
 
-      <!-- 1st Level Spells Section (only show if class learns spells at level 1) -->
+      <!-- Cantrips Section -->
       <div
-        v-if="availableLeveledSpells.length > 0 && spellsLimit > 0"
+        v-for="choice in cantripChoices"
+        :key="choice.id"
         class="space-y-4"
       >
         <div class="flex items-center justify-between border-b pb-2">
           <h3 class="text-lg font-semibold text-gray-900 dark:text-white">
-            1st Level Spells ({{ selections.class?.name }})
+            Cantrips ({{ choice.source_name }})
           </h3>
           <UBadge
-            :color="spellsSelected >= spellsLimit ? 'success' : 'warning'"
+            :color="getSelectedCount(choice.id) >= choice.quantity ? 'success' : 'warning'"
             variant="subtle"
             size="md"
           >
-            {{ spellsSelected }} of {{ spellsLimit }}
+            {{ getSelectedCount(choice.id) }} of {{ choice.quantity }}
           </UBadge>
         </div>
 
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-          <CharacterBuilderSpellPickerCard
-            v-for="spell in availableLeveledSpells"
+          <CharacterPickerSpellPickerCard
+            v-for="spell in getAvailableSpells(choice)"
             :key="spell.id"
             :spell="spell"
-            :selected="isSpellSelected(spell.id)"
-            :disabled="!isSpellSelected(spell.id) && spellsAtLimit"
-            @toggle="handleSpellToggle"
+            :selected="isSpellSelected(choice.id, spell.id)"
+            :disabled="!isSpellSelected(choice.id, spell.id) && isChoiceAtLimit(choice)"
+            @toggle="handleSpellToggle(choice, spell)"
+            @view-details="handleViewDetails(spell)"
+          />
+        </div>
+      </div>
+
+      <!-- Spells Known Section -->
+      <div
+        v-for="choice in spellsKnownChoices"
+        :key="choice.id"
+        class="space-y-4"
+      >
+        <div class="flex items-center justify-between border-b pb-2">
+          <h3 class="text-lg font-semibold text-gray-900 dark:text-white">
+            1st Level Spells ({{ choice.source_name }})
+          </h3>
+          <UBadge
+            :color="getSelectedCount(choice.id) >= choice.quantity ? 'success' : 'warning'"
+            variant="subtle"
+            size="md"
+          >
+            {{ getSelectedCount(choice.id) }} of {{ choice.quantity }}
+          </UBadge>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+          <CharacterPickerSpellPickerCard
+            v-for="spell in getAvailableSpells(choice)"
+            :key="spell.id"
+            :spell="spell"
+            :selected="isSpellSelected(choice.id, spell.id)"
+            :disabled="!isSpellSelected(choice.id, spell.id) && isChoiceAtLimit(choice)"
+            @toggle="handleSpellToggle(choice, spell)"
             @view-details="handleViewDetails(spell)"
           />
         </div>
@@ -396,7 +424,7 @@ function handleCloseModal() {
 
       <!-- Empty State -->
       <div
-        v-if="availableCantrips.length === 0 && availableLeveledSpells.length === 0 && raceSpells.length === 0"
+        v-if="choicesByType.spells.length === 0 && fixedRaceSpells.length === 0"
         class="text-center py-12"
       >
         <UIcon
@@ -423,7 +451,7 @@ function handleCloseModal() {
     </div>
 
     <!-- Spell Detail Modal -->
-    <CharacterBuilderSpellDetailModal
+    <CharacterPickerSpellDetailModal
       :spell="detailSpell"
       :open="detailModalOpen"
       @close="handleCloseModal"

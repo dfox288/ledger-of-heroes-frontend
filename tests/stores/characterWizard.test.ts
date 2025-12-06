@@ -128,13 +128,7 @@ describe('characterWizard store', () => {
       expect(store.selections.abilityScores.charisma).toBe(10)
     })
 
-    it('has empty pending choices initially', () => {
-      const store = useCharacterWizardStore()
-      expect(store.pendingChoices.proficiencies.size).toBe(0)
-      expect(store.pendingChoices.languages.size).toBe(0)
-      expect(store.pendingChoices.equipment.size).toBe(0)
-      expect(store.pendingChoices.spells.size).toBe(0)
-    })
+    // Note: pendingChoices removed - choices are now managed by useUnifiedChoices composable
   })
 
   describe('needsSubraceStep computed', () => {
@@ -250,50 +244,8 @@ describe('characterWizard store', () => {
     })
   })
 
-  describe('pending choices actions', () => {
-    it('toggleProficiencyChoice adds and removes selections', () => {
-      const store = useCharacterWizardStore()
-
-      // Add first selection
-      store.toggleProficiencyChoice('class:skill_choice', 1)
-      expect(store.pendingChoices.proficiencies.get('class:skill_choice')?.has(1)).toBe(true)
-
-      // Add second selection
-      store.toggleProficiencyChoice('class:skill_choice', 2)
-      expect(store.pendingChoices.proficiencies.get('class:skill_choice')?.has(2)).toBe(true)
-      expect(store.pendingChoices.proficiencies.get('class:skill_choice')?.size).toBe(2)
-
-      // Remove first selection
-      store.toggleProficiencyChoice('class:skill_choice', 1)
-      expect(store.pendingChoices.proficiencies.get('class:skill_choice')?.has(1)).toBe(false)
-      expect(store.pendingChoices.proficiencies.get('class:skill_choice')?.size).toBe(1)
-    })
-
-    it('toggleSpellChoice adds and removes spells', () => {
-      const store = useCharacterWizardStore()
-
-      store.toggleSpellChoice(101)
-      expect(store.pendingChoices.spells.has(101)).toBe(true)
-
-      store.toggleSpellChoice(102)
-      expect(store.pendingChoices.spells.size).toBe(2)
-
-      store.toggleSpellChoice(101)
-      expect(store.pendingChoices.spells.has(101)).toBe(false)
-      expect(store.pendingChoices.spells.size).toBe(1)
-    })
-
-    it('setEquipmentChoice sets equipment selection', () => {
-      const store = useCharacterWizardStore()
-
-      store.setEquipmentChoice('weapon_choice', 5)
-      expect(store.pendingChoices.equipment.get('weapon_choice')).toBe(5)
-
-      // Overwrite selection
-      store.setEquipmentChoice('weapon_choice', 6)
-      expect(store.pendingChoices.equipment.get('weapon_choice')).toBe(6)
-    })
-  })
+  // Note: pending choices actions removed - choices are now managed by useUnifiedChoices composable
+  // Removed tests for: toggleProficiencyChoice, toggleSpellChoice, setEquipmentChoice
 
   describe('reset action', () => {
     it('resets all state to defaults', () => {
@@ -305,7 +257,6 @@ describe('characterWizard store', () => {
       store.selections.race = mockElf
       store.selections.class = mockCleric
       store.selections.name = 'Test Character'
-      store.toggleSpellChoice(101)
       store.isLoading = true
       store.error = 'Some error'
 
@@ -318,7 +269,7 @@ describe('characterWizard store', () => {
       expect(store.selections.race).toBeNull()
       expect(store.selections.class).toBeNull()
       expect(store.selections.name).toBe('')
-      expect(store.pendingChoices.spells.size).toBe(0)
+      // Note: pendingChoices removed - now managed by useUnifiedChoices composable
       expect(store.isLoading).toBe(false)
       expect(store.error).toBeNull()
     })

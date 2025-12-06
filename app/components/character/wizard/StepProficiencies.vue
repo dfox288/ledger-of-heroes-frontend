@@ -1,93 +1,92 @@
 <!-- app/components/character/wizard/StepProficiencies.vue -->
 <script setup lang="ts">
-import type { ProficiencyOption, ProficiencyTypeOption, ProficiencyTypeLookupResponse } from '~/types/proficiencies'
 import type { components } from '~/types/api/generated'
 import { useCharacterWizard } from '~/composables/useCharacterWizard'
 import { useCharacterWizardStore } from '~/stores/characterWizard'
 
 type ProficiencyResource = components['schemas']['ProficiencyResource']
+type PendingChoice = components['schemas']['PendingChoiceResource']
 
 const store = useCharacterWizardStore()
 const { apiFetch } = useApi()
-const { selections, pendingChoices, isLoading } = storeToRefs(store)
+const { selections } = storeToRefs(store)
 const { nextStep } = useCharacterWizard()
 
 // ══════════════════════════════════════════════════════════════
-// Fetch proficiency choices from backend
+// Fetch proficiency choices from unified API
 // ══════════════════════════════════════════════════════════════
 
-interface ProficiencyChoiceGroup {
-  quantity: number
-  remaining: number
-  selected_skills?: number[]
-  selected_proficiency_types?: number[]
-  options: ProficiencyOption[]
-  proficiency_type?: string | null
-  proficiency_subcategory?: string | null
-}
+const {
+  choicesByType,
+  pending: loadingChoices,
+  error: _choicesError,
+  fetchChoices,
+  resolveChoice
+} = useUnifiedChoices(computed(() => store.characterId))
 
-interface ProficiencyChoicesResponse {
-  data: {
-    class: Record<string, ProficiencyChoiceGroup>
-    race: Record<string, ProficiencyChoiceGroup>
-    background: Record<string, ProficiencyChoiceGroup>
+// Fetch on mount
+onMounted(async () => {
+  if (store.characterId) {
+    await fetchChoices('proficiency')
   }
-}
+})
 
-const { data: proficiencyChoices, pending: _loadingChoices } = await useAsyncData(
-  `wizard-proficiency-choices-${store.characterId}`,
-  () => apiFetch<ProficiencyChoicesResponse>(`/characters/${store.characterId}/proficiency-choices`),
-  { watch: [() => store.characterId] }
-)
+// Local state for tracking selections (before save)
+const localSelections = ref<Map<string, Set<string>>>(new Map())
 
-// ══════════════════════════════════════════════════════════════
-// Subcategory Options Fetching
-// ══════════════════════════════════════════════════════════════
-
-const subcategoryOptionsCache = ref<Map<string, ProficiencyOption[]>>(new Map())
-const loadingSubcategories = ref<Set<string>>(new Set())
-
-async function fetchSubcategoryOptions(category: string, subcategory: string): Promise<ProficiencyOption[]> {
-  const cacheKey = `${category}:${subcategory}`
-
-  if (subcategoryOptionsCache.value.has(cacheKey)) {
-    return subcategoryOptionsCache.value.get(cacheKey)!
+// Initialize local selections from already-resolved choices
+watch(() => choicesByType.value.proficiencies, (choices) => {
+  if (!choices) return
+  for (const choice of choices) {
+    if (choice.selected && choice.selected.length > 0) {
+      localSelections.value.set(choice.id, new Set(choice.selected))
+    }
   }
+}, { immediate: true })
 
-  loadingSubcategories.value.add(cacheKey)
+// ══════════════════════════════════════════════════════════════
+// Options fetching for dynamic endpoints
+// ══════════════════════════════════════════════════════════════
+
+const optionsCache = ref<Map<string, unknown[]>>(new Map())
+const loadingOptions = ref<Set<string>>(new Set())
+
+async function fetchOptionsIfNeeded(choice: PendingChoice): Promise<void> {
+  // If options are already provided, no need to fetch
+  if (choice.options && choice.options.length > 0) return
+
+  // If no endpoint provided, nothing to fetch
+  if (!choice.options_endpoint) return
+
+  // Check cache
+  if (optionsCache.value.has(choice.id)) return
+
+  // Already loading
+  if (loadingOptions.value.has(choice.id)) return
+
+  loadingOptions.value.add(choice.id)
 
   try {
-    const response = await apiFetch<ProficiencyTypeLookupResponse>('/proficiency-types', {
-      query: { category, subcategory }
-    })
-
-    if (!response?.data) {
-      return []
+    const response = await apiFetch<{ data: unknown[] }>(choice.options_endpoint)
+    if (response?.data) {
+      optionsCache.value.set(choice.id, response.data)
     }
-
-    const options: ProficiencyOption[] = response.data.map(item => ({
-      type: 'proficiency_type' as const,
-      proficiency_type_id: item.id,
-      proficiency_type: {
-        id: item.id,
-        name: item.name,
-        slug: item.slug
-      }
-    }))
-
-    subcategoryOptionsCache.value.set(cacheKey, options)
-    return options
-  } catch {
-    console.warn(`Failed to fetch proficiency types for ${category}:${subcategory}`)
-    return []
+  } catch (err) {
+    console.warn(`Failed to fetch options for choice ${choice.id}:`, err)
   } finally {
-    loadingSubcategories.value.delete(cacheKey)
+    loadingOptions.value.delete(choice.id)
   }
 }
 
-function isSubcategoryLoading(category: string | null, subcategory: string | null): boolean {
-  if (!category || !subcategory) return false
-  return loadingSubcategories.value.has(`${category}:${subcategory}`)
+function getEffectiveOptions(choice: PendingChoice): unknown[] {
+  if (choice.options && choice.options.length > 0) {
+    return choice.options
+  }
+  return optionsCache.value.get(choice.id) ?? []
+}
+
+function isOptionsLoading(choice: PendingChoice): boolean {
+  return loadingOptions.value.has(choice.id)
 }
 
 // ══════════════════════════════════════════════════════════════
@@ -216,159 +215,135 @@ const grantedBySource = computed<GrantedProficienciesBySource[]>(() => {
 const hasAnyGranted = computed(() => grantedBySource.value.length > 0)
 
 // ══════════════════════════════════════════════════════════════
-// Proficiency Choices
+// Proficiency Choices - Group by source
 // ══════════════════════════════════════════════════════════════
 
-const hasAnyChoices = computed(() => {
-  if (!proficiencyChoices.value) return false
-  const { class: cls, race, background } = proficiencyChoices.value.data
-  return Object.keys(cls).length > 0
-    || Object.keys(race).length > 0
-    || Object.keys(background).length > 0
-})
-
-interface ChoiceGroup {
-  groupName: string
-  quantity: number
-  remaining: number
-  selectedSkills: number[]
-  selectedProficiencyTypes: number[]
-  options: ProficiencyOption[]
-  proficiencyType: string | null
-  proficiencySubcategory: string | null
-}
-
-interface ChoiceSource {
+interface ChoicesBySource {
   source: 'class' | 'race' | 'background'
   label: string
   entityName: string
-  groups: ChoiceGroup[]
+  choices: PendingChoice[]
 }
 
-const choicesBySource = computed<ChoiceSource[]>(() => {
-  if (!proficiencyChoices.value) return []
+const proficiencyChoicesBySource = computed<ChoicesBySource[]>(() => {
+  const choices = choicesByType.value.proficiencies
+  if (!choices || choices.length === 0) return []
 
-  const sources: ChoiceSource[] = []
-  const { class: cls, race, background } = proficiencyChoices.value.data
+  const sources: ChoicesBySource[] = []
 
-  const mapGroups = (groups: typeof cls): ChoiceGroup[] =>
-    Object.entries(groups).map(([groupName, group]) => ({
-      groupName,
-      quantity: group.quantity,
-      remaining: group.remaining,
-      selectedSkills: group.selected_skills ?? [],
-      selectedProficiencyTypes: group.selected_proficiency_types ?? [],
-      options: group.options,
-      proficiencyType: group.proficiency_type ?? null,
-      proficiencySubcategory: group.proficiency_subcategory ?? null
-    }))
+  // Group by source
+  const bySource = {
+    class: choices.filter(c => c.source === 'class'),
+    race: choices.filter(c => c.source === 'race'),
+    background: choices.filter(c => c.source === 'background')
+  }
 
-  if (Object.keys(cls).length > 0) {
+  if (bySource.class.length > 0) {
     sources.push({
       source: 'class',
       label: 'From Class',
       entityName: selections.value.class?.name ?? 'Unknown',
-      groups: mapGroups(cls)
+      choices: bySource.class
     })
   }
 
-  if (Object.keys(race).length > 0) {
+  if (bySource.race.length > 0) {
     sources.push({
       source: 'race',
       label: 'From Race',
       entityName: selections.value.race?.name ?? 'Unknown',
-      groups: mapGroups(race)
+      choices: bySource.race
     })
   }
 
-  if (Object.keys(background).length > 0) {
+  if (bySource.background.length > 0) {
     sources.push({
       source: 'background',
       label: 'From Background',
       entityName: selections.value.background?.name ?? 'Unknown',
-      groups: mapGroups(background)
+      choices: bySource.background
     })
   }
 
   return sources
 })
 
-function getEffectiveOptions(group: ChoiceGroup): ProficiencyOption[] {
-  if (group.options.length > 0) {
-    return group.options
-  }
-
-  if (group.proficiencyType && group.proficiencySubcategory) {
-    const cacheKey = `${group.proficiencyType}:${group.proficiencySubcategory}`
-    return subcategoryOptionsCache.value.get(cacheKey) ?? []
-  }
-
-  return []
-}
-
-async function loadSubcategoryOptionsIfNeeded(group: ChoiceGroup): Promise<void> {
-  if (group.options.length === 0 && group.proficiencyType && group.proficiencySubcategory) {
-    const cacheKey = `${group.proficiencyType}:${group.proficiencySubcategory}`
-    if (!subcategoryOptionsCache.value.has(cacheKey) && !loadingSubcategories.value.has(cacheKey)) {
-      await fetchSubcategoryOptions(group.proficiencyType, group.proficiencySubcategory)
-    }
-  }
-}
-
-onMounted(async () => {
-  for (const source of choicesBySource.value) {
-    for (const group of source.groups) {
-      await loadSubcategoryOptionsIfNeeded(group)
-    }
-  }
+const hasAnyChoices = computed(() => {
+  return proficiencyChoicesBySource.value.length > 0
 })
 
-watch(choicesBySource, async (sources) => {
+// Load options for all choices on mount
+watch(proficiencyChoicesBySource, async (sources) => {
   for (const source of sources) {
-    for (const group of source.groups) {
-      await loadSubcategoryOptionsIfNeeded(group)
+    for (const choice of source.choices) {
+      await fetchOptionsIfNeeded(choice)
     }
   }
-}, { immediate: false })
+}, { immediate: true })
 
-function getSelectedCount(source: string, groupName: string): number {
-  const key = `${source}:${groupName}`
-  return pendingChoices.value.proficiencies.get(key)?.size ?? 0
+// ══════════════════════════════════════════════════════════════
+// Selection Logic
+// ══════════════════════════════════════════════════════════════
+
+function getSelectedCount(choiceId: string): number {
+  return localSelections.value.get(choiceId)?.size ?? 0
 }
 
-function isSkillSelected(source: string, groupName: string, skillId: number): boolean {
-  const key = `${source}:${groupName}`
-  return pendingChoices.value.proficiencies.get(key)?.has(skillId) ?? false
+function isOptionSelected(choiceId: string, optionId: string | number): boolean {
+  const selected = localSelections.value.get(choiceId)
+  if (!selected) return false
+  return selected.has(String(optionId))
 }
 
-function handleSkillToggle(source: 'class' | 'race' | 'background', groupName: string, optionId: number, quantity: number, optionType: 'skill' | 'proficiency_type') {
-  const key = `${source}:${groupName}`
-  const current = getSelectedCount(source, groupName)
-  const isSelected = isSkillSelected(source, groupName, optionId)
+function handleOptionToggle(choice: PendingChoice, optionId: string | number) {
+  const id = String(optionId)
+  const current = localSelections.value.get(choice.id) ?? new Set<string>()
+  const updated = new Set(current)
 
-  if (!isSelected && current >= quantity) return
-
-  store.toggleProficiencyChoice(key, optionId, optionType)
-}
-
-function getOptionName(option: ProficiencyOption): string {
-  if (option.type === 'skill') {
-    return option.skill.name
+  if (updated.has(id)) {
+    updated.delete(id)
   } else {
-    return option.proficiency_type.name
+    // Don't allow selection if quantity limit reached
+    if (updated.size >= choice.quantity) return
+    updated.add(id)
   }
+
+  localSelections.value.set(choice.id, updated)
 }
 
-function getOptionId(option: ProficiencyOption): number {
-  if (option.type === 'skill') {
-    return option.skill_id
-  } else {
-    return option.proficiency_type_id
-  }
+// ══════════════════════════════════════════════════════════════
+// Option Display Helpers
+// ══════════════════════════════════════════════════════════════
+
+interface OptionDisplay {
+  id: string | number
+  name: string
 }
 
-function getLabelForProficiencyType(type: string, quantity: number): string {
-  switch (type) {
+function getDisplayOptions(choice: PendingChoice): OptionDisplay[] {
+  const options = getEffectiveOptions(choice)
+  return options.map((rawOpt: unknown) => {
+    const opt = rawOpt as Record<string, unknown>
+    // Handle skill options
+    if (opt.skill) {
+      const skill = opt.skill as { id: number, name: string }
+      return { id: skill.id, name: skill.name }
+    }
+    // Handle proficiency_type options
+    if (opt.proficiency_type) {
+      const profType = opt.proficiency_type as { id: number, name: string }
+      return { id: profType.id, name: profType.name }
+    }
+    // Fallback
+    return { id: (opt.id as number) ?? 0, name: (opt.name as string) ?? 'Unknown' }
+  })
+}
+
+function getChoiceLabel(choice: PendingChoice): string {
+  const subtype = choice.subtype ?? 'proficiency'
+  const quantity = choice.quantity
+
+  switch (subtype) {
     case 'skill':
       return `Choose ${quantity} skill${quantity > 1 ? 's' : ''}`
     case 'tool':
@@ -377,71 +352,60 @@ function getLabelForProficiencyType(type: string, quantity: number): string {
       return `Choose ${quantity} weapon${quantity > 1 ? 's' : ''}`
     case 'armor':
       return `Choose ${quantity} armor type${quantity > 1 ? 's' : ''}`
-    case 'language':
-      return `Choose ${quantity} language${quantity > 1 ? 's' : ''}`
     default:
       return `Choose ${quantity} proficienc${quantity > 1 ? 'ies' : 'y'}`
   }
 }
 
-function getChoiceLabel(group: ChoiceGroup): string {
-  const options = getEffectiveOptions(group)
-  const quantity = group.quantity
-
-  if (group.proficiencyType) {
-    return getLabelForProficiencyType(group.proficiencyType, quantity)
-  }
-
-  const firstOption = options[0]
-  if (!firstOption) return `Choose ${quantity}`
-
-  const firstType = firstOption.type
-  const allSameType = options.every(opt => opt.type === firstType)
-
-  if (allSameType && firstType === 'skill') {
-    return `Choose ${quantity} skill${quantity > 1 ? 's' : ''}`
-  }
-
-  if (allSameType && firstType === 'proficiency_type') {
-    const proficiencyOption = firstOption as ProficiencyTypeOption
-    const name = proficiencyOption.proficiency_type.name
-
-    if (name.toLowerCase().includes('tool')) {
-      return `Choose ${quantity} tool${quantity > 1 ? 's' : ''}`
-    }
-    if (name.toLowerCase().includes('weapon')) {
-      return `Choose ${quantity} weapon${quantity > 1 ? 's' : ''}`
-    }
-    if (name.toLowerCase().includes('armor')) {
-      return `Choose ${quantity} armor type${quantity > 1 ? 's' : ''}`
-    }
-    if (name.toLowerCase().includes('language')) {
-      return `Choose ${quantity} language${quantity > 1 ? 's' : ''}`
-    }
-
-    return `Choose ${quantity} proficienc${quantity > 1 ? 'ies' : 'y'}`
-  }
-
-  return `Choose ${quantity} option${quantity > 1 ? 's' : ''}`
-}
+// ══════════════════════════════════════════════════════════════
+// Save Logic
+// ══════════════════════════════════════════════════════════════
 
 const allProficiencyChoicesComplete = computed(() => {
-  if (!proficiencyChoices.value) return true
+  const choices = choicesByType.value.proficiencies
+  if (!choices || choices.length === 0) return true
 
-  for (const source of choicesBySource.value) {
-    for (const group of source.groups) {
-      if (getSelectedCount(source.source, group.groupName) < group.quantity) {
-        return false
-      }
+  for (const choice of choices) {
+    const selectedCount = getSelectedCount(choice.id)
+    if (selectedCount < choice.quantity) {
+      return false
     }
   }
 
   return true
 })
 
+const isSaving = ref(false)
+
 async function handleContinue() {
-  await store.saveProficiencyChoices()
-  nextStep()
+  if (!allProficiencyChoicesComplete.value) return
+
+  isSaving.value = true
+
+  try {
+    // Resolve each choice with local selections
+    const choices = choicesByType.value.proficiencies ?? []
+    for (const choice of choices) {
+      const selected = localSelections.value.get(choice.id)
+      if (!selected || selected.size === 0) continue
+
+      // Only resolve if there are new selections (different from already selected)
+      const currentSelected = new Set(choice.selected)
+      const hasChanges = selected.size !== currentSelected.size
+        || [...selected].some(id => !currentSelected.has(id))
+
+      if (hasChanges) {
+        await resolveChoice(choice.id, { selected: Array.from(selected) })
+      }
+    }
+
+    // Move to next step
+    nextStep()
+  } catch (err) {
+    console.error('Failed to save proficiency choices:', err)
+  } finally {
+    isSaving.value = false
+  }
 }
 </script>
 
@@ -510,7 +474,7 @@ async function handleContinue() {
         Additional Choices
       </h3>
       <div
-        v-for="sourceData in choicesBySource"
+        v-for="sourceData in proficiencyChoicesBySource"
         :key="sourceData.source"
         class="choice-source"
       >
@@ -519,24 +483,24 @@ async function handleContinue() {
         </h3>
 
         <div
-          v-for="group in sourceData.groups"
-          :key="group.groupName"
+          v-for="choice in sourceData.choices"
+          :key="choice.id"
           class="mb-6"
         >
           <div class="flex items-center justify-between mb-3">
             <span class="text-sm font-medium">
-              {{ getChoiceLabel(group) }}:
+              {{ getChoiceLabel(choice) }}:
             </span>
             <UBadge
-              :color="getSelectedCount(sourceData.source, group.groupName) === group.quantity ? 'success' : 'neutral'"
+              :color="getSelectedCount(choice.id) === choice.quantity ? 'success' : 'neutral'"
               size="md"
             >
-              {{ getSelectedCount(sourceData.source, group.groupName) }}/{{ group.quantity }} selected
+              {{ getSelectedCount(choice.id) }}/{{ choice.quantity }} selected
             </UBadge>
           </div>
 
           <div
-            v-if="isSubcategoryLoading(group.proficiencyType, group.proficiencySubcategory)"
+            v-if="isOptionsLoading(choice)"
             class="flex items-center gap-2 p-4 text-gray-500"
           >
             <UIcon
@@ -551,26 +515,26 @@ async function handleContinue() {
             class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3"
           >
             <button
-              v-for="option in getEffectiveOptions(group)"
-              :key="getOptionId(option)"
+              v-for="option in getDisplayOptions(choice)"
+              :key="option.id"
               type="button"
               class="skill-option p-3 rounded-lg border text-left transition-all"
               :class="{
-                'border-primary bg-primary/10': isSkillSelected(sourceData.source, group.groupName, getOptionId(option)),
-                'border-gray-200 dark:border-gray-700 hover:border-primary/50': !isSkillSelected(sourceData.source, group.groupName, getOptionId(option))
+                'border-primary bg-primary/10': isOptionSelected(choice.id, option.id),
+                'border-gray-200 dark:border-gray-700 hover:border-primary/50': !isOptionSelected(choice.id, option.id)
               }"
-              @click="handleSkillToggle(sourceData.source, group.groupName, getOptionId(option), group.quantity, option.type)"
+              @click="handleOptionToggle(choice, option.id)"
             >
               <div class="flex items-center gap-2">
                 <UIcon
-                  :name="isSkillSelected(sourceData.source, group.groupName, getOptionId(option)) ? 'i-heroicons-check-circle-solid' : 'i-heroicons-circle'"
+                  :name="isOptionSelected(choice.id, option.id) ? 'i-heroicons-check-circle-solid' : 'i-heroicons-circle'"
                   class="w-5 h-5"
                   :class="{
-                    'text-primary': isSkillSelected(sourceData.source, group.groupName, getOptionId(option)),
-                    'text-gray-400': !isSkillSelected(sourceData.source, group.groupName, getOptionId(option))
+                    'text-primary': isOptionSelected(choice.id, option.id),
+                    'text-gray-400': !isOptionSelected(choice.id, option.id)
                   }"
                 />
-                <span class="font-medium">{{ getOptionName(option) }}</span>
+                <span class="font-medium">{{ option.name }}</span>
               </div>
             </button>
           </div>
@@ -583,8 +547,8 @@ async function handleContinue() {
       <UButton
         data-test="continue-btn"
         size="lg"
-        :disabled="(hasAnyChoices && !allProficiencyChoicesComplete) || isLoading"
-        :loading="isLoading"
+        :disabled="(hasAnyChoices && !allProficiencyChoicesComplete) || loadingChoices || isSaving"
+        :loading="loadingChoices || isSaving"
         @click="handleContinue"
       >
         {{ hasAnyChoices ? 'Continue with Proficiencies' : 'Continue' }}

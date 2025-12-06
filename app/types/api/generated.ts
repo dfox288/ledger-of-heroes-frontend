@@ -3,7 +3,7 @@
  * Do not make direct changes to the file.
  *
  * Generated from: http://localhost:8080/docs/api.json
- * Generated at: 2025-12-06T08:36:46.183Z
+ * Generated at: 2025-12-06T19:02:07.930Z
  *
  * To regenerate: npm run types:sync
  */
@@ -695,6 +695,70 @@ export interface paths {
     put?: never
     post?: never
     delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/v1/characters/{character}/pending-choices': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /**
+         * List all pending choices for a character
+         * @description Returns all choices that need user input, grouped with summary statistics.
+         */
+    get: operations['characters.pending-choices.index']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/v1/characters/{character}/pending-choices/{choiceId}': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /**
+         * Get a specific pending choice
+         * @description Returns details about a single choice including available options.
+         */
+    get: operations['characters.pending-choices.show']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/v1/characters/{character}/choices/{choiceId}': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    /**
+         * Resolve a pending choice
+         * @description Submit the user's selection to resolve a choice. The request format varies by choice type.
+         */
+    post: operations['characters.choices.resolve']
+    /**
+         * Undo a resolved choice
+         * @description Reverts a previously made choice, if the choice type supports undo.
+         */
+    delete: operations['characters.choices.undo']
     options?: never
     head?: never
     patch?: never
@@ -5980,6 +6044,19 @@ export interface components {
       /** @description Ability increase choice */
       ability_increases?: number[] | null
     }
+    /** AsiChoiceResource */
+    AsiChoiceResource: {
+      success: boolean
+      choice_type: string
+      asi_choices_remaining: number
+      changes: {
+        feat: unknown[] | null
+        ability_increases: unknown[]
+        proficiencies_gained: unknown[]
+        spells_gained: unknown[]
+      }
+      new_ability_scores: unknown[]
+    }
     /** BackgroundResource */
     BackgroundResource: {
       id: number
@@ -6090,6 +6167,17 @@ export interface components {
         script: string | null
       } | null
     }
+    /** CharacterNoteResource */
+    CharacterNoteResource: {
+      id: number
+      category: string
+      category_label: string
+      title: string | null
+      content: string
+      sort_order: number
+      created_at: string
+      updated_at: string
+    }
     /** CharacterNoteStoreRequest */
     CharacterNoteStoreRequest: {
       category: components['schemas']['NoteCategory']
@@ -6102,6 +6190,22 @@ export interface components {
       title?: string | null
       content?: string
       sort_order?: number
+    }
+    /** CharacterNotesGroupedResource */
+    CharacterNotesGroupedResource: {
+      /** @description Notes grouped by category */
+      data: {
+        [key: string]: {
+          id: number
+          category: string
+          category_label: string
+          title: string | null
+          content: string
+          sort_order: number
+          created_at: string
+          updated_at: string
+        }[]
+      }
     }
     /** CharacterProficiencyResource */
     CharacterProficiencyResource: {
@@ -6278,9 +6382,13 @@ export interface components {
           modifier: number | null
         }
       }
-      /** @description Saving throw modifiers keyed by ability code */
+      /** @description Saving throws with proficiency status */
       saving_throws: {
-        [key: string]: number | null
+        [key: string]: {
+          modifier: number | null
+          proficient: boolean
+          total: number | null
+        }
       }
       armor_class: number | null
       hit_points: {
@@ -6290,6 +6398,10 @@ export interface components {
       }
       /** @description Derived combat stats */
       initiative_bonus: number | null
+      /**
+             * @description Note: Individual passive fields kept for backwards compatibility.
+             *     New 'passive' object provides grouped access (Issue #255).
+             */
       passive_perception: number | null
       passive_investigation: number | null
       passive_insight: number | null
@@ -6314,6 +6426,31 @@ export interface components {
         total: number
         current: number
       }[]
+      /** @description All 18 skills with full breakdown */
+      skills: {
+        name: string
+        slug: string
+        ability: string
+        ability_modifier: number | null
+        proficient: boolean
+        expertise: boolean
+        modifier: number | null
+        passive: number | null
+      }[]
+      /** @description Movement speeds */
+      speed: {
+        walk: number
+        fly: number | null
+        swim: number | null
+        climb: number | null
+        burrow: number | null
+      }
+      /** @description Grouped passive scores */
+      passive: {
+        perception: number | null
+        investigation: number | null
+        insight: number | null
+      }
     }
     /** CharacterStoreRequest */
     CharacterStoreRequest: {
@@ -6344,12 +6481,47 @@ export interface components {
     }
     /** CharacterSummaryResource */
     CharacterSummaryResource: {
-      character: unknown[]
-      pending_choices: unknown[]
-      resources: unknown[]
-      combat_state: unknown[]
+      /** @description Basic character info */
+      character: {
+        id: number
+        name: string
+        total_level: number
+      }
+      /** @description Pending choices requiring user input */
+      pending_choices: {
+        proficiencies: number
+        languages: number
+        spells: number
+        optional_features: number
+        asi: number
+      }
+      /** @description Current resource states */
+      resources: {
+        hit_points: {
+          current: number | null
+          max: number | null
+          temp: number
+        }
+        hit_dice: {
+          available: number
+          max: number
+        }
+        spell_slots: unknown[]
+        features_with_uses: unknown[]
+      }
+      /** @description Combat state information */
+      combat_state: {
+        conditions: string[]
+        death_saves: {
+          successes: number
+          failures: number
+        }
+        is_conscious: boolean
+      }
+      /** @description Whether character creation is complete */
       creation_complete: boolean
-      missing_required: unknown[]
+      /** @description List of missing required fields/choices */
+      missing_required: string[]
     }
     /** CharacterUpdateRequest */
     CharacterUpdateRequest: {
@@ -6391,6 +6563,13 @@ export interface components {
              * @description Portrait URL (external image link)
              */
       portrait_url?: string | null
+    }
+    /** ChoiceResultResource */
+    ChoiceResultResource: {
+      /** @description Success message */
+      message: string
+      /** @description The choice ID that was resolved/undone */
+      choice_id: string
     }
     /** ChoicesResource */
     ChoicesResource: {
@@ -6468,6 +6647,8 @@ export interface components {
       /** @description Level at which subclass is chosen */
       subclass_level: number | null
       spellcasting_type: string
+      /** @description Number of spells available to this class */
+      spell_count: number | null
       /** @description === MULTICLASS REQUIREMENTS === */
       multiclass_requirements?: {
         type: string
@@ -6521,6 +6702,10 @@ export interface components {
       name: string
       slug: string
       description: string
+      /** @description Number of monsters that inflict this condition */
+      monster_count: number | null
+      /** @description Number of spells that inflict this condition */
+      spell_count: number | null
     }
     /** CounterProgressionResource */
     CounterProgressionResource: {
@@ -6540,6 +6725,31 @@ export interface components {
       roll?: number
       damage?: number
       is_critical?: boolean
+    }
+    /** DeathSaveResultResource */
+    DeathSaveResultResource: {
+      /** @description Current success count (0-3) */
+      death_save_successes: number
+      /** @description Current failure count (0-3) */
+      death_save_failures: number
+      /** @description Character's current HP */
+      current_hit_points: number
+      /** @description Roll result: success, failure, critical_success, critical_failure, damage, critical_damage */
+      result: string
+      /** @description Final outcome if determined: stable, dead, conscious */
+      outcome: string | null
+      /** @description True if character is stable (3+ successes) */
+      is_stable: boolean
+      /** @description True if character is dead (3+ failures) */
+      is_dead: boolean
+    }
+    /** DeathSaveStatusResource */
+    DeathSaveStatusResource: {
+      /** @description Current success count (0-3) */
+      death_save_successes: number
+      /** @description Current failure count (0-3) */
+      death_save_failures: number
+      is_stable: string
     }
     /** EntityConditionResource */
     EntityConditionResource: {
@@ -6814,8 +7024,66 @@ export interface components {
       name: string
       description: string | null
     }
-    /** JsonResource */
-    JsonResource: string
+    /** LanguageChoicesResource */
+    LanguageChoicesResource: {
+      race: {
+        known: {
+          id: number
+          name: string
+          slug: string
+          script: string
+        }[]
+        choices: {
+          quantity: number
+          remaining: number
+          selected: number[]
+          options: {
+            id: number
+            name: string
+            slug: string
+            script: string
+          }[]
+        }
+      }
+      background: {
+        known: {
+          id: number
+          name: string
+          slug: string
+          script: string
+        }[]
+        choices: {
+          quantity: number
+          remaining: number
+          selected: number[]
+          options: {
+            id: number
+            name: string
+            slug: string
+            script: string
+          }[]
+        }
+      }
+      feat: {
+        known: {
+          id: number
+          name: string
+          slug: string
+          script: string
+        }[]
+        choices: {
+          quantity: number
+          remaining: number
+          selected: number[]
+          options: {
+            id: number
+            name: string
+            slug: string
+            script: string
+          }[]
+        }
+      }
+    }
     /** LanguageResource */
     LanguageResource: {
       id: number
@@ -6862,6 +7130,11 @@ export interface components {
     MediaUploadRequest: {
       /** Format: binary */
       file: string
+    }
+    /** MessageResource */
+    MessageResource: {
+      /** @description Response message */
+      message: string
     }
     /** ModifierResource */
     ModifierResource: {
@@ -7007,6 +7280,150 @@ export interface components {
         [key: string]: unknown
       } | null
     }
+    /** PendingChoiceResource */
+    PendingChoiceResource: {
+      /** @description Deterministic choice ID: {type}:{source}:{sourceId}:{level}:{group} */
+      id: string
+      /** @description Choice type: proficiency, language, equipment, spell, asi_or_feat, subclass, optional_feature */
+      type: string
+      /** @description Subtype: skill, tool, cantrip, invocation, etc. */
+      subtype: string | null
+      /** @description Source: class, race, background, feat */
+      source: string
+      /** @description Human-readable source name: "Rogue", "High Elf", etc. */
+      source_name: string
+      /** @description Character level when choice became available */
+      level_granted: number
+      /** @description Whether choice blocks completion if unresolved */
+      required: boolean
+      /** @description How many selections needed */
+      quantity: number
+      /** @description Selections still needed (quantity - selected count) */
+      remaining: number
+      /** @description Already chosen option IDs/slugs */
+      selected: string[]
+      /** @description Available options (null if external endpoint) */
+      options: unknown[] | null
+      /** @description URL for dynamic options */
+      options_endpoint: string | null
+      /** @description Type-specific extra data */
+      metadata: unknown[]
+    }
+    /** PendingChoicesResource */
+    PendingChoicesResource: {
+      /** @description All pending choices */
+      choices: {
+        id: string
+        type: string
+        subtype: string | null
+        source: string
+        source_name: string
+        level_granted: number
+        required: boolean
+        quantity: number
+        remaining: number
+        selected: string[]
+        options: unknown[] | null
+        options_endpoint: string | null
+        metadata: unknown[]
+      }[]
+      /** @description Summary statistics */
+      summary: {
+        total_pending: number
+        required_pending: number
+        optional_pending: number
+        by_type: {
+          [key: string]: number
+        }
+        by_source: {
+          [key: string]: number
+        }
+      }
+    }
+    /** ProficiencyChoicesResource */
+    ProficiencyChoicesResource: {
+      class: {
+        [key: string]: {
+          proficiency_type: string
+          proficiency_subcategory: string | null
+          quantity: number
+          remaining: number
+          selected_skills: number[]
+          selected_proficiency_types: number[]
+          options: {
+            type: string
+            skill_id: number | null
+            skill: {
+              id: number
+              name: string
+              slug: string
+              ability_code: string
+            } | null
+            proficiency_type_id: number | null
+            proficiency_type: {
+              id: number
+              name: string
+              slug: string
+              category: string
+            } | null
+          }[]
+        }
+      }
+      race: {
+        [key: string]: {
+          proficiency_type: string
+          proficiency_subcategory: string | null
+          quantity: number
+          remaining: number
+          selected_skills: number[]
+          selected_proficiency_types: number[]
+          options: {
+            type: string
+            skill_id: number | null
+            skill: {
+              id: number
+              name: string
+              slug: string
+              ability_code: string
+            } | null
+            proficiency_type_id: number | null
+            proficiency_type: {
+              id: number
+              name: string
+              slug: string
+              category: string
+            } | null
+          }[]
+        }
+      }
+      background: {
+        [key: string]: {
+          proficiency_type: string
+          proficiency_subcategory: string | null
+          quantity: number
+          remaining: number
+          selected_skills: number[]
+          selected_proficiency_types: number[]
+          options: {
+            type: string
+            skill_id: number | null
+            skill: {
+              id: number
+              name: string
+              slug: string
+              ability_code: string
+            } | null
+            proficiency_type_id: number | null
+            proficiency_type: {
+              id: number
+              name: string
+              slug: string
+              category: string
+            } | null
+          }[]
+        }
+      }
+    }
     /** ProficiencyResource */
     ProficiencyResource: {
       id: number
@@ -7125,6 +7542,41 @@ export interface components {
     ReplaceCharacterClassRequest: {
       class_id: number
       force?: boolean
+    }
+    /**
+         * ResolveChoiceRequest
+         * @description Resolve a pending character choice.
+         *
+         *     This request supports multiple formats depending on the choice type:
+         *
+         *     **Generic Selection** (most choice types):
+         *     ```json
+         *     {"selected": ["option1", "option2"]}
+         *     ```
+         *     The `selected` array contains IDs or slugs of the chosen options.
+         *
+         *     **ASI Choice** (Ability Score Improvement):
+         *     ```json
+         *     {"type": "asi", "increases": {"strength": 2, "dexterity": 1}}
+         *     ```
+         *     The `increases` object maps ability names to increase amounts (1 or 2).
+         *
+         *     **Feat Choice**:
+         *     ```json
+         *     {"type": "feat", "feat_id": 42}
+         *     ```
+         *     The `feat_id` is the ID of the chosen feat.
+         */
+    ResolveChoiceRequest: {
+      /**
+             * @description ASI/Feat specific fields
+             * @enum {string}
+             */
+      type?: 'asi' | 'feat'
+      feat_id?: number
+      /** @description Generic selection (array of IDs or slugs) */
+      selected?: string[]
+      increases?: number[]
     }
     /** SavingThrowResource */
     SavingThrowResource: {
@@ -7310,6 +7762,13 @@ export interface components {
       subclass_name?: string | null
       level_acquired?: number
     }
+    /** SyncResultResource */
+    SyncResultResource: {
+      /** @description Success message */
+      message: string
+      /** @description The synced data */
+      data: unknown[]
+    }
     /** TagResource */
     TagResource: {
       id: string
@@ -7410,14 +7869,39 @@ export interface operations {
     }
     requestBody?: never
     responses: {
-      /** @description Array of `AbilityScoreResource` */
+      /** @description Paginated set */
       200: {
         headers: {
           [name: string]: unknown
         }
         content: {
           'application/json': {
-            data: components['schemas']['AbilityScoreResource'][]
+            data: string[]
+            links: {
+              first: string | null
+              last: string | null
+              prev: string | null
+              next: string | null
+            }
+            meta: {
+              current_page: number
+              from: number | null
+              last_page: number
+              /** @description Generated paginator links. */
+              links: {
+                url: string | null
+                label: string
+                active: boolean
+              }[]
+              /** @description Base path for paginator generated URLs. */
+              path: string | null
+              /** @description Number of items shown per page. */
+              per_page: number
+              /** @description Number of the last item in the slice. */
+              to: number | null
+              /** @description Total number of items being paginated. */
+              total: number
+            }
           }
         }
       }
@@ -7436,14 +7920,14 @@ export interface operations {
     }
     requestBody?: never
     responses: {
-      /** @description `JsonResource` */
+      /** @description `AbilityScoreResource` */
       200: {
         headers: {
           [name: string]: unknown
         }
         content: {
           'application/json': {
-            data: components['schemas']['JsonResource']
+            data: components['schemas']['AbilityScoreResource']
           }
         }
       }
@@ -7578,12 +8062,15 @@ export interface operations {
       }
     }
     responses: {
+      /** @description `AsiChoiceResource` */
       200: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': 200
+          'application/json': {
+            data: components['schemas']['AsiChoiceResource']
+          }
         }
       }
       404: components['responses']['ModelNotFoundException']
@@ -7981,6 +8468,120 @@ export interface operations {
       404: components['responses']['ModelNotFoundException']
     }
   }
+  'characters.pending-choices.index': {
+    parameters: {
+      query?: {
+        type?: string
+      }
+      header?: never
+      path: {
+        /** @description The character ID */
+        character: number
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description `PendingChoicesResource` */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': {
+            data: components['schemas']['PendingChoicesResource']
+          }
+        }
+      }
+      404: components['responses']['ModelNotFoundException']
+    }
+  }
+  'characters.pending-choices.show': {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        /** @description The character ID */
+        character: number
+        choiceId: string
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description `PendingChoiceResource` */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': {
+            data: components['schemas']['PendingChoiceResource']
+          }
+        }
+      }
+      404: components['responses']['ModelNotFoundException']
+    }
+  }
+  'characters.choices.resolve': {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        /** @description The character ID */
+        character: number
+        choiceId: string
+      }
+      cookie?: never
+    }
+    requestBody?: {
+      content: {
+        'application/json': components['schemas']['ResolveChoiceRequest']
+      }
+    }
+    responses: {
+      /** @description `ChoiceResultResource` */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': {
+            data: components['schemas']['ChoiceResultResource']
+          }
+        }
+      }
+      404: components['responses']['ModelNotFoundException']
+      422: components['responses']['ValidationException']
+    }
+  }
+  'characters.choices.undo': {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        /** @description The character ID */
+        character: number
+        choiceId: string
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description `ChoiceResultResource` */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': {
+            data: components['schemas']['ChoiceResultResource']
+          }
+        }
+      }
+      404: components['responses']['ModelNotFoundException']
+    }
+  }
   'characters.classes.index': {
     parameters: {
       query?: never
@@ -8028,7 +8629,7 @@ export interface operations {
           [name: string]: unknown
         }
         content: {
-          'application/json': 201
+          'application/json': Record<string, never>
         }
       }
       404: components['responses']['ModelNotFoundException']
@@ -8058,7 +8659,7 @@ export interface operations {
           [name: string]: unknown
         }
         content: {
-          'application/json': 200
+          'application/json': Record<string, never>
         }
       }
       404: components['responses']['ModelNotFoundException']
@@ -8084,7 +8685,7 @@ export interface operations {
           [name: string]: unknown
         }
         content: {
-          'application/json': 204
+          'application/json': Record<string, never>
         }
       }
       404: components['responses']['ModelNotFoundException']
@@ -8109,7 +8710,7 @@ export interface operations {
           [name: string]: unknown
         }
         content: {
-          'application/json': 200
+          'application/json': Record<string, never>
         }
       }
       404: components['responses']['ModelNotFoundException']
@@ -8138,7 +8739,7 @@ export interface operations {
           [name: string]: unknown
         }
         content: {
-          'application/json': 200
+          'application/json': Record<string, never>
         }
       }
       404: components['responses']['ModelNotFoundException']
@@ -8187,12 +8788,15 @@ export interface operations {
       }
     }
     responses: {
+      /** @description `CharacterConditionResource` */
       200: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': 200
+          'application/json': {
+            data: components['schemas']['CharacterConditionResource']
+          }
         }
       }
       404: components['responses']['ModelNotFoundException']
@@ -8213,13 +8817,12 @@ export interface operations {
     }
     requestBody?: never
     responses: {
-      200: {
+      /** @description No content */
+      204: {
         headers: {
           [name: string]: unknown
         }
-        content: {
-          'application/json': 204
-        }
+        content?: never
       }
       404: components['responses']['ModelNotFoundException']
     }
@@ -8240,12 +8843,15 @@ export interface operations {
       }
     }
     responses: {
+      /** @description `DeathSaveResultResource` */
       200: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': 200
+          'application/json': {
+            data: components['schemas']['DeathSaveResultResource']
+          }
         }
       }
       404: components['responses']['ModelNotFoundException']
@@ -8264,12 +8870,15 @@ export interface operations {
     }
     requestBody?: never
     responses: {
+      /** @description `DeathSaveStatusResource` */
       200: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': 200
+          'application/json': {
+            data: components['schemas']['DeathSaveStatusResource']
+          }
         }
       }
       404: components['responses']['ModelNotFoundException']
@@ -8287,12 +8896,15 @@ export interface operations {
     }
     requestBody?: never
     responses: {
+      /** @description `DeathSaveStatusResource` */
       200: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': 200
+          'application/json': {
+            data: components['schemas']['DeathSaveStatusResource']
+          }
         }
       }
       404: components['responses']['ModelNotFoundException']
@@ -8340,12 +8952,15 @@ export interface operations {
       }
     }
     responses: {
-      200: {
+      /** @description `CharacterEquipmentResource` */
+      201: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': 201
+          'application/json': {
+            data: components['schemas']['CharacterEquipmentResource']
+          }
         }
       }
       404: components['responses']['ModelNotFoundException']
@@ -8366,13 +8981,12 @@ export interface operations {
     }
     requestBody?: never
     responses: {
-      200: {
+      /** @description No content */
+      204: {
         headers: {
           [name: string]: unknown
         }
-        content: {
-          'application/json': 204
-        }
+        content?: never
       }
       404: components['responses']['ModelNotFoundException']
     }
@@ -8395,12 +9009,15 @@ export interface operations {
       }
     }
     responses: {
+      /** @description `CharacterEquipmentResource` */
       200: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': 200
+          'application/json': {
+            data: components['schemas']['CharacterEquipmentResource']
+          }
         }
       }
       404: components['responses']['ModelNotFoundException']
@@ -8445,15 +9062,13 @@ export interface operations {
     }
     requestBody?: never
     responses: {
-      /** @description Array of `CharacterFeatureResource` */
+      /** @description `SyncResultResource` */
       200: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': {
-            data: components['schemas']['CharacterFeatureResource'][]
-          }
+          'application/json': components['schemas']['SyncResultResource']
         }
       }
       404: components['responses']['ModelNotFoundException']
@@ -8472,15 +9087,26 @@ export interface operations {
     }
     requestBody?: never
     responses: {
+      /** @description `MessageResource` */
       200: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': Record<string, never>
+          'application/json': components['schemas']['MessageResource']
         }
       }
       404: components['responses']['ModelNotFoundException']
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': {
+            message: string
+          }
+        }
+      }
     }
   }
   'characters.languages.index': {
@@ -8521,14 +9147,14 @@ export interface operations {
     }
     requestBody?: never
     responses: {
-      /** @description `ChoicesResource` */
+      /** @description `LanguageChoicesResource` */
       200: {
         headers: {
           [name: string]: unknown
         }
         content: {
           'application/json': {
-            data: components['schemas']['ChoicesResource']
+            data: components['schemas']['LanguageChoicesResource']
           }
         }
       }
@@ -8555,12 +9181,13 @@ export interface operations {
       }
     }
     responses: {
+      /** @description `SyncResultResource` */
       200: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': Record<string, never>
+          'application/json': components['schemas']['SyncResultResource']
         }
       }
       404: components['responses']['ModelNotFoundException']
@@ -8579,15 +9206,13 @@ export interface operations {
     }
     requestBody?: never
     responses: {
-      /** @description Array of `CharacterLanguageResource` */
+      /** @description `SyncResultResource` */
       200: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': {
-            data: components['schemas']['CharacterLanguageResource'][]
-          }
+          'application/json': components['schemas']['SyncResultResource']
         }
       }
       404: components['responses']['ModelNotFoundException']
@@ -8610,7 +9235,15 @@ export interface operations {
           [name: string]: unknown
         }
         content: {
-          'application/json': 200
+          'application/json': {
+            previous_level: number
+            new_level: number
+            hp_increase: number
+            new_max_hp: number
+            features_gained: unknown[]
+            spell_slots: unknown[]
+            asi_pending: boolean
+          }
         }
       }
       404: components['responses']['ModelNotFoundException']
@@ -8628,14 +9261,13 @@ export interface operations {
     }
     requestBody?: never
     responses: {
+      /** @description `CharacterNotesGroupedResource` */
       200: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': {
-            data: string
-          }
+          'application/json': components['schemas']['CharacterNotesGroupedResource']
         }
       }
       404: components['responses']['ModelNotFoundException']
@@ -8657,12 +9289,15 @@ export interface operations {
       }
     }
     responses: {
-      200: {
+      /** @description `CharacterNoteResource` */
+      201: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': 201
+          'application/json': {
+            data: components['schemas']['CharacterNoteResource']
+          }
         }
       }
       404: components['responses']['ModelNotFoundException']
@@ -8683,12 +9318,15 @@ export interface operations {
     }
     requestBody?: never
     responses: {
+      /** @description `CharacterNoteResource` */
       200: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': 200
+          'application/json': {
+            data: components['schemas']['CharacterNoteResource']
+          }
         }
       }
       404: components['responses']['ModelNotFoundException']
@@ -8712,12 +9350,15 @@ export interface operations {
       }
     }
     responses: {
+      /** @description `CharacterNoteResource` */
       200: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': 200
+          'application/json': {
+            data: components['schemas']['CharacterNoteResource']
+          }
         }
       }
       404: components['responses']['ModelNotFoundException']
@@ -8738,13 +9379,12 @@ export interface operations {
     }
     requestBody?: never
     responses: {
-      200: {
+      /** @description No content */
+      204: {
         headers: {
           [name: string]: unknown
         }
-        content: {
-          'application/json': 204
-        }
+        content?: never
       }
       404: components['responses']['ModelNotFoundException']
     }
@@ -8787,14 +9427,14 @@ export interface operations {
     }
     requestBody?: never
     responses: {
-      /** @description `ChoicesResource` */
+      /** @description `ProficiencyChoicesResource` */
       200: {
         headers: {
           [name: string]: unknown
         }
         content: {
           'application/json': {
-            data: components['schemas']['ChoicesResource']
+            data: components['schemas']['ProficiencyChoicesResource']
           }
         }
       }
@@ -8823,12 +9463,13 @@ export interface operations {
       }
     }
     responses: {
+      /** @description `SyncResultResource` */
       200: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': Record<string, never>
+          'application/json': components['schemas']['SyncResultResource']
         }
       }
       404: components['responses']['ModelNotFoundException']
@@ -8847,15 +9488,13 @@ export interface operations {
     }
     requestBody?: never
     responses: {
-      /** @description Array of `CharacterProficiencyResource` */
+      /** @description `SyncResultResource` */
       200: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': {
-            data: components['schemas']['CharacterProficiencyResource'][]
-          }
+          'application/json': components['schemas']['SyncResultResource']
         }
       }
       404: components['responses']['ModelNotFoundException']
@@ -8907,12 +9546,15 @@ export interface operations {
       }
     }
     responses: {
-      200: {
+      /** @description `CharacterSpellResource` */
+      201: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': 201
+          'application/json': {
+            data: components['schemas']['CharacterSpellResource']
+          }
         }
       }
       404: components['responses']['ModelNotFoundException']
@@ -8963,13 +9605,12 @@ export interface operations {
     }
     requestBody?: never
     responses: {
-      200: {
+      /** @description No content */
+      204: {
         headers: {
           [name: string]: unknown
         }
-        content: {
-          'application/json': 204
-        }
+        content?: never
       }
       404: components['responses']['ModelNotFoundException']
     }
@@ -8988,12 +9629,15 @@ export interface operations {
     }
     requestBody?: never
     responses: {
+      /** @description `CharacterSpellResource` */
       200: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': 200
+          'application/json': {
+            data: components['schemas']['CharacterSpellResource']
+          }
         }
       }
       404: components['responses']['ModelNotFoundException']
@@ -9013,12 +9657,15 @@ export interface operations {
     }
     requestBody?: never
     responses: {
+      /** @description `CharacterSpellResource` */
       200: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': 200
+          'application/json': {
+            data: components['schemas']['CharacterSpellResource']
+          }
         }
       }
       404: components['responses']['ModelNotFoundException']
@@ -9250,14 +9897,39 @@ export interface operations {
     }
     requestBody?: never
     responses: {
-      /** @description Array of `ConditionResource` */
+      /** @description Paginated set */
       200: {
         headers: {
           [name: string]: unknown
         }
         content: {
           'application/json': {
-            data: components['schemas']['ConditionResource'][]
+            data: string[]
+            links: {
+              first: string | null
+              last: string | null
+              prev: string | null
+              next: string | null
+            }
+            meta: {
+              current_page: number
+              from: number | null
+              last_page: number
+              /** @description Generated paginator links. */
+              links: {
+                url: string | null
+                label: string
+                active: boolean
+              }[]
+              /** @description Base path for paginator generated URLs. */
+              path: string | null
+              /** @description Number of items shown per page. */
+              per_page: number
+              /** @description Number of the last item in the slice. */
+              to: number | null
+              /** @description Total number of items being paginated. */
+              total: number
+            }
           }
         }
       }
@@ -9276,14 +9948,14 @@ export interface operations {
     }
     requestBody?: never
     responses: {
-      /** @description `JsonResource` */
+      /** @description `ConditionResource` */
       200: {
         headers: {
           [name: string]: unknown
         }
         content: {
           'application/json': {
-            data: components['schemas']['JsonResource']
+            data: components['schemas']['ConditionResource']
           }
         }
       }
@@ -9512,14 +10184,39 @@ export interface operations {
     }
     requestBody?: never
     responses: {
-      /** @description Array of `DamageTypeResource` */
+      /** @description Paginated set */
       200: {
         headers: {
           [name: string]: unknown
         }
         content: {
           'application/json': {
-            data: components['schemas']['DamageTypeResource'][]
+            data: string[]
+            links: {
+              first: string | null
+              last: string | null
+              prev: string | null
+              next: string | null
+            }
+            meta: {
+              current_page: number
+              from: number | null
+              last_page: number
+              /** @description Generated paginator links. */
+              links: {
+                url: string | null
+                label: string
+                active: boolean
+              }[]
+              /** @description Base path for paginator generated URLs. */
+              path: string | null
+              /** @description Number of items shown per page. */
+              per_page: number
+              /** @description Number of the last item in the slice. */
+              to: number | null
+              /** @description Total number of items being paginated. */
+              total: number
+            }
           }
         }
       }
@@ -9538,14 +10235,14 @@ export interface operations {
     }
     requestBody?: never
     responses: {
-      /** @description `JsonResource` */
+      /** @description `DamageTypeResource` */
       200: {
         headers: {
           [name: string]: unknown
         }
         content: {
           'application/json': {
-            data: components['schemas']['JsonResource']
+            data: components['schemas']['DamageTypeResource']
           }
         }
       }
@@ -9686,12 +10383,15 @@ export interface operations {
       }
     }
     responses: {
-      200: {
+      /** @description `FeatureSelectionResource` */
+      201: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': 201
+          'application/json': {
+            data: components['schemas']['FeatureSelectionResource']
+          }
         }
       }
       404: components['responses']['ModelNotFoundException']
@@ -9770,13 +10470,12 @@ export interface operations {
     }
     requestBody?: never
     responses: {
-      200: {
+      /** @description No content */
+      204: {
         headers: {
           [name: string]: unknown
         }
-        content: {
-          'application/json': 204
-        }
+        content?: never
       }
       404: components['responses']['ModelNotFoundException']
     }
@@ -10142,14 +10841,39 @@ export interface operations {
     }
     requestBody?: never
     responses: {
-      /** @description Array of `LanguageResource` */
+      /** @description Paginated set */
       200: {
         headers: {
           [name: string]: unknown
         }
         content: {
           'application/json': {
-            data: components['schemas']['LanguageResource'][]
+            data: string[]
+            links: {
+              first: string | null
+              last: string | null
+              prev: string | null
+              next: string | null
+            }
+            meta: {
+              current_page: number
+              from: number | null
+              last_page: number
+              /** @description Generated paginator links. */
+              links: {
+                url: string | null
+                label: string
+                active: boolean
+              }[]
+              /** @description Base path for paginator generated URLs. */
+              path: string | null
+              /** @description Number of items shown per page. */
+              per_page: number
+              /** @description Number of the last item in the slice. */
+              to: number | null
+              /** @description Total number of items being paginated. */
+              total: number
+            }
           }
         }
       }
@@ -10168,14 +10892,14 @@ export interface operations {
     }
     requestBody?: never
     responses: {
-      /** @description `JsonResource` */
+      /** @description `LanguageResource` */
       200: {
         headers: {
           [name: string]: unknown
         }
         content: {
           'application/json': {
-            data: components['schemas']['JsonResource']
+            data: components['schemas']['LanguageResource']
           }
         }
       }
@@ -11537,14 +12261,39 @@ export interface operations {
     }
     requestBody?: never
     responses: {
-      /** @description Array of `SpellSchoolResource` */
+      /** @description Paginated set */
       200: {
         headers: {
           [name: string]: unknown
         }
         content: {
           'application/json': {
-            data: components['schemas']['SpellSchoolResource'][]
+            data: string[]
+            links: {
+              first: string | null
+              last: string | null
+              prev: string | null
+              next: string | null
+            }
+            meta: {
+              current_page: number
+              from: number | null
+              last_page: number
+              /** @description Generated paginator links. */
+              links: {
+                url: string | null
+                label: string
+                active: boolean
+              }[]
+              /** @description Base path for paginator generated URLs. */
+              path: string | null
+              /** @description Number of items shown per page. */
+              per_page: number
+              /** @description Number of the last item in the slice. */
+              to: number | null
+              /** @description Total number of items being paginated. */
+              total: number
+            }
           }
         }
       }
@@ -11563,14 +12312,14 @@ export interface operations {
     }
     requestBody?: never
     responses: {
-      /** @description `JsonResource` */
+      /** @description `SpellSchoolResource` */
       200: {
         headers: {
           [name: string]: unknown
         }
         content: {
           'application/json': {
-            data: components['schemas']['JsonResource']
+            data: components['schemas']['SpellSchoolResource']
           }
         }
       }
@@ -11672,12 +12421,15 @@ export interface operations {
       }
     }
     responses: {
+      /** @description `SpellSlotsResource` */
       200: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': 200
+          'application/json': {
+            data: components['schemas']['SpellSlotsResource']
+          }
         }
       }
       404: components['responses']['ModelNotFoundException']

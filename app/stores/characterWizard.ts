@@ -52,15 +52,7 @@ export interface WizardSelections {
   alignment: CharacterAlignment | null
 }
 
-export interface PendingChoices {
-  proficiencies: Map<string, Set<number>>
-  /** Tracks whether each proficiency choice key uses skill_ids or proficiency_type_ids */
-  proficiencyChoiceTypes: Map<string, 'skill' | 'proficiency_type'>
-  languages: Map<string, Set<number>>
-  equipment: Map<string, number>
-  equipmentItems: Map<string, number>
-  spells: Set<number>
-}
+// Note: PendingChoices interface removed - choices are now managed by useUnifiedChoices composable
 
 export interface CharacterSummaryData {
   character: {
@@ -108,16 +100,7 @@ function defaultSelections(): WizardSelections {
   }
 }
 
-function defaultPendingChoices(): PendingChoices {
-  return {
-    proficiencies: new Map(),
-    proficiencyChoiceTypes: new Map(),
-    languages: new Map(),
-    equipment: new Map(),
-    equipmentItems: new Map(),
-    spells: new Set()
-  }
-}
+// Note: defaultPendingChoices removed - choices are now managed by useUnifiedChoices composable
 
 // ════════════════════════════════════════════════════════════════
 // STORE
@@ -142,11 +125,7 @@ export const useCharacterWizardStore = defineStore('characterWizard', () => {
 
   const selections = ref<WizardSelections>(defaultSelections())
 
-  // ══════════════════════════════════════════════════════════════
-  // PENDING CHOICES (multi-select before save)
-  // ══════════════════════════════════════════════════════════════
-
-  const pendingChoices = ref<PendingChoices>(defaultPendingChoices())
+  // Note: pendingChoices removed - choices are now managed by useUnifiedChoices composable
 
   // ══════════════════════════════════════════════════════════════
   // BACKEND DATA (fetched, read-only for display)
@@ -416,10 +395,8 @@ export const useCharacterWizardStore = defineStore('characterWizard', () => {
       selections.value.class = classDetail.data
       selections.value.subclass = null // Clear subclass when class changes
 
-      // Clear any pending choices that depend on class
-      pendingChoices.value.proficiencies = new Map()
-      pendingChoices.value.equipment = new Map()
-      pendingChoices.value.spells = new Set()
+      // Note: Pending choices are now managed by useUnifiedChoices composable
+      // Backend automatically regenerates choices when class changes
 
       await syncWithBackend()
     } catch (err) {
@@ -551,325 +528,11 @@ export const useCharacterWizardStore = defineStore('characterWizard', () => {
     }
   }
 
-  // ══════════════════════════════════════════════════════════════
-  // ACTIONS: Save Pending Choices to Backend
-  // ══════════════════════════════════════════════════════════════
-
-  /**
-   * Save proficiency choices to backend
-   * Makes separate API calls for each source:choice_group
-   * Sends skill_ids for skill choices, proficiency_type_ids for tool/other choices
-   */
-  async function saveProficiencyChoices(): Promise<void> {
-    if (!characterId.value) return
-    if (pendingChoices.value.proficiencies.size === 0) return
-
-    isLoading.value = true
-    error.value = null
-
-    try {
-      // Key format is "source:choiceGroup" (e.g., "class:skill_choice_1")
-      for (const [key, selectedIds] of pendingChoices.value.proficiencies) {
-        if (selectedIds.size === 0) continue
-
-        const [source, choiceGroup] = key.split(':')
-
-        // Determine whether to send skill_ids or proficiency_type_ids
-        const choiceType = pendingChoices.value.proficiencyChoiceTypes.get(key) ?? 'skill'
-        const body: Record<string, unknown> = {
-          source,
-          choice_group: choiceGroup
-        }
-
-        if (choiceType === 'skill') {
-          body.skill_ids = Array.from(selectedIds)
-        } else {
-          body.proficiency_type_ids = Array.from(selectedIds)
-        }
-
-        await apiFetch(`/characters/${characterId.value}/proficiency-choices`, {
-          method: 'POST',
-          body
-        })
-      }
-
-      // Clear pending choices after successful save
-      pendingChoices.value.proficiencies = new Map()
-      pendingChoices.value.proficiencyChoiceTypes = new Map()
-
-      await syncWithBackend()
-    } catch (err) {
-      error.value = err instanceof Error ? err.message : 'Failed to save proficiency choices'
-      throw err
-    } finally {
-      isLoading.value = false
-    }
-  }
-
-  /**
-   * Save language choices to backend
-   * Makes separate API calls for each source (race, background)
-   * API expects: { source: 'race'|'background', language_ids: number[] }
-   */
-  async function saveLanguageChoices(): Promise<void> {
-    if (!characterId.value) return
-    if (pendingChoices.value.languages.size === 0) return
-
-    isLoading.value = true
-    error.value = null
-
-    try {
-      // Make separate API calls for each source
-      const promises: Promise<unknown>[] = []
-      for (const [source, ids] of pendingChoices.value.languages) {
-        if (ids.size > 0) {
-          promises.push(
-            apiFetch(`/characters/${characterId.value}/language-choices`, {
-              method: 'POST',
-              body: {
-                source,
-                language_ids: Array.from(ids)
-              }
-            })
-          )
-        }
-      }
-
-      await Promise.all(promises)
-
-      // Clear pending choices after successful save
-      pendingChoices.value.languages = new Map()
-
-      await syncWithBackend()
-    } catch (err) {
-      error.value = err instanceof Error ? err.message : 'Failed to save language choices'
-      throw err
-    } finally {
-      isLoading.value = false
-    }
-  }
-
-  /**
-   * Clear existing equipment before re-saving
-   * Used to avoid duplicates when saving equipment choices
-   */
-  async function clearExistingEquipment(): Promise<void> {
-    if (!characterId.value) return
-
-    try {
-      const response = await apiFetch<{ data: Array<{ id: number }> }>(
-        `/characters/${characterId.value}/equipment`
-      )
-
-      const items = response?.data ?? []
-      for (const item of items) {
-        await apiFetch(`/characters/${characterId.value}/equipment/${item.id}`, {
-          method: 'DELETE'
-        })
-      }
-    } catch {
-      // If fetching equipment fails (e.g., no equipment yet), continue with save
-    }
-  }
-
-  /**
-   * Save equipment choices to backend
-   * Iterates through selected equipment options and saves each item individually
-   */
-  async function saveEquipmentChoices(): Promise<void> {
-    if (!characterId.value) return
-
-    isLoading.value = true
-    error.value = null
-
-    try {
-      // First, clear any existing equipment to avoid duplicates on re-save
-      await clearExistingEquipment()
-
-      // Combine equipment from class and background
-      const allItems = [
-        ...(selections.value.class?.equipment ?? []),
-        ...(selections.value.background?.equipment ?? [])
-      ]
-
-      // Process choice equipment
-      for (const [group, optionId] of pendingChoices.value.equipment) {
-        const selectedOption = allItems.find(item => item.id === optionId)
-        if (!selectedOption) continue
-
-        // If option has choice_items, process each
-        if (selectedOption.choice_items?.length) {
-          for (const [index, choiceItem] of selectedOption.choice_items.entries()) {
-            let itemId: number | undefined
-            const quantity = choiceItem.quantity
-
-            if (choiceItem.item) {
-              // Fixed item - use directly
-              itemId = choiceItem.item.id
-            } else if (choiceItem.proficiency_type) {
-              // Category item - get user's selection
-              const key = `${group}:${selectedOption.choice_option}:${index}`
-              itemId = pendingChoices.value.equipmentItems.get(key)
-              if (!itemId) continue
-            } else {
-              continue
-            }
-
-            await apiFetch(`/characters/${characterId.value}/equipment`, {
-              method: 'POST',
-              body: { item_id: itemId, quantity }
-            })
-          }
-        } else if (selectedOption.item) {
-          // Simple choice with direct item reference
-          await apiFetch(`/characters/${characterId.value}/equipment`, {
-            method: 'POST',
-            body: { item_id: selectedOption.item.id, quantity: selectedOption.quantity }
-          })
-        }
-      }
-
-      // Also add fixed equipment (both database items and flavor items)
-      const fixedEquipment = allItems.filter(item => !item.is_choice)
-      for (const item of fixedEquipment) {
-        if (item.item) {
-          // Database item at top level - save with item_id
-          await apiFetch(`/characters/${characterId.value}/equipment`, {
-            method: 'POST',
-            body: { item_id: item.item.id, quantity: item.quantity }
-          })
-        } else if (item.choice_items?.[0]?.item) {
-          // Database item inside choice_items (e.g., Leather armor, Dagger)
-          const choiceItem = item.choice_items[0]
-          const choiceItemRef = choiceItem.item!
-          await apiFetch(`/characters/${characterId.value}/equipment`, {
-            method: 'POST',
-            body: { item_id: choiceItemRef.id, quantity: choiceItem.quantity ?? item.quantity }
-          })
-        } else if (item.description) {
-          // Flavor item - save with custom_name
-          await apiFetch(`/characters/${characterId.value}/equipment`, {
-            method: 'POST',
-            body: { custom_name: item.description, quantity: item.quantity }
-          })
-        }
-      }
-
-      // Clear pending choices after successful save
-      pendingChoices.value.equipment = new Map()
-      pendingChoices.value.equipmentItems = new Map()
-
-      await syncWithBackend()
-    } catch (err) {
-      error.value = err instanceof Error ? err.message : 'Failed to save equipment choices'
-      throw err
-    } finally {
-      isLoading.value = false
-    }
-  }
-
-  /**
-   * Save spell choices to backend
-   * Posts each selected spell to the character's spell list
-   */
-  async function saveSpellChoices(): Promise<void> {
-    if (!characterId.value) return
-    if (pendingChoices.value.spells.size === 0) return
-
-    isLoading.value = true
-    error.value = null
-
-    try {
-      // Post all selected spells
-      const spellIds = Array.from(pendingChoices.value.spells)
-
-      // Send all spell IDs in a single request
-      await apiFetch(`/characters/${characterId.value}/spells`, {
-        method: 'POST',
-        body: { spell_ids: spellIds }
-      })
-
-      // Clear pending choices after successful save
-      pendingChoices.value.spells = new Set()
-
-      await syncWithBackend()
-    } catch (err) {
-      error.value = err instanceof Error ? err.message : 'Failed to save spell choices'
-      throw err
-    } finally {
-      isLoading.value = false
-    }
-  }
-
-  // ══════════════════════════════════════════════════════════════
-  // ACTIONS: Pending Choices (Local State)
-  // ══════════════════════════════════════════════════════════════
-
-  /**
-   * Toggle a proficiency selection
-   * @param key - The choice key in format "source:choiceGroup"
-   * @param id - The skill ID or proficiency_type ID
-   * @param choiceType - Whether this is a 'skill' or 'proficiency_type' choice (defaults to 'skill')
-   */
-  function toggleProficiencyChoice(key: string, id: number, choiceType: 'skill' | 'proficiency_type' = 'skill'): void {
-    const current = pendingChoices.value.proficiencies.get(key) ?? new Set()
-    const updated = new Set(current)
-
-    if (updated.has(id)) {
-      updated.delete(id)
-    } else {
-      updated.add(id)
-    }
-
-    pendingChoices.value.proficiencies = new Map(
-      pendingChoices.value.proficiencies.set(key, updated)
-    )
-
-    // Track the choice type for this key
-    pendingChoices.value.proficiencyChoiceTypes = new Map(
-      pendingChoices.value.proficiencyChoiceTypes.set(key, choiceType)
-    )
-  }
-
-  /**
-   * Toggle a language selection
-   */
-  function toggleLanguageChoice(source: string, id: number): void {
-    const current = pendingChoices.value.languages.get(source) ?? new Set()
-    const updated = new Set(current)
-
-    if (updated.has(id)) {
-      updated.delete(id)
-    } else {
-      updated.add(id)
-    }
-
-    pendingChoices.value.languages = new Map(
-      pendingChoices.value.languages.set(source, updated)
-    )
-  }
-
-  /**
-   * Set equipment choice
-   */
-  function setEquipmentChoice(choiceGroup: string, optionId: number): void {
-    pendingChoices.value.equipment = new Map(
-      pendingChoices.value.equipment.set(choiceGroup, optionId)
-    )
-  }
-
-  /**
-   * Toggle spell selection
-   */
-  function toggleSpellChoice(spellId: number): void {
-    const updated = new Set(pendingChoices.value.spells)
-    if (updated.has(spellId)) {
-      updated.delete(spellId)
-    } else {
-      updated.add(spellId)
-    }
-    pendingChoices.value.spells = updated
-  }
+  // Note: Save pending choices methods removed - choices are now managed by useUnifiedChoices composable
+  // The following methods were removed:
+  // - saveProficiencyChoices, saveLanguageChoices, saveEquipmentChoices, saveSpellChoices
+  // - toggleProficiencyChoice, toggleLanguageChoice, setEquipmentChoice, toggleSpellChoice
+  // - clearExistingEquipment
 
   // ══════════════════════════════════════════════════════════════
   // ACTIONS: Source Selection
@@ -893,7 +556,7 @@ export const useCharacterWizardStore = defineStore('characterWizard', () => {
     characterId.value = null
     selectedSources.value = []
     selections.value = defaultSelections()
-    pendingChoices.value = defaultPendingChoices()
+    // Note: pendingChoices removed - choices are managed by useUnifiedChoices composable
     stats.value = null
     summary.value = null
     isLoading.value = false
@@ -909,7 +572,7 @@ export const useCharacterWizardStore = defineStore('characterWizard', () => {
     characterId,
     selectedSources,
     selections,
-    pendingChoices,
+    // Note: pendingChoices removed - choices managed by useUnifiedChoices composable
     stats,
     summary,
     isLoading,
@@ -943,17 +606,9 @@ export const useCharacterWizardStore = defineStore('characterWizard', () => {
     saveAbilityScores,
     saveDetails,
 
-    // Actions: Pending choices (local state)
-    toggleProficiencyChoice,
-    toggleLanguageChoice,
-    setEquipmentChoice,
-    toggleSpellChoice,
-
-    // Actions: Save pending choices to backend
-    saveProficiencyChoices,
-    saveLanguageChoices,
-    saveEquipmentChoices,
-    saveSpellChoices,
+    // Note: Pending choice actions removed - use useUnifiedChoices composable instead
+    // Removed: toggleProficiencyChoice, toggleLanguageChoice, setEquipmentChoice, toggleSpellChoice
+    // Removed: saveProficiencyChoices, saveLanguageChoices, saveEquipmentChoices, saveSpellChoices
 
     // Actions: Sources
     setSelectedSources,
