@@ -156,4 +156,47 @@ test.describe('Character Creation Wizard', () => {
       await expect(page).toHaveURL(/\/characters\/new\/class/)
     })
   })
+
+  test.describe('Step 3: Class', () => {
+    test.beforeEach(async ({ page }) => {
+      await goToStep(page, 'class')
+    })
+
+    test('displays class selection with correct title', async ({ page }) => {
+      await expect(page.getByRole('heading', { name: /choose your class/i })).toBeVisible()
+    })
+
+    test('displays search input', async ({ page }) => {
+      await expect(page.locator('input[placeholder*="Search classes"]')).toBeVisible()
+    })
+
+    test('displays Bard class card', async ({ page }) => {
+      await expect(page.getByText('Bard')).toBeVisible()
+    })
+
+    test('can search for Bard', async ({ page }) => {
+      await page.locator('input[placeholder*="Search classes"]').fill('Bard')
+      await expect(page.getByText('Bard')).toBeVisible()
+    })
+
+    test('shows spellcasting info when Bard selected', async ({ page }) => {
+      // Click on Bard
+      await page.getByText('Bard').first().click()
+
+      // Should show info that Bard is a spellcaster
+      await expect(page.getByText(/spellcasting class/i)).toBeVisible()
+    })
+
+    test('can select Bard and continue', async ({ page }) => {
+      // Select Bard
+      await page.getByText('Bard').first().click()
+
+      // Click Continue
+      await page.getByRole('button', { name: /continue with bard/i }).click()
+      await waitForLoading(page)
+
+      // Should skip subclass (Bard picks at level 3) and go to background
+      await expect(page).toHaveURL(/\/characters\/new\/background/)
+    })
+  })
 })
