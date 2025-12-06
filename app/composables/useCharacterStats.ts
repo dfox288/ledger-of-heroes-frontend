@@ -22,8 +22,8 @@ import type { CharacterStats, AbilityScoreCode } from '~/types/character'
 export interface AbilityScoreDisplay {
   code: AbilityScoreCode
   name: string
-  score: number
-  modifier: number
+  score: number | null
+  modifier: number | null
   formattedModifier: string
   formatted: string
 }
@@ -31,7 +31,7 @@ export interface AbilityScoreDisplay {
 export interface SavingThrowDisplay {
   code: AbilityScoreCode
   name: string
-  bonus: number
+  bonus: number | null
   formattedBonus: string
   isProficient: boolean
 }
@@ -145,7 +145,10 @@ export function useCharacterStats(characterId: Ref<number | null>) {
       const bonus = stats.value!.saving_throws[code]
       const abilityMod = stats.value!.ability_scores[code].modifier
       // Proficient if save bonus > ability modifier (includes prof bonus)
-      const isProficient = bonus >= abilityMod + profBonus
+      // Handle null values - default to not proficient if either is null
+      const isProficient = bonus !== null && abilityMod !== null
+        ? bonus >= abilityMod + profBonus
+        : false
 
       return {
         code,

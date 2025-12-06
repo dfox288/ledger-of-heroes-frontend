@@ -60,10 +60,10 @@ const sourceLabels: Record<string, string> = {
               class="bg-gray-50 dark:bg-gray-800 rounded-lg p-3"
             >
               <div class="font-medium text-gray-900 dark:text-white">
-                {{ feature.feature.name }}
+                {{ feature.feature?.name ?? 'Unknown Feature' }}
               </div>
               <div
-                v-if="feature.feature.description"
+                v-if="feature.feature?.description"
                 class="text-sm text-gray-600 dark:text-gray-400 mt-1 line-clamp-2"
               >
                 {{ feature.feature.description }}

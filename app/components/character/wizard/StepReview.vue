@@ -377,7 +377,7 @@ function getOrdinalSuffix(n: number): string {
             variant="subtle"
             size="md"
           >
-            {{ lang.language.name }}
+            {{ lang.language?.name ?? 'Unknown' }}
           </UBadge>
         </div>
         <div
@@ -415,7 +415,7 @@ function getOrdinalSuffix(n: number): string {
             class="w-4 h-4 text-gray-400 flex-shrink-0"
           />
           <span class="text-gray-700 dark:text-gray-300">
-            {{ item.custom_name || item.item?.name || item.description || 'Unknown item' }}
+            {{ item.custom_name || item.item?.name || item.custom_description || 'Unknown item' }}
           </span>
           <span
             v-if="item.quantity > 1"

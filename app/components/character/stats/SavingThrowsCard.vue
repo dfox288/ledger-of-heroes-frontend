@@ -56,9 +56,9 @@ defineProps<Props>()
         <span
           class="font-mono text-lg font-semibold"
           :class="{
-            'text-green-600 dark:text-green-400': save.bonus > 0,
-            'text-gray-600 dark:text-gray-400': save.bonus === 0,
-            'text-red-600 dark:text-red-400': save.bonus < 0
+            'text-green-600 dark:text-green-400': (save.bonus ?? 0) > 0,
+            'text-gray-600 dark:text-gray-400': save.bonus === 0 || save.bonus === null,
+            'text-red-600 dark:text-red-400': (save.bonus ?? 0) < 0
           }"
         >
           {{ save.formattedBonus }}

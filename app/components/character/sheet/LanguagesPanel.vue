@@ -27,7 +27,7 @@ defineProps<{
         variant="subtle"
         size="md"
       >
-        {{ lang.language.name }}
+        {{ lang.language?.name ?? 'Unknown' }}
       </UBadge>
     </div>
   </div>

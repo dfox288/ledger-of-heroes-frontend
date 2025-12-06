@@ -37,7 +37,7 @@ defineProps<{
             class="w-5 h-5 text-gray-400"
           />
           <span class="text-gray-900 dark:text-white">
-            {{ item.custom_name ?? item.item?.name ?? item.description ?? 'Unknown item' }}
+            {{ item.custom_name ?? item.item?.name ?? item.custom_description ?? 'Unknown item' }}
           </span>
         </div>
         <span
