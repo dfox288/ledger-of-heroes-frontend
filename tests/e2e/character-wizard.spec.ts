@@ -230,4 +230,75 @@ test.describe('Character Creation Wizard', () => {
       await expect(page).toHaveURL(/\/characters\/new\/abilities/)
     })
   })
+
+  test.describe('Step 5: Abilities', () => {
+    test.beforeEach(async ({ page }) => {
+      await goToStep(page, 'abilities')
+    })
+
+    test('displays abilities step with correct title', async ({ page }) => {
+      await expect(page.getByRole('heading', { name: /assign ability scores/i })).toBeVisible()
+    })
+
+    test('displays method selector with three options', async ({ page }) => {
+      await expect(page.getByRole('button', { name: 'Standard Array' })).toBeVisible()
+      await expect(page.getByRole('button', { name: 'Point Buy' })).toBeVisible()
+      await expect(page.getByRole('button', { name: 'Manual' })).toBeVisible()
+    })
+
+    test('can switch to Manual method', async ({ page }) => {
+      // Click Manual button
+      await page.getByRole('button', { name: 'Manual' }).click()
+
+      // Should show number inputs for each ability
+      await expect(page.getByText(/enter your ability scores/i)).toBeVisible()
+    })
+
+    test('can enter ability scores manually', async ({ page }) => {
+      // Switch to Manual
+      await page.getByRole('button', { name: 'Manual' }).click()
+
+      // Fill in ability scores using data-testid
+      await page.locator('[data-testid="input-strength"]').fill('8')
+      await page.locator('[data-testid="input-dexterity"]').fill('14')
+      await page.locator('[data-testid="input-constitution"]').fill('13')
+      await page.locator('[data-testid="input-intelligence"]').fill('10')
+      await page.locator('[data-testid="input-wisdom"]').fill('12')
+      await page.locator('[data-testid="input-charisma"]').fill('15')
+
+      // Save button should be enabled
+      await expect(page.locator('[data-testid="save-abilities"]')).toBeEnabled()
+    })
+
+    test('validates ability score range (3-20)', async ({ page }) => {
+      // Switch to Manual
+      await page.getByRole('button', { name: 'Manual' }).click()
+
+      // Enter invalid score (too low)
+      await page.locator('[data-testid="input-strength"]').fill('2')
+
+      // Save button should be disabled
+      await expect(page.locator('[data-testid="save-abilities"]')).toBeDisabled()
+    })
+
+    test('can save abilities and continue', async ({ page }) => {
+      // Switch to Manual
+      await page.getByRole('button', { name: 'Manual' }).click()
+
+      // Fill valid scores
+      await page.locator('[data-testid="input-strength"]').fill('8')
+      await page.locator('[data-testid="input-dexterity"]').fill('14')
+      await page.locator('[data-testid="input-constitution"]').fill('13')
+      await page.locator('[data-testid="input-intelligence"]').fill('10')
+      await page.locator('[data-testid="input-wisdom"]').fill('12')
+      await page.locator('[data-testid="input-charisma"]').fill('15')
+
+      // Click Save & Continue
+      await page.locator('[data-testid="save-abilities"]').click()
+      await waitForLoading(page)
+
+      // Should proceed to proficiencies
+      await expect(page).toHaveURL(/\/characters\/new\/proficiencies/)
+    })
+  })
 })
