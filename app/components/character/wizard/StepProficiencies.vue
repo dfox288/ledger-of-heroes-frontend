@@ -402,8 +402,11 @@ async function handleContinue() {
       }
     }
 
+    // Sync store with backend to update hasProficiencyChoices
+    await store.syncWithBackend()
+
     // Move to next step
-    nextStep()
+    await nextStep()
   } catch (err) {
     console.error('Failed to save proficiency choices:', err)
     toast.add({

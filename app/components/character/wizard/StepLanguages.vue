@@ -32,8 +32,8 @@ onMounted(async () => {
   await fetchChoices('language')
 })
 
-// Local selections: Map<choiceId, Set<number>>
-const localSelections = ref<Map<string, Set<number>>>(new Map())
+// Local selections: Map<choiceId, Set<slug>> - stored as strings for API compatibility
+const localSelections = ref<Map<string, Set<string>>>(new Map())
 
 // Get language choices grouped by source
 const languageChoicesBySource = computed(() => {
@@ -95,14 +95,14 @@ function getSelectedCount(choiceId: string): number {
 }
 
 // Check if a language is selected in this choice
-function isLanguageSelected(choiceId: string, languageId: number): boolean {
-  return localSelections.value.get(choiceId)?.has(languageId) ?? false
+function isLanguageSelected(choiceId: string, slug: string): boolean {
+  return localSelections.value.get(choiceId)?.has(slug) ?? false
 }
 
 // Check if a language is selected in ANY OTHER choice (cross-choice conflict)
-function isLanguageSelectedElsewhere(choiceId: string, languageId: number): boolean {
-  for (const [otherChoiceId, selectedIds] of localSelections.value.entries()) {
-    if (otherChoiceId !== choiceId && selectedIds.has(languageId)) {
+function isLanguageSelectedElsewhere(choiceId: string, slug: string): boolean {
+  for (const [otherChoiceId, selectedSlugs] of localSelections.value.entries()) {
+    if (otherChoiceId !== choiceId && selectedSlugs.has(slug)) {
       return true
     }
   }
@@ -110,24 +110,24 @@ function isLanguageSelectedElsewhere(choiceId: string, languageId: number): bool
 }
 
 // Handle language toggle
-function handleLanguageToggle(choice: PendingChoice, languageId: number) {
+function handleLanguageToggle(choice: PendingChoice, slug: string) {
   const current = getSelectedCount(choice.id)
-  const isSelected = isLanguageSelected(choice.id, languageId)
+  const isSelected = isLanguageSelected(choice.id, slug)
 
   // Don't allow selecting more than quantity (unless deselecting)
   if (!isSelected && current >= choice.quantity) return
 
   // Don't allow selecting a language already chosen from another choice
-  if (!isSelected && isLanguageSelectedElsewhere(choice.id, languageId)) return
+  if (!isSelected && isLanguageSelectedElsewhere(choice.id, slug)) return
 
   // Toggle the selection
-  const selections = localSelections.value.get(choice.id) ?? new Set<number>()
+  const selections = localSelections.value.get(choice.id) ?? new Set<string>()
   const updated = new Set(selections)
 
-  if (updated.has(languageId)) {
-    updated.delete(languageId)
+  if (updated.has(slug)) {
+    updated.delete(slug)
   } else {
-    updated.add(languageId)
+    updated.add(slug)
   }
 
   localSelections.value.set(choice.id, updated)
@@ -151,10 +151,10 @@ async function handleContinue() {
 
   try {
     // Resolve each choice
-    for (const [choiceId, selectedIds] of localSelections.value.entries()) {
-      if (selectedIds.size > 0) {
+    for (const [choiceId, selectedSlugs] of localSelections.value.entries()) {
+      if (selectedSlugs.size > 0) {
         await resolveChoice(choiceId, {
-          selected: Array.from(selectedIds)
+          selected: Array.from(selectedSlugs)
         })
       }
     }
@@ -162,7 +162,10 @@ async function handleContinue() {
     // Clear local selections
     localSelections.value.clear()
 
-    nextStep()
+    // Sync store with backend to update hasLanguageChoices
+    await store.syncWithBackend()
+
+    await nextStep()
   } catch (e) {
     console.error('Failed to save language choices:', e)
     toast.add({
@@ -284,36 +287,36 @@ async function handleContinue() {
           <!-- Language options grid -->
           <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
             <button
-              v-for="option in (data.choice.options as Array<{ id: number, name: string, script?: string }>)"
-              :key="option.id"
+              v-for="option in (data.choice.options as Array<{ id: number, slug: string, name: string, script?: string }>)"
+              :key="option.slug"
               type="button"
               class="language-option p-3 rounded-lg border text-left transition-all"
               :class="{
-                'border-primary bg-primary/10': isLanguageSelected(data.choice.id, option.id),
-                'border-gray-200 dark:border-gray-700 hover:border-primary/50': !isLanguageSelected(data.choice.id, option.id) && !isLanguageSelectedElsewhere(data.choice.id, option.id),
-                'border-gray-200 dark:border-gray-700 opacity-50 cursor-not-allowed': isLanguageSelectedElsewhere(data.choice.id, option.id)
+                'border-primary bg-primary/10': isLanguageSelected(data.choice.id, option.slug),
+                'border-gray-200 dark:border-gray-700 hover:border-primary/50': !isLanguageSelected(data.choice.id, option.slug) && !isLanguageSelectedElsewhere(data.choice.id, option.slug),
+                'border-gray-200 dark:border-gray-700 opacity-50 cursor-not-allowed': isLanguageSelectedElsewhere(data.choice.id, option.slug)
               }"
-              :disabled="isLanguageSelectedElsewhere(data.choice.id, option.id)"
-              @click="handleLanguageToggle(data.choice, option.id)"
+              :disabled="isLanguageSelectedElsewhere(data.choice.id, option.slug)"
+              @click="handleLanguageToggle(data.choice, option.slug)"
             >
               <div class="flex items-center gap-2">
                 <UIcon
-                  :name="isLanguageSelectedElsewhere(data.choice.id, option.id)
+                  :name="isLanguageSelectedElsewhere(data.choice.id, option.slug)
                     ? 'i-heroicons-no-symbol'
-                    : isLanguageSelected(data.choice.id, option.id)
+                    : isLanguageSelected(data.choice.id, option.slug)
                       ? 'i-heroicons-check-circle-solid'
                       : 'i-heroicons-circle'"
                   class="w-5 h-5"
                   :class="{
-                    'text-primary': isLanguageSelected(data.choice.id, option.id),
-                    'text-gray-400': !isLanguageSelected(data.choice.id, option.id) && !isLanguageSelectedElsewhere(data.choice.id, option.id),
-                    'text-gray-300 dark:text-gray-600': isLanguageSelectedElsewhere(data.choice.id, option.id)
+                    'text-primary': isLanguageSelected(data.choice.id, option.slug),
+                    'text-gray-400': !isLanguageSelected(data.choice.id, option.slug) && !isLanguageSelectedElsewhere(data.choice.id, option.slug),
+                    'text-gray-300 dark:text-gray-600': isLanguageSelectedElsewhere(data.choice.id, option.slug)
                   }"
                 />
                 <span class="font-medium">{{ option.name }}</span>
               </div>
               <p
-                v-if="isLanguageSelectedElsewhere(data.choice.id, option.id)"
+                v-if="isLanguageSelectedElsewhere(data.choice.id, option.slug)"
                 class="text-xs text-gray-400 dark:text-gray-500 mt-1 ml-7"
               >
                 Already selected from {{ data.choice.source === 'race' ? 'background' : 'race' }}
