@@ -1,6 +1,6 @@
 # Project Status
 
-**D&D 5e Compendium Frontend** | **Last Updated:** 2025-12-04
+**D&D 5e Compendium Frontend** | **Last Updated:** 2025-12-06
 
 ---
 
@@ -52,6 +52,15 @@
 - Alignment selector (#125) - inline with name input
 - Equipment pack contents (#133) - shows what's in packs
 - Language choices step (#131) - ⏸️ waiting on backend endpoint #139
+
+**🚧 Major Work Planned: Unified Choice System Migration (#264)**
+
+Backend has completed a unified choice system (#246) that consolidates all character creation choices into a single API pattern. Frontend migration planned with 7 sub-issues:
+- #265: Infrastructure (types, routes, composable)
+- #266-269: Component updates (Proficiencies, Languages, Equipment, Spells)
+- #270-271: Store cleanup and deprecated route removal
+
+**Plan:** `docs/plans/2025-12-06-unified-choice-api-migration.md`
 
 **Pending Enhancement:** [#96](https://github.com/dfox288/dnd-rulebook-project/issues/96) - Structured item type data for equipment category choices
 

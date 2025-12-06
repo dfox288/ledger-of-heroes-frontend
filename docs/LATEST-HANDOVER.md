@@ -1,1 +1,1 @@
-handovers/SESSION-HANDOVER-2025-12-04-session3.md
+handovers/SESSION-HANDOVER-2025-12-06-unified-choice-planning.md
