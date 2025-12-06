@@ -5,6 +5,7 @@ import type { Spell } from '~/types'
 import type { components } from '~/types/api/generated'
 import { useCharacterWizardStore } from '~/stores/characterWizard'
 import { useCharacterWizard } from '~/composables/useCharacterWizard'
+import { normalizeEndpoint } from '~/composables/useApi'
 
 type PendingChoice = components['schemas']['PendingChoiceResource']
 
@@ -39,8 +40,8 @@ onMounted(async () => {
 const error = computed(() => storeError.value || choicesError.value)
 
 // Local tracking for selected spells per choice
-// Map<choiceId, Set<spellId>>
-const selectedSpells = ref<Map<string, Set<number>>>(new Map())
+// Map<choiceId, Set<spellId as string>> - API expects string IDs like "33"
+const selectedSpells = ref<Map<string, Set<string>>>(new Map())
 
 // Local cache for fetched spell options
 // Map<choiceId, Spell[]>
@@ -64,7 +65,9 @@ async function fetchSpellOptionsForChoice(choice: PendingChoice) {
   if (!choice.options_endpoint || spellOptions.value.has(choice.id)) return
 
   try {
-    const response = await apiFetch<{ data: Spell[] }>(choice.options_endpoint)
+    // Normalize endpoint: backend returns /api/v1/... but Nitro expects /...
+    const endpoint = normalizeEndpoint(choice.options_endpoint)
+    const response = await apiFetch<{ data: Spell[] }>(endpoint)
     spellOptions.value.set(choice.id, response.data)
   } catch (e) {
     console.error(`Failed to fetch spell options for ${choice.id}:`, e)
@@ -87,13 +90,12 @@ watch(choicesByType, async (newVal) => {
   for (const choice of allSpellChoices) {
     await fetchSpellOptionsForChoice(choice)
 
-    // Initialize selected set from choice.selected
+    // Initialize selected set from choice.selected (slugs from API)
     if (!selectedSpells.value.has(choice.id)) {
-      const selected = new Set<number>()
-      for (const spellId of choice.selected) {
-        // Convert string to number if needed
-        const numId = typeof spellId === 'string' ? parseInt(spellId, 10) : spellId
-        selected.add(numId)
+      const selected = new Set<string>()
+      for (const spellSlug of choice.selected) {
+        // Ensure it's a string (slug)
+        selected.add(String(spellSlug))
       }
       selectedSpells.value.set(choice.id, selected)
     }
@@ -144,7 +146,7 @@ function getSelectedCount(choiceId: string): number {
 
 // Check if a spell is selected in a choice
 function isSpellSelected(choiceId: string, spellId: number): boolean {
-  return selectedSpells.value.get(choiceId)?.has(spellId) ?? false
+  return selectedSpells.value.get(choiceId)?.has(String(spellId)) ?? false
 }
 
 // Check if a choice is at limit
@@ -154,15 +156,16 @@ function isChoiceAtLimit(choice: PendingChoice): boolean {
 
 // Toggle spell selection for a choice
 function handleSpellToggle(choice: PendingChoice, spell: Spell) {
-  const selected = selectedSpells.value.get(choice.id) ?? new Set<number>()
+  const selected = selectedSpells.value.get(choice.id) ?? new Set<string>()
+  const spellIdStr = String(spell.id)
 
-  if (selected.has(spell.id)) {
+  if (selected.has(spellIdStr)) {
     // Deselect
-    selected.delete(spell.id)
+    selected.delete(spellIdStr)
   } else {
     // Don't allow selecting more than limit
     if (selected.size >= choice.quantity) return
-    selected.add(spell.id)
+    selected.add(spellIdStr)
   }
 
   selectedSpells.value.set(choice.id, selected)

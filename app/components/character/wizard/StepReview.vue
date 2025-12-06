@@ -31,8 +31,8 @@ const router = useRouter()
  * Finish wizard and navigate to character sheet
  */
 async function finishWizard() {
-  // Navigate to character sheet
-  await router.push(`/characters/${store.characterId}`)
+  // Navigate to character sheet using publicId
+  await router.push(`/characters/${store.publicId}`)
 
   // Reset wizard state after navigation
   store.reset()

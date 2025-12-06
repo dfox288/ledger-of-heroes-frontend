@@ -108,6 +108,58 @@ function defaultSelections(): WizardSelections {
 
 export const useCharacterWizardStore = defineStore('characterWizard', () => {
   const { apiFetch } = useApi()
+  const { generateSlug } = useCharacterSlug()
+
+  // ══════════════════════════════════════════════════════════════
+  // HELPERS: Character Creation
+  // ══════════════════════════════════════════════════════════════
+
+  /**
+   * Create a character with retry logic for public_id collisions
+   *
+   * Generates a public_id client-side and sends it to the backend.
+   * If collision occurs (422), regenerates and retries up to 3 times.
+   */
+  async function createCharacterWithRetry(
+    name: string,
+    raceId: number,
+    maxRetries = 3
+  ): Promise<{ id: number, public_id: string }> {
+    let lastError: Error | null = null
+
+    for (let attempt = 0; attempt < maxRetries; attempt++) {
+      const newPublicId = generateSlug()
+
+      try {
+        const response = await apiFetch<{ data: { id: number, public_id: string } }>('/characters', {
+          method: 'POST',
+          body: {
+            public_id: newPublicId,
+            name,
+            race_id: raceId
+          }
+        })
+        return response.data
+      } catch (err: unknown) {
+        // Check if it's a collision error (422 with public_id error)
+        const isCollision = err instanceof Error
+          && 'status' in err
+          && (err as { status: number }).status === 422
+          && err.message.includes('public_id')
+
+        if (isCollision && attempt < maxRetries - 1) {
+          // Collision detected, retry with new public_id
+          console.warn(`public_id collision on attempt ${attempt + 1}, retrying...`)
+          lastError = err as Error
+          continue
+        }
+
+        throw err
+      }
+    }
+
+    throw lastError || new Error('Failed to create character after max retries')
+  }
 
   // ══════════════════════════════════════════════════════════════
   // CHARACTER IDENTITY
@@ -115,6 +167,13 @@ export const useCharacterWizardStore = defineStore('characterWizard', () => {
 
   /** Character ID - null until first save (on race selection) */
   const characterId = ref<number | null>(null)
+
+  /**
+   * Public ID for URL-safe character identification
+   * Format: {adjective}-{noun}-{suffix} (e.g., "shadow-warden-q3x9")
+   * Generated client-side, sent to backend on creation
+   */
+  const publicId = ref<string | null>(null)
 
   /** Selected sourcebook codes for filtering (e.g., ['PHB', 'XGE']) */
   const selectedSources = ref<string[]>([])
@@ -294,17 +353,15 @@ export const useCharacterWizardStore = defineStore('characterWizard', () => {
 
     try {
       if (!characterId.value) {
-        // First save - create character with race
+        // First save - create character with race and public_id
         // Provide a default name that can be changed later in Details step
         const defaultName = selections.value.name || `New ${race.name}`
-        const response = await apiFetch<{ data: { id: number } }>('/characters', {
-          method: 'POST',
-          body: {
-            name: defaultName,
-            race_id: race.id
-          }
-        })
-        characterId.value = response.data.id
+
+        // Generate public_id with collision retry
+        const response = await createCharacterWithRetry(defaultName, race.id)
+        characterId.value = response.id
+        publicId.value = response.public_id
+
         // Store the default name in selections
         if (!selections.value.name) {
           selections.value.name = defaultName
@@ -546,6 +603,52 @@ export const useCharacterWizardStore = defineStore('characterWizard', () => {
   }
 
   // ══════════════════════════════════════════════════════════════
+  // ACTIONS: Load Character
+  // ══════════════════════════════════════════════════════════════
+
+  /**
+   * Load an existing character by publicId (for page refresh/navigation)
+   *
+   * Called when navigating to a wizard step URL with a publicId.
+   * Fetches the character data and populates the store state.
+   */
+  async function loadCharacter(charPublicId: string): Promise<void> {
+    // Skip if already loaded
+    if (publicId.value === charPublicId && characterId.value) {
+      return
+    }
+
+    isLoading.value = true
+    error.value = null
+
+    try {
+      // Fetch character data by publicId (backend accepts both id and public_id)
+      const response = await apiFetch<{ data: { id: number, public_id: string, name: string, race?: Race, background?: Background } }>(`/characters/${charPublicId}`)
+
+      characterId.value = response.data.id
+      publicId.value = response.data.public_id
+
+      // Populate selections from fetched data
+      if (response.data.name) {
+        selections.value.name = response.data.name
+      }
+      if (response.data.race) {
+        selections.value.race = response.data.race as Race
+      }
+      if (response.data.background) {
+        selections.value.background = response.data.background as Background
+      }
+
+      await syncWithBackend()
+    } catch (err) {
+      error.value = err instanceof Error ? err.message : 'Failed to load character'
+      throw err
+    } finally {
+      isLoading.value = false
+    }
+  }
+
+  // ══════════════════════════════════════════════════════════════
   // ACTIONS: Reset
   // ══════════════════════════════════════════════════════════════
 
@@ -554,6 +657,7 @@ export const useCharacterWizardStore = defineStore('characterWizard', () => {
    */
   function reset(): void {
     characterId.value = null
+    publicId.value = null
     selectedSources.value = []
     selections.value = defaultSelections()
     // Note: pendingChoices removed - choices are managed by useUnifiedChoices composable
@@ -570,6 +674,7 @@ export const useCharacterWizardStore = defineStore('characterWizard', () => {
   return {
     // State
     characterId,
+    publicId,
     selectedSources,
     selections,
     // Note: pendingChoices removed - choices managed by useUnifiedChoices composable
@@ -613,7 +718,8 @@ export const useCharacterWizardStore = defineStore('characterWizard', () => {
     // Actions: Sources
     setSelectedSources,
 
-    // Actions: Reset
+    // Actions: Load/Reset
+    loadCharacter,
     reset
   }
 })

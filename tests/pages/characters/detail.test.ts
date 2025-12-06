@@ -1,14 +1,14 @@
 import { describe, it, expect, vi } from 'vitest'
 import { mountSuspended } from '@nuxt/test-utils/runtime'
-import CharacterDetailPage from '~/pages/characters/[id]/index.vue'
+import CharacterDetailPage from '~/pages/characters/[publicId]/index.vue'
 
-// Mock useRoute to provide character ID
+// Mock useRoute to provide character publicId
 vi.mock('#app', async () => {
   const actual = await vi.importActual('#app')
   return {
     ...actual,
     useRoute: () => ({
-      params: { id: '1' }
+      params: { publicId: 'shadow-warden-q3x9' }
     })
   }
 })
@@ -24,6 +24,7 @@ vi.mock('~/composables/useApi', () => ({
 describe('Character Detail Page', () => {
   const mockCharacter = {
     id: 1,
+    public_id: 'shadow-warden-q3x9',
     name: 'Thorin Ironforge',
     level: 3,
     experience_points: 900,

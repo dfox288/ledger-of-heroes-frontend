@@ -1,14 +1,16 @@
-<!-- app/pages/characters/[id]/index.vue -->
+<!-- app/pages/characters/[publicId]/index.vue -->
 <script setup lang="ts">
 /**
  * Character View Page - Full Character Sheet
  *
  * Displays comprehensive D&D 5e character sheet with all data sections.
  * Uses useCharacterSheet composable for parallel data fetching.
+ *
+ * URL: /characters/:publicId (e.g., /characters/shadow-warden-q3x9)
  */
 
 const route = useRoute()
-const characterId = computed(() => route.params.id as string)
+const publicId = computed(() => route.params.publicId as string)
 
 const {
   character,
@@ -22,7 +24,7 @@ const {
   savingThrows,
   loading,
   error
-} = useCharacterSheet(characterId)
+} = useCharacterSheet(publicId)
 
 useSeoMeta({
   title: () => character.value?.name ?? 'Character Sheet',

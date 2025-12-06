@@ -125,15 +125,20 @@ function createStepRegistry(store: ReturnType<typeof useCharacterWizardStore>): 
 
 /**
  * Extract step name from route path
- * Handles /characters/new/[step] pattern
+ * Handles /characters/new/[step] and /characters/[publicId]/edit/[step] patterns
  */
 function extractStepFromPath(path: string): string {
-  // Match /characters/new/step or /characters/123/edit/step
+  // Match /characters/new/step
   const newMatch = path.match(/\/characters\/new\/([^/?]+)/)
   if (newMatch?.[1]) return newMatch[1]
 
-  const editMatch = path.match(/\/characters\/\d+\/edit\/([^/?]+)/)
+  // Match /characters/{publicId}/edit/step (publicId format: word-word-XXXX)
+  const editMatch = path.match(/\/characters\/[a-z]+-[a-z]+-[A-Za-z0-9]{4}\/edit\/([^/?]+)/)
   if (editMatch?.[1]) return editMatch[1]
+
+  // Legacy: Match /characters/{numericId}/edit/step
+  const legacyMatch = path.match(/\/characters\/\d+\/edit\/([^/?]+)/)
+  if (legacyMatch?.[1]) return legacyMatch[1]
 
   return 'sourcebooks' // Default to first step
 }
@@ -286,26 +291,21 @@ export function useCharacterWizard(options: UseCharacterWizardOptions = {}) {
   // ══════════════════════════════════════════════════════════════
 
   /**
-   * Determine if we're in "new character" mode based on current URL
-   */
-  const isNewCharacterMode = computed(() =>
-    route.path.includes('/characters/new/')
-  )
-
-  /**
    * Build the URL for a step
-   * Uses current route to determine mode (new vs edit)
+   *
+   * Uses publicId for URLs once a character is created.
+   * This handles the transition from /characters/new/* to /characters/{publicId}/edit/*
+   * after the first save (race selection creates the character).
    */
   function getStepUrl(stepName: string): string {
-    // Stay in the same mode we're currently in
-    if (isNewCharacterMode.value) {
-      return `/characters/new/${stepName}`
+    // Once character is created, always use publicId URLs
+    // This handles the transition from "new" mode to "edit" mode
+    if (store.publicId) {
+      return `/characters/${store.publicId}/edit/${stepName}`
     }
-    // Edit mode - use character ID in URL
-    if (store.characterId) {
-      return `/characters/${store.characterId}/edit/${stepName}`
-    }
-    // Fallback to new mode
+
+    // Before character is created, use new mode URLs
+    // (only applies to sourcebooks and race steps before first save)
     return `/characters/new/${stepName}`
   }
 

@@ -9,6 +9,22 @@
  * const { apiFetch } = useApi()
  * const data = await apiFetch('/spells', { query: { level: 3 } })
  */
+/**
+ * Normalize an endpoint path from backend format to Nitro format.
+ * Backend returns paths like "/api/v1/characters/1/spells" but Nitro expects "/characters/1/spells"
+ */
+export function normalizeEndpoint(endpoint: string): string {
+  // Strip /api/v1 prefix if present
+  if (endpoint.startsWith('/api/v1/')) {
+    return endpoint.replace('/api/v1/', '/')
+  }
+  // Strip /api/v1 without trailing slash (edge case)
+  if (endpoint.startsWith('/api/v1')) {
+    return endpoint.replace('/api/v1', '')
+  }
+  return endpoint
+}
+
 export const useApi = () => {
   /**
    * Create a configured $fetch instance that targets Nitro routes

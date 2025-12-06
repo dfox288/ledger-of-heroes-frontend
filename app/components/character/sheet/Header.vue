@@ -65,7 +65,7 @@ const classesDisplay = computed(() => {
       <UButton
         v-if="!character.is_complete"
         data-test="edit-button"
-        :to="`/characters/${character.id}/edit`"
+        :to="`/characters/${character.public_id}/edit`"
         variant="outline"
         size="sm"
         icon="i-heroicons-pencil"

@@ -65,10 +65,21 @@ export interface CharacterSpell extends CharacterSpellFromAPI {
 }
 
 /**
- * Full character data from API
+ * Full character data from API with public_id
+ *
+ * The base CharacterResource is extended with public_id which is used
+ * for URL-safe, human-readable character identifiers.
+ *
  * @see CharacterResource in OpenAPI spec
  */
-export type Character = components['schemas']['CharacterResource']
+export type Character = components['schemas']['CharacterResource'] & {
+  /**
+   * URL-safe, human-readable character identifier
+   * Format: {adjective}-{noun}-{suffix} (e.g., "shadow-warden-q3x9")
+   * Used in URLs instead of numeric ID for better UX
+   */
+  public_id: string
+}
 
 /**
  * Character stats from /characters/{id}/stats endpoint
@@ -159,6 +170,7 @@ export interface CharacterValidationStatus {
  */
 export interface CharacterSummary {
   id: number
+  public_id: string
   name: string
   level: number
   is_complete: boolean

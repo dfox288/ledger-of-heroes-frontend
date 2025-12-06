@@ -22,12 +22,12 @@ const { data, pending, error, refresh } = await useAsyncData(
 
 const characters = computed(() => data.value?.data ?? [])
 
-// Delete character
-async function deleteCharacter(id: number) {
+// Delete character by publicId
+async function deleteCharacter(publicId: string) {
   if (!confirm('Are you sure you want to delete this character?')) return
 
   try {
-    await apiFetch(`/characters/${id}`, { method: 'DELETE' })
+    await apiFetch(`/characters/${publicId}`, { method: 'DELETE' })
     await refresh()
   } catch (err) {
     console.error('Failed to delete character:', err)
@@ -108,9 +108,9 @@ async function deleteCharacter(id: number) {
     >
       <CharacterCard
         v-for="character in characters"
-        :key="character.id"
+        :key="character.public_id"
         :character="character"
-        @delete="deleteCharacter(character.id)"
+        @delete="deleteCharacter(character.public_id)"
       />
     </div>
   </div>

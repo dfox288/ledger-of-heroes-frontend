@@ -64,7 +64,7 @@ const statusText = computed(() =>
       <div class="flex justify-between items-center">
         <div class="flex gap-2">
           <UButton
-            :to="`/characters/${character.id}`"
+            :to="`/characters/${character.public_id}`"
             variant="ghost"
             size="sm"
           >
@@ -72,7 +72,7 @@ const statusText = computed(() =>
           </UButton>
           <UButton
             v-if="character.level === 1"
-            :to="`/characters/${character.id}/edit`"
+            :to="`/characters/${character.public_id}/edit`"
             variant="soft"
             color="primary"
             size="sm"

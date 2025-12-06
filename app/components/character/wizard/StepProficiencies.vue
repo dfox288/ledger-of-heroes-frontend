@@ -3,6 +3,7 @@
 import type { components } from '~/types/api/generated'
 import { useCharacterWizard } from '~/composables/useCharacterWizard'
 import { useCharacterWizardStore } from '~/stores/characterWizard'
+import { normalizeEndpoint } from '~/composables/useApi'
 
 type ProficiencyResource = components['schemas']['ProficiencyResource']
 type PendingChoice = components['schemas']['PendingChoiceResource']
@@ -70,7 +71,9 @@ async function fetchOptionsIfNeeded(choice: PendingChoice): Promise<void> {
   loadingOptions.value.add(choice.id)
 
   try {
-    const response = await apiFetch<{ data: unknown[] }>(choice.options_endpoint)
+    // Normalize endpoint: backend returns /api/v1/... but Nitro expects /...
+    const endpoint = normalizeEndpoint(choice.options_endpoint)
+    const response = await apiFetch<{ data: unknown[] }>(endpoint)
     if (response?.data) {
       optionsCache.value.set(choice.id, response.data)
     }

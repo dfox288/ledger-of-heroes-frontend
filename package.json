@@ -44,11 +44,13 @@
     "@types/three": "^0.181.0",
     "eslint": "^9.39.1",
     "idb-keyval": "^6.2.2",
+    "nanoid": "^5.1.6",
     "nuxt": "^4.2.1",
     "pinia": "^3.0.4",
     "pinia-plugin-persistedstate": "^4.7.1",
     "three": "^0.181.2",
     "typescript": "^5.9.3",
+    "unique-names-generator": "^4.7.1",
     "vue": "^3.5.24",
     "vue-router": "^4.6.3"
   },
