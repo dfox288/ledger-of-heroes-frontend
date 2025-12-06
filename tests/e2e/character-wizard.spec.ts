@@ -75,3 +75,34 @@ async function goToStep(page: Page, step: string): Promise<void> {
   await page.goto(`${WIZARD_BASE_URL}/${step}`)
   await waitForLoading(page)
 }
+
+// ════════════════════════════════════════════════════════════════
+// TESTS
+// ════════════════════════════════════════════════════════════════
+
+test.describe('Character Creation Wizard', () => {
+  test.describe('Step 1: Sourcebooks', () => {
+    test.beforeEach(async ({ page }) => {
+      await goToStep(page, 'sourcebooks')
+    })
+
+    test('displays sourcebooks step with correct title', async ({ page }) => {
+      await expect(page.getByRole('heading', { name: /source/i })).toBeVisible()
+    })
+
+    test('has PHB sourcebook available', async ({ page }) => {
+      // PHB should be visible and selectable
+      await expect(page.getByText('PHB')).toBeVisible()
+    })
+
+    test('Next button is enabled when sourcebook selected', async ({ page }) => {
+      // PHB should be selected by default
+      await expect(getNextButton(page)).toBeEnabled()
+    })
+
+    test('can proceed to race step', async ({ page }) => {
+      await clickNextAndWait(page)
+      await expect(page).toHaveURL(/\/characters\/new\/race/)
+    })
+  })
+})
