@@ -92,7 +92,7 @@ export type AbilityScoreCode = 'STR' | 'DEX' | 'CON' | 'INT' | 'WIS' | 'CHA'
  * and saving_throws (AbilityScoreCode keys instead of generic string).
  */
 export interface CharacterStats extends Omit<CharacterStatsFromAPI, 'ability_scores' | 'saving_throws' | 'spellcasting'> {
-  ability_scores: Record<AbilityScoreCode, { score: number | null; modifier: number | null }>
+  ability_scores: Record<AbilityScoreCode, { score: number | null, modifier: number | null }>
   saving_throws: Record<AbilityScoreCode, number | null>
   spellcasting: {
     ability: AbilityScoreCode
@@ -162,9 +162,9 @@ export interface CharacterSummary {
   name: string
   level: number
   is_complete: boolean
-  race: { id: number; name: string; slug: string } | null
-  class: { id: number; name: string; slug: string } | null
-  background: { id: number; name: string; slug: string } | null
+  race: { id: number, name: string, slug: string } | null
+  class: { id: number, name: string, slug: string } | null
+  background: { id: number, name: string, slug: string } | null
 }
 
 /**

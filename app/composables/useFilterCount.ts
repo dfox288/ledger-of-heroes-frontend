@@ -23,7 +23,7 @@ import { computed, type Ref, type ComputedRef } from 'vue'
  * <UiFilterCollapse :badge-count="activeFilterCount" />
  * ```
  */
-export function useFilterCount(...refs: Ref<any>[]): ComputedRef<number> {
+export function useFilterCount(...refs: Ref<unknown>[]): ComputedRef<number> {
   return computed(() => {
     let count = 0
 

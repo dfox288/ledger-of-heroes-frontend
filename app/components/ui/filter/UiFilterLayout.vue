@@ -51,10 +51,10 @@
 
 // Slots are defined implicitly by the template
 defineSlots<{
-  primary?: () => any
-  quick?: () => any
-  advanced?: () => any
-  actions?: () => any
+  primary?: () => unknown
+  quick?: () => unknown
+  advanced?: () => unknown
+  actions?: () => unknown
 }>()
 </script>
 

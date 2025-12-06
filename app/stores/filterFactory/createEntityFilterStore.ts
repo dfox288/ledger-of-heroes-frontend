@@ -163,6 +163,7 @@ export function createEntityFilterStore<T extends BaseFilterState = BaseFilterSt
         'filtersOpen',
         ...config.fields.filter(f => f.persist !== false).map(f => f.name)
       ]
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Pinia persist plugin typing requires any
     } as any
   })
 }

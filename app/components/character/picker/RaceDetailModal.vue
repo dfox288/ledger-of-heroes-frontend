@@ -43,9 +43,7 @@ const speedDisplay = computed(() => {
   return speeds
 })
 
-function handleClose() {
-  emit('close')
-}
+// handleClose is implicit through isOpen setter - keeping modal close logic centralized
 </script>
 
 <template>

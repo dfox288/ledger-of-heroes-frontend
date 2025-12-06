@@ -114,7 +114,7 @@ function truncateDescription(text: string, maxLength: number = 150): string {
 
       <!-- Timeline items -->
       <div
-        v-for="(item, index) in timelineItems"
+        v-for="item in timelineItems"
         :key="item.value"
         class="relative pb-8 last:pb-0"
       >

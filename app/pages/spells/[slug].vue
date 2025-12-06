@@ -7,11 +7,9 @@ const {
   entity,
   pending: loading,
   error,
-  spellLevelText,
   hasScalingEffects,
   scalingType,
   combatMechanicsVisible,
-  groupedClasses,
   parsedAreaOfEffect
 } = useSpellDetail(slug)
 

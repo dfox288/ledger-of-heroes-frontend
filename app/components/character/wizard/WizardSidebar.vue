@@ -6,7 +6,6 @@ const props = defineProps<UseCharacterWizardOptions>()
 
 const {
   activeSteps,
-  currentStepName,
   currentStepIndex,
   progressPercent,
   getStepUrl

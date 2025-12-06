@@ -32,7 +32,7 @@ interface Props {
   widthClass?: string
 }
 
-const props = withDefaults(defineProps<Props>(), {
+withDefaults(defineProps<Props>(), {
   placeholder: 'Select...',
   widthClass: 'w-full sm:w-48'
 })

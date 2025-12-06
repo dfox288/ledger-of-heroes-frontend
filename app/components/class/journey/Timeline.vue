@@ -30,7 +30,7 @@ interface Props {
   parentClassName?: string
 }
 
-const props = withDefaults(defineProps<Props>(), {
+withDefaults(defineProps<Props>(), {
   showParentFeatures: false,
   parentClassName: undefined
 })

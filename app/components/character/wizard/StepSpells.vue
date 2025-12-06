@@ -20,7 +20,7 @@ const { nextStep } = useCharacterWizard()
 const { apiFetch } = useApi()
 
 // Fetch available spells for this character
-const { data: availableSpells, pending: loadingSpells, refresh: refreshSpells } = await useAsyncData(
+const { data: availableSpells, pending: loadingSpells } = await useAsyncData(
   `wizard-available-spells-${characterId.value}`,
   () => apiFetch<{ data: Spell[] }>(`/characters/${characterId.value}/available-spells?max_level=1&include_known=true`),
   { transform: (response: { data: Spell[] }) => response.data }

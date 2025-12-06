@@ -9,9 +9,12 @@ export type FilterType
     | 'greaterThan' // field > value
     | 'rangePreset' // field >= preset.min AND field <= preset.max
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any -- Filter values can be any type from form inputs
+type FilterValue = any
+
 export interface FilterConfig {
   /** Vue ref containing the filter value */
-  ref: Ref<any>
+  ref: Ref<FilterValue>
 
   /** Meilisearch field name */
   field: string
@@ -28,7 +31,7 @@ export interface FilterConfig {
 
   /** For 'equals' with lookup: transform value before filtering.
    * For 'in' type: receives array and should return transformed array. */
-  transform?: (value: any) => string | number | null | (string | number | null)[]
+  transform?: (value: FilterValue) => string | number | null | (string | number | null)[]
 }
 
 export interface UseMeilisearchFiltersReturn {
@@ -106,7 +109,7 @@ export function useMeilisearchFilters(
             if (filteredValues.length === 0) break
 
             // Quote string values that contain spaces for Meilisearch syntax
-            const quotedValues = filteredValues.map((v: any) => {
+            const quotedValues = filteredValues.map((v: string | number | null) => {
               if (typeof v === 'string' && v.includes(' ')) {
                 return `"${v}"`
               }

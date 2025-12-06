@@ -141,7 +141,7 @@ const getLevelLabel = (levelStr: string): string => {
 
 const getLevelFilterText = computed(() => {
   if (selectedLevels.value.length === 0) return null
-  const labels = selectedLevels.value.sort((a, b) => Number(a) - Number(b)).map(level => getLevelLabel(level))
+  const labels = [...selectedLevels.value].sort((a, b) => Number(a) - Number(b)).map(level => getLevelLabel(level))
   const prefix = selectedLevels.value.length === 1 ? 'Level' : 'Levels'
   return `${prefix}: ${labels.join(', ')}`
 })

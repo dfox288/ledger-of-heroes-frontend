@@ -11,7 +11,7 @@ import type { components } from '~/types/api/generated'
 import type { OptionalFeatureResource } from '~/types/api/entities'
 
 type ClassFeatureResource = components['schemas']['ClassFeatureResource']
-type ClassLevelProgressionResource = components['schemas']['ClassLevelProgressionResource']
+// ClassLevelProgressionResource imported but used for type context in useClassDetail
 
 interface TimelineLevel {
   level: number
@@ -41,7 +41,6 @@ const {
   counters,
   subclassLevel,
   levelProgression,
-  progressionTable,
   optionalFeatures,
   getOptionsAvailableAtLevel
 } = useClassDetail(slug)
@@ -122,7 +121,7 @@ function getSpellSlotsAtLevel(level: number): Record<string, number> | undefined
   }
 
   Object.entries(slotMap).forEach(([key, label]) => {
-    const value = (progression as any)[key]
+    const value = (progression as Record<string, number | undefined>)[key]
     if (value && value > 0) {
       slots[label] = value
       hasSlots = true

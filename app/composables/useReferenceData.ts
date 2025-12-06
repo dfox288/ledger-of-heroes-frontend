@@ -1,11 +1,11 @@
 import { computed, type ComputedRef, type Ref } from 'vue'
 
-export interface ReferenceDataOptions {
+export interface ReferenceDataOptions<T> {
   /** Override cache key (default: endpoint-based) */
   cacheKey?: string
 
   /** Transform response (default: extracts .data property) */
-  transform?: (data: any[]) => any[]
+  transform?: (data: T[]) => T[]
 
   /** Fetch multiple pages (for large datasets like classes) */
   pages?: number
@@ -50,7 +50,7 @@ export interface UseReferenceDataReturn<T> {
  */
 export function useReferenceData<T>(
   endpoint: string,
-  options: ReferenceDataOptions = {}
+  options: ReferenceDataOptions<T> = {}
 ): UseReferenceDataReturn<T> {
   const { apiFetch } = useApi()
 

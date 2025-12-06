@@ -16,10 +16,7 @@ const imagePath = computed(() => {
   return getImagePath('classes', props.entity.slug, 512)
 })
 
-const parentImagePath = computed(() => {
-  if (!props.parentClass?.slug) return null
-  return getImagePath('classes', props.parentClass.slug, 256)
-})
+// Parent image is rendered via UiClassParentImageOverlay component which handles its own image path
 
 /**
  * Get hit die display text

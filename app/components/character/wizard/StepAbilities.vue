@@ -31,8 +31,8 @@ const choiceBonuses = computed(() =>
 )
 const { nextStep } = useCharacterWizard()
 
-// All 6 ability scores for the choice UI
-const allAbilities = [
+// All 6 ability scores for the choice UI (to be used when Issue #219 is implemented)
+const _allAbilities = [
   { code: 'STR', name: 'Strength', key: 'strength' },
   { code: 'DEX', name: 'Dexterity', key: 'dexterity' },
   { code: 'CON', name: 'Constitution', key: 'constitution' },

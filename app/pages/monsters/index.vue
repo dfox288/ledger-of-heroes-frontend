@@ -22,7 +22,6 @@ const {
   selectedAlignments,
   selectedMovementTypes,
   selectedArmorTypes,
-  canHover,
   hasLairActions,
   hasReactions,
   isSpellcaster,
@@ -203,7 +202,7 @@ const getCRLabel = (cr: string) => {
 const getCRFilterText = computed(() => {
   if (selectedCRs.value.length === 0) return null
 
-  const labels = selectedCRs.value
+  const labels = [...selectedCRs.value]
     .sort((a, b) => Number(a) - Number(b))
     .map(cr => getCRLabel(cr).replace('CR ', '')) // Remove "CR " prefix for compactness
 
@@ -228,7 +227,7 @@ const getSizeLabel = (sizeId: string) => {
 const getSizeFilterText = computed(() => {
   if (selectedSizes.value.length === 0) return null
 
-  const labels = selectedSizes.value
+  const labels = [...selectedSizes.value]
     .map(sizeId => getSizeLabel(sizeId))
     .sort()
 
@@ -244,7 +243,7 @@ const clearSizeFilter = () => {
 const getAlignmentFilterText = computed(() => {
   if (selectedAlignments.value.length === 0) return null
 
-  const labels = selectedAlignments.value.sort()
+  const labels = [...selectedAlignments.value].sort()
   const prefix = selectedAlignments.value.length === 1 ? 'Alignment' : 'Alignments'
   return `${prefix}: ${labels.join(', ')}`
 })
@@ -257,7 +256,7 @@ const clearAlignmentFilter = () => {
 const getArmorTypeFilterText = computed(() => {
   if (selectedArmorTypes.value.length === 0) return null
 
-  const labels = selectedArmorTypes.value.sort()
+  const labels = [...selectedArmorTypes.value].sort()
   const prefix = selectedArmorTypes.value.length === 1 ? 'Armor Type' : 'Armor Types'
   return `${prefix}: ${labels.join(', ')}`
 })

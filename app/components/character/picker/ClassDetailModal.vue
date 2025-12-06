@@ -36,9 +36,7 @@ const hitDieText = computed(() => {
   return `d${props.characterClass?.hit_die}`
 })
 
-function handleClose() {
-  emit('close')
-}
+// handleClose is implicit through isOpen setter - keeping modal close logic centralized
 </script>
 
 <template>
