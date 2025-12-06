@@ -528,4 +528,61 @@ test.describe('Character Creation Wizard', () => {
       await expect(page).toHaveURL(/\/characters/)
     })
   })
+
+  test.describe('Navigation', () => {
+    test('Back button is disabled on first step', async ({ page }) => {
+      await goToStep(page, 'sourcebooks')
+      await expect(getBackButton(page)).toBeDisabled()
+    })
+
+    test('Back button works on subsequent steps', async ({ page }) => {
+      await goToStep(page, 'race')
+      await expect(getBackButton(page)).toBeEnabled()
+
+      await getBackButton(page).click()
+      await expect(page).toHaveURL(/\/sourcebooks/)
+    })
+
+    test('can navigate back and forth without losing data', async ({ page }) => {
+      // Start at race, select Human
+      await goToStep(page, 'race')
+      await page.getByText('Human').first().click()
+      await page.getByRole('button', { name: /continue with human/i }).click()
+      await waitForLoading(page)
+
+      // Now at class, go back
+      await getBackButton(page).click()
+      await waitForLoading(page)
+
+      // Should still show Human as selected
+      await expect(page.getByRole('button', { name: /continue with human/i })).toBeVisible()
+    })
+
+    test('direct URL navigation works for valid steps', async ({ page }) => {
+      await page.goto(`${WIZARD_BASE_URL}/abilities`)
+      await expect(page.getByRole('heading', { name: /assign ability scores/i })).toBeVisible()
+    })
+
+    test('invalid step shows 404', async ({ page }) => {
+      const response = await page.goto(`${WIZARD_BASE_URL}/invalid-step`)
+      expect(response?.status()).toBe(404)
+    })
+  })
+
+  test.describe('Sidebar Progress', () => {
+    test('shows progress indicator', async ({ page }) => {
+      await goToStep(page, 'sourcebooks')
+      await expect(page.locator('[data-test="progress-bar"]')).toBeVisible()
+    })
+
+    test('clicking completed step navigates there', async ({ page }) => {
+      // Complete sourcebooks
+      await goToStep(page, 'sourcebooks')
+      await clickNextAndWait(page)
+
+      // Now on race, click back to sourcebooks in sidebar
+      await page.locator('[data-test="step-item-sourcebooks"]').click()
+      await expect(page).toHaveURL(/\/sourcebooks/)
+    })
+  })
 })
