@@ -105,4 +105,55 @@ test.describe('Character Creation Wizard', () => {
       await expect(page).toHaveURL(/\/characters\/new\/race/)
     })
   })
+
+  test.describe('Step 2: Race', () => {
+    test.beforeEach(async ({ page }) => {
+      await goToStep(page, 'race')
+    })
+
+    test('displays race selection with correct title', async ({ page }) => {
+      await expect(page.getByRole('heading', { name: /choose your race/i })).toBeVisible()
+    })
+
+    test('displays search input', async ({ page }) => {
+      await expect(page.locator('input[placeholder*="Search races"]')).toBeVisible()
+    })
+
+    test('displays Human race card', async ({ page }) => {
+      await expect(page.getByText('Human')).toBeVisible()
+    })
+
+    test('can search for Human', async ({ page }) => {
+      await page.locator('input[placeholder*="Search races"]').fill('Human')
+      await expect(page.getByText('Human')).toBeVisible()
+    })
+
+    test('can select Human race', async ({ page }) => {
+      // Click on the Human card
+      await page.getByText('Human').first().click()
+
+      // The "Continue with Human" button should appear
+      await expect(page.getByRole('button', { name: /continue with human/i })).toBeVisible()
+    })
+
+    test('Continue button is disabled until race selected', async ({ page }) => {
+      // Initially no race selected - look for a disabled continue button
+      const continueButton = page.getByRole('button', { name: /continue with/i })
+      // The button text should show "Continue with Selection" when nothing selected
+      // and be disabled
+      await expect(page.getByRole('button', { name: /continue with selection/i })).toBeDisabled()
+    })
+
+    test('selecting Human and continuing skips subrace step', async ({ page }) => {
+      // Select Human
+      await page.getByText('Human').first().click()
+
+      // Click Continue
+      await page.getByRole('button', { name: /continue with human/i }).click()
+      await waitForLoading(page)
+
+      // Should skip subrace and go directly to class (Human has no subraces)
+      await expect(page).toHaveURL(/\/characters\/new\/class/)
+    })
+  })
 })
