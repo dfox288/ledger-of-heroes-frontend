@@ -1,5 +1,7 @@
 <script setup lang="ts">
+import { storeToRefs } from 'pinia'
 import { useCharacterWizardStore } from '~/stores/characterWizard'
+import { useCharacterWizard } from '~/composables/useCharacterWizard'
 import type { CharacterAlignment } from '~/types/character'
 
 /**
@@ -7,10 +9,11 @@ import type { CharacterAlignment } from '~/types/character'
  *
  * Allows user to enter character name and select alignment.
  * This step comes near the end of the wizard, after major choices are made.
- * Both fields update the store directly (no save button needed - wizard handles save).
  */
 
 const store = useCharacterWizardStore()
+const { isLoading, error } = storeToRefs(store)
+const { nextStep } = useCharacterWizard()
 
 // Create local refs that sync with store
 const name = computed({
@@ -26,6 +29,25 @@ const alignment = computed({
     store.selections.alignment = value
   }
 })
+
+// Validation: name is required
+const canProceed = computed(() => {
+  return name.value.trim().length > 0
+})
+
+/**
+ * Save details and continue to next step
+ */
+async function handleContinue() {
+  if (!canProceed.value) return
+
+  try {
+    await store.saveDetails(name.value, alignment.value)
+    await nextStep()
+  } catch (err) {
+    console.error('Failed to save details:', err)
+  }
+}
 
 // Standard D&D 5e alignments
 const alignmentOptions = [
@@ -139,6 +161,27 @@ const alignmentOptions = [
         Alignment represents your character's moral and ethical outlook. It can guide
         roleplay decisions but doesn't restrict your choices.
       </p>
+    </div>
+
+    <!-- Error State -->
+    <UAlert
+      v-if="error"
+      color="error"
+      icon="i-heroicons-exclamation-circle"
+      :title="error"
+    />
+
+    <!-- Continue Button -->
+    <div class="flex justify-center pt-6">
+      <UButton
+        data-test="continue-btn"
+        size="lg"
+        :disabled="!canProceed || isLoading"
+        :loading="isLoading"
+        @click="handleContinue"
+      >
+        Continue to Review
+      </UButton>
     </div>
   </div>
 </template>

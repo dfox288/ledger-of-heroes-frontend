@@ -3,8 +3,10 @@
 import { storeToRefs } from 'pinia'
 import type { Subclass } from '~/stores/characterWizard'
 import { useCharacterWizardStore } from '~/stores/characterWizard'
+import { useCharacterWizard } from '~/composables/useCharacterWizard'
 
 const store = useCharacterWizardStore()
+const { nextStep } = useCharacterWizard()
 const { selections, isLoading, error, sourceFilterString } = storeToRefs(store)
 
 // API client
@@ -70,7 +72,7 @@ async function confirmSelection() {
 
   try {
     await store.selectSubclass(localSelectedSubclass.value)
-    // Navigation is handled by the wizard layout
+    await nextStep()
   } catch (err) {
     console.error('Failed to save subclass:', err)
   }

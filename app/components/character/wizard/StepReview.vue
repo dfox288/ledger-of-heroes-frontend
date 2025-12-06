@@ -25,6 +25,18 @@ import type {
 
 const store = useCharacterWizardStore()
 const { apiFetch } = useApi()
+const router = useRouter()
+
+/**
+ * Finish wizard and navigate to character sheet
+ */
+async function finishWizard() {
+  // Navigate to character sheet
+  await router.push(`/characters/${store.characterId}`)
+
+  // Reset wizard state after navigation
+  store.reset()
+}
 
 // Fetch character stats
 const {
@@ -485,5 +497,21 @@ function getOrdinalSuffix(n: number): string {
         No spells selected yet.
       </div>
     </UCard>
+
+    <!-- Finish Button -->
+    <div class="flex justify-center pt-8 border-t border-gray-200 dark:border-gray-700 mt-8">
+      <UButton
+        data-test="finish-btn"
+        size="xl"
+        color="primary"
+        @click="finishWizard"
+      >
+        <UIcon
+          name="i-heroicons-check-circle"
+          class="w-5 h-5 mr-2"
+        />
+        Create Character
+      </UButton>
+    </div>
   </div>
 </template>
