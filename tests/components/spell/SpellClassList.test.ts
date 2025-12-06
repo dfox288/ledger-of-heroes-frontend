@@ -10,16 +10,16 @@ type ClassResource = components['schemas']['ClassResource']
  */
 function createMockClass(overrides: Partial<ClassResource> = {}): ClassResource {
   return {
-    id: '1',
+    id: 1,
     slug: 'wizard',
     name: 'Wizard',
-    hit_die: 'd6',
+    hit_die: 6,
     description: 'A scholarly magic-user',
     archetype: 'Arcane Caster',
     primary_ability: 'Intelligence',
-    parent_class_id: '',
-    is_base_class: '1',
-    subclass_level: '',
+    parent_class_id: null,
+    is_base_class: true,
+    subclass_level: null,
     spellcasting_type: 'full',
     ...overrides
   } as ClassResource
@@ -55,7 +55,7 @@ describe('SpellClassList', () => {
       const baseClass = createMockClass({
         slug: 'wizard',
         name: 'Wizard',
-        is_base_class: '1'
+        is_base_class: true
       })
 
       const wrapper = await mountSuspended(SpellClassList, {
@@ -70,8 +70,8 @@ describe('SpellClassList', () => {
 
     it('displays multiple base classes as badges', async () => {
       const classes = [
-        createMockClass({ slug: 'sorcerer', name: 'Sorcerer', is_base_class: '1' }),
-        createMockClass({ slug: 'wizard', name: 'Wizard', is_base_class: '1' })
+        createMockClass({ slug: 'sorcerer', name: 'Sorcerer', is_base_class: true }),
+        createMockClass({ slug: 'wizard', name: 'Wizard', is_base_class: true })
       ]
 
       const wrapper = await mountSuspended(SpellClassList, {
@@ -86,7 +86,7 @@ describe('SpellClassList', () => {
       const baseClass = createMockClass({
         slug: 'wizard',
         name: 'Wizard',
-        is_base_class: '1'
+        is_base_class: true
       })
 
       const wrapper = await mountSuspended(SpellClassList, {
@@ -106,11 +106,11 @@ describe('SpellClassList', () => {
       const subclass = createMockClass({
         slug: 'light-domain',
         name: 'Light Domain',
-        is_base_class: '0',
+        is_base_class: false,
         parent_class: createMockClass({
           slug: 'cleric',
           name: 'Cleric',
-          is_base_class: '1'
+          is_base_class: true
         })
       })
 
@@ -128,11 +128,11 @@ describe('SpellClassList', () => {
       const subclass = createMockClass({
         slug: 'light-domain',
         name: 'Light Domain',
-        is_base_class: '0',
+        is_base_class: false,
         parent_class: createMockClass({
           slug: 'cleric',
           name: 'Cleric',
-          is_base_class: '1'
+          is_base_class: true
         })
       })
 
@@ -150,11 +150,11 @@ describe('SpellClassList', () => {
       const subclass = createMockClass({
         slug: 'light-domain',
         name: 'Light Domain',
-        is_base_class: '0',
+        is_base_class: false,
         parent_class: createMockClass({
           slug: 'cleric',
           name: 'Cleric',
-          is_base_class: '1'
+          is_base_class: true
         })
       })
 
@@ -172,7 +172,7 @@ describe('SpellClassList', () => {
       const subclass = createMockClass({
         slug: 'light-domain',
         name: 'Light Domain',
-        is_base_class: '0'
+        is_base_class: false
         // no parent_class field
       })
 
@@ -193,22 +193,22 @@ describe('SpellClassList', () => {
         createMockClass({
           slug: 'wizard',
           name: 'Wizard',
-          is_base_class: '1'
+          is_base_class: true
         }),
         createMockClass({
           slug: 'light-domain',
           name: 'Light Domain',
-          is_base_class: '0',
+          is_base_class: false,
           parent_class: createMockClass({
             slug: 'cleric',
             name: 'Cleric',
-            is_base_class: '1'
+            is_base_class: true
           })
         }),
         createMockClass({
           slug: 'sorcerer',
           name: 'Sorcerer',
-          is_base_class: '1'
+          is_base_class: true
         })
       ]
 
@@ -228,11 +228,11 @@ describe('SpellClassList', () => {
       const subclass = createMockClass({
         slug: 'light-domain',
         name: 'Light Domain',
-        is_base_class: '0',
+        is_base_class: false,
         parent_class: createMockClass({
           slug: 'cleric',
           name: 'Cleric',
-          is_base_class: '1'
+          is_base_class: true
         })
       })
 
@@ -250,7 +250,7 @@ describe('SpellClassList', () => {
       const baseClass = createMockClass({
         slug: 'wizard',
         name: 'Wizard',
-        is_base_class: '1'
+        is_base_class: true
       })
 
       const wrapper = await mountSuspended(SpellClassList, {
@@ -269,7 +269,7 @@ describe('SpellClassList', () => {
       const baseClass = createMockClass({
         slug: 'wizard',
         name: 'Wizard',
-        is_base_class: '1'
+        is_base_class: true
       })
 
       const wrapper = await mountSuspended(SpellClassList, {
@@ -287,7 +287,7 @@ describe('SpellClassList', () => {
       const baseClass = createMockClass({
         slug: 'wizard',
         name: 'Wizard',
-        is_base_class: '1'
+        is_base_class: true
       })
 
       const wrapper = await mountSuspended(SpellClassList, {
