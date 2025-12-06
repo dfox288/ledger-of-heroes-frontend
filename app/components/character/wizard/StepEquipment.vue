@@ -30,8 +30,8 @@ const expandedFixedPacks = ref<Set<number>>(new Set())
 // Track local selections (choiceId → selected option letter)
 const localSelections = ref<Map<string, string>>(new Map())
 
-// Track item selections for compound choices (choiceId:itemKey → itemId)
-const itemSelections = ref<Map<string, number>>(new Map())
+// Track item selections for filtered options (choiceId:optionLetter → itemSlug)
+const itemSelections = ref<Map<string, string>>(new Map())
 
 // Fetch equipment choices on mount
 onMounted(async () => {
@@ -65,6 +65,13 @@ function handleChoiceSelect(choiceId: string, optionLetter: string) {
   localSelections.value.set(choiceId, optionLetter)
   // Clear any item selections for this choice when changing options
   clearItemSelectionsForChoice(choiceId)
+}
+
+/**
+ * Handle item selection for filtered options (e.g., "any simple weapon")
+ */
+function handleItemSelect(choiceId: string, optionLetter: string, itemSlug: string) {
+  itemSelections.value.set(`${choiceId}:${optionLetter}`, itemSlug)
 }
 
 /**
@@ -114,6 +121,32 @@ const allEquipmentChoicesMade = computed(() => {
 const isSaving = ref(false)
 
 /**
+ * Gather all item selections for a choice option, including multi-select
+ * Keys can be: "choiceId:optionLetter" or "choiceId:optionLetter:index"
+ */
+function gatherItemSelectionsForOption(choiceId: string, optionLetter: string): string[] {
+  const selections: string[] = []
+
+  // Check for primary selection (index 0)
+  const primaryKey = `${choiceId}:${optionLetter}`
+  const primarySelection = itemSelections.value.get(primaryKey)
+  if (primarySelection) {
+    selections.push(primarySelection)
+  }
+
+  // Check for indexed selections (index 1, 2, etc.)
+  for (const [key, value] of itemSelections.value.entries()) {
+    // Match pattern: "choiceId:optionLetter:N" where N is a number
+    const indexedPattern = `${choiceId}:${optionLetter}:`
+    if (key.startsWith(indexedPattern) && key !== primaryKey) {
+      selections.push(value)
+    }
+  }
+
+  return selections
+}
+
+/**
  * Continue to next step - resolve all choices
  */
 async function handleContinue() {
@@ -122,21 +155,16 @@ async function handleContinue() {
   try {
     // Resolve each equipment choice
     for (const [choiceId, optionLetter] of localSelections.value) {
-      // Build item_selections if any exist for this choice
-      const itemSelectionsForChoice: Record<string, number> = {}
-      for (const [key, itemId] of itemSelections.value) {
-        if (key.startsWith(`${choiceId}:`)) {
-          const itemKey = key.substring(choiceId.length + 1) // Remove "choiceId:" prefix
-          itemSelectionsForChoice[itemKey] = itemId
-        }
-      }
+      // Gather all item selections for this option (handles multi-select like "two martial weapons")
+      const itemSlugs = gatherItemSelectionsForOption(choiceId, optionLetter)
 
       const payload: Record<string, unknown> = {
         selected: [optionLetter]
       }
 
-      if (Object.keys(itemSelectionsForChoice).length > 0) {
-        payload.item_selections = itemSelectionsForChoice
+      // If user selected specific items, include them in the payload
+      if (itemSlugs.length > 0) {
+        payload.item_selections = { [optionLetter]: itemSlugs }
       }
 
       await resolveChoice(choiceId, payload)
@@ -333,7 +361,9 @@ function formatPackContentItem(content: PackContentResource): string {
       <CharacterWizardEquipmentChoiceList
         :choices="classEquipmentChoices"
         :local-selections="localSelections"
+        :item-selections="itemSelections"
         @select="handleChoiceSelect"
+        @item-select="handleItemSelect"
       />
     </div>
 
@@ -414,7 +444,9 @@ function formatPackContentItem(content: PackContentResource): string {
       <CharacterWizardEquipmentChoiceList
         :choices="backgroundEquipmentChoices"
         :local-selections="localSelections"
+        :item-selections="itemSelections"
         @select="handleChoiceSelect"
+        @item-select="handleItemSelect"
       />
     </div>
 
