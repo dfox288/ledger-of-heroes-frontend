@@ -402,3 +402,226 @@ export function createMockFeat(overrides: Partial<Feat> = {}): Feat {
     ...overrides
   }
 }
+
+// ============================================================================
+// Wizard-Specific Fixtures (Issue #313)
+// ============================================================================
+
+/**
+ * Pre-configured races for wizard step tests
+ *
+ * These fixtures represent common test scenarios:
+ * - elf: Subrace REQUIRED (tests mandatory subrace selection)
+ * - human: Subrace OPTIONAL (tests optional subrace flow)
+ * - dwarf: Different speed + required subrace (tests edge cases)
+ * - halfOrc: No subraces available (tests simplest flow)
+ */
+export const wizardMockRaces = {
+  elf: createMockRace({
+    id: 1,
+    name: 'Elf',
+    slug: 'elf',
+    speed: 30,
+    subrace_required: true,
+    subraces: [
+      { id: 2, slug: 'high-elf', name: 'High Elf' },
+      { id: 3, slug: 'wood-elf', name: 'Wood Elf' }
+    ],
+    modifiers: [
+      {
+        modifier_category: 'ability_score',
+        ability_score: { id: 2, code: 'DEX', name: 'Dexterity' },
+        value: 2
+      }
+    ]
+  }),
+  human: createMockRace({
+    id: 4,
+    name: 'Human',
+    slug: 'human',
+    speed: 30,
+    subrace_required: false,
+    subraces: [
+      { id: 5, slug: 'variant-human', name: 'Variant Human' }
+    ],
+    modifiers: [
+      { modifier_category: 'ability_score', ability_score: { id: 1, code: 'STR', name: 'Strength' }, value: 1 },
+      { modifier_category: 'ability_score', ability_score: { id: 2, code: 'DEX', name: 'Dexterity' }, value: 1 },
+      { modifier_category: 'ability_score', ability_score: { id: 3, code: 'CON', name: 'Constitution' }, value: 1 },
+      { modifier_category: 'ability_score', ability_score: { id: 4, code: 'INT', name: 'Intelligence' }, value: 1 },
+      { modifier_category: 'ability_score', ability_score: { id: 5, code: 'WIS', name: 'Wisdom' }, value: 1 },
+      { modifier_category: 'ability_score', ability_score: { id: 6, code: 'CHA', name: 'Charisma' }, value: 1 }
+    ]
+  }),
+  dwarf: createMockRace({
+    id: 6,
+    name: 'Dwarf',
+    slug: 'dwarf',
+    speed: 25,
+    subrace_required: true,
+    subraces: [
+      { id: 7, slug: 'hill-dwarf', name: 'Hill Dwarf' },
+      { id: 8, slug: 'mountain-dwarf', name: 'Mountain Dwarf' }
+    ],
+    modifiers: [
+      {
+        modifier_category: 'ability_score',
+        ability_score: { id: 3, code: 'CON', name: 'Constitution' },
+        value: 2
+      }
+    ]
+  }),
+  halfOrc: createMockRace({
+    id: 9,
+    name: 'Half-Orc',
+    slug: 'half-orc',
+    speed: 30,
+    subrace_required: false,
+    subraces: [],
+    modifiers: [
+      { modifier_category: 'ability_score', ability_score: { id: 1, code: 'STR', name: 'Strength' }, value: 2 },
+      { modifier_category: 'ability_score', ability_score: { id: 3, code: 'CON', name: 'Constitution' }, value: 1 }
+    ]
+  })
+} as const
+
+/**
+ * Pre-configured classes for wizard step tests
+ *
+ * These fixtures represent common test scenarios:
+ * - fighter: No spellcasting, subclass at level 3 (standard martial)
+ * - wizard: INT spellcaster, subclass at level 2 (early specialization)
+ * - cleric: WIS spellcaster, subclass at level 1 (immediate specialization)
+ */
+export const wizardMockClasses = {
+  fighter: createMockClass({
+    id: 10,
+    name: 'Fighter',
+    slug: 'fighter',
+    hit_die: 10,
+    spellcasting_ability: null,
+    primary_ability: { id: 1, code: 'STR', name: 'Strength' },
+    subclass_level: 3,
+    subclasses: [
+      { id: 11, name: 'Champion' },
+      { id: 12, name: 'Battle Master' }
+    ]
+  }),
+  wizard: createMockClass({
+    id: 1,
+    name: 'Wizard',
+    slug: 'wizard',
+    hit_die: 6,
+    spellcasting_ability: { id: 4, code: 'INT', name: 'Intelligence' },
+    primary_ability: { id: 4, code: 'INT', name: 'Intelligence' },
+    subclass_level: 2,
+    subclasses: [
+      { id: 2, name: 'School of Evocation' },
+      { id: 3, name: 'School of Abjuration' }
+    ]
+  }),
+  cleric: createMockClass({
+    id: 13,
+    name: 'Cleric',
+    slug: 'cleric',
+    hit_die: 8,
+    spellcasting_ability: { id: 5, code: 'WIS', name: 'Wisdom' },
+    primary_ability: { id: 5, code: 'WIS', name: 'Wisdom' },
+    subclass_level: 1,
+    subclasses: [
+      { id: 14, name: 'Life Domain' },
+      { id: 15, name: 'War Domain' }
+    ]
+  })
+} as const
+
+/**
+ * Pre-configured backgrounds for wizard step tests
+ *
+ * These fixtures represent common test scenarios:
+ * - acolyte: Default background with religion/insight skills
+ * - soldier: Different feature + different skills (Athletics, Intimidation)
+ */
+export const wizardMockBackgrounds = {
+  acolyte: createMockBackground({
+    id: 1,
+    name: 'Acolyte',
+    slug: 'acolyte',
+    feature_name: 'Shelter of the Faithful',
+    feature_description: 'As an acolyte, you command the respect of those who share your faith.',
+    proficiencies: [
+      {
+        id: 1,
+        proficiency_type: 'skill',
+        proficiency_subcategory: null,
+        proficiency_type_id: null,
+        skill: { id: 1, name: 'Insight', code: 'INSIGHT', description: null, ability_score: null },
+        proficiency_name: 'Insight',
+        grants: true,
+        is_choice: false,
+        quantity: 1
+      },
+      {
+        id: 2,
+        proficiency_type: 'skill',
+        proficiency_subcategory: null,
+        proficiency_type_id: null,
+        skill: { id: 2, name: 'Religion', code: 'RELIGION', description: null, ability_score: null },
+        proficiency_name: 'Religion',
+        grants: true,
+        is_choice: false,
+        quantity: 1
+      }
+    ]
+  }),
+  soldier: createMockBackground({
+    id: 16,
+    name: 'Soldier',
+    slug: 'soldier',
+    feature_name: 'Military Rank',
+    feature_description: 'You have a military rank from your career as a soldier.',
+    proficiencies: [
+      {
+        id: 3,
+        proficiency_type: 'skill',
+        proficiency_subcategory: null,
+        proficiency_type_id: null,
+        skill: { id: 3, name: 'Athletics', code: 'ATHLETICS', description: null, ability_score: null },
+        proficiency_name: 'Athletics',
+        grants: true,
+        is_choice: false,
+        quantity: 1
+      },
+      {
+        id: 4,
+        proficiency_type: 'skill',
+        proficiency_subcategory: null,
+        proficiency_type_id: null,
+        skill: { id: 4, name: 'Intimidation', code: 'INTIMIDATION', description: null, ability_score: null },
+        proficiency_name: 'Intimidation',
+        grants: true,
+        is_choice: false,
+        quantity: 1
+      }
+    ]
+  })
+} as const
+
+/**
+ * Helper functions to convert wizard mock objects to arrays
+ *
+ * Useful when tests need to iterate over all fixtures or pass to components
+ * that expect array props (like USelectMenu :items)
+ */
+
+export function getWizardMockRacesArray(): Race[] {
+  return Object.values(wizardMockRaces)
+}
+
+export function getWizardMockClassesArray(): CharacterClass[] {
+  return Object.values(wizardMockClasses)
+}
+
+export function getWizardMockBackgroundsArray(): Background[] {
+  return Object.values(wizardMockBackgrounds)
+}
