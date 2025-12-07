@@ -5,6 +5,38 @@ import type { CharacterEquipment } from '~/types/character'
 defineProps<{
   equipment: CharacterEquipment[]
 }>()
+
+/**
+ * Get display name for an equipment item
+ * Handles custom_description which may be JSON with a description field
+ */
+function getItemDisplayName(item: CharacterEquipment): string {
+  // First priority: custom name
+  if (item.custom_name) {
+    return item.custom_name
+  }
+
+  // Second priority: linked item name (cast from generic object type)
+  const itemData = item.item as { name?: string } | null
+  if (itemData?.name) {
+    return itemData.name
+  }
+
+  // Third priority: parse custom_description (may be JSON)
+  if (item.custom_description) {
+    try {
+      const parsed = JSON.parse(item.custom_description)
+      if (typeof parsed === 'object' && parsed.description) {
+        return parsed.description
+      }
+    } catch {
+      // Not JSON, use as-is
+      return item.custom_description
+    }
+  }
+
+  return 'Unknown item'
+}
 </script>
 
 <template>
@@ -37,7 +69,7 @@ defineProps<{
             class="w-5 h-5 text-gray-400"
           />
           <span class="text-gray-900 dark:text-white">
-            {{ item.custom_name ?? item.item?.name ?? item.custom_description ?? 'Unknown item' }}
+            {{ getItemDisplayName(item) }}
           </span>
         </div>
         <span

@@ -159,11 +159,15 @@ export function useCharacterSheet(characterId: Ref<string | number>): UseCharact
     const abilities: AbilityScoreCode[] = ['STR', 'DEX', 'CON', 'INT', 'WIS', 'CHA']
 
     return abilities.map((ability) => {
-      const modifier = stats.value?.saving_throws[ability] ?? 0
-      // Determine proficiency by comparing save modifier to ability modifier
-      // If save > ability mod, they're proficient
-      const abilityMod = stats.value?.ability_scores[ability]?.modifier ?? 0
-      const proficient = modifier > abilityMod
+      // API returns { modifier, proficient, total } for each saving throw
+      const saveData = stats.value?.saving_throws[ability]
+      // Handle both object format (new API) and number format (legacy/type definition)
+      const modifier = typeof saveData === 'object' && saveData !== null
+        ? (saveData as { total: number }).total
+        : (saveData ?? 0)
+      const proficient = typeof saveData === 'object' && saveData !== null
+        ? (saveData as { proficient: boolean }).proficient
+        : false
 
       return {
         ability,
