@@ -75,7 +75,7 @@ describe('Character Detail Page', () => {
       const wrapper = await mountSuspended(CharacterDetailPage)
       await wrapper.vm.$nextTick()
 
-      const inspirationBadge = wrapper.find('[data-test="inspiration-badge"]')
+      const inspirationBadge = wrapper.find('[data-testid="inspiration-badge"]')
       expect(inspirationBadge.exists()).toBe(true)
       expect(inspirationBadge.text()).toContain('Inspired')
     })
@@ -88,7 +88,7 @@ describe('Character Detail Page', () => {
       const wrapper = await mountSuspended(CharacterDetailPage)
       await wrapper.vm.$nextTick()
 
-      const inspirationBadge = wrapper.find('[data-test="inspiration-badge"]')
+      const inspirationBadge = wrapper.find('[data-testid="inspiration-badge"]')
       expect(inspirationBadge.exists()).toBe(false)
     })
   })

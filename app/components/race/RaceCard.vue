@@ -7,6 +7,8 @@ interface Props {
 
 const props = defineProps<Props>()
 
+const { getSizeColor } = useEntityColorMap()
+
 /**
  * Check if this is a subrace
  * A race is a subrace if it has a parent_race object
@@ -14,21 +16,6 @@ const props = defineProps<Props>()
 const isSubrace = computed(() => {
   return !!props.race.parent_race
 })
-
-/**
- * Get size color based on size code (NuxtUI v4 semantic colors)
- */
-const getSizeColor = (sizeCode: string): 'primary' | 'secondary' | 'success' | 'info' | 'warning' | 'error' | 'neutral' => {
-  const colors: Record<string, 'primary' | 'secondary' | 'success' | 'info' | 'warning' | 'error' | 'neutral'> = {
-    T: 'neutral', // Tiny - gray
-    S: 'success', // Small - green
-    M: 'info', // Medium - blue
-    L: 'warning', // Large - amber
-    H: 'error', // Huge - red
-    G: 'error' // Gargantuan - red
-  }
-  return colors[sizeCode] || 'info'
-}
 
 /**
  * Get ability score modifiers summary
@@ -57,12 +44,11 @@ const abilityModifiers = computed(() => {
 /**
  * Truncate description to specified length
  */
-const truncatedDescription = computed(() => {
-  if (!props.race.description) return 'A playable race for D&D 5e characters'
-  const maxLength = 150
-  if (props.race.description.length <= maxLength) return props.race.description
-  return props.race.description.substring(0, maxLength).trim() + '...'
-})
+const truncatedDescription = useTruncateDescription(
+  computed(() => props.race.description),
+  150,
+  'A playable race for D&D 5e characters'
+)
 
 /**
  * Format speed display including special movement types
@@ -107,7 +93,7 @@ const backgroundImage = computed(() => {
       <!-- Background Image Layer -->
       <div
         v-if="backgroundImage"
-        data-test="card-background"
+        data-testid="card-background"
         class="absolute inset-0 bg-cover bg-center opacity-15 transition-all duration-300 group-hover:opacity-30 group-hover:scale-110 group-hover:rotate-3"
         :style="{ backgroundImage: `url(${backgroundImage})` }"
       />

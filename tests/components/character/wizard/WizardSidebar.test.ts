@@ -52,7 +52,7 @@ describe('WizardSidebar', () => {
       })
 
       // Look for step items with specific test IDs
-      const sourcebooksStep = wrapper.find('[data-test="step-item-sourcebooks"]')
+      const sourcebooksStep = wrapper.find('[data-testid="step-item-sourcebooks"]')
       expect(sourcebooksStep.exists()).toBe(true)
     })
   })
@@ -64,7 +64,7 @@ describe('WizardSidebar', () => {
         props: { route }
       })
 
-      const currentStep = wrapper.find('[data-test="step-item-race"]')
+      const currentStep = wrapper.find('[data-testid="step-item-race"]')
       expect(currentStep.classes()).toContain('bg-primary-50')
     })
 
@@ -75,8 +75,8 @@ describe('WizardSidebar', () => {
       })
 
       // Sourcebooks (index 0) should show as completed when on race (index 1)
-      const sourcebooksStep = wrapper.find('[data-test="step-item-sourcebooks"]')
-      expect(sourcebooksStep.find('[data-test="check-icon"]').exists()).toBe(true)
+      const sourcebooksStep = wrapper.find('[data-testid="step-item-sourcebooks"]')
+      expect(sourcebooksStep.find('[data-testid="check-icon"]').exists()).toBe(true)
     })
   })
 
@@ -87,7 +87,7 @@ describe('WizardSidebar', () => {
         props: { route }
       })
 
-      const raceStep = wrapper.find('[data-test="step-item-race"]')
+      const raceStep = wrapper.find('[data-testid="step-item-race"]')
       // Verify the step is clickable (not disabled)
       expect(raceStep.classes()).toContain('cursor-pointer')
       await raceStep.trigger('click')
@@ -101,7 +101,7 @@ describe('WizardSidebar', () => {
       })
 
       // Current step should not have cursor-pointer class
-      const raceStep = wrapper.find('[data-test="step-item-race"]')
+      const raceStep = wrapper.find('[data-testid="step-item-race"]')
       expect(raceStep.classes()).not.toContain('cursor-pointer')
     })
 
@@ -112,7 +112,7 @@ describe('WizardSidebar', () => {
       })
 
       // Future steps should be disabled
-      const reviewStep = wrapper.find('[data-test="step-item-review"]')
+      const reviewStep = wrapper.find('[data-testid="step-item-review"]')
       expect(reviewStep.classes()).toContain('cursor-not-allowed')
     })
   })
@@ -125,7 +125,7 @@ describe('WizardSidebar', () => {
       })
 
       // Progress bar should exist
-      expect(wrapper.find('[data-test="progress-bar"]').exists()).toBe(true)
+      expect(wrapper.find('[data-testid="progress-bar"]').exists()).toBe(true)
     })
   })
 })

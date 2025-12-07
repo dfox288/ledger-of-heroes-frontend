@@ -316,7 +316,7 @@ function formatPackContentItem(content: PackContentResource): string {
             <!-- Pack contents toggle for fixed items -->
             <button
               v-if="hasPackContents(item)"
-              :data-test="`fixed-pack-contents-toggle-${item.id}`"
+              :data-testid="`fixed-pack-contents-toggle-${item.id}`"
               type="button"
               :aria-expanded="isFixedPackExpanded(item.id)"
               :aria-label="`${isFixedPackExpanded(item.id) ? 'Hide' : 'Show'} contents of ${getItemDisplayName(item)}`"
@@ -334,7 +334,7 @@ function formatPackContentItem(content: PackContentResource): string {
           <!-- Pack contents list (when expanded) -->
           <div
             v-if="hasPackContents(item) && isFixedPackExpanded(item.id)"
-            :data-test="`fixed-pack-contents-list-${item.id}`"
+            :data-testid="`fixed-pack-contents-list-${item.id}`"
             class="ml-7 mt-2 p-3 bg-gray-50 dark:bg-gray-800/50 rounded-lg border border-gray-200 dark:border-gray-700"
           >
             <p class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-2">
@@ -399,7 +399,7 @@ function formatPackContentItem(content: PackContentResource): string {
             <!-- Pack contents toggle for fixed items -->
             <button
               v-if="hasPackContents(item)"
-              :data-test="`fixed-pack-contents-toggle-${item.id}`"
+              :data-testid="`fixed-pack-contents-toggle-${item.id}`"
               type="button"
               :aria-expanded="isFixedPackExpanded(item.id)"
               :aria-label="`${isFixedPackExpanded(item.id) ? 'Hide' : 'Show'} contents of ${getItemDisplayName(item)}`"
@@ -417,7 +417,7 @@ function formatPackContentItem(content: PackContentResource): string {
           <!-- Pack contents list (when expanded) -->
           <div
             v-if="hasPackContents(item) && isFixedPackExpanded(item.id)"
-            :data-test="`fixed-pack-contents-list-${item.id}`"
+            :data-testid="`fixed-pack-contents-list-${item.id}`"
             class="ml-7 mt-2 p-3 bg-gray-50 dark:bg-gray-800/50 rounded-lg border border-gray-200 dark:border-gray-700"
           >
             <p class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-2">
@@ -453,7 +453,7 @@ function formatPackContentItem(content: PackContentResource): string {
     <!-- Continue Button -->
     <div class="flex justify-center pt-4">
       <UButton
-        data-test="continue-btn"
+        data-testid="continue-btn"
         size="lg"
         :disabled="!allEquipmentChoicesMade || pending || isSaving"
         :loading="pending || isSaving"

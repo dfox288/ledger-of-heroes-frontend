@@ -65,7 +65,7 @@ const shouldShow = computed(() => abilityScoreModifiers.value.length > 0)
         <div
           v-for="modifier in abilityScoreModifiers"
           :key="modifier.id"
-          data-test="ability-box"
+          data-testid="ability-box"
           class="flex flex-col items-center justify-center p-4 rounded-lg bg-primary-50 dark:bg-primary-900/20 border border-primary-200 dark:border-primary-800 min-w-[100px]"
         >
           <!-- Ability Code or "Your choice" -->

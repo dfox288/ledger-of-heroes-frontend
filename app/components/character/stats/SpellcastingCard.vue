@@ -35,7 +35,7 @@ function getOrdinal(level: number): string {
 
 <template>
   <UCard
-    data-test="spellcasting-card"
+    data-testid="spellcasting-card"
     :ui="{ body: 'p-4' }"
   >
     <template #header>
@@ -53,7 +53,7 @@ function getOrdinal(level: number): string {
       <!-- Spellcasting Ability -->
       <div class="flex flex-col items-center">
         <div
-          data-test="ability-value"
+          data-testid="ability-value"
           class="text-lg font-bold text-arcane-600 dark:text-arcane-400"
         >
           {{ abilityName }}
@@ -66,7 +66,7 @@ function getOrdinal(level: number): string {
       <!-- Spell Save DC -->
       <div class="flex flex-col items-center">
         <div
-          data-test="save-dc-value"
+          data-testid="save-dc-value"
           class="text-2xl font-bold text-arcane-600 dark:text-arcane-400"
         >
           {{ saveDC }}
@@ -79,7 +79,7 @@ function getOrdinal(level: number): string {
       <!-- Spell Attack Bonus -->
       <div class="flex flex-col items-center">
         <div
-          data-test="attack-bonus-value"
+          data-testid="attack-bonus-value"
           class="text-2xl font-bold text-arcane-600 dark:text-arcane-400"
         >
           {{ formattedAttackBonus }}
@@ -93,7 +93,7 @@ function getOrdinal(level: number): string {
     <!-- Spell Slots -->
     <div
       v-if="hasSlots"
-      data-test="spell-slots"
+      data-testid="spell-slots"
       class="pt-4 border-t border-gray-200 dark:border-gray-700"
     >
       <div class="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-2">
@@ -103,7 +103,7 @@ function getOrdinal(level: number): string {
         <div
           v-for="(count, level) in slots"
           :key="level"
-          :data-test="`slot-level-${level}`"
+          :data-testid="`slot-level-${level}`"
           class="flex items-center gap-1.5 px-2 py-1 rounded-full bg-arcane-50 dark:bg-arcane-900/20"
         >
           <span class="text-xs font-medium text-arcane-700 dark:text-arcane-300">

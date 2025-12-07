@@ -15,6 +15,9 @@ const store = useCharacterWizardStore()
 const { isLoading, error } = storeToRefs(store)
 const { nextStep } = useCharacterWizard()
 
+// Toast for user feedback
+const toast = useToast()
+
 // Create local refs that sync with store
 const name = computed({
   get: () => store.selections.name,
@@ -46,6 +49,11 @@ async function handleContinue() {
     await nextStep()
   } catch (err) {
     console.error('Failed to save details:', err)
+    toast.add({
+      title: 'Save Failed',
+      description: 'Unable to save your selection. Please try again.',
+      color: 'error'
+    })
   }
 }
 
@@ -174,7 +182,7 @@ const alignmentOptions = [
     <!-- Continue Button -->
     <div class="flex justify-center pt-6">
       <UButton
-        data-test="continue-btn"
+        data-testid="continue-btn"
         size="lg"
         :disabled="!canProceed || isLoading"
         :loading="isLoading"

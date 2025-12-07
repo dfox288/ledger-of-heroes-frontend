@@ -38,14 +38,14 @@ const TEST_CHARACTER_NAME = 'Test Human Bard'
  * Get the Next button in the wizard footer
  */
 function getNextButton(page: Page): Locator {
-  return page.locator('[data-test="next-button"]')
+  return page.locator('[data-testid="next-button"]')
 }
 
 /**
  * Get the Back button in the wizard footer
  */
 function getBackButton(page: Page): Locator {
-  return page.locator('[data-test="back-button"]')
+  return page.locator('[data-testid="back-button"]')
 }
 
 /**
@@ -572,7 +572,7 @@ test.describe('Character Creation Wizard', () => {
   test.describe('Sidebar Progress', () => {
     test('shows progress indicator', async ({ page }) => {
       await goToStep(page, 'sourcebooks')
-      await expect(page.locator('[data-test="progress-bar"]')).toBeVisible()
+      await expect(page.locator('[data-testid="progress-bar"]')).toBeVisible()
     })
 
     test('clicking completed step navigates there', async ({ page }) => {
@@ -581,7 +581,7 @@ test.describe('Character Creation Wizard', () => {
       await clickNextAndWait(page)
 
       // Now on race, click back to sourcebooks in sidebar
-      await page.locator('[data-test="step-item-sourcebooks"]').click()
+      await page.locator('[data-testid="step-item-sourcebooks"]').click()
       await expect(page).toHaveURL(/\/sourcebooks/)
     })
   })

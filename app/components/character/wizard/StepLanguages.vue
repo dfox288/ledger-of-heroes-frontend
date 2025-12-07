@@ -247,7 +247,7 @@ async function handleContinue() {
         <!-- Known languages (already selected/resolved) -->
         <div
           v-if="data.knownLanguages.length > 0"
-          data-test="known-languages"
+          data-testid="known-languages"
           class="mb-4"
         >
           <p class="text-sm text-gray-600 dark:text-gray-400 mb-2">
@@ -336,7 +336,7 @@ async function handleContinue() {
     <!-- Continue Button -->
     <div class="flex justify-center pt-6">
       <UButton
-        data-test="continue-btn"
+        data-testid="continue-btn"
         size="lg"
         :disabled="!allLanguageChoicesComplete || pending || isLoading"
         :loading="pending || isLoading"

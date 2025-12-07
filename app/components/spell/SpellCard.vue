@@ -7,6 +7,8 @@ interface Props {
 
 const props = defineProps<Props>()
 
+const { getSpellSchoolColor } = useEntityColorMap()
+
 /**
  * Format spell level for display
  */
@@ -15,24 +17,6 @@ const levelText = computed(() => {
   const suffix = ['th', 'st', 'nd', 'rd', 'th', 'th', 'th', 'th', 'th', 'th']
   return `${props.spell.level}${suffix[props.spell.level]} Level`
 })
-
-/**
- * Get badge color for spell school
- * Maps D&D schools to NuxtUI v4 color names
- */
-const getSchoolColor = (schoolCode: string): 'primary' | 'secondary' | 'success' | 'info' | 'warning' | 'error' | 'neutral' => {
-  const colorMap: Record<string, 'primary' | 'secondary' | 'success' | 'info' | 'warning' | 'error' | 'neutral'> = {
-    A: 'info', // Abjuration (protection)
-    C: 'primary', // Conjuration (summoning)
-    D: 'info', // Divination (knowledge)
-    EN: 'warning', // Enchantment (mind)
-    EV: 'error', // Evocation (energy/damage)
-    I: 'primary', // Illusion (deception)
-    N: 'neutral', // Necromancy (death)
-    T: 'success' // Transmutation (transformation)
-  }
-  return colorMap[schoolCode] || 'info'
-}
 
 /**
  * Parse area of effect field (Issue #54)
@@ -100,7 +84,7 @@ const isMaterialConsumed = computed(() => {
       </UBadge>
       <UBadge
         v-if="spell.school"
-        :color="getSchoolColor(spell.school.code)"
+        :color="getSpellSchoolColor(spell.school.code)"
         variant="subtle"
         size="md"
       >

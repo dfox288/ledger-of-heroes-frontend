@@ -70,14 +70,14 @@ export function testBackgroundImageBehavior(
     if (hasBackgroundImage) {
       it('renders background image when available', async () => {
         const wrapper = await mountComponent()
-        const bgDiv = wrapper.find('[data-test="card-background"]')
+        const bgDiv = wrapper.find('[data-testid="card-background"]')
         expect(bgDiv.exists()).toBe(true)
         expect(bgDiv.attributes('style')).toContain('background-image')
       })
     } else {
       it('does not render background when image unavailable', async () => {
         const wrapper = await mountComponent()
-        const bgDiv = wrapper.find('[data-test="card-background"]')
+        const bgDiv = wrapper.find('[data-testid="card-background"]')
         expect(bgDiv.exists()).toBe(false)
       })
     }

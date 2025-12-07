@@ -243,7 +243,7 @@ function isSelected(choiceId: string, optionLetter: string): boolean {
       <button
         v-for="option in getEquipmentOptions(choice)"
         :key="option.option"
-        :data-test="`option-${option.option}`"
+        :data-testid="`option-${option.option}`"
         type="button"
         class="w-full p-3 rounded-lg border-2 transition-all text-left flex items-center gap-3"
         :class="[

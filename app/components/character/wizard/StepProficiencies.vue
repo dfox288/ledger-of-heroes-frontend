@@ -581,7 +581,7 @@ async function handleContinue() {
     <!-- Continue Button -->
     <div class="flex justify-center pt-6">
       <UButton
-        data-test="continue-btn"
+        data-testid="continue-btn"
         size="lg"
         :disabled="(hasAnyChoices && !allProficiencyChoicesComplete) || loadingChoices || isSaving"
         :loading="loadingChoices || isSaving"

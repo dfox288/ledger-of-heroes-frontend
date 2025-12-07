@@ -134,7 +134,7 @@ describe('StepLanguages', () => {
   describe('continue button', () => {
     it('is disabled when choices incomplete', async () => {
       const wrapper = await mountSuspended(StepLanguages)
-      const continueBtn = wrapper.find('[data-test="continue-btn"]')
+      const continueBtn = wrapper.find('[data-testid="continue-btn"]')
       expect(continueBtn.attributes('disabled')).toBeDefined()
     })
   })

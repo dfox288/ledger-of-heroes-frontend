@@ -132,7 +132,7 @@ const filterProgressionFeatures = (featuresString: string): string => {
       <div
         v-for="row in progressionTable.rows"
         :key="row.level as number"
-        data-test="level-card"
+        data-testid="level-card"
         class="p-4 rounded-lg border border-gray-200 dark:border-gray-700"
         :class="{
           'bg-primary-50 dark:bg-primary-900/20': isASILevel(row.level as number),

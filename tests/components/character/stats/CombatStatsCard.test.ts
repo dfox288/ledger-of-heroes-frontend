@@ -28,7 +28,7 @@ describe('CombatStatsCard', () => {
         props: defaultProps
       })
 
-      expect(wrapper.find('[data-test="combat-stats-card"]').exists()).toBe(true)
+      expect(wrapper.find('[data-testid="combat-stats-card"]').exists()).toBe(true)
     })
   })
 
@@ -38,7 +38,7 @@ describe('CombatStatsCard', () => {
         props: { ...defaultProps, hitPoints: 45 }
       })
 
-      const hpSection = wrapper.find('[data-test="hp-value"]')
+      const hpSection = wrapper.find('[data-testid="hp-value"]')
       expect(hpSection.text()).toContain('45')
     })
 
@@ -47,7 +47,7 @@ describe('CombatStatsCard', () => {
         props: { ...defaultProps, hitPoints: '—' }
       })
 
-      const hpSection = wrapper.find('[data-test="hp-value"]')
+      const hpSection = wrapper.find('[data-testid="hp-value"]')
       expect(hpSection.text()).toContain('—')
     })
 
@@ -66,7 +66,7 @@ describe('CombatStatsCard', () => {
         props: { ...defaultProps, armorClass: 18 }
       })
 
-      const acSection = wrapper.find('[data-test="ac-value"]')
+      const acSection = wrapper.find('[data-testid="ac-value"]')
       expect(acSection.text()).toContain('18')
     })
 
@@ -85,7 +85,7 @@ describe('CombatStatsCard', () => {
         props: { ...defaultProps, initiative: '+3' }
       })
 
-      const initSection = wrapper.find('[data-test="init-value"]')
+      const initSection = wrapper.find('[data-testid="init-value"]')
       expect(initSection.text()).toContain('+3')
     })
 
@@ -94,7 +94,7 @@ describe('CombatStatsCard', () => {
         props: { ...defaultProps, initiative: '-1' }
       })
 
-      const initSection = wrapper.find('[data-test="init-value"]')
+      const initSection = wrapper.find('[data-testid="init-value"]')
       expect(initSection.text()).toContain('-1')
     })
 
@@ -113,7 +113,7 @@ describe('CombatStatsCard', () => {
         props: { ...defaultProps, speed: 35 }
       })
 
-      const speedSection = wrapper.find('[data-test="speed-value"]')
+      const speedSection = wrapper.find('[data-testid="speed-value"]')
       expect(speedSection.text()).toContain('35')
     })
 
@@ -132,7 +132,7 @@ describe('CombatStatsCard', () => {
         props: { ...defaultProps, proficiencyBonus: '+3' }
       })
 
-      const profSection = wrapper.find('[data-test="prof-value"]')
+      const profSection = wrapper.find('[data-testid="prof-value"]')
       expect(profSection.text()).toContain('+3')
     })
 

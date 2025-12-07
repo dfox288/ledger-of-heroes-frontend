@@ -24,19 +24,10 @@ const imagePath = computed(() => {
 /**
  * Truncate description for header
  */
-const truncatedDescription = computed(() => {
-  if (!props.entity?.description) return ''
-  const maxLength = 200
-  if (props.entity.description.length <= maxLength) {
-    return props.entity.description
-  }
-  const truncated = props.entity.description.substring(0, maxLength)
-  const lastPeriod = truncated.lastIndexOf('.')
-  if (lastPeriod > maxLength * 0.6) {
-    return truncated.substring(0, lastPeriod + 1)
-  }
-  return truncated + '...'
-})
+const truncatedDescription = useTruncateDescription(
+  computed(() => props.entity?.description),
+  200
+)
 
 /**
  * Get size badge color based on size code

@@ -32,7 +32,7 @@ describe('SavingThrowsCard', () => {
         props: { savingThrows: defaultSavingThrows }
       })
 
-      expect(wrapper.find('[data-test="saving-throws-card"]').exists()).toBe(true)
+      expect(wrapper.find('[data-testid="saving-throws-card"]').exists()).toBe(true)
     })
 
     it('shows section header', async () => {
@@ -68,7 +68,7 @@ describe('SavingThrowsCard', () => {
         props: { savingThrows: saves }
       })
 
-      const strSection = wrapper.find('[data-test="save-STR"]')
+      const strSection = wrapper.find('[data-testid="save-STR"]')
       expect(strSection.text()).toContain('+5')
     })
 
@@ -82,7 +82,7 @@ describe('SavingThrowsCard', () => {
         props: { savingThrows: saves }
       })
 
-      const strSection = wrapper.find('[data-test="save-STR"]')
+      const strSection = wrapper.find('[data-testid="save-STR"]')
       expect(strSection.text()).toContain('-2')
     })
   })
@@ -94,11 +94,11 @@ describe('SavingThrowsCard', () => {
       })
 
       // DEX and WIS are proficient
-      const dexSection = wrapper.find('[data-test="save-DEX"]')
-      const wisSection = wrapper.find('[data-test="save-WIS"]')
+      const dexSection = wrapper.find('[data-testid="save-DEX"]')
+      const wisSection = wrapper.find('[data-testid="save-WIS"]')
 
-      expect(dexSection.find('[data-test="proficiency-dot"]').exists()).toBe(true)
-      expect(wisSection.find('[data-test="proficiency-dot"]').exists()).toBe(true)
+      expect(dexSection.find('[data-testid="proficiency-dot"]').exists()).toBe(true)
+      expect(wisSection.find('[data-testid="proficiency-dot"]').exists()).toBe(true)
     })
 
     it('does not show proficiency indicator for non-proficient saves', async () => {
@@ -107,11 +107,11 @@ describe('SavingThrowsCard', () => {
       })
 
       // STR, CON, INT, CHA are not proficient
-      const strSection = wrapper.find('[data-test="save-STR"]')
-      const conSection = wrapper.find('[data-test="save-CON"]')
+      const strSection = wrapper.find('[data-testid="save-STR"]')
+      const conSection = wrapper.find('[data-testid="save-CON"]')
 
-      expect(strSection.find('[data-test="proficiency-dot"]').exists()).toBe(false)
-      expect(conSection.find('[data-test="proficiency-dot"]').exists()).toBe(false)
+      expect(strSection.find('[data-testid="proficiency-dot"]').exists()).toBe(false)
+      expect(conSection.find('[data-testid="proficiency-dot"]').exists()).toBe(false)
     })
 
     it('shows filled dot for proficient saves', async () => {
@@ -119,8 +119,8 @@ describe('SavingThrowsCard', () => {
         props: { savingThrows: defaultSavingThrows }
       })
 
-      const dexSection = wrapper.find('[data-test="save-DEX"]')
-      const profDot = dexSection.find('[data-test="proficiency-dot"]')
+      const dexSection = wrapper.find('[data-testid="save-DEX"]')
+      const profDot = dexSection.find('[data-testid="proficiency-dot"]')
 
       // Should have the filled styling
       expect(profDot.classes().some(c => c.includes('bg-'))).toBe(true)
@@ -134,7 +134,7 @@ describe('SavingThrowsCard', () => {
       })
 
       // Each save should have its own row
-      const saveItems = wrapper.findAll('[data-test^="save-"]')
+      const saveItems = wrapper.findAll('[data-testid^="save-"]')
       expect(saveItems.length).toBe(6)
     })
   })

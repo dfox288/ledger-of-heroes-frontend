@@ -151,7 +151,7 @@ describe('RaceOverviewAbilityScoresCard', () => {
     })
 
     // Should have data-test attributes for each ability box
-    const abilityBoxes = wrapper.findAll('[data-test="ability-box"]')
+    const abilityBoxes = wrapper.findAll('[data-testid="ability-box"]')
     expect(abilityBoxes.length).toBe(2)
   })
 
@@ -214,7 +214,7 @@ describe('RaceOverviewAbilityScoresCard', () => {
       }
     })
 
-    const abilityBoxes = wrapper.findAll('[data-test="ability-box"]')
+    const abilityBoxes = wrapper.findAll('[data-testid="ability-box"]')
     expect(abilityBoxes.length).toBe(3)
   })
 

@@ -21,12 +21,11 @@ const backgroundImageUrl = computed(() =>
 /**
  * Truncate description to specified length
  */
-const truncatedDescription = computed(() => {
-  if (!props.language.description) return 'A language spoken in the D&D multiverse'
-  const maxLength = 120
-  if (props.language.description.length <= maxLength) return props.language.description
-  return props.language.description.substring(0, maxLength).trim() + '...'
-})
+const truncatedDescription = useTruncateDescription(
+  computed(() => props.language.description),
+  120,
+  'A language spoken in the D&D multiverse'
+)
 </script>
 
 <template>

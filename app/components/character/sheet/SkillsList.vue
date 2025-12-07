@@ -32,7 +32,7 @@ function formatModifier(mod: number): string {
             'bg-success-500 border-success-500': skill.proficient && !skill.expertise,
             'border-gray-400 dark:border-gray-500': !skill.proficient
           }"
-          :data-test="skill.expertise ? 'expertise' : (skill.proficient ? 'proficient' : 'not-proficient')"
+          :data-testid="skill.expertise ? 'expertise' : (skill.proficient ? 'proficient' : 'not-proficient')"
         />
         <!-- Modifier -->
         <span class="text-sm font-bold text-gray-900 dark:text-white w-8">

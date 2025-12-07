@@ -61,7 +61,7 @@ const shouldShow = computed(() => validResistances.value.length > 0)
       <UBadge
         v-for="resistance in validResistances"
         :key="resistance.id"
-        data-test="resistance-badge"
+        data-testid="resistance-badge"
         color="neutral"
         variant="subtle"
         size="md"

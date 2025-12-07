@@ -33,7 +33,7 @@ async function handleBack() {
     <div class="flex justify-between items-center max-w-4xl mx-auto">
       <!-- Back Button -->
       <UButton
-        data-test="back-button"
+        data-testid="back-button"
         color="neutral"
         variant="ghost"
         icon="i-heroicons-arrow-left"
@@ -45,7 +45,7 @@ async function handleBack() {
 
       <!-- Next/Finish Button -->
       <UButton
-        data-test="next-button"
+        data-testid="next-button"
         color="primary"
         :icon="isLastStep ? 'i-heroicons-check' : 'i-heroicons-arrow-right'"
         icon-trailing

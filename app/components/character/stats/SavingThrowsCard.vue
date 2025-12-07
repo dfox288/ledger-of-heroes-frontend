@@ -16,7 +16,7 @@ defineProps<Props>()
 
 <template>
   <UCard
-    data-test="saving-throws-card"
+    data-testid="saving-throws-card"
     :ui="{ body: 'p-4' }"
   >
     <template #header>
@@ -33,14 +33,14 @@ defineProps<Props>()
       <div
         v-for="save in savingThrows"
         :key="save.code"
-        :data-test="`save-${save.code}`"
+        :data-testid="`save-${save.code}`"
         class="flex items-center justify-between p-2 rounded-lg bg-gray-50 dark:bg-gray-800"
       >
         <!-- Ability code and proficiency dot -->
         <div class="flex items-center gap-2">
           <span
             v-if="save.isProficient"
-            data-test="proficiency-dot"
+            data-testid="proficiency-dot"
             class="w-2 h-2 rounded-full bg-primary"
           />
           <span

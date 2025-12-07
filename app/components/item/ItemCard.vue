@@ -7,21 +7,14 @@ interface Props {
 
 const props = defineProps<Props>()
 
+const { getItemRarityColor } = useEntityColorMap()
+
 /**
  * Get rarity color for badge (NuxtUI v4 semantic colors)
  * Progressive rarity scale from common to artifact
  */
-const rarityColor = computed<'primary' | 'secondary' | 'success' | 'info' | 'warning' | 'error' | 'neutral'>(() => {
-  const colors: Record<string, 'primary' | 'secondary' | 'success' | 'info' | 'warning' | 'error' | 'neutral'> = {
-    'common': 'neutral', // Gray - most basic
-    'uncommon': 'success', // Green - slightly better
-    'rare': 'info', // Blue - notable
-    'very rare': 'primary', // Teal/cyan - very valuable
-    'legendary': 'warning', // Orange/amber - extremely rare
-    'artifact': 'error' // Red - unique/powerful
-  }
-  const rarity = props.item.rarity?.toLowerCase()
-  return (rarity && colors[rarity]) || 'neutral'
+const rarityColor = computed(() => {
+  return getItemRarityColor(props.item.rarity || null)
 })
 
 /**

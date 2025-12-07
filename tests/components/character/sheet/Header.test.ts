@@ -59,20 +59,20 @@ describe('CharacterSheetHeader', () => {
     const wrapper = await mountSuspended(Header, {
       props: { character: mockCharacter }
     })
-    expect(wrapper.find('[data-test="inspiration-badge"]').exists()).toBe(true)
+    expect(wrapper.find('[data-testid="inspiration-badge"]').exists()).toBe(true)
   })
 
   it('hides Inspiration badge when has_inspiration is false', async () => {
     const wrapper = await mountSuspended(Header, {
       props: { character: { ...mockCharacter, has_inspiration: false } }
     })
-    expect(wrapper.find('[data-test="inspiration-badge"]').exists()).toBe(false)
+    expect(wrapper.find('[data-testid="inspiration-badge"]').exists()).toBe(false)
   })
 
   it('shows Edit button for incomplete characters', async () => {
     const wrapper = await mountSuspended(Header, {
       props: { character: { ...mockCharacter, is_complete: false } }
     })
-    expect(wrapper.find('[data-test="edit-button"]').exists()).toBe(true)
+    expect(wrapper.find('[data-testid="edit-button"]').exists()).toBe(true)
   })
 })

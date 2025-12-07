@@ -30,7 +30,7 @@ function formatModifier(mod: number): string {
           :class="save.proficient
             ? 'bg-success-500 border-success-500'
             : 'border-gray-400 dark:border-gray-500'"
-          :data-test="save.proficient ? 'proficient' : 'not-proficient'"
+          :data-testid="save.proficient ? 'proficient' : 'not-proficient'"
         />
         <span class="text-sm font-medium text-gray-700 dark:text-gray-300 w-8">
           {{ save.ability }}

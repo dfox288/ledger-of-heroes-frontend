@@ -25,7 +25,7 @@ describe('SpellcastingCard', () => {
         props: defaultProps
       })
 
-      expect(wrapper.find('[data-test="spellcasting-card"]').exists()).toBe(true)
+      expect(wrapper.find('[data-testid="spellcasting-card"]').exists()).toBe(true)
     })
 
     it('shows section header', async () => {
@@ -61,7 +61,7 @@ describe('SpellcastingCard', () => {
         props: { ...defaultProps, saveDC: 15 }
       })
 
-      const dcSection = wrapper.find('[data-test="save-dc-value"]')
+      const dcSection = wrapper.find('[data-testid="save-dc-value"]')
       expect(dcSection.text()).toContain('15')
     })
 
@@ -80,7 +80,7 @@ describe('SpellcastingCard', () => {
         props: { ...defaultProps, formattedAttackBonus: '+7' }
       })
 
-      const attackSection = wrapper.find('[data-test="attack-bonus-value"]')
+      const attackSection = wrapper.find('[data-testid="attack-bonus-value"]')
       expect(attackSection.text()).toContain('+7')
     })
 
@@ -121,7 +121,7 @@ describe('SpellcastingCard', () => {
         props: defaultProps
       })
 
-      expect(wrapper.find('[data-test="spell-slots"]').exists()).toBe(false)
+      expect(wrapper.find('[data-testid="spell-slots"]').exists()).toBe(false)
     })
   })
 

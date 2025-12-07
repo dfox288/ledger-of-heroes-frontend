@@ -19,12 +19,9 @@ const props = withDefaults(defineProps<Props>(), {
 /**
  * Truncate description to specified length
  */
-const truncatedDescription = computed(() => {
-  const maxLength = 150
-  if (!props.description) return ''
-  if (props.description.length <= maxLength) return props.description
-  return props.description.substring(0, maxLength).trim() + '...'
-})
+const truncatedDescription = useTruncateDescription(
+  computed(() => props.description)
+)
 
 /**
  * Get background image path (256px variant)
@@ -49,7 +46,7 @@ const backgroundImage = computed(() =>
       <!-- Background Image Layer -->
       <div
         v-if="backgroundImage"
-        data-test="card-background"
+        data-testid="card-background"
         class="absolute inset-0 bg-cover bg-center opacity-15 transition-all duration-300 group-hover:opacity-30 group-hover:scale-110 group-hover:rotate-3"
         :style="{ backgroundImage: `url(${backgroundImage})` }"
       />

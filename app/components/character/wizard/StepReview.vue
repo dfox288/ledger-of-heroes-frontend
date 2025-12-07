@@ -501,7 +501,7 @@ function getOrdinalSuffix(n: number): string {
     <!-- Finish Button -->
     <div class="flex justify-center pt-8 border-t border-gray-200 dark:border-gray-700 mt-8">
       <UButton
-        data-test="finish-btn"
+        data-testid="finish-btn"
         size="xl"
         color="primary"
         @click="finishWizard"

@@ -127,8 +127,8 @@ useSeoMeta({
 
     <!-- Step component -->
     <component
-      v-else
       :is="stepComponent"
+      v-else
     />
   </WizardLayout>
 </template>

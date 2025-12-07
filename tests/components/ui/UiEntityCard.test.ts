@@ -56,12 +56,12 @@ describe('UiEntityCard', () => {
         color: 'spell'
       },
       slots: {
-        badges: '<span data-test="badge">Test Badge</span>',
-        title: '<h3 data-test="title">Test Title</h3>'
+        badges: '<span data-testid="badge">Test Badge</span>',
+        title: '<h3 data-testid="title">Test Title</h3>'
       }
     })
-    expect(wrapper.find('[data-test="badge"]').exists()).toBe(true)
-    expect(wrapper.find('[data-test="title"]').exists()).toBe(true)
+    expect(wrapper.find('[data-testid="badge"]').exists()).toBe(true)
+    expect(wrapper.find('[data-testid="title"]').exists()).toBe(true)
   })
 
   it('renders background image when provided', async () => {
@@ -73,7 +73,7 @@ describe('UiEntityCard', () => {
         color: 'spell'
       }
     })
-    const bgElement = wrapper.find('[data-test="card-background"]')
+    const bgElement = wrapper.find('[data-testid="card-background"]')
     expect(bgElement.exists()).toBe(true)
   })
 
@@ -126,15 +126,15 @@ describe('UiEntityCard', () => {
         color: 'spell'
       },
       slots: {
-        badges: '<div data-test="badges-slot">Badges</div>',
-        title: '<div data-test="title-slot">Title</div>',
-        stats: '<div data-test="stats-slot">Stats</div>',
-        extra: '<div data-test="extra-slot">Extra</div>'
+        badges: '<div data-testid="badges-slot">Badges</div>',
+        title: '<div data-testid="title-slot">Title</div>',
+        stats: '<div data-testid="stats-slot">Stats</div>',
+        extra: '<div data-testid="extra-slot">Extra</div>'
       }
     })
-    expect(wrapper.find('[data-test="badges-slot"]').exists()).toBe(true)
-    expect(wrapper.find('[data-test="title-slot"]').exists()).toBe(true)
-    expect(wrapper.find('[data-test="stats-slot"]').exists()).toBe(true)
-    expect(wrapper.find('[data-test="extra-slot"]').exists()).toBe(true)
+    expect(wrapper.find('[data-testid="badges-slot"]').exists()).toBe(true)
+    expect(wrapper.find('[data-testid="title-slot"]').exists()).toBe(true)
+    expect(wrapper.find('[data-testid="stats-slot"]').exists()).toBe(true)
+    expect(wrapper.find('[data-testid="extra-slot"]').exists()).toBe(true)
   })
 })

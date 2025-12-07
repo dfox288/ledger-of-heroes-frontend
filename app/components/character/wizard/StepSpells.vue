@@ -466,7 +466,7 @@ function handleCloseModal() {
     <!-- Continue Button -->
     <div class="flex justify-center pt-4">
       <UButton
-        data-test="continue-btn"
+        data-testid="continue-btn"
         size="lg"
         :disabled="!canProceed || isLoading || isSaving"
         :loading="isLoading || isSaving"

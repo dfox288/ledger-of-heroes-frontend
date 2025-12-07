@@ -9,6 +9,9 @@ const store = useCharacterWizardStore()
 const { selections, isLoading, error, isSubraceRequired } = storeToRefs(store)
 const { nextStep } = useCharacterWizard()
 
+// Toast for user feedback
+const toast = useToast()
+
 // API client for fetching full subrace details
 const { apiFetch } = useApi()
 
@@ -62,6 +65,11 @@ async function handleViewDetails(subrace: SubraceItem) {
     detailSubrace.value = response.data
   } catch (err) {
     console.error('Failed to fetch subrace details:', err)
+    toast.add({
+      title: 'Save Failed',
+      description: 'Unable to save your selection. Please try again.',
+      color: 'error'
+    })
     // Still show modal with partial data from the list
     // Use unknown intermediate cast since SubraceItem is a partial Race
     detailSubrace.value = subrace as unknown as Race
@@ -90,6 +98,11 @@ async function confirmSelection() {
       nextStep()
     } catch (err) {
       console.error('Failed to save subrace selection:', err)
+      toast.add({
+        title: 'Save Failed',
+        description: 'Unable to save your selection. Please try again.',
+        color: 'error'
+      })
     }
     return
   }
@@ -102,6 +115,11 @@ async function confirmSelection() {
     nextStep()
   } catch (err) {
     console.error('Failed to save subrace:', err)
+    toast.add({
+      title: 'Save Failed',
+      description: 'Unable to save your selection. Please try again.',
+      color: 'error'
+    })
   }
 }
 

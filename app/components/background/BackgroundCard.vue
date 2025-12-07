@@ -44,12 +44,11 @@ const languagesCount = computed(() => {
 /**
  * Truncate description to specified length
  */
-const truncatedDescription = computed(() => {
-  if (!props.background.description) return 'A character background for D&D 5e'
-  const maxLength = 150
-  if (props.background.description.length <= maxLength) return props.background.description
-  return props.background.description.substring(0, maxLength).trim() + '...'
-})
+const truncatedDescription = useTruncateDescription(
+  computed(() => props.background.description),
+  150,
+  'A character background for D&D 5e'
+)
 
 /**
  * Get background image path (256px variant)
@@ -69,7 +68,7 @@ const backgroundImage = computed(() => {
       <!-- Background Image Layer -->
       <div
         v-if="backgroundImage"
-        data-test="card-background"
+        data-testid="card-background"
         class="absolute inset-0 bg-cover bg-center opacity-15 transition-all duration-300 group-hover:opacity-30 group-hover:scale-110 group-hover:rotate-3"
         :style="{ backgroundImage: `url(${backgroundImage})` }"
       />

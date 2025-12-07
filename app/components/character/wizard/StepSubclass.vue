@@ -9,6 +9,9 @@ const store = useCharacterWizardStore()
 const { nextStep } = useCharacterWizard()
 const { selections, isLoading, error, sourceFilterString } = storeToRefs(store)
 
+// Toast for user feedback
+const toast = useToast()
+
 // API client
 const { apiFetch } = useApi()
 
@@ -75,6 +78,11 @@ async function confirmSelection() {
     await nextStep()
   } catch (err) {
     console.error('Failed to save subclass:', err)
+    toast.add({
+      title: 'Save Failed',
+      description: 'Unable to save your selection. Please try again.',
+      color: 'error'
+    })
   }
 }
 

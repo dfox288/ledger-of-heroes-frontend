@@ -125,7 +125,7 @@ describe('UiClassProgressionTable', () => {
       expect(mobileCards.exists()).toBe(true)
 
       // Check for level cards
-      const levelCards = wrapper.findAll('[data-test="level-card"]')
+      const levelCards = wrapper.findAll('[data-testid="level-card"]')
       expect(levelCards.length).toBe(3)
 
       // Check first card contains level info
@@ -173,7 +173,7 @@ describe('UiClassProgressionTable', () => {
         props: { progressionTable: tableWithFiltering }
       })
 
-      const mobileCard = wrapper.find('[data-test="level-card"]')
+      const mobileCard = wrapper.find('[data-testid="level-card"]')
 
       // Should show filtered features
       expect(mobileCard.text()).toContain('Second Wind')

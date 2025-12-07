@@ -24,7 +24,7 @@ defineProps<Props>()
 
 <template>
   <UCard
-    data-test="combat-stats-card"
+    data-testid="combat-stats-card"
     :ui="{ body: 'p-4' }"
   >
     <template #header>
@@ -41,7 +41,7 @@ defineProps<Props>()
       <!-- Hit Points -->
       <div class="flex flex-col items-center">
         <div
-          data-test="hp-value"
+          data-testid="hp-value"
           class="text-2xl font-bold text-red-600 dark:text-red-400"
         >
           {{ hitPoints }}
@@ -54,7 +54,7 @@ defineProps<Props>()
       <!-- Armor Class -->
       <div class="flex flex-col items-center">
         <div
-          data-test="ac-value"
+          data-testid="ac-value"
           class="text-2xl font-bold text-blue-600 dark:text-blue-400"
         >
           {{ armorClass }}
@@ -67,7 +67,7 @@ defineProps<Props>()
       <!-- Initiative -->
       <div class="flex flex-col items-center">
         <div
-          data-test="init-value"
+          data-testid="init-value"
           class="text-2xl font-bold text-green-600 dark:text-green-400"
         >
           {{ initiative }}
@@ -80,7 +80,7 @@ defineProps<Props>()
       <!-- Speed -->
       <div class="flex flex-col items-center">
         <div
-          data-test="speed-value"
+          data-testid="speed-value"
           class="text-2xl font-bold text-amber-600 dark:text-amber-400"
         >
           {{ speed }}
@@ -94,7 +94,7 @@ defineProps<Props>()
       <!-- Proficiency Bonus -->
       <div class="flex flex-col items-center">
         <div
-          data-test="prof-value"
+          data-testid="prof-value"
           class="text-2xl font-bold text-purple-600 dark:text-purple-400"
         >
           {{ proficiencyBonus }}

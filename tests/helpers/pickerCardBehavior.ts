@@ -49,7 +49,7 @@ export function testPickerCardBehavior<T extends { name: string }>(
       const wrapper = await mountSuspended(component, {
         props: { [propName]: mockEntity, selected: true }
       })
-      const pickerCard = wrapper.find('[data-testid="picker-card"], [data-test="picker-card"]')
+      const pickerCard = wrapper.find('[data-testid="picker-card"], [data-testid="picker-card"]')
       expect(pickerCard.classes()).toContain('ring-2')
     })
 
@@ -57,7 +57,7 @@ export function testPickerCardBehavior<T extends { name: string }>(
       const wrapper = await mountSuspended(component, {
         props: { [propName]: mockEntity, selected: false }
       })
-      const pickerCard = wrapper.find('[data-testid="picker-card"], [data-test="picker-card"]')
+      const pickerCard = wrapper.find('[data-testid="picker-card"], [data-testid="picker-card"]')
       expect(pickerCard.classes()).not.toContain('ring-2')
     })
 
@@ -65,7 +65,7 @@ export function testPickerCardBehavior<T extends { name: string }>(
       const wrapper = await mountSuspended(component, {
         props: { [propName]: mockEntity, selected: false }
       })
-      const pickerCard = wrapper.find('[data-testid="picker-card"], [data-test="picker-card"]')
+      const pickerCard = wrapper.find('[data-testid="picker-card"], [data-testid="picker-card"]')
       await pickerCard.trigger('click')
 
       expect(wrapper.emitted('select')).toBeTruthy()
@@ -83,7 +83,7 @@ export function testPickerCardBehavior<T extends { name: string }>(
       const wrapper = await mountSuspended(component, {
         props: { [propName]: mockEntity, selected: false }
       })
-      const detailsBtn = wrapper.find('[data-testid="view-details-btn"], [data-test="view-details-btn"]')
+      const detailsBtn = wrapper.find('[data-testid="view-details-btn"], [data-testid="view-details-btn"]')
       await detailsBtn.trigger('click')
 
       // Check for both event name variations (kebab-case and camelCase)

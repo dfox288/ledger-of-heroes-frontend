@@ -69,7 +69,7 @@ describe('RaceOverviewInheritedDataSection', () => {
         props: { ...baseProps, inheritedData: { traits: [] } }
       })
 
-      expect(wrapper.find('[data-test="inherited-traits"]').exists()).toBe(false)
+      expect(wrapper.find('[data-testid="inherited-traits"]').exists()).toBe(false)
     })
 
     it('displays inherited lore traits in collapsible accordion', async () => {
@@ -88,7 +88,7 @@ describe('RaceOverviewInheritedDataSection', () => {
       expect(text).toContain('Lore')
       expect(text).toContain('2 lore entries')
       // Lore is in accordion, so names should be visible when expanded
-      expect(wrapper.find('[data-test="inherited-lore"]').exists()).toBe(true)
+      expect(wrapper.find('[data-testid="inherited-lore"]').exists()).toBe(true)
     })
 
     it('displays both lore and species traits when both present', async () => {
@@ -208,7 +208,7 @@ describe('RaceOverviewInheritedDataSection', () => {
         props: { ...baseProps, inheritedData: { modifiers: [] } }
       })
 
-      expect(wrapper.find('[data-test="inherited-modifiers"]').exists()).toBe(false)
+      expect(wrapper.find('[data-testid="inherited-modifiers"]').exists()).toBe(false)
     })
   })
 
@@ -236,7 +236,7 @@ describe('RaceOverviewInheritedDataSection', () => {
         props: { ...baseProps, inheritedData: { languages: [] } }
       })
 
-      expect(wrapper.find('[data-test="inherited-languages"]').exists()).toBe(false)
+      expect(wrapper.find('[data-testid="inherited-languages"]').exists()).toBe(false)
     })
 
     it('displays single language correctly', async () => {
@@ -325,7 +325,7 @@ describe('RaceOverviewInheritedDataSection', () => {
         props: { ...baseProps, inheritedData: { senses: [] } }
       })
 
-      expect(wrapper.find('[data-test="inherited-senses"]').exists()).toBe(false)
+      expect(wrapper.find('[data-testid="inherited-senses"]').exists()).toBe(false)
     })
   })
 
@@ -353,7 +353,7 @@ describe('RaceOverviewInheritedDataSection', () => {
         props: { ...baseProps, inheritedData: { proficiencies: [] } }
       })
 
-      expect(wrapper.find('[data-test="inherited-proficiencies"]').exists()).toBe(false)
+      expect(wrapper.find('[data-testid="inherited-proficiencies"]').exists()).toBe(false)
     })
   })
 
@@ -381,7 +381,7 @@ describe('RaceOverviewInheritedDataSection', () => {
         props: { ...baseProps, inheritedData: { conditions: [] } }
       })
 
-      expect(wrapper.find('[data-test="inherited-conditions"]').exists()).toBe(false)
+      expect(wrapper.find('[data-testid="inherited-conditions"]').exists()).toBe(false)
     })
   })
 
@@ -436,15 +436,15 @@ describe('RaceOverviewInheritedDataSection', () => {
       })
 
       // Check for presence of sections with data
-      expect(wrapper.find('[data-test="inherited-traits"]').exists()).toBe(true)
-      expect(wrapper.find('[data-test="inherited-languages"]').exists()).toBe(true)
+      expect(wrapper.find('[data-testid="inherited-traits"]').exists()).toBe(true)
+      expect(wrapper.find('[data-testid="inherited-languages"]').exists()).toBe(true)
 
       // Check for absence of sections without data
-      expect(wrapper.find('[data-test="inherited-modifiers"]').exists()).toBe(false)
-      expect(wrapper.find('[data-test="inherited-senses"]').exists()).toBe(false)
-      expect(wrapper.find('[data-test="inherited-proficiencies"]').exists()).toBe(false)
-      expect(wrapper.find('[data-test="inherited-conditions"]').exists()).toBe(false)
-      expect(wrapper.find('[data-test="inherited-lore"]').exists()).toBe(false)
+      expect(wrapper.find('[data-testid="inherited-modifiers"]').exists()).toBe(false)
+      expect(wrapper.find('[data-testid="inherited-senses"]').exists()).toBe(false)
+      expect(wrapper.find('[data-testid="inherited-proficiencies"]').exists()).toBe(false)
+      expect(wrapper.find('[data-testid="inherited-conditions"]').exists()).toBe(false)
+      expect(wrapper.find('[data-testid="inherited-lore"]').exists()).toBe(false)
     })
 
     it('handles completely empty inherited data', async () => {
@@ -455,8 +455,8 @@ describe('RaceOverviewInheritedDataSection', () => {
       // Should still render header
       expect(wrapper.text()).toContain('Inherited from Elf')
       // But no data sections
-      expect(wrapper.find('[data-test="inherited-traits"]').exists()).toBe(false)
-      expect(wrapper.find('[data-test="inherited-modifiers"]').exists()).toBe(false)
+      expect(wrapper.find('[data-testid="inherited-traits"]').exists()).toBe(false)
+      expect(wrapper.find('[data-testid="inherited-modifiers"]').exists()).toBe(false)
     })
   })
 

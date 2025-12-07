@@ -11,6 +11,9 @@ const store = useCharacterWizardStore()
 const { selections, isLoading, error, sourceFilterString } = storeToRefs(store)
 const { nextStep } = useCharacterWizard()
 
+// Toast for user feedback
+const toast = useToast()
+
 // API client
 const { apiFetch } = useApi()
 
@@ -70,6 +73,11 @@ async function confirmSelection() {
     nextStep()
   } catch (err) {
     console.error('Failed to save background:', err)
+    toast.add({
+      title: 'Save Failed',
+      description: 'Unable to save your selection. Please try again.',
+      color: 'error'
+    })
   }
 }
 

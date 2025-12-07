@@ -39,15 +39,15 @@ vi.mock('~/composables/useCharacterStats', () => ({
 // Stub child components
 const stubs = {
   CharacterStatsCombatStatsCard: {
-    template: '<div data-test="combat-stats-card">Combat Stats</div>',
+    template: '<div data-testid="combat-stats-card">Combat Stats</div>',
     props: ['hitPoints', 'armorClass', 'initiative', 'speed', 'proficiencyBonus']
   },
   CharacterStatsSavingThrowsCard: {
-    template: '<div data-test="saving-throws-card">Saving Throws</div>',
+    template: '<div data-testid="saving-throws-card">Saving Throws</div>',
     props: ['savingThrows']
   },
   CharacterStatsSpellcastingCard: {
-    template: '<div data-test="spellcasting-card">Spellcasting</div>',
+    template: '<div data-testid="spellcasting-card">Spellcasting</div>',
     props: ['ability', 'abilityName', 'saveDC', 'attackBonus', 'formattedAttackBonus', 'slots']
   }
 }
@@ -113,7 +113,7 @@ describe('StepReview', () => {
         global: { stubs }
       })
 
-      expect(wrapper.find('[data-test="combat-stats-card"]').exists()).toBe(true)
+      expect(wrapper.find('[data-testid="combat-stats-card"]').exists()).toBe(true)
     })
 
     it('renders saving throws card', async () => {
@@ -121,7 +121,7 @@ describe('StepReview', () => {
         global: { stubs }
       })
 
-      expect(wrapper.find('[data-test="saving-throws-card"]').exists()).toBe(true)
+      expect(wrapper.find('[data-testid="saving-throws-card"]').exists()).toBe(true)
     })
 
     it('renders ability scores section', async () => {
@@ -179,7 +179,7 @@ describe('StepReview', () => {
       })
 
       // With stubs, check if stub exists
-      expect(wrapper.find('[data-test="spellcasting-card"]').exists()).toBe(false)
+      expect(wrapper.find('[data-testid="spellcasting-card"]').exists()).toBe(false)
     })
 
     it('shows SpellcastingCard when character is spellcaster', async () => {
@@ -197,7 +197,7 @@ describe('StepReview', () => {
         global: { stubs }
       })
 
-      expect(wrapper.find('[data-test="spellcasting-card"]').exists()).toBe(true)
+      expect(wrapper.find('[data-testid="spellcasting-card"]').exists()).toBe(true)
 
       // Reset for other tests
       mockStatsData.isSpellcaster.value = false

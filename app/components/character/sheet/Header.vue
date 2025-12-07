@@ -40,7 +40,7 @@ const classesDisplay = computed(() => {
       <!-- Inspiration Badge -->
       <UBadge
         v-if="character.has_inspiration"
-        data-test="inspiration-badge"
+        data-testid="inspiration-badge"
         color="warning"
         variant="solid"
         size="lg"
@@ -64,7 +64,7 @@ const classesDisplay = computed(() => {
       <!-- Edit Button (for incomplete characters) -->
       <UButton
         v-if="!character.is_complete"
-        data-test="edit-button"
+        data-testid="edit-button"
         :to="`/characters/${character.public_id}/edit`"
         variant="outline"
         size="sm"

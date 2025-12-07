@@ -113,7 +113,7 @@ describe('RaceOverviewResistancesDisplay', () => {
     })
 
     // Should have data-test attributes for each badge
-    const badges = wrapper.findAll('[data-test="resistance-badge"]')
+    const badges = wrapper.findAll('[data-testid="resistance-badge"]')
     expect(badges.length).toBe(2)
   })
 
@@ -216,7 +216,7 @@ describe('RaceOverviewResistancesDisplay', () => {
     })
 
     // Should have badge rendered (size prop is set but not in HTML)
-    const badges = wrapper.findAll('[data-test="resistance-badge"]')
+    const badges = wrapper.findAll('[data-testid="resistance-badge"]')
     expect(badges.length).toBe(1)
   })
 

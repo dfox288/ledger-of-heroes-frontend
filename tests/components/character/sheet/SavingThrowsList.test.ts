@@ -38,7 +38,7 @@ describe('CharacterSheetSavingThrowsList', () => {
     const wrapper = await mountSuspended(SavingThrowsList, {
       props: { savingThrows: mockSavingThrows }
     })
-    const proficientIndicators = wrapper.findAll('[data-test="proficient"]')
+    const proficientIndicators = wrapper.findAll('[data-testid="proficient"]')
     expect(proficientIndicators.length).toBe(2) // STR and CON
   })
 })

@@ -35,7 +35,7 @@ function handleStepClick(stepName: string, stepIndex: number) {
       <div class="mt-2">
         <div
           class="h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden"
-          data-test="progress-bar"
+          data-testid="progress-bar"
         >
           <div
             class="h-full bg-primary transition-all duration-300"
@@ -57,7 +57,7 @@ function handleStepClick(stepName: string, stepIndex: number) {
         >
           <button
             type="button"
-            :data-test="`step-item-${step.name}`"
+            :data-testid="`step-item-${step.name}`"
             class="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-left transition-colors"
             :class="{
               'bg-primary-50 dark:bg-primary-900/20 text-primary-700 dark:text-primary-300': getStepStatus(index) === 'current',
@@ -80,7 +80,7 @@ function handleStepClick(stepName: string, stepIndex: number) {
                 v-if="getStepStatus(index) === 'completed'"
                 name="i-heroicons-check"
                 class="w-4 h-4"
-                data-test="check-icon"
+                data-testid="check-icon"
               />
               <span v-else>{{ index + 1 }}</span>
             </span>

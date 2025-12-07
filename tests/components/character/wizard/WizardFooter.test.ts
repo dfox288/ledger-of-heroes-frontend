@@ -25,8 +25,8 @@ describe('WizardFooter', () => {
         props: { route }
       })
 
-      expect(wrapper.find('[data-test="back-button"]').exists()).toBe(true)
-      expect(wrapper.find('[data-test="next-button"]').exists()).toBe(true)
+      expect(wrapper.find('[data-testid="back-button"]').exists()).toBe(true)
+      expect(wrapper.find('[data-testid="next-button"]').exists()).toBe(true)
     })
 
     it('has sticky footer styling', async () => {
@@ -47,7 +47,7 @@ describe('WizardFooter', () => {
         props: { route }
       })
 
-      const backButton = wrapper.find('[data-test="back-button"]')
+      const backButton = wrapper.find('[data-testid="back-button"]')
       expect(backButton.attributes('disabled')).toBeDefined()
     })
 
@@ -57,7 +57,7 @@ describe('WizardFooter', () => {
         props: { route }
       })
 
-      const backButton = wrapper.find('[data-test="back-button"]')
+      const backButton = wrapper.find('[data-testid="back-button"]')
       expect(backButton.attributes('disabled')).toBeUndefined()
     })
 
@@ -68,7 +68,7 @@ describe('WizardFooter', () => {
       })
 
       // Verify clicking doesn't throw and the button is clickable
-      const backButton = wrapper.find('[data-test="back-button"]')
+      const backButton = wrapper.find('[data-testid="back-button"]')
       expect(backButton.element.hasAttribute('disabled')).toBe(false)
       await backButton.trigger('click')
       // Navigation is handled asynchronously; integration tests verify navigation
@@ -82,7 +82,7 @@ describe('WizardFooter', () => {
         props: { route }
       })
 
-      const nextButton = wrapper.find('[data-test="next-button"]')
+      const nextButton = wrapper.find('[data-testid="next-button"]')
       expect(nextButton.text()).toContain('Next')
     })
 
@@ -92,7 +92,7 @@ describe('WizardFooter', () => {
         props: { route }
       })
 
-      const nextButton = wrapper.find('[data-test="next-button"]')
+      const nextButton = wrapper.find('[data-testid="next-button"]')
       expect(nextButton.text()).toContain('Finish')
     })
 
@@ -103,7 +103,7 @@ describe('WizardFooter', () => {
       })
 
       // Verify clicking doesn't throw and the button is enabled
-      const nextButton = wrapper.find('[data-test="next-button"]')
+      const nextButton = wrapper.find('[data-testid="next-button"]')
       expect(nextButton.element.hasAttribute('disabled')).toBe(false)
       await nextButton.trigger('click')
       // Navigation is handled asynchronously; integration tests verify navigation
@@ -117,7 +117,7 @@ describe('WizardFooter', () => {
       })
 
       // No race selected, canProceed should be false
-      const nextButton = wrapper.find('[data-test="next-button"]')
+      const nextButton = wrapper.find('[data-testid="next-button"]')
       expect(nextButton.attributes('disabled')).toBeDefined()
     })
 
@@ -128,7 +128,7 @@ describe('WizardFooter', () => {
         props: { route }
       })
 
-      const nextButton = wrapper.find('[data-test="next-button"]')
+      const nextButton = wrapper.find('[data-testid="next-button"]')
       // Button should NOT be disabled when canProceed is true
       expect(nextButton.element.hasAttribute('disabled')).toBe(false)
     })
@@ -142,7 +142,7 @@ describe('WizardFooter', () => {
         props: { route }
       })
 
-      const nextButton = wrapper.find('[data-test="next-button"]')
+      const nextButton = wrapper.find('[data-testid="next-button"]')
       expect(nextButton.html()).toContain('i-heroicons-arrow-right')
     })
 
@@ -152,7 +152,7 @@ describe('WizardFooter', () => {
         props: { route }
       })
 
-      const nextButton = wrapper.find('[data-test="next-button"]')
+      const nextButton = wrapper.find('[data-testid="next-button"]')
       expect(nextButton.html()).toContain('i-heroicons-check')
     })
   })

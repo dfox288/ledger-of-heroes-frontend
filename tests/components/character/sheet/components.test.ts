@@ -128,14 +128,14 @@ describe('CharacterSheetHeader', () => {
     const wrapper = await mountSuspended(Header, {
       props: { character: mockCharacter }
     })
-    expect(wrapper.find('[data-test="inspiration-badge"]').exists()).toBe(true)
+    expect(wrapper.find('[data-testid="inspiration-badge"]').exists()).toBe(true)
   })
 
   it('shows Edit button for incomplete characters', async () => {
     const wrapper = await mountSuspended(Header, {
       props: { character: { ...mockCharacter, is_complete: false } }
     })
-    expect(wrapper.find('[data-test="edit-button"]').exists()).toBe(true)
+    expect(wrapper.find('[data-testid="edit-button"]').exists()).toBe(true)
   })
 })
 
@@ -216,7 +216,7 @@ describe('CharacterSheetSavingThrowsList', () => {
     const wrapper = await mountSuspended(SavingThrowsList, {
       props: { savingThrows: mockSavingThrows }
     })
-    const profIndicators = wrapper.findAll('[data-test="proficient"]')
+    const profIndicators = wrapper.findAll('[data-testid="proficient"]')
     expect(profIndicators.length).toBe(2) // STR and CON
   })
 })
@@ -235,8 +235,8 @@ describe('CharacterSheetSkillsList', () => {
     const wrapper = await mountSuspended(SkillsList, {
       props: { skills: mockSkills }
     })
-    expect(wrapper.findAll('[data-test="proficient"]').length).toBe(1)
-    expect(wrapper.findAll('[data-test="expertise"]').length).toBe(1)
+    expect(wrapper.findAll('[data-testid="proficient"]').length).toBe(1)
+    expect(wrapper.findAll('[data-testid="expertise"]').length).toBe(1)
   })
 })
 

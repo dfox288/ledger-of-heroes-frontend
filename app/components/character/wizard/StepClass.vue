@@ -11,6 +11,9 @@ const store = useCharacterWizardStore()
 const { selections, isLoading, error, sourceFilterString } = storeToRefs(store)
 const { nextStep } = useCharacterWizard()
 
+// Toast for user feedback
+const toast = useToast()
+
 // Get API client
 const { apiFetch } = useApi()
 
@@ -65,6 +68,11 @@ async function confirmSelection() {
   } catch (err) {
     // Error is already set in store
     console.error('Failed to save class:', err)
+    toast.add({
+      title: 'Save Failed',
+      description: 'Unable to save your selection. Please try again.',
+      color: 'error'
+    })
   }
 }
 

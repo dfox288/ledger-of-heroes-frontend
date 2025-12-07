@@ -40,7 +40,7 @@ describe('CharacterSheetSkillsList', () => {
     const wrapper = await mountSuspended(SkillsList, {
       props: { skills: mockSkills }
     })
-    const profIndicators = wrapper.findAll('[data-test="proficient"]')
+    const profIndicators = wrapper.findAll('[data-testid="proficient"]')
     expect(profIndicators.length).toBe(1) // Athletics only (Stealth has expertise, uses different indicator)
   })
 
@@ -48,7 +48,7 @@ describe('CharacterSheetSkillsList', () => {
     const wrapper = await mountSuspended(SkillsList, {
       props: { skills: mockSkills }
     })
-    const expertiseIndicators = wrapper.findAll('[data-test="expertise"]')
+    const expertiseIndicators = wrapper.findAll('[data-testid="expertise"]')
     expect(expertiseIndicators.length).toBe(1) // Only Stealth
   })
 })

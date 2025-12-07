@@ -155,7 +155,7 @@ function formatCondition(condition: EntityConditionResource): string {
         </h4>
         <UAccordion
           :items="[{ label: `${loreTraits.length} lore ${loreTraits.length === 1 ? 'entry' : 'entries'}`, slot: 'lore', defaultOpen: false }]"
-          data-test="inherited-lore"
+          data-testid="inherited-lore"
         >
           <template #lore>
             <div class="space-y-3 p-2">
@@ -190,7 +190,7 @@ function formatCondition(condition: EntityConditionResource): string {
         </h4>
         <div
           class="space-y-3"
-          data-test="inherited-traits"
+          data-testid="inherited-traits"
         >
           <div
             v-for="trait in speciesTraits"
@@ -221,7 +221,7 @@ function formatCondition(condition: EntityConditionResource): string {
         </h4>
         <div
           class="flex flex-wrap gap-2"
-          data-test="inherited-modifiers"
+          data-testid="inherited-modifiers"
         >
           <UBadge
             v-for="mod in inheritedData.modifiers"
@@ -249,7 +249,7 @@ function formatCondition(condition: EntityConditionResource): string {
         </h4>
         <div
           class="flex flex-wrap gap-2"
-          data-test="inherited-languages"
+          data-testid="inherited-languages"
         >
           <UBadge
             v-for="(lang, index) in inheritedData.languages"
@@ -277,7 +277,7 @@ function formatCondition(condition: EntityConditionResource): string {
         </h4>
         <div
           class="flex flex-wrap gap-2"
-          data-test="inherited-senses"
+          data-testid="inherited-senses"
         >
           <UBadge
             v-for="sense in inheritedData.senses"
@@ -305,7 +305,7 @@ function formatCondition(condition: EntityConditionResource): string {
         </h4>
         <ul
           class="list-disc list-inside text-sm text-gray-600 dark:text-gray-400 space-y-1 ml-6"
-          data-test="inherited-proficiencies"
+          data-testid="inherited-proficiencies"
         >
           <li
             v-for="prof in inheritedData.proficiencies"
@@ -330,7 +330,7 @@ function formatCondition(condition: EntityConditionResource): string {
         </h4>
         <div
           class="flex flex-wrap gap-2"
-          data-test="inherited-conditions"
+          data-testid="inherited-conditions"
         >
           <UBadge
             v-for="(condition, index) in inheritedData.conditions"
