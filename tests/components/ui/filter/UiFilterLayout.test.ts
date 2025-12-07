@@ -1,4 +1,5 @@
 import { describe, it, expect } from 'vitest'
+import { h } from 'vue'
 import { mountSuspended } from '@nuxt/test-utils/runtime'
 import UiFilterLayout from '~/components/ui/filter/UiFilterLayout.vue'
 
@@ -7,7 +8,7 @@ describe('UiFilterLayout', () => {
     it('renders primary slot content', async () => {
       const wrapper = await mountSuspended(UiFilterLayout, {
         slots: {
-          primary: '<div data-testid="primary-content">Primary Filters</div>'
+          primary: () => h('div', { 'data-testid': 'primary-content' }, 'Primary Filters')
         }
       })
 
@@ -18,7 +19,7 @@ describe('UiFilterLayout', () => {
     it('renders quick slot content', async () => {
       const wrapper = await mountSuspended(UiFilterLayout, {
         slots: {
-          quick: '<div data-testid="quick-content">Quick Toggles</div>'
+          quick: () => h('div', { 'data-testid': 'quick-content' }, 'Quick Toggles')
         }
       })
 
@@ -29,7 +30,7 @@ describe('UiFilterLayout', () => {
     it('renders advanced slot content', async () => {
       const wrapper = await mountSuspended(UiFilterLayout, {
         slots: {
-          advanced: '<div data-testid="advanced-content">Advanced Filters</div>'
+          advanced: () => h('div', { 'data-testid': 'advanced-content' }, 'Advanced Filters')
         }
       })
 
@@ -40,7 +41,7 @@ describe('UiFilterLayout', () => {
     it('renders actions slot content', async () => {
       const wrapper = await mountSuspended(UiFilterLayout, {
         slots: {
-          actions: '<button data-testid="clear-button">Clear Filters</button>'
+          actions: () => h('button', { 'data-testid': 'clear-button' }, 'Clear Filters')
         }
       })
 
@@ -51,10 +52,10 @@ describe('UiFilterLayout', () => {
     it('renders all slots together', async () => {
       const wrapper = await mountSuspended(UiFilterLayout, {
         slots: {
-          primary: '<div data-testid="primary">Primary</div>',
-          quick: '<div data-testid="quick">Quick</div>',
-          advanced: '<div data-testid="advanced">Advanced</div>',
-          actions: '<div data-testid="actions">Actions</div>'
+          primary: () => h('div', { 'data-testid': 'primary' }, 'Primary'),
+          quick: () => h('div', { 'data-testid': 'quick' }, 'Quick'),
+          advanced: () => h('div', { 'data-testid': 'advanced' }, 'Advanced'),
+          actions: () => h('div', { 'data-testid': 'actions' }, 'Actions')
         }
       })
 
@@ -69,8 +70,8 @@ describe('UiFilterLayout', () => {
     it('has correct spacing between sections', async () => {
       const wrapper = await mountSuspended(UiFilterLayout, {
         slots: {
-          primary: '<div>Primary</div>',
-          quick: '<div>Quick</div>'
+          primary: () => h('div', 'Primary'),
+          quick: () => h('div', 'Quick')
         }
       })
 
@@ -81,7 +82,7 @@ describe('UiFilterLayout', () => {
     it('applies flex layout with gap-3 to primary slot container', async () => {
       const wrapper = await mountSuspended(UiFilterLayout, {
         slots: {
-          primary: '<div>Primary</div>'
+          primary: () => h('div', 'Primary')
         }
       })
 
@@ -94,7 +95,7 @@ describe('UiFilterLayout', () => {
     it('applies flex layout to quick slot container', async () => {
       const wrapper = await mountSuspended(UiFilterLayout, {
         slots: {
-          quick: '<div>Quick</div>'
+          quick: () => h('div', 'Quick')
         }
       })
 
@@ -107,7 +108,7 @@ describe('UiFilterLayout', () => {
     it('applies flex layout to advanced slot container', async () => {
       const wrapper = await mountSuspended(UiFilterLayout, {
         slots: {
-          advanced: '<div>Advanced</div>'
+          advanced: () => h('div', 'Advanced')
         }
       })
 
@@ -120,7 +121,7 @@ describe('UiFilterLayout', () => {
     it('right-aligns actions slot', async () => {
       const wrapper = await mountSuspended(UiFilterLayout, {
         slots: {
-          actions: '<button>Clear</button>'
+          actions: () => h('button', 'Clear')
         }
       })
 
@@ -134,7 +135,7 @@ describe('UiFilterLayout', () => {
     it('does not render primary container when slot is empty', async () => {
       const wrapper = await mountSuspended(UiFilterLayout, {
         slots: {
-          quick: '<div>Quick</div>'
+          quick: () => h('div', 'Quick')
         }
       })
 
@@ -144,7 +145,7 @@ describe('UiFilterLayout', () => {
     it('does not render quick container when slot is empty', async () => {
       const wrapper = await mountSuspended(UiFilterLayout, {
         slots: {
-          primary: '<div>Primary</div>'
+          primary: () => h('div', 'Primary')
         }
       })
 
@@ -154,7 +155,7 @@ describe('UiFilterLayout', () => {
     it('does not render advanced container when slot is empty', async () => {
       const wrapper = await mountSuspended(UiFilterLayout, {
         slots: {
-          primary: '<div>Primary</div>'
+          primary: () => h('div', 'Primary')
         }
       })
 
@@ -164,7 +165,7 @@ describe('UiFilterLayout', () => {
     it('does not render actions container when slot is empty', async () => {
       const wrapper = await mountSuspended(UiFilterLayout, {
         slots: {
-          primary: '<div>Primary</div>'
+          primary: () => h('div', 'Primary')
         }
       })
 
@@ -184,10 +185,10 @@ describe('UiFilterLayout', () => {
     it('has dark mode classes on all sections', async () => {
       const wrapper = await mountSuspended(UiFilterLayout, {
         slots: {
-          primary: '<div>Primary</div>',
-          quick: '<div>Quick</div>',
-          advanced: '<div>Advanced</div>',
-          actions: '<div>Actions</div>'
+          primary: () => h('div', 'Primary'),
+          quick: () => h('div', 'Quick'),
+          advanced: () => h('div', 'Advanced'),
+          actions: () => h('div', 'Actions')
         }
       })
 

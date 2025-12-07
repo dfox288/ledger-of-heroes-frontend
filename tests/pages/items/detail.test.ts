@@ -26,7 +26,7 @@ function createMockUseItemDetail(overrides: any = {}) {
     hasSpells: ref(false),
     requiresAttunement: ref(false),
     attunementText: ref(null),
-    spellsByChargeCost: ref([]),
+    spellsByChargeCost: ref(new Map()),
     damageDisplay: ref(null),
     rangeDisplay: ref(null),
     acDisplay: ref(null),
@@ -290,14 +290,16 @@ describe('Item Detail Page', () => {
       ]
     })
     const { useItemDetail } = await import('~/composables/useItemDetail')
+    // Create a Map for spellsByChargeCost (component expects Map<string, ItemSpellResource[]>)
+    const spellsMap = new Map([
+      ['3', [{ id: 1, name: 'Fireball', slug: 'fireball', level: 3, school: { id: 1, name: 'Evocation', code: 'EVO' }, charge_cost: 3 }]]
+    ])
     vi.mocked(useItemDetail).mockReturnValue(createMockUseItemDetail({
       entity: ref(mockWand),
       isCharged: ref(true),
       isMagic: ref(true),
       hasSpells: ref(true),
-      spellsByChargeCost: ref([
-        { cost: 3, spells: [{ id: 1, name: 'Fireball', slug: 'fireball', level: 3, school: { id: 1, name: 'Evocation', code: 'EVO' }, charge_cost: 3 }] }
-      ])
+      spellsByChargeCost: ref(spellsMap)
     }))
 
     const ItemDetailPage = await import('~/pages/items/[slug].vue').then(m => m.default)

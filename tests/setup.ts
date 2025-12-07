@@ -4,6 +4,36 @@ import { h } from 'vue'
 import 'vitest-canvas-mock'
 
 // =============================================================================
+// BROWSER API MOCKS
+// =============================================================================
+// Mock browser APIs that aren't available in Node.js test environment.
+// The requestAnimationFrame is needed by Nuxt's navigation-repaint.client.js plugin.
+// Using vi.stubGlobal ensures the mock is properly available across worker processes.
+// =============================================================================
+
+// Mock requestAnimationFrame and cancelAnimationFrame
+// Use synchronous execution to prevent pending timers after test teardown
+let rafId = 0
+vi.stubGlobal('requestAnimationFrame', (callback: FrameRequestCallback) => {
+  // Execute callback synchronously to avoid lingering timers
+  // This prevents "unhandled error after test environment was torn down"
+  callback(Date.now())
+  return ++rafId
+})
+vi.stubGlobal('cancelAnimationFrame', vi.fn())
+
+// Mock browser history API for Vue Router
+// Vue Router's finalizeNavigation uses history.replaceState
+vi.stubGlobal('history', {
+  state: {},
+  replaceState: vi.fn(),
+  pushState: vi.fn(),
+  go: vi.fn(),
+  back: vi.fn(),
+  forward: vi.fn()
+})
+
+// =============================================================================
 // MOCK NUXT UI ICON COMPONENT
 // =============================================================================
 // Icons fail to load in test environment because the icon provider isn't
@@ -29,7 +59,14 @@ const createMockIcon = (componentName: string) => ({
 config.global.stubs = {
   ...config.global.stubs,
   Icon: createMockIcon('Icon'),
-  UIcon: createMockIcon('UIcon')
+  UIcon: createMockIcon('UIcon'),
+  // Mock RouterLink to prevent "Failed to resolve component: RouterLink" warnings
+  // This is needed because NuxtLink internally uses RouterLink
+  RouterLink: {
+    name: 'RouterLink',
+    props: ['to'],
+    template: '<a :href="to"><slot /></a>'
+  }
 }
 
 // =============================================================================

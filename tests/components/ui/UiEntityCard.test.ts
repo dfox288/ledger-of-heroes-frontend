@@ -1,4 +1,5 @@
 import { describe, it, expect } from 'vitest'
+import { h } from 'vue'
 import { mountSuspended } from '@nuxt/test-utils/runtime'
 import UiCardUiEntityCard from '~/components/ui/card/UiEntityCard.vue'
 
@@ -56,8 +57,8 @@ describe('UiEntityCard', () => {
         color: 'spell'
       },
       slots: {
-        badges: '<span data-testid="badge">Test Badge</span>',
-        title: '<h3 data-testid="title">Test Title</h3>'
+        badges: () => h('span', { 'data-testid': 'badge' }, 'Test Badge'),
+        title: () => h('h3', { 'data-testid': 'title' }, 'Test Title')
       }
     })
     expect(wrapper.find('[data-testid="badge"]').exists()).toBe(true)
@@ -126,10 +127,10 @@ describe('UiEntityCard', () => {
         color: 'spell'
       },
       slots: {
-        badges: '<div data-testid="badges-slot">Badges</div>',
-        title: '<div data-testid="title-slot">Title</div>',
-        stats: '<div data-testid="stats-slot">Stats</div>',
-        extra: '<div data-testid="extra-slot">Extra</div>'
+        badges: () => h('div', { 'data-testid': 'badges-slot' }, 'Badges'),
+        title: () => h('div', { 'data-testid': 'title-slot' }, 'Title'),
+        stats: () => h('div', { 'data-testid': 'stats-slot' }, 'Stats'),
+        extra: () => h('div', { 'data-testid': 'extra-slot' }, 'Extra')
       }
     })
     expect(wrapper.find('[data-testid="badges-slot"]').exists()).toBe(true)

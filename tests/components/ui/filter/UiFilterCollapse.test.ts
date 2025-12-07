@@ -1,4 +1,5 @@
 import { describe, it, expect } from 'vitest'
+import { h } from 'vue'
 import { mountSuspended } from '@nuxt/test-utils/runtime'
 import UiFilterCollapse from '~/components/ui/filter/UiFilterCollapse.vue'
 
@@ -163,7 +164,7 @@ describe('UiFilterCollapse', () => {
           modelValue: false
         },
         slots: {
-          default: '<div data-testid="filter-content">Filter Content</div>'
+          default: () => h('div', { 'data-testid': 'filter-content' }, 'Filter Content')
         }
       })
 
@@ -177,7 +178,7 @@ describe('UiFilterCollapse', () => {
           modelValue: true
         },
         slots: {
-          default: '<div data-testid="filter-content">Filter Content</div>'
+          default: () => h('div', { 'data-testid': 'filter-content' }, 'Filter Content')
         }
       })
 
@@ -192,12 +193,10 @@ describe('UiFilterCollapse', () => {
           modelValue: true
         },
         slots: {
-          default: `
-            <div class="space-y-4">
-              <div>Filter 1</div>
-              <div>Filter 2</div>
-            </div>
-          `
+          default: () => h('div', { class: 'space-y-4' }, [
+            h('div', 'Filter 1'),
+            h('div', 'Filter 2')
+          ])
         }
       })
 
@@ -213,7 +212,7 @@ describe('UiFilterCollapse', () => {
           modelValue: false
         },
         slots: {
-          search: '<input type="text" placeholder="Search..." data-testid="search-input" />'
+          search: () => h('input', { type: 'text', placeholder: 'Search...', 'data-testid': 'search-input' })
         }
       })
 

@@ -1,4 +1,5 @@
 import { describe, it, expect } from 'vitest'
+import { h } from 'vue'
 import { mountSuspended } from '@nuxt/test-utils/runtime'
 import UiAccordionDataTable from '~/components/ui/accordion/UiAccordionDataTable.vue'
 
@@ -36,7 +37,7 @@ describe('UiAccordionDataTable', () => {
     const wrapper = await mountSuspended(UiAccordionDataTable, {
       props: { columns, rows },
       slots: {
-        'cell-value': '<span class="custom-badge">{{ value }}</span>'
+        'cell-value': () => h('span', { class: 'custom-badge' }, '{{ value }}')
       }
     })
 

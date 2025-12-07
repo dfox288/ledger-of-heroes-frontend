@@ -302,19 +302,21 @@ describe('useCharacterWizard', () => {
 
     it('returns /edit/ path when in edit mode', () => {
       const store = useCharacterWizardStore()
-      store.characterId = 42
+      // getStepUrl uses publicId (not characterId) to determine edit mode
+      store.publicId = 'arcane-phoenix-M7k2'
 
       // Use edit mode path to test edit mode behavior
-      const route = createMockRoute('/characters/42/edit/sourcebooks')
+      const route = createMockRoute('/characters/arcane-phoenix-M7k2/edit/sourcebooks')
       const { getStepUrl } = useCharacterWizard({ route })
-      expect(getStepUrl('race')).toBe('/characters/42/edit/race')
+      expect(getStepUrl('race')).toBe('/characters/arcane-phoenix-M7k2/edit/race')
     })
 
-    it('stays in /new/ mode even when characterId is set', () => {
+    it('stays in /new/ mode when only characterId is set (no publicId)', () => {
       const store = useCharacterWizardStore()
+      // Only characterId is set, but publicId is not - getStepUrl uses publicId
       store.characterId = 42
 
-      // In new character flow, stay in /new/ path even after character is created
+      // Without publicId, stays in /new/ path
       const route = createMockRoute('/characters/new/race')
       const { getStepUrl } = useCharacterWizard({ route })
       expect(getStepUrl('class')).toBe('/characters/new/class')
