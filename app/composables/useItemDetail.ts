@@ -43,8 +43,9 @@ type ItemSpellResource = components['schemas']['ItemSpellResource']
  */
 export function useItemDetail(slug: Ref<string>) {
   // Fetch item data with caching and SEO
+  // Pass the reactive ref directly so useEntityDetail can watch for changes
   const { data: entity, loading: pending, error, refresh } = useEntityDetail<Item>({
-    slug: slug.value,
+    slug,
     endpoint: '/items',
     cacheKey: 'item',
     seo: {

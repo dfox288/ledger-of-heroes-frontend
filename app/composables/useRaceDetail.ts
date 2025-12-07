@@ -32,8 +32,9 @@ type EntityConditionResource = components['schemas']['EntityConditionResource']
  */
 export function useRaceDetail(slug: Ref<string>) {
   // Fetch race data with caching and SEO
+  // Pass the reactive ref directly so useEntityDetail can watch for changes
   const { data: entity, loading: pending, error, refresh } = useEntityDetail<Race>({
-    slug: slug.value,
+    slug,
     endpoint: '/races',
     cacheKey: 'race',
     seo: {

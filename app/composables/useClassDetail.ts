@@ -25,8 +25,9 @@ type ClassFeatureResource = components['schemas']['ClassFeatureResource']
  */
 export function useClassDetail(slug: Ref<string>) {
   // Fetch class data with caching and SEO
+  // Pass the reactive ref directly so useEntityDetail can watch for changes
   const { data: entity, loading: pending, error, refresh } = useEntityDetail<CharacterClass>({
-    slug: slug.value,
+    slug,
     endpoint: '/classes',
     cacheKey: 'class',
     seo: {

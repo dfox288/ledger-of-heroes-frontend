@@ -40,8 +40,9 @@ export interface SkillWithAbility {
  */
 export function useBackgroundDetail(slug: Ref<string>) {
   // Fetch background data with caching and SEO
+  // Pass the reactive ref directly so useEntityDetail can watch for changes
   const { data: entity, loading: pending, error, refresh } = useEntityDetail<Background>({
-    slug: slug.value,
+    slug,
     endpoint: '/backgrounds',
     cacheKey: 'background',
     seo: {
