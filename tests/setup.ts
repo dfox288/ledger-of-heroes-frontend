@@ -259,11 +259,11 @@ const createMockApiResponse = (url) => {
     if (url.includes('/sources')) {
       return Promise.resolve({
         data: [
-          { id: 1, code: 'PHB', name: "Player's Handbook", category: 'Core Rulebooks', publication_year: 2014 },
-          { id: 2, code: 'DMG', name: "Dungeon Master's Guide", category: 'Core Rulebooks', publication_year: 2014 },
+          { id: 1, code: 'PHB', name: 'Player\'s Handbook', category: 'Core Rulebooks', publication_year: 2014 },
+          { id: 2, code: 'DMG', name: 'Dungeon Master\'s Guide', category: 'Core Rulebooks', publication_year: 2014 },
           { id: 3, code: 'MM', name: 'Monster Manual', category: 'Core Rulebooks', publication_year: 2014 },
-          { id: 4, code: 'XGE', name: "Xanathar's Guide to Everything", category: 'Expansion', publication_year: 2017 },
-          { id: 5, code: 'TCE', name: "Tasha's Cauldron of Everything", category: 'Expansion', publication_year: 2020 }
+          { id: 4, code: 'XGE', name: 'Xanathar\'s Guide to Everything', category: 'Expansion', publication_year: 2017 },
+          { id: 5, code: 'TCE', name: 'Tasha\'s Cauldron of Everything', category: 'Expansion', publication_year: 2020 }
         ]
       })
     }

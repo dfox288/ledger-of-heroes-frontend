@@ -27,18 +27,19 @@ vi.mock('~/composables/useCharacterSlug', () => ({
 // eslint-disable-next-line import/first
 import { useCharacterWizardStore } from '~/stores/characterWizard'
 
-// Mock race data
+// Mock race data - includes full_slug for slug-based references (#318)
 const mockElf: Race = {
   id: 1,
   name: 'Elf',
   slug: 'elf',
+  full_slug: 'phb:elf',
   description: 'Elves are a magical people',
   speed: 30,
   size: { id: 1, name: 'Medium', slug: 'medium' },
   subrace_required: true,
   subraces: [
-    { id: 2, name: 'High Elf', slug: 'high-elf' },
-    { id: 3, name: 'Wood Elf', slug: 'wood-elf' }
+    { id: 2, name: 'High Elf', slug: 'high-elf', full_slug: 'phb:high-elf' },
+    { id: 3, name: 'Wood Elf', slug: 'wood-elf', full_slug: 'phb:wood-elf' }
   ],
   modifiers: [],
   traits: [],
@@ -50,12 +51,13 @@ const mockHuman: Race = {
   id: 4,
   name: 'Human',
   slug: 'human',
+  full_slug: 'phb:human',
   description: 'Humans are versatile',
   speed: 30,
   size: { id: 1, name: 'Medium', slug: 'medium' },
   subrace_required: false,
   subraces: [
-    { id: 5, name: 'Variant Human', slug: 'variant-human' }
+    { id: 5, name: 'Variant Human', slug: 'variant-human', full_slug: 'phb:variant-human' }
   ],
   modifiers: [],
   traits: [],
@@ -67,6 +69,7 @@ const mockHalfOrc: Race = {
   id: 6,
   name: 'Half-Orc',
   slug: 'half-orc',
+  full_slug: 'phb:half-orc',
   description: 'Half-Orcs are strong',
   speed: 30,
   size: { id: 1, name: 'Medium', slug: 'medium' },
@@ -78,11 +81,12 @@ const mockHalfOrc: Race = {
   sources: [{ code: 'PHB', name: 'Player\'s Handbook' }]
 } as Race
 
-// Mock class data
+// Mock class data - includes full_slug for slug-based references (#318)
 const mockCleric: CharacterClass = {
   id: 1,
   name: 'Cleric',
   slug: 'cleric',
+  full_slug: 'phb:cleric',
   hit_die: 8,
   subclass_level: 1,
   spellcasting_ability: { id: 5, code: 'WIS', name: 'Wisdom' },
@@ -98,6 +102,7 @@ const mockFighter: CharacterClass = {
   id: 2,
   name: 'Fighter',
   slug: 'fighter',
+  full_slug: 'phb:fighter',
   hit_die: 10,
   subclass_level: 3,
   spellcasting_ability: null,
@@ -111,6 +116,7 @@ const mockWizard: CharacterClass = {
   id: 3,
   name: 'Wizard',
   slug: 'wizard',
+  full_slug: 'phb:wizard',
   hit_die: 6,
   subclass_level: 2,
   spellcasting_ability: { id: 4, code: 'INT', name: 'Intelligence' },
@@ -313,7 +319,7 @@ describe('characterWizard store', () => {
 
     it('returns subrace when selected', () => {
       const store = useCharacterWizardStore()
-      const highElf = { ...mockElf, id: 2, name: 'High Elf', slug: 'high-elf' }
+      const highElf = { ...mockElf, id: 2, name: 'High Elf', slug: 'high-elf', full_slug: 'phb:high-elf' }
       store.selections.race = mockElf
       store.selections.subrace = highElf
       expect(store.effectiveRace?.id).toBe(highElf.id)
@@ -364,7 +370,7 @@ describe('characterWizard store', () => {
       expect(store.selections.race?.id).toBe(mockHuman.id)
       expect(mockApiFetch).toHaveBeenCalledWith(
         '/characters/456',
-        expect.objectContaining({ method: 'PATCH', body: { race_id: mockHuman.id } })
+        expect.objectContaining({ method: 'PATCH', body: { race_slug: mockHuman.full_slug } })
       )
     })
 
@@ -447,7 +453,7 @@ describe('characterWizard store', () => {
       const store = useCharacterWizardStore()
       store.characterId = 1
       store.selections.race = mockElf
-      const highElf = { ...mockElf, id: 2, name: 'High Elf', slug: 'high-elf' } as Race
+      const highElf = { ...mockElf, id: 2, name: 'High Elf', slug: 'high-elf', full_slug: 'phb:high-elf' } as Race
 
       mockApiFetch
         .mockResolvedValueOnce({}) // PATCH
@@ -459,7 +465,7 @@ describe('characterWizard store', () => {
       expect(store.selections.subrace?.id).toBe(2)
       expect(mockApiFetch).toHaveBeenCalledWith(
         '/characters/1',
-        expect.objectContaining({ method: 'PATCH', body: { race_id: 2 } })
+        expect.objectContaining({ method: 'PATCH', body: { race_slug: 'phb:high-elf' } })
       )
     })
 
@@ -478,7 +484,7 @@ describe('characterWizard store', () => {
       expect(store.selections.subrace).toBeNull()
       expect(mockApiFetch).toHaveBeenCalledWith(
         '/characters/1',
-        expect.objectContaining({ body: { race_id: mockHuman.id } })
+        expect.objectContaining({ body: { race_slug: mockHuman.full_slug } })
       )
     })
   })
@@ -511,7 +517,7 @@ describe('characterWizard store', () => {
       expect(store.selections.class?.id).toBe(mockCleric.id)
       expect(mockApiFetch).toHaveBeenCalledWith(
         '/characters/1/classes',
-        expect.objectContaining({ method: 'POST', body: { class_id: mockCleric.id } })
+        expect.objectContaining({ method: 'POST', body: { class_slug: mockCleric.full_slug } })
       )
     })
 
@@ -531,7 +537,7 @@ describe('characterWizard store', () => {
       expect(store.selections.class?.id).toBe(mockCleric.id)
       expect(mockApiFetch).toHaveBeenCalledWith(
         `/characters/1/classes/${mockFighter.id}`,
-        expect.objectContaining({ method: 'PUT', body: { class_id: mockCleric.id } })
+        expect.objectContaining({ method: 'PUT', body: { class_slug: mockCleric.full_slug } })
       )
     })
 
@@ -549,7 +555,7 @@ describe('characterWizard store', () => {
       const store = useCharacterWizardStore()
       store.characterId = 1
       store.selections.class = mockFighter
-      store.selections.subclass = { id: 99, name: 'Champion', slug: 'champion' }
+      store.selections.subclass = { id: 99, name: 'Champion', slug: 'champion', full_slug: 'phb:champion' }
 
       mockApiFetch
         .mockResolvedValueOnce({})
@@ -568,6 +574,7 @@ describe('characterWizard store', () => {
       id: 1,
       name: 'Soldier',
       slug: 'soldier',
+      full_slug: 'phb:soldier',
       feature_name: 'Military Rank'
     } as Background
 
@@ -598,7 +605,7 @@ describe('characterWizard store', () => {
       expect(store.selections.background?.id).toBe(mockBackground.id)
       expect(mockApiFetch).toHaveBeenCalledWith(
         '/characters/1',
-        expect.objectContaining({ method: 'PATCH', body: { background_id: 1 } })
+        expect.objectContaining({ method: 'PATCH', body: { background_slug: mockBackground.full_slug } })
       )
     })
   })

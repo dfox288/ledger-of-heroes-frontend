@@ -3,7 +3,8 @@
  * Used when user goes back in wizard and selects a different class
  *
  * @example PUT /api/characters/1/classes/2
- * Body: { class_id: 3 }
+ * Body: { class_slug: "phb:cleric" }
+ * @see #318 - Slug-based character references
  */
 export default defineEventHandler(async (event) => {
   const config = useRuntimeConfig()

@@ -5,6 +5,8 @@ interface Props {
     id: number
     name: string
     slug: string
+    /** Full slug for API references (e.g., "phb:evoker") - see #318 */
+    full_slug: string
     source?: { code: string, name: string }
     description?: string
   }

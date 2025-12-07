@@ -7,8 +7,10 @@ const props = defineProps<{
   stats: CharacterStats
 }>()
 
-const cantrips = computed(() => props.spells.filter(s => s.spell.level === 0))
-const leveledSpells = computed(() => props.spells.filter(s => s.spell.level > 0))
+// Filter out dangling spell references (sourcebook removed)
+const validSpells = computed(() => props.spells.filter(s => s.spell !== null))
+const cantrips = computed(() => validSpells.value.filter(s => s.spell!.level === 0))
+const leveledSpells = computed(() => validSpells.value.filter(s => s.spell!.level > 0))
 
 function formatModifier(value: number): string {
   return value >= 0 ? `+${value}` : `${value}`
@@ -61,7 +63,7 @@ function formatModifier(value: number): string {
           variant="subtle"
           size="md"
         >
-          {{ spell.spell.name }}
+          {{ spell.spell!.name }}
         </UBadge>
       </div>
     </div>
@@ -82,13 +84,13 @@ function formatModifier(value: number): string {
             :class="spell.prepared ? 'text-success-500' : 'text-gray-400'"
             class="w-4 h-4"
           />
-          <span class="text-gray-900 dark:text-white">{{ spell.spell.name }}</span>
+          <span class="text-gray-900 dark:text-white">{{ spell.spell!.name }}</span>
           <UBadge
             color="neutral"
             variant="subtle"
             size="xs"
           >
-            Lvl {{ spell.spell.level }}
+            Lvl {{ spell.spell!.level }}
           </UBadge>
         </li>
       </ul>

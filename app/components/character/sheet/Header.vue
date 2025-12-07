@@ -15,8 +15,10 @@ const classesDisplay = computed(() => {
     return props.character.class?.name ?? 'No class'
   }
   return props.character.classes
-    .map(c => `${c.class.name} ${c.level}`)
-    .join(' / ')
+    // Filter out dangling class references (sourcebook removed)
+    .filter(c => c.class !== null)
+    .map(c => `${c.class!.name} ${c.level}`)
+    .join(' / ') || 'No class'
 })
 </script>
 

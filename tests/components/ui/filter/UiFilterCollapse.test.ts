@@ -212,7 +212,7 @@ describe('UiFilterCollapse', () => {
           modelValue: false
         },
         slots: {
-          search: () => h('input', { type: 'text', placeholder: 'Search...', 'data-testid': 'search-input' })
+          search: () => h('input', { 'type': 'text', 'placeholder': 'Search...', 'data-testid': 'search-input' })
         }
       })
 

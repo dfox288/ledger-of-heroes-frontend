@@ -37,6 +37,8 @@ export interface Subclass {
   id: number
   name: string
   slug: string
+  /** Full slug for API references (e.g., "phb:evoker") - see #318 */
+  full_slug: string
   description?: string
   source?: { code: string, name: string }
 }
@@ -120,10 +122,13 @@ export const useCharacterWizardStore = defineStore('characterWizard', () => {
    *
    * Generates a public_id client-side and sends it to the backend.
    * If collision occurs (422), regenerates and retries up to 3 times.
+   *
+   * @param name - Character name
+   * @param raceSlug - Full slug for race (e.g., "phb:human") - see #318
    */
   async function createCharacterWithRetry(
     name: string,
-    raceId: number,
+    raceSlug: string,
     maxRetries = 3
   ): Promise<{ id: number, public_id: string }> {
     let lastError: Error | null = null
@@ -137,7 +142,7 @@ export const useCharacterWizardStore = defineStore('characterWizard', () => {
           body: {
             public_id: newPublicId,
             name,
-            race_id: raceId
+            race_slug: raceSlug
           }
         })
         return response.data
@@ -347,19 +352,27 @@ export const useCharacterWizardStore = defineStore('characterWizard', () => {
   /**
    * Select or create character with race
    * This is the first save point - creates the character draft
+   *
+   * Note: Uses full_slug for API requests (see #318)
    */
   async function selectRace(race: Race): Promise<void> {
     isLoading.value = true
     error.value = null
 
     try {
+      // Race must have full_slug for slug-based references (#318)
+      const raceSlug = race.full_slug
+      if (!raceSlug) {
+        throw new Error('Race missing full_slug - cannot save')
+      }
+
       if (!characterId.value) {
         // First save - create character with race and public_id
         // Provide a default name that can be changed later in Details step
         const defaultName = selections.value.name || `New ${race.name}`
 
-        // Generate public_id with collision retry
-        const response = await createCharacterWithRetry(defaultName, race.id)
+        // Generate public_id with collision retry, using race_slug (#318)
+        const response = await createCharacterWithRetry(defaultName, raceSlug)
         characterId.value = response.id
         publicId.value = response.public_id
 
@@ -368,10 +381,10 @@ export const useCharacterWizardStore = defineStore('characterWizard', () => {
           selections.value.name = defaultName
         }
       } else {
-        // Update existing character
+        // Update existing character using race_slug (#318)
         await apiFetch(`/characters/${characterId.value}`, {
           method: 'PATCH',
-          body: { race_id: race.id }
+          body: { race_slug: raceSlug }
         })
       }
 
@@ -391,6 +404,8 @@ export const useCharacterWizardStore = defineStore('characterWizard', () => {
 
   /**
    * Select subrace (or null for "None" on optional subraces)
+   *
+   * Note: Uses full_slug for API requests (see #318)
    */
   async function selectSubrace(subrace: Race | null): Promise<void> {
     if (!characterId.value) return
@@ -399,12 +414,13 @@ export const useCharacterWizardStore = defineStore('characterWizard', () => {
     error.value = null
 
     try {
-      const raceId = subrace?.id ?? selections.value.race?.id
-      if (!raceId) throw new Error('No race selected')
+      // Use subrace's full_slug if selected, otherwise fall back to base race's full_slug (#318)
+      const raceSlug = subrace?.full_slug ?? selections.value.race?.full_slug
+      if (!raceSlug) throw new Error('No race selected or race missing full_slug')
 
       await apiFetch(`/characters/${characterId.value}`, {
         method: 'PATCH',
-        body: { race_id: raceId }
+        body: { race_slug: raceSlug }
       })
 
       selections.value.subrace = subrace
@@ -421,6 +437,9 @@ export const useCharacterWizardStore = defineStore('characterWizard', () => {
    * Select class
    * If character already has a class, uses PUT to replace it.
    * If no class exists, uses POST to add it.
+   *
+   * Note: Uses full_slug for API requests (see #318)
+   * URL paths still use ID (backend accepts both, pivot ID recommended)
    */
   async function selectClass(cls: CharacterClass): Promise<void> {
     if (!characterId.value) return
@@ -434,17 +453,24 @@ export const useCharacterWizardStore = defineStore('characterWizard', () => {
     error.value = null
 
     try {
+      // Class must have full_slug for slug-based references (#318)
+      const classSlug = cls.full_slug
+      if (!classSlug) {
+        throw new Error('Class missing full_slug - cannot save')
+      }
+
       if (selections.value.class) {
         // Replace existing class using PUT endpoint
+        // URL uses ID (backend accepts both), body uses class_slug (#318)
         await apiFetch(`/characters/${characterId.value}/classes/${selections.value.class.id}`, {
           method: 'PUT',
-          body: { class_id: cls.id }
+          body: { class_slug: classSlug }
         })
       } else {
-        // Add new class using POST endpoint
+        // Add new class using POST endpoint with class_slug (#318)
         await apiFetch(`/characters/${characterId.value}/classes`, {
           method: 'POST',
-          body: { class_id: cls.id }
+          body: { class_slug: classSlug }
         })
       }
 
@@ -467,6 +493,8 @@ export const useCharacterWizardStore = defineStore('characterWizard', () => {
 
   /**
    * Select subclass
+   *
+   * Note: Uses full_slug for API requests (see #318)
    */
   async function selectSubclass(subclass: Subclass): Promise<void> {
     if (!characterId.value || !selections.value.class) return
@@ -475,11 +503,12 @@ export const useCharacterWizardStore = defineStore('characterWizard', () => {
     error.value = null
 
     try {
+      // URL uses class ID, body uses subclass_slug (#318)
       await apiFetch(
         `/characters/${characterId.value}/classes/${selections.value.class.id}/subclass`,
         {
           method: 'PUT',
-          body: { subclass_id: subclass.id }
+          body: { subclass_slug: subclass.full_slug }
         }
       )
 
@@ -495,6 +524,8 @@ export const useCharacterWizardStore = defineStore('characterWizard', () => {
 
   /**
    * Select background
+   *
+   * Note: Uses full_slug for API requests (see #318)
    */
   async function selectBackground(background: Background): Promise<void> {
     if (!characterId.value) return
@@ -503,9 +534,15 @@ export const useCharacterWizardStore = defineStore('characterWizard', () => {
     error.value = null
 
     try {
+      // Background must have full_slug for slug-based references (#318)
+      const backgroundSlug = background.full_slug
+      if (!backgroundSlug) {
+        throw new Error('Background missing full_slug - cannot save')
+      }
+
       await apiFetch(`/characters/${characterId.value}`, {
         method: 'PATCH',
-        body: { background_id: background.id }
+        body: { background_slug: backgroundSlug }
       })
 
       // Fetch full background data

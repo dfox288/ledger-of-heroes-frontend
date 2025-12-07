@@ -132,16 +132,23 @@ export interface AbilityScores {
 /**
  * Character class entry for multiclass support
  * Stores class info and cached full data for UI
+ *
+ * Note: Uses slug-based references for portability (see #318)
+ * The API returns both the slug reference AND resolved data (or null if dangling)
  */
 export interface CharacterClassEntry {
-  classId: number
-  subclassId: number | null
+  /** Full slug reference (e.g., "phb:fighter") - always present */
+  classSlug: string
+  /** Full slug reference for subclass (e.g., "phb:champion") */
+  subclassSlug: string | null
   level: number
   isPrimary: boolean
   order: number
-  /** Cached full class data for UI display */
+  /** Indicates if the class reference couldn't be resolved */
+  isDangling?: boolean
+  /** Cached full class data for UI display (null if dangling) */
   classData: CharacterClass | null
-  /** Cached subclass data if selected */
+  /** Cached subclass data if selected (null if dangling) */
   subclassData?: CharacterClass | null
 }
 
@@ -167,6 +174,9 @@ export interface CharacterValidationStatus {
 
 /**
  * Character summary (list view)
+ *
+ * Note: Uses slug-based references for portability (see #318)
+ * Entity data may be null if the reference is dangling (sourcebook removed)
  */
 export interface CharacterSummary {
   id: number
@@ -174,9 +184,20 @@ export interface CharacterSummary {
   name: string
   level: number
   is_complete: boolean
-  race: { id: number, name: string, slug: string } | null
-  class: { id: number, name: string, slug: string } | null
-  background: { id: number, name: string, slug: string } | null
+  /** Resolved race data (null if dangling) */
+  race: { id: number, name: string, slug: string, full_slug: string } | null
+  /** Race slug reference (always present if race was set) */
+  race_slug: string | null
+  /** Indicates if race reference couldn't be resolved */
+  race_is_dangling?: boolean
+  /** Resolved primary class data (null if dangling) */
+  class: { id: number, name: string, slug: string, full_slug: string } | null
+  /** Resolved background data (null if dangling) */
+  background: { id: number, name: string, slug: string, full_slug: string } | null
+  /** Background slug reference (always present if background was set) */
+  background_slug: string | null
+  /** Indicates if background reference couldn't be resolved */
+  background_is_dangling?: boolean
 }
 
 /**

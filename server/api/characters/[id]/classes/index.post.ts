@@ -2,7 +2,8 @@
  * Add class to character - Proxies to Laravel backend
  *
  * @example POST /api/characters/1/classes
- * Body: { class_id: 1 }
+ * Body: { class_slug: "phb:fighter" }
+ * @see #318 - Slug-based character references
  */
 export default defineEventHandler(async (event) => {
   const config = useRuntimeConfig()

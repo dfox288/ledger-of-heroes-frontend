@@ -2,7 +2,8 @@
  * Set character subclass - Proxies to Laravel backend
  *
  * @example PUT /api/characters/1/classes/2/subclass
- * Body: { subclass_id: 3 }
+ * Body: { subclass_slug: "phb:life-domain" }
+ * @see #318 - Slug-based character references
  */
 export default defineEventHandler(async (event) => {
   const config = useRuntimeConfig()

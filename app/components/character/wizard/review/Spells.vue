@@ -25,10 +25,14 @@ function getOrdinalSuffix(n: number): string {
 const spellGroups = computed<SpellGroup[]>(() => {
   if (!props.spells || props.spells.length === 0) return []
 
+  // Filter out dangling spell references (sourcebook removed)
+  const validSpells = props.spells.filter(s => s.spell !== null)
+  if (validSpells.length === 0) return []
+
   const grouped = new Map<number, CharacterSpell[]>()
 
-  for (const spell of props.spells) {
-    const level = spell.spell.level
+  for (const spell of validSpells) {
+    const level = spell.spell!.level
     const existing = grouped.get(level) ?? []
     grouped.set(level, [...existing, spell])
   }
@@ -38,7 +42,7 @@ const spellGroups = computed<SpellGroup[]>(() => {
   return levels.map(level => ({
     level,
     label: level === 0 ? 'Cantrips' : `${level}${getOrdinalSuffix(level)} Level`,
-    spells: grouped.get(level)?.sort((a, b) => a.spell.name.localeCompare(b.spell.name)) ?? []
+    spells: grouped.get(level)?.sort((a, b) => a.spell!.name.localeCompare(b.spell!.name)) ?? []
   }))
 })
 </script>
@@ -77,7 +81,7 @@ const spellGroups = computed<SpellGroup[]>(() => {
             variant="subtle"
             size="md"
           >
-            {{ spell.spell.name }}
+            {{ spell.spell!.name }}
             <UIcon
               v-if="spell.always_prepared"
               name="i-heroicons-star-solid"
