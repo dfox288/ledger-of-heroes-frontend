@@ -48,11 +48,8 @@ export default defineVitestConfig({
     environmentOptions: {
       nuxt: {
         mock: {
-          indexHtml: false
-        },
-        overrides: {
-          appManifest: false,
-          routeRules: {}
+          intersectionObserver: true,
+          indexedDb: true
         }
       }
     }
