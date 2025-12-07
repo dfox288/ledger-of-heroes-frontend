@@ -8,23 +8,23 @@
 #   ./scripts/create-agent-worktree.sh <instance-number> <branch-name>
 #
 # Placeholders replaced by setup script:
-#   2  - Unique instance number (1, 2, 3, etc.)
-#   4002    - Nuxt dev server port (4001, 4002, etc.)
-#   34680     - HMR WebSocket port (34679, 34680, etc.)
-#   6008 - Storybook port (6007, 6008, etc.)
-#   8083   - Nginx proxy port (8082, 8083, etc.)
+#   1  - Unique instance number (1, 2, 3, etc.)
+#   4001    - Nuxt dev server port (4001, 4002, etc.)
+#   34679     - HMR WebSocket port (34679, 34680, etc.)
+#   6007 - Storybook port (6007, 6008, etc.)
+#   8082   - Nginx proxy port (8082, 8083, etc.)
 #
 # NOTE: The !override tag tells Docker Compose to REPLACE arrays instead of merging them.
 
 services:
   nuxt:
-    container_name: dnd-frontend-nuxt-2
+    container_name: dnd-frontend-nuxt-1
     ports: !override
-      - "4002:3000"
-      - "34680:24678"
-      - "6008:6006"
+      - "4001:3000"
+      - "34679:24678"
+      - "6007:6006"
 
   nginx:
-    container_name: dnd-frontend-nginx-2
+    container_name: dnd-frontend-nginx-1
     ports: !override
-      - "8083:80"
+      - "8082:80"

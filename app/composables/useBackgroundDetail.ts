@@ -39,20 +39,22 @@ export interface SkillWithAbility {
  * ```
  */
 export function useBackgroundDetail(slug: Ref<string>) {
-  const { apiFetch } = useApi()
-
-  // Fetch background data with caching
-  const { data: response, pending, error, refresh } = useAsyncData(
-    `background-detail-${slug.value}`,
-    async () => {
-      const result = await apiFetch<{ data: Background }>(`/backgrounds/${slug.value}`)
-      return result?.data || null
-    },
-    { watch: [slug] }
-  )
-
-  // Main entity accessor
-  const entity = computed(() => response.value as Background | null)
+  // Fetch background data with caching and SEO
+  const { data: entity, loading: pending, error, refresh } = useEntityDetail<Background>({
+    slug: slug.value,
+    endpoint: '/backgrounds',
+    cacheKey: 'background',
+    seo: {
+      titleTemplate: (name: string) => `${name} - D&D 5e Background`,
+      descriptionExtractor: (background: unknown) => {
+        const b = background as Background
+        // Extract description from description trait (category=null, name="Description")
+        const descTrait = b.traits?.find(t => t.category === null && t.name === 'Description')
+        return descTrait?.description?.substring(0, 160) ?? ''
+      },
+      fallbackTitle: 'Background - D&D 5e Compendium'
+    }
+  })
 
   // ─────────────────────────────────────────────────────────────────────────────
   // Trait Extraction
@@ -220,29 +222,6 @@ export function useBackgroundDetail(slug: Ref<string>) {
 
   const sources = computed(() => entity.value?.sources ?? [])
   const tags = computed(() => entity.value?.tags ?? [])
-
-  // ─────────────────────────────────────────────────────────────────────────────
-  // SEO
-  // ─────────────────────────────────────────────────────────────────────────────
-
-  useSeoMeta({
-    title: computed(() =>
-      entity.value?.name
-        ? `${entity.value.name} - D&D 5e Background`
-        : 'Background - D&D 5e Compendium'
-    ),
-    description: computed(() =>
-      descriptionTrait.value?.description?.substring(0, 160) ?? ''
-    )
-  })
-
-  useHead({
-    title: computed(() =>
-      entity.value?.name
-        ? `${entity.value.name} - D&D 5e Background`
-        : 'Background - D&D 5e Compendium'
-    )
-  })
 
   return {
     // Core

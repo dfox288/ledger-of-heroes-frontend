@@ -60,20 +60,22 @@ export interface FeatAdvantage {
  * ```
  */
 export function useFeatDetail(slug: Ref<string>) {
+  // Fetch feat data with caching and SEO
+  const { data: entity, loading: pending, error, refresh } = useEntityDetail<Feat>({
+    slug: slug.value,
+    endpoint: '/feats',
+    cacheKey: 'feat',
+    seo: {
+      titleTemplate: (name: string) => `${name} - D&D 5e Feat`,
+      descriptionExtractor: (feat: unknown) => {
+        const f = feat as Feat
+        return f.description?.substring(0, 160) ?? ''
+      },
+      fallbackTitle: 'Feat - D&D 5e Compendium'
+    }
+  })
+
   const { apiFetch } = useApi()
-
-  // Fetch feat data with caching
-  const { data: response, pending, error, refresh } = useAsyncData(
-    `feat-detail-${slug.value}`,
-    async () => {
-      const result = await apiFetch<{ data: Feat }>(`/feats/${slug.value}`)
-      return result?.data || null
-    },
-    { watch: [slug] }
-  )
-
-  // Main entity accessor
-  const entity = computed(() => response.value as Feat | null)
 
   // ─────────────────────────────────────────────────────────────────────────────
   // Half-Feat Status
@@ -269,29 +271,6 @@ export function useFeatDetail(slug: Ref<string>) {
 
   const sources = computed(() => entity.value?.sources ?? [])
   const tags = computed(() => entity.value?.tags ?? [])
-
-  // ─────────────────────────────────────────────────────────────────────────────
-  // SEO
-  // ─────────────────────────────────────────────────────────────────────────────
-
-  useSeoMeta({
-    title: computed(() =>
-      entity.value?.name
-        ? `${entity.value.name} - D&D 5e Feat`
-        : 'Feat - D&D 5e Compendium'
-    ),
-    description: computed(() =>
-      entity.value?.description?.substring(0, 160) ?? ''
-    )
-  })
-
-  useHead({
-    title: computed(() =>
-      entity.value?.name
-        ? `${entity.value.name} - D&D 5e Feat`
-        : 'Feat - D&D 5e Compendium'
-    )
-  })
 
   return {
     // Core
