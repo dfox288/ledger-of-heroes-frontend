@@ -34,7 +34,7 @@ export async function mountWizardStep(
 
   // Get store and reset to clean state
   const store = useCharacterWizardStore()
-  store.$reset()
+  store.reset()
 
   // Apply optional store setup
   if (storeSetup) {
