@@ -24,20 +24,21 @@ type ClassFeatureResource = components['schemas']['ClassFeatureResource']
  * ```
  */
 export function useClassDetail(slug: Ref<string>) {
-  const { apiFetch } = useApi()
-
-  // Fetch class data with caching across all views
-  const { data: response, pending, error, refresh } = useAsyncData(
-    `class-detail-${slug.value}`,
-    async () => {
-      const result = await apiFetch<{ data: CharacterClass }>(`/classes/${slug.value}`)
-      return result?.data || null
-    },
-    { watch: [slug] }
-  )
-
-  // Main entity accessor
-  const entity = computed(() => response.value as CharacterClass | null)
+  // Fetch class data with caching and SEO
+  // Pass the reactive ref directly so useEntityDetail can watch for changes
+  const { data: entity, loading: pending, error, refresh } = useEntityDetail<CharacterClass>({
+    slug,
+    endpoint: '/classes',
+    cacheKey: 'class',
+    seo: {
+      titleTemplate: (name: string) => `${name} - D&D 5e Class`,
+      descriptionExtractor: (cls: unknown) => {
+        const c = cls as CharacterClass
+        return c.description?.substring(0, 160) ?? ''
+      },
+      fallbackTitle: 'Class - D&D 5e Compendium'
+    }
+  })
 
   // ─────────────────────────────────────────────────────────────────────────────
   // Basic computed properties
@@ -238,29 +239,6 @@ export function useClassDetail(slug: Ref<string>) {
     }
     // Fallback to computed data
     return hitPoints.value?.hit_die_numeric ?? null
-  })
-
-  // ─────────────────────────────────────────────────────────────────────────────
-  // SEO
-  // ─────────────────────────────────────────────────────────────────────────────
-
-  useSeoMeta({
-    title: computed(() =>
-      entity.value?.name
-        ? `${entity.value.name} - D&D 5e Class`
-        : 'Class - D&D 5e Compendium'
-    ),
-    description: computed(() =>
-      entity.value?.description?.substring(0, 160) ?? ''
-    )
-  })
-
-  useHead({
-    title: computed(() =>
-      entity.value?.name
-        ? `${entity.value.name} - D&D 5e Class`
-        : 'Class - D&D 5e Compendium'
-    )
   })
 
   return {

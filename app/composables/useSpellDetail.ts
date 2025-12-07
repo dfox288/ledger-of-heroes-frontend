@@ -1,4 +1,4 @@
-import { computed, isRef, ref, type ComputedRef, type Ref } from 'vue'
+import { computed, type ComputedRef, type Ref } from 'vue'
 import type { Spell } from '~/types/api/entities'
 import type { components } from '~/types/api/generated'
 
@@ -73,11 +73,10 @@ export interface UseSpellDetailReturn {
  * ```
  */
 export function useSpellDetail(slug: Ref<string> | string): UseSpellDetailReturn {
-  const slugRef = isRef(slug) ? slug : ref(slug)
-
+  // useEntityDetail now handles both Ref<string> and string, converting internally
   // Fetch spell data with caching and SEO
   const { data: entity, loading: pending, error, refresh } = useEntityDetail<Spell>({
-    slug: slugRef.value,
+    slug,
     endpoint: '/spells',
     cacheKey: 'spell',
     seo: {

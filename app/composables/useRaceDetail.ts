@@ -31,20 +31,21 @@ type EntityConditionResource = components['schemas']['EntityConditionResource']
  * ```
  */
 export function useRaceDetail(slug: Ref<string>) {
-  const { apiFetch } = useApi()
-
-  // Fetch race data with caching across all views
-  const { data: response, pending, error, refresh } = useAsyncData(
-    `race-detail-${slug.value}`,
-    async () => {
-      const result = await apiFetch<{ data: Race }>(`/races/${slug.value}`)
-      return result?.data || null
-    },
-    { watch: [slug] }
-  )
-
-  // Main entity accessor
-  const entity = computed(() => response.value as Race | null)
+  // Fetch race data with caching and SEO
+  // Pass the reactive ref directly so useEntityDetail can watch for changes
+  const { data: entity, loading: pending, error, refresh } = useEntityDetail<Race>({
+    slug,
+    endpoint: '/races',
+    cacheKey: 'race',
+    seo: {
+      titleTemplate: (name: string) => `${name} - D&D 5e Race`,
+      descriptionExtractor: (race: unknown) => {
+        const r = race as Race
+        return r.description?.substring(0, 160) ?? ''
+      },
+      fallbackTitle: 'Race - D&D 5e Compendium'
+    }
+  })
 
   // ─────────────────────────────────────────────────────────────────────────────
   // Basic computed properties
@@ -139,29 +140,6 @@ export function useRaceDetail(slug: Ref<string>) {
   // ─────────────────────────────────────────────────────────────────────────────
 
   const tags = computed(() => entity.value?.tags ?? [])
-
-  // ─────────────────────────────────────────────────────────────────────────────
-  // SEO
-  // ─────────────────────────────────────────────────────────────────────────────
-
-  useSeoMeta({
-    title: computed(() =>
-      entity.value?.name
-        ? `${entity.value.name} - D&D 5e Race`
-        : 'Race - D&D 5e Compendium'
-    ),
-    description: computed(() =>
-      entity.value?.description?.substring(0, 160) ?? ''
-    )
-  })
-
-  useHead({
-    title: computed(() =>
-      entity.value?.name
-        ? `${entity.value.name} - D&D 5e Race`
-        : 'Race - D&D 5e Compendium'
-    )
-  })
 
   return {
     // Core

@@ -1,11 +1,11 @@
-import { computed, type ComputedRef } from 'vue'
+import { computed, isRef, ref, toValue, type ComputedRef, type MaybeRef, type Ref } from 'vue'
 
 /**
  * Configuration for useEntityDetail composable
  */
 export interface UseEntityDetailConfig {
-  /** Entity slug from route params */
-  slug: string
+  /** Entity slug from route params - can be reactive or static */
+  slug: MaybeRef<string>
 
   /** API endpoint (e.g., '/spells', '/items') */
   endpoint: string
@@ -66,13 +66,18 @@ export interface UseEntityDetailReturn<T = unknown> {
 export function useEntityDetail<T = unknown>(config: UseEntityDetailConfig): UseEntityDetailReturn<T> {
   const { apiFetch } = useApi()
 
+  // Ensure slug is reactive for watch to work
+  const slugRef = isRef(config.slug) ? config.slug : ref(config.slug)
+
   // Fetch entity data using useAsyncData for SSR support
+  // watch: [slugRef] enables automatic refetch when slug changes (e.g., navigation)
   const { data: response, pending: loading, error, refresh } = useAsyncData(
-    `${config.cacheKey}-${config.slug}`,
+    () => `${config.cacheKey}-${toValue(slugRef)}`,
     async () => {
-      const result = await apiFetch(`${config.endpoint}/${config.slug}`)
+      const result = await apiFetch(`${config.endpoint}/${toValue(slugRef)}`)
       return result?.data || null
-    }
+    },
+    { watch: [slugRef] }
   )
 
   // Entity data accessor

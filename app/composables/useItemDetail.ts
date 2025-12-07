@@ -42,20 +42,21 @@ type ItemSpellResource = components['schemas']['ItemSpellResource']
  * ```
  */
 export function useItemDetail(slug: Ref<string>) {
-  const { apiFetch } = useApi()
-
-  // Fetch item data with caching
-  const { data: response, pending, error, refresh } = useAsyncData(
-    `item-detail-${slug.value}`,
-    async () => {
-      const result = await apiFetch<{ data: Item }>(`/items/${slug.value}`)
-      return result?.data || null
-    },
-    { watch: [slug] }
-  )
-
-  // Main entity accessor
-  const entity = computed(() => response.value as Item | null)
+  // Fetch item data with caching and SEO
+  // Pass the reactive ref directly so useEntityDetail can watch for changes
+  const { data: entity, loading: pending, error, refresh } = useEntityDetail<Item>({
+    slug,
+    endpoint: '/items',
+    cacheKey: 'item',
+    seo: {
+      titleTemplate: (name: string) => `${name} - D&D 5e Item`,
+      descriptionExtractor: (item: unknown) => {
+        const i = item as Item
+        return i.detail?.substring(0, 160) ?? ''
+      },
+      fallbackTitle: 'Item - D&D 5e Compendium'
+    }
+  })
 
   // ─────────────────────────────────────────────────────────────────────────────
   // Type Detection
@@ -252,29 +253,6 @@ export function useItemDetail(slug: Ref<string>) {
     }
 
     return colorMap[code ?? ''] || 'gray'
-  })
-
-  // ─────────────────────────────────────────────────────────────────────────────
-  // SEO
-  // ─────────────────────────────────────────────────────────────────────────────
-
-  useSeoMeta({
-    title: computed(() =>
-      entity.value?.name
-        ? `${entity.value.name} - D&D 5e Item`
-        : 'Item - D&D 5e Compendium'
-    ),
-    description: computed(() =>
-      entity.value?.detail?.substring(0, 160) ?? ''
-    )
-  })
-
-  useHead({
-    title: computed(() =>
-      entity.value?.name
-        ? `${entity.value.name} - D&D 5e Item`
-        : 'Item - D&D 5e Compendium'
-    )
   })
 
   return {
