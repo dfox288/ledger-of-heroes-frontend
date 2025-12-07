@@ -1,1 +1,1 @@
-handovers/SESSION-HANDOVER-2025-12-06-unified-choice-planning.md
+../../dnd-rulebook-project/docs/frontend/handovers/SESSION-HANDOVER-2025-12-06-unified-choice-planning.md

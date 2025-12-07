@@ -1,24 +1,37 @@
-# Documentation Index
+# Documentation
 
-## Quick Links
+**Most documentation has moved to the wrapper project.**
 
-- **[PROJECT-STATUS.md](PROJECT-STATUS.md)** - Current metrics, milestones, project state
-- **[TODO.md](TODO.md)** - Active tasks and priorities
-- **[LATEST-HANDOVER.md](LATEST-HANDOVER.md)** - Most recent session handover
+See: `../dnd-rulebook-project/docs/frontend/`
 
-## Reference Documentation
+## What's Here
 
-- [reference/](reference/) - Stable reference docs (filters, components, blocked work)
+| Document | Purpose |
+|----------|---------|
+| **[PROJECT-STATUS.md](PROJECT-STATUS.md)** | Project metrics and current status |
+| **[LATEST-HANDOVER.md](LATEST-HANDOVER.md)** | Symlink to latest session handover |
 
-## Session Documentation
+## Writing New Docs
 
-- [handovers/](handovers/) - Recent session handovers (last 7 days)
-- [plans/](plans/) - Active implementation plans
-- [proposals/](proposals/) - API enhancement proposals
+All new plans, handovers, proposals, and reference docs go to the wrapper repo:
 
-## Archive
+```bash
+# Plans
+../dnd-rulebook-project/docs/frontend/plans/YYYY-MM-DD-topic-design.md
 
-- [archive/](archive/) - Historical documentation organized by type and month
-  - [archive/handovers/](archive/handovers/) - Older session handovers
-  - [archive/plans/](archive/plans/) - Completed implementation plans
-  - [archive/analysis/](archive/analysis/) - Historical analysis documents
+# Handovers
+../dnd-rulebook-project/docs/frontend/handovers/SESSION-HANDOVER-YYYY-MM-DD-topic.md
+
+# After writing a handover, update the symlink:
+ln -sf ../../dnd-rulebook-project/docs/frontend/handovers/SESSION-HANDOVER-YYYY-MM-DD-topic.md LATEST-HANDOVER.md
+```
+
+## Why Centralized?
+
+Moving documentation to the wrapper project:
+- Makes cross-cutting docs easier to find
+- Reduces duplication between frontend/backend
+- Keeps this repo focused on code
+- Consolidates GitHub Issues + docs in same repo
+
+See [../CLAUDE.md](../CLAUDE.md) for full documentation workflow.

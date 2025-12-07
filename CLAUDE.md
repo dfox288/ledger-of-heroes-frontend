@@ -14,10 +14,44 @@ Nuxt 4.x frontend for D&D 5e Compendium. Consumes REST API from `../importer` (L
 
 **Essential Docs:**
 - `docs/PROJECT-STATUS.md` - Metrics and current status
-- `docs/LATEST-HANDOVER.md` - Latest session handover
-- `docs/proposals/` - API enhancement proposals
+- `docs/LATEST-HANDOVER.md` - Latest session handover (symlink to wrapper)
 
 **Tasks & Issues:** [GitHub Issues](https://github.com/dfox288/dnd-rulebook-project/issues) (shared with backend)
+
+---
+
+## Documentation Locations
+
+**All documentation (plans, handovers, proposals, reference) lives in the wrapper repo:**
+
+```
+../dnd-rulebook-project/docs/frontend/
+├── handovers/   # Session handovers
+├── plans/       # Implementation plans
+├── proposals/   # API enhancement proposals
+├── reference/   # Stable reference docs
+└── archive/     # Old handovers
+```
+
+| Doc Type | Write To |
+|----------|----------|
+| **Plans** | `../dnd-rulebook-project/docs/frontend/plans/YYYY-MM-DD-topic-design.md` |
+| **Handovers** | `../dnd-rulebook-project/docs/frontend/handovers/SESSION-HANDOVER-YYYY-MM-DD-topic.md` |
+| **Proposals** | `../dnd-rulebook-project/docs/frontend/proposals/` |
+| **Reference** | `../dnd-rulebook-project/docs/frontend/reference/` |
+
+**Stays local:** `docs/PROJECT-STATUS.md`, `docs/LATEST-HANDOVER.md` (symlink), `docs/README.md`
+
+### Session Handover Workflow
+
+1. Write handover to wrapper: `../dnd-rulebook-project/docs/frontend/handovers/SESSION-HANDOVER-YYYY-MM-DD-topic.md`
+2. Update symlink:
+   ```bash
+   ln -sf ../../dnd-rulebook-project/docs/frontend/handovers/SESSION-HANDOVER-YYYY-MM-DD-topic.md docs/LATEST-HANDOVER.md
+   ```
+3. Commit to BOTH repos:
+   - Wrapper repo: the new handover file
+   - This repo: the updated symlink (if changed)
 
 ---
 
@@ -480,9 +514,10 @@ tests/
 
 docs/
 ├── PROJECT-STATUS.md   # Metrics (single source of truth)
-├── proposals/          # API enhancement proposals
-├── handovers/          # Session handovers
-└── reference/          # Stable documentation
+├── LATEST-HANDOVER.md  # Symlink → wrapper repo handover
+└── README.md           # Points to wrapper for all other docs
+
+# All other docs in: ../dnd-rulebook-project/docs/frontend/
 ```
 
 ---
