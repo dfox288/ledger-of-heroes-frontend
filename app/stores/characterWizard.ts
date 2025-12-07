@@ -499,6 +499,11 @@ export const useCharacterWizardStore = defineStore('characterWizard', () => {
   async function selectSubclass(subclass: Subclass): Promise<void> {
     if (!characterId.value || !selections.value.class) return
 
+    // Validate full_slug exists (required for API - see #318)
+    if (!subclass.full_slug) {
+      throw new Error('Subclass missing full_slug - cannot save')
+    }
+
     isLoading.value = true
     error.value = null
 

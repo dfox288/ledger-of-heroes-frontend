@@ -80,8 +80,8 @@ function formatModifier(value: number): string {
           class="flex items-center gap-2"
         >
           <UIcon
-            :name="spell.prepared ? 'i-heroicons-check-circle' : 'i-heroicons-minus-circle'"
-            :class="spell.prepared ? 'text-success-500' : 'text-gray-400'"
+            :name="spell.is_prepared ? 'i-heroicons-check-circle' : 'i-heroicons-minus-circle'"
+            :class="spell.is_prepared ? 'text-success-500' : 'text-gray-400'"
             class="w-4 h-4"
           />
           <span class="text-gray-900 dark:text-white">{{ spell.spell!.name }}</span>
@@ -97,7 +97,7 @@ function formatModifier(value: number): string {
     </div>
 
     <div
-      v-if="spells.length === 0"
+      v-if="validSpells.length === 0"
       class="text-center text-gray-500 dark:text-gray-400 py-8"
     >
       No spells known
