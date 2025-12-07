@@ -26,6 +26,17 @@ const {
   error
 } = useCharacterSheet(publicId)
 
+// Validation - check for dangling references when sourcebooks are removed
+const characterId = computed(() => character.value?.id ?? null)
+const { validationResult, validateReferences } = useCharacterValidation(characterId)
+
+// Trigger validation once character is loaded
+watch(characterId, async (newId) => {
+  if (newId) {
+    await validateReferences()
+  }
+}, { immediate: true })
+
 useSeoMeta({
   title: () => character.value?.name ?? 'Character Sheet',
   description: () => `View ${character.value?.name ?? 'character'} - D&D 5e Character Sheet`
@@ -90,6 +101,9 @@ const tabItems = computed(() => {
     >
       <!-- Header -->
       <CharacterSheetHeader :character="character" />
+
+      <!-- Validation Warning - shows when sourcebook content was removed -->
+      <CharacterSheetValidationWarning :validation-result="validationResult" />
 
       <!-- Main Grid: Abilities sidebar + Stats/Skills -->
       <div class="grid lg:grid-cols-[200px_1fr] gap-6">
