@@ -26,11 +26,6 @@ describe('useEntityDetail', () => {
     expect(config.seo.titleTemplate('Fireball')).toBe('Fireball - Test')
   })
 
-  it('composable exists and is importable', async () => {
-    const { useEntityDetail } = await import('~/composables/useEntityDetail')
-    expect(useEntityDetail).toBeDefined()
-    expect(typeof useEntityDetail).toBe('function')
-  })
 })
 
 /**

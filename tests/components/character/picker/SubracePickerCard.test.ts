@@ -2,13 +2,15 @@
 import { describe, it, expect } from 'vitest'
 import { mountSuspended } from '@nuxt/test-utils/runtime'
 import SubracePickerCard from '~/components/character/picker/SubracePickerCard.vue'
+import { createMockRace, mockSource } from '../../../helpers/mockFactories'
 
-const mockSubrace = {
+// Subrace is a partial Race with subrace-specific properties
+const mockSubrace = createMockRace({
   id: 1,
   name: 'Hill Dwarf',
   slug: 'hill-dwarf',
   speed: 25,
-  sources: [{ id: 1, code: 'PHB', name: 'Player\'s Handbook' }],
+  sources: [{ ...mockSource, id: 1 }],
   modifiers: [
     {
       id: 1,
@@ -24,7 +26,7 @@ const mockSubrace = {
       description: 'Your hit point maximum increases by 1, and it increases by 1 every time you gain a level.'
     }
   ]
-}
+})
 
 describe('SubracePickerCard', () => {
   // Custom common behavior tests (uses different data-testid)

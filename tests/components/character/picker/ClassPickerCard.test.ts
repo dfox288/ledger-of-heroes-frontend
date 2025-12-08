@@ -3,16 +3,16 @@ import { describe, it, expect } from 'vitest'
 import { mountSuspended } from '@nuxt/test-utils/runtime'
 import ClassPickerCard from '~/components/character/picker/ClassPickerCard.vue'
 import { testPickerCardBehavior } from '../../../helpers/pickerCardBehavior'
+import { createMockClass } from '../../../helpers/mockFactories'
 
-const mockClass = {
-  id: 1,
+const mockClass = createMockClass({
   name: 'Wizard',
   slug: 'wizard',
   hit_die: 6,
   primary_ability: 'Intelligence',
   spellcasting_ability: { id: 4, name: 'Intelligence', code: 'INT' },
   description: 'A scholarly magic-user capable of manipulating the structures of reality.'
-}
+})
 
 describe('ClassPickerCard', () => {
   // Test common picker card behavior

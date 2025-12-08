@@ -10,19 +10,6 @@ import { describe, it, expect } from 'vitest'
  */
 
 describe('useCharacterSheet', () => {
-  it('composable exists and is importable', async () => {
-    const { useCharacterSheet } = await import('~/composables/useCharacterSheet')
-    expect(useCharacterSheet).toBeDefined()
-    expect(typeof useCharacterSheet).toBe('function')
-  })
-
-  it('exports UseCharacterSheetReturn interface', async () => {
-    // Type-only test - verifies the interface is exported
-    const { UseCharacterSheetReturn } = await import('~/composables/useCharacterSheet') as any
-    // If this compiles, the type is exported correctly
-    expect(true).toBe(true)
-  })
-
   describe('skill modifier calculation logic', () => {
     it('calculates non-proficient skill modifier correctly', () => {
       // Acrobatics (DEX): ability mod only

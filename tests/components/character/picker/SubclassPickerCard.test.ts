@@ -3,13 +3,19 @@ import { describe, it, expect } from 'vitest'
 import { mountSuspended } from '@nuxt/test-utils/runtime'
 import SubclassPickerCard from '~/components/character/picker/SubclassPickerCard.vue'
 import { testPickerCardBehavior } from '../../../helpers/pickerCardBehavior'
+import { createMockClass, mockSource } from '../../../helpers/mockFactories'
 
+// Subclass has 'source' (singular) instead of 'sources' array - extend base mock
 const mockSubclass = {
-  id: 20,
-  name: 'Knowledge Domain',
-  slug: 'cleric-knowledge-domain',
-  source: { code: 'PHB', name: 'Player\'s Handbook' },
-  description: 'The gods of knowledge value learning and understanding above all.'
+  ...createMockClass({
+    id: 20,
+    name: 'Knowledge Domain',
+    slug: 'cleric-knowledge-domain',
+    is_base_class: false,
+    parent_class_id: 13, // Cleric
+    description: 'The gods of knowledge value learning and understanding above all.'
+  }),
+  source: mockSource // SubclassPickerCard expects 'source' singular
 }
 
 describe('SubclassPickerCard', () => {

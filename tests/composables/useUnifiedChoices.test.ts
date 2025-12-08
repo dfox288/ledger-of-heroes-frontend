@@ -58,12 +58,6 @@ const mockSummary = {
 }
 
 describe('useUnifiedChoices', () => {
-  it('composable exists and is importable', async () => {
-    const { useUnifiedChoices } = await import('~/composables/useUnifiedChoices')
-    expect(useUnifiedChoices).toBeDefined()
-    expect(typeof useUnifiedChoices).toBe('function')
-  })
-
   describe('choicesByType computed', () => {
     it('groups choices by type correctly', () => {
       // Test the grouping logic

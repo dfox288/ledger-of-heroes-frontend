@@ -3,9 +3,9 @@ import { describe, it, expect } from 'vitest'
 import { mountSuspended } from '@nuxt/test-utils/runtime'
 import BackgroundPickerCard from '~/components/character/picker/BackgroundPickerCard.vue'
 import { testPickerCardBehavior } from '../../../helpers/pickerCardBehavior'
+import { createMockBackground } from '../../../helpers/mockFactories'
 
-const mockBackground = {
-  id: 1,
+const mockBackground = createMockBackground({
   name: 'Soldier',
   slug: 'soldier',
   feature_name: 'Military Rank',
@@ -13,23 +13,41 @@ const mockBackground = {
     {
       id: 1,
       proficiency_type: 'skill',
-      skill: { id: 4, name: 'Athletics', code: 'ATH' }
+      proficiency_subcategory: null,
+      proficiency_type_id: null,
+      skill: { id: 4, name: 'Athletics', code: 'ATH', description: null, ability_score: null },
+      proficiency_name: 'Athletics',
+      grants: true,
+      is_choice: false,
+      quantity: 1
     },
     {
       id: 2,
       proficiency_type: 'skill',
-      skill: { id: 10, name: 'Intimidation', code: 'INT' }
+      proficiency_subcategory: null,
+      proficiency_type_id: null,
+      skill: { id: 10, name: 'Intimidation', code: 'INT', description: null, ability_score: null },
+      proficiency_name: 'Intimidation',
+      grants: true,
+      is_choice: false,
+      quantity: 1
     },
     {
       id: 3,
       proficiency_type: 'tool',
-      skill: null
+      proficiency_subcategory: null,
+      proficiency_type_id: null,
+      skill: null,
+      proficiency_name: 'Tool',
+      grants: true,
+      is_choice: false,
+      quantity: 1
     }
   ],
   languages: [
-    { id: 1, name: 'Common', code: 'COMM' }
+    { language: { id: 1, name: 'Common' }, is_choice: false }
   ]
-}
+})
 
 describe('BackgroundPickerCard', () => {
   // Test common picker card behavior

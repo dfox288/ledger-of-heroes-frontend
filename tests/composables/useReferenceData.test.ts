@@ -9,20 +9,6 @@ import { ref, computed } from 'vue'
  */
 
 describe('useReferenceData', () => {
-  it('composable exists and is importable', async () => {
-    const { useReferenceData } = await import('~/composables/useReferenceData')
-    expect(useReferenceData).toBeDefined()
-    expect(typeof useReferenceData).toBe('function')
-  })
-
-  it('exports correct TypeScript interfaces', () => {
-    const { ReferenceDataOptions }: any = {} as { ReferenceDataOptions: any }
-    const { UseReferenceDataReturn }: any = {} as { UseReferenceDataReturn: any }
-
-    // Type-only test - ensures interfaces are exported
-    expect(true).toBe(true)
-  })
-
   it('generates default cache key from endpoint', () => {
     // Test the cache key generation logic
     const endpoint = '/spell-schools'

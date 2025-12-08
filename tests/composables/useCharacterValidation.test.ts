@@ -10,24 +10,6 @@ import { describe, it, expect } from 'vitest'
  */
 
 describe('useCharacterValidation', () => {
-  it('composable exists and is importable', async () => {
-    const { useCharacterValidation } = await import('~/composables/useCharacterValidation')
-    expect(useCharacterValidation).toBeDefined()
-    expect(typeof useCharacterValidation).toBe('function')
-  })
-
-  it('exports ValidationResult interface', async () => {
-    // Type-only test - verifies the interface is exported
-    const { useCharacterValidation, ValidationResult } = await import('~/composables/useCharacterValidation') as {
-      useCharacterValidation: typeof import('~/composables/useCharacterValidation').useCharacterValidation
-      ValidationResult: unknown
-    }
-    // If this compiles, the type definitions are correct
-    expect(useCharacterValidation).toBeDefined()
-    // Note: ValidationResult is a TypeScript type, not a runtime value
-    expect(ValidationResult).toBeUndefined()
-  })
-
   describe('validation result structure', () => {
     it('returns expected properties', async () => {
       // This tests the shape of what the composable returns

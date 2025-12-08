@@ -3,9 +3,9 @@ import { describe, it, expect } from 'vitest'
 import { mountSuspended } from '@nuxt/test-utils/runtime'
 import RacePickerCard from '~/components/character/picker/RacePickerCard.vue'
 import { testPickerCardBehavior } from '../../../helpers/pickerCardBehavior'
+import { createMockRace } from '../../../helpers/mockFactories'
 
-const mockRace = {
-  id: 1,
+const mockRace = createMockRace({
   name: 'Dwarf',
   slug: 'dwarf',
   size: { id: 2, name: 'Medium', code: 'M' },
@@ -23,7 +23,7 @@ const mockRace = {
       value: 2
     }
   ]
-}
+})
 
 describe('RacePickerCard', () => {
   // Test common picker card behavior
