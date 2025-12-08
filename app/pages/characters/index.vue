@@ -1,27 +1,42 @@
 <!-- app/pages/characters/index.vue -->
 <script setup lang="ts">
+import { computed } from 'vue'
 import type { CharacterSummary } from '~/types'
 import { logger } from '~/utils/logger'
 
 /**
  * Character List Page
  *
- * Displays user's characters with option to create new ones.
+ * Displays user's characters with search and pagination.
+ * Uses useEntityList composable following the pattern of other entity pages.
  */
 
-useSeoMeta({
-  title: 'Your Characters',
-  description: 'Manage your D&D 5e characters'
+// Use entity list composable for pagination and search
+const {
+  searchQuery,
+  currentPage,
+  data,
+  meta,
+  totalResults,
+  loading,
+  error,
+  refresh,
+  clearFilters,
+  hasActiveFilters
+} = useEntityList({
+  endpoint: '/characters',
+  cacheKey: 'characters-list',
+  queryBuilder: computed(() => ({})), // No custom filters (just search + pagination)
+  perPage: 15, // Characters per page
+  seo: {
+    title: 'Your Characters - D&D 5e Compendium',
+    description: 'Manage your D&D 5e characters'
+  }
 })
 
-// Fetch characters
+const characters = computed(() => data.value as CharacterSummary[])
+const perPage = 15
 const { apiFetch } = useApi()
-const { data, pending, error, refresh } = await useAsyncData(
-  'characters-list',
-  () => apiFetch<{ data: CharacterSummary[] }>('/characters')
-)
-
-const characters = computed(() => data.value?.data ?? [])
 
 // Delete character by publicId
 async function deleteCharacter(publicId: string) {
@@ -39,7 +54,7 @@ async function deleteCharacter(publicId: string) {
 <template>
   <div class="container mx-auto px-4 py-8 max-w-4xl">
     <!-- Header -->
-    <div class="flex items-center justify-between mb-8">
+    <div class="flex items-center justify-between mb-6">
       <div>
         <h1 class="text-3xl font-bold text-gray-900 dark:text-white">
           Your Characters
@@ -58,61 +73,87 @@ async function deleteCharacter(publicId: string) {
       </UButton>
     </div>
 
-    <!-- Loading State -->
-    <div
-      v-if="pending"
-      class="flex justify-center py-12"
-    >
-      <UIcon
-        name="i-heroicons-arrow-path"
-        class="w-8 h-8 animate-spin text-gray-400"
-      />
-    </div>
-
-    <!-- Error State -->
-    <UAlert
-      v-else-if="error"
-      color="error"
-      icon="i-heroicons-exclamation-triangle"
-      title="Failed to load characters"
-      :description="error.message"
-    />
-
-    <!-- Empty State -->
-    <div
-      v-else-if="characters.length === 0"
-      class="text-center py-12"
-    >
-      <UIcon
-        name="i-heroicons-user-group"
-        class="w-16 h-16 mx-auto text-gray-300 dark:text-gray-600"
-      />
-      <h3 class="mt-4 text-lg font-medium text-gray-900 dark:text-white">
-        No characters yet
-      </h3>
-      <p class="mt-2 text-gray-500 dark:text-gray-400">
-        Create your first character to begin your adventure!
-      </p>
-      <UButton
-        to="/characters/create"
-        class="mt-6"
-        icon="i-heroicons-plus"
+    <!-- Search Input -->
+    <div class="mb-6">
+      <UInput
+        v-model="searchQuery"
+        placeholder="Search characters..."
+        size="lg"
       >
-        Create Your First Character
-      </UButton>
+        <template
+          v-if="searchQuery"
+          #trailing
+        >
+          <UButton
+            color="neutral"
+            variant="link"
+            icon="i-heroicons-x-mark"
+            :padded="false"
+            aria-label="Clear search"
+            @click="searchQuery = ''"
+          />
+        </template>
+      </UInput>
     </div>
 
-    <!-- Character Grid -->
-    <div
-      v-else
-      class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3"
+    <!-- List States (Loading, Error, Empty, Results) -->
+    <UiListStates
+      :loading="loading"
+      :error="error"
+      :empty="characters.length === 0"
+      :meta="meta"
+      :total="totalResults"
+      entity-name="character"
+      entity-name-plural="Characters"
+      :has-filters="hasActiveFilters"
+      :current-page="currentPage"
+      :per-page="perPage"
+      @retry="refresh"
+      @clear-filters="clearFilters"
+      @update:current-page="currentPage = $event"
     >
-      <CharacterCard
-        v-for="character in characters"
-        :key="character.public_id"
-        :character="character"
-        @delete="deleteCharacter(character.public_id)"
-      />
-    </div>
+      <!-- Custom empty state with create button -->
+      <template #empty>
+        <div class="text-center py-12">
+          <UIcon
+            name="i-heroicons-user-group"
+            class="w-16 h-16 mx-auto text-gray-300 dark:text-gray-600"
+          />
+          <h3 class="mt-4 text-lg font-medium text-gray-900 dark:text-white">
+            No characters {{ hasActiveFilters ? 'found' : 'yet' }}
+          </h3>
+          <p class="mt-2 text-gray-500 dark:text-gray-400">
+            {{ hasActiveFilters
+              ? 'Try adjusting your search or clear filters'
+              : 'Create your first character to begin your adventure!'
+            }}
+          </p>
+          <div class="mt-6 flex justify-center gap-3">
+            <UButton
+              v-if="hasActiveFilters"
+              variant="soft"
+              @click="clearFilters"
+            >
+              Clear Search
+            </UButton>
+            <UButton
+              to="/characters/create"
+              icon="i-heroicons-plus"
+            >
+              {{ hasActiveFilters ? 'Create Character' : 'Create Your First Character' }}
+            </UButton>
+          </div>
+        </div>
+      </template>
+
+      <template #grid>
+        <CharacterCard
+          v-for="character in characters"
+          :key="character.public_id"
+          :character="character"
+          @delete="deleteCharacter(character.public_id)"
+        />
+      </template>
+    </UiListStates>
   </div>
 </template>

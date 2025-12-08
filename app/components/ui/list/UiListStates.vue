@@ -90,12 +90,15 @@ const pageModel = computed({
   />
 
   <!-- Empty State -->
-  <UiListEmptyState
-    v-else-if="empty"
-    :entity-name="entityName"
-    :has-filters="hasFilters"
-    @clear-filters="emit('clear-filters')"
-  />
+  <template v-else-if="empty">
+    <slot name="empty">
+      <UiListEmptyState
+        :entity-name="entityName"
+        :has-filters="hasFilters"
+        @clear-filters="emit('clear-filters')"
+      />
+    </slot>
+  </template>
 
   <!-- Results -->
   <div v-else>
