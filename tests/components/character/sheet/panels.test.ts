@@ -74,6 +74,88 @@ describe('CharacterSheetEquipmentPanel', () => {
     })
     expect(wrapper.text()).toContain('No equipment')
   })
+
+  it('displays carrying capacity when provided', async () => {
+    const wrapper = await mountSuspended(EquipmentPanel, {
+      props: {
+        equipment: mockEquipment,
+        carryingCapacity: 150
+      }
+    })
+    expect(wrapper.text()).toContain('Carrying Capacity')
+    expect(wrapper.text()).toContain('150 lbs')
+  })
+
+  it('displays push/drag/lift capacity when provided', async () => {
+    const wrapper = await mountSuspended(EquipmentPanel, {
+      props: {
+        equipment: mockEquipment,
+        pushDragLift: 300
+      }
+    })
+    expect(wrapper.text()).toContain('Push/Drag/Lift')
+    expect(wrapper.text()).toContain('300 lbs')
+  })
+
+  it('displays both capacities when both provided', async () => {
+    const wrapper = await mountSuspended(EquipmentPanel, {
+      props: {
+        equipment: mockEquipment,
+        carryingCapacity: 150,
+        pushDragLift: 300
+      }
+    })
+    expect(wrapper.text()).toContain('Carrying Capacity')
+    expect(wrapper.text()).toContain('150 lbs')
+    expect(wrapper.text()).toContain('Push/Drag/Lift')
+    expect(wrapper.text()).toContain('300 lbs')
+  })
+
+  it('hides capacity section when no capacities provided', async () => {
+    const wrapper = await mountSuspended(EquipmentPanel, {
+      props: { equipment: mockEquipment }
+    })
+    expect(wrapper.text()).not.toContain('Carrying Capacity')
+    expect(wrapper.text()).not.toContain('Push/Drag/Lift')
+  })
+
+  it('hides capacity section when capacities are null', async () => {
+    const wrapper = await mountSuspended(EquipmentPanel, {
+      props: {
+        equipment: mockEquipment,
+        carryingCapacity: null,
+        pushDragLift: null
+      }
+    })
+    expect(wrapper.text()).not.toContain('Carrying Capacity')
+    expect(wrapper.text()).not.toContain('Push/Drag/Lift')
+  })
+
+  it('displays only carrying capacity when push/drag/lift is null', async () => {
+    const wrapper = await mountSuspended(EquipmentPanel, {
+      props: {
+        equipment: mockEquipment,
+        carryingCapacity: 150,
+        pushDragLift: null
+      }
+    })
+    expect(wrapper.text()).toContain('Carrying Capacity')
+    expect(wrapper.text()).toContain('150 lbs')
+    expect(wrapper.text()).not.toContain('Push/Drag/Lift')
+  })
+
+  it('displays only push/drag/lift when carrying capacity is null', async () => {
+    const wrapper = await mountSuspended(EquipmentPanel, {
+      props: {
+        equipment: mockEquipment,
+        carryingCapacity: null,
+        pushDragLift: 300
+      }
+    })
+    expect(wrapper.text()).toContain('Push/Drag/Lift')
+    expect(wrapper.text()).toContain('300 lbs')
+    expect(wrapper.text()).not.toContain('Carrying Capacity')
+  })
 })
 
 describe('CharacterSheetSpellsPanel', () => {

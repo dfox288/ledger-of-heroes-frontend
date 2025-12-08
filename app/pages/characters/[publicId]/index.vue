@@ -105,14 +105,21 @@ const tabItems = computed(() => {
       <!-- Validation Warning - shows when sourcebook content was removed -->
       <CharacterSheetValidationWarning :validation-result="validationResult" />
 
+      <!-- Active Conditions - shows when character has status effects -->
+      <CharacterSheetConditions :conditions="character.conditions" />
+
       <!-- Main Grid: Abilities sidebar + Stats/Skills -->
       <div class="grid lg:grid-cols-[200px_1fr] gap-6">
-        <!-- Left Sidebar: Ability Scores + Death Saves -->
+        <!-- Left Sidebar: Ability Scores + Death Saves + Hit Dice -->
         <div class="space-y-4">
           <CharacterSheetAbilityScoreBlock :stats="stats" />
           <CharacterSheetDeathSaves
             :successes="character.death_save_successes"
             :failures="character.death_save_failures"
+          />
+          <CharacterSheetHitDice
+            v-if="stats.hit_dice?.length"
+            :hit-dice="stats.hit_dice"
           />
         </div>
 
@@ -146,7 +153,11 @@ const tabItems = computed(() => {
         </template>
 
         <template #equipment>
-          <CharacterSheetEquipmentPanel :equipment="equipment" />
+          <CharacterSheetEquipmentPanel
+            :equipment="equipment"
+            :carrying-capacity="stats?.carrying_capacity"
+            :push-drag-lift="stats?.push_drag_lift"
+          />
         </template>
 
         <template #spells>
