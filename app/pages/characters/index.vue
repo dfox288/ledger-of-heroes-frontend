@@ -36,9 +36,9 @@ const {
 
 const characters = computed(() => data.value as CharacterSummary[])
 const perPage = 15
+const { apiFetch } = useApi()
 
 // Delete character by publicId
-const { apiFetch } = useApi()
 async function deleteCharacter(publicId: string) {
   if (!confirm('Are you sure you want to delete this character?')) return
 
