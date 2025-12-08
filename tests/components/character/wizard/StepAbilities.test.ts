@@ -1,9 +1,72 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest'
+import { mockNuxtImport } from '@nuxt/test-utils/runtime'
 import { setActivePinia, createPinia } from 'pinia'
 import StepAbilities from '~/components/character/wizard/StepAbilities.vue'
-import { useCharacterWizardStore } from '~/stores/characterWizard'
 import { testWizardStepBehavior, mountWizardStep } from '../../../helpers/wizardStepBehavior'
 import { wizardMockRaces } from '../../../helpers/mockFactories'
+import type { components } from '~/types/api/generated'
+
+type PendingChoice = components['schemas']['PendingChoiceResource']
+
+// Mock pending choices for ability_score type (Half-Elf example)
+// Prefixed with _ to indicate it's available for future tests that need API mock data
+const _mockAbilityScoreChoices: PendingChoice[] = [
+  {
+    id: 'ability_score|race|phb:half-elf|1|modifier_2468',
+    type: 'ability_score',
+    subtype: null,
+    source: 'race',
+    source_name: 'Half-Elf',
+    level_granted: 1,
+    required: true,
+    quantity: 2,
+    remaining: 2,
+    selected: [],
+    options: [
+      { code: 'STR', name: 'Strength' },
+      { code: 'DEX', name: 'Dexterity' },
+      { code: 'CON', name: 'Constitution' },
+      { code: 'INT', name: 'Intelligence' },
+      { code: 'WIS', name: 'Wisdom' }
+      // CHA excluded because Half-Elf has fixed +2 CHA
+    ],
+    options_endpoint: null,
+    metadata: { bonus_value: 1, choice_constraint: 'different' }
+  }
+]
+
+const mockNoChoices: PendingChoice[] = []
+
+// Mutable state for test-specific mock data
+let currentMockChoices: PendingChoice[] = mockNoChoices
+
+// Mock useUnifiedChoices composable
+mockNuxtImport('useUnifiedChoices', () => {
+  return vi.fn(() => {
+    return {
+      choices: ref(currentMockChoices),
+      choicesByType: computed(() => ({
+        abilityScores: currentMockChoices.filter(c => c.type === 'ability_score'),
+        languages: [],
+        proficiencies: [],
+        equipment: [],
+        spells: [],
+        subclass: null,
+        asiOrFeat: [],
+        optionalFeatures: []
+      })),
+      summary: ref(null),
+      pending: ref(false),
+      error: ref(null),
+      allRequiredComplete: computed(() =>
+        currentMockChoices.every(c => c.remaining === 0)
+      ),
+      fetchChoices: vi.fn().mockResolvedValue(undefined),
+      resolveChoice: vi.fn().mockResolvedValue(undefined),
+      undoChoice: vi.fn().mockResolvedValue(undefined)
+    }
+  })
+})
 
 // Run shared behavior tests
 testWizardStepBehavior({
@@ -15,6 +78,8 @@ testWizardStepBehavior({
 describe('StepAbilities - Specific Behavior', () => {
   beforeEach(() => {
     setActivePinia(createPinia())
+    // Reset mock choices to empty by default (no pending ability score choices)
+    currentMockChoices = mockNoChoices
   })
 
   describe('Method Selection', () => {
@@ -679,9 +744,11 @@ describe('StepAbilities - Specific Behavior', () => {
 
       const vm = wrapper.vm as any
 
-      // abilityScoreSelections Map should exist
+      // abilityScoreSelections Map should exist and be empty on init
       expect(vm.abilityScoreSelections).toBeDefined()
       expect(vm.abilityScoreSelections instanceof Map).toBe(true)
+      // Verify empty on init to prevent test pollution from previous tests
+      expect(vm.abilityScoreSelections.size).toBe(0)
     })
 
     it('allows selecting abilities for choice bonus', async () => {

@@ -15,6 +15,28 @@ interface AbilityScoreChoiceMetadata {
   choice_constraint?: string
 }
 
+/** Default bonus value when metadata doesn't specify one */
+const DEFAULT_ABILITY_BONUS = 1
+
+/**
+ * Safely parse ability score choice metadata with type validation.
+ * Returns null if metadata is missing or malformed.
+ *
+ * @param choice - The pending choice to extract metadata from
+ * @returns Validated metadata or null
+ */
+function getChoiceMetadata(choice: PendingChoice): AbilityScoreChoiceMetadata | null {
+  if (!choice.metadata || typeof choice.metadata !== 'object' || Array.isArray(choice.metadata)) {
+    return null
+  }
+  const meta = choice.metadata as Record<string, unknown>
+  return {
+    modifier_id: typeof meta.modifier_id === 'number' ? meta.modifier_id : undefined,
+    bonus_value: typeof meta.bonus_value === 'number' ? meta.bonus_value : undefined,
+    choice_constraint: typeof meta.choice_constraint === 'string' ? meta.choice_constraint : undefined
+  }
+}
+
 const store = useCharacterWizardStore()
 const {
   selections,
@@ -38,12 +60,18 @@ const {
 // Local selections: Map<choiceId, Set<abilityCode>>
 const abilityScoreSelections = ref<Map<string, Set<string>>>(new Map())
 
-// Fetch ability_score choices on mount
-onMounted(async () => {
-  if (store.characterId) {
-    await fetchChoices('ability_score')
-  }
-})
+// Fetch ability_score choices when characterId becomes available
+// Using watch instead of onMounted to handle cases where characterId
+// is set after the component mounts (e.g., after character creation)
+watch(
+  () => store.characterId,
+  async (id) => {
+    if (id) {
+      await fetchChoices('ability_score')
+    }
+  },
+  { immediate: true }
+)
 
 // Initialize from already-resolved selections when choices load
 watch(() => choicesByType.value.abilityScores, (choices) => {
@@ -112,10 +140,18 @@ function handleAbilityToggle(choice: PendingChoice, code: string) {
   abilityScoreSelections.value.set(choice.id, updated)
 }
 
-// Get the bonus value from a choice's metadata
+/**
+ * Get the bonus value from a choice's metadata.
+ * Returns DEFAULT_ABILITY_BONUS if not specified or invalid.
+ *
+ * @param choice - The pending choice to get bonus value from
+ * @returns The bonus value (always positive for display)
+ */
 function getChoiceBonusValue(choice: PendingChoice): number {
-  const metadata = choice.metadata as unknown as AbilityScoreChoiceMetadata | undefined
-  return metadata?.bonus_value ?? 1
+  const metadata = getChoiceMetadata(choice)
+  const bonus = metadata?.bonus_value ?? DEFAULT_ABILITY_BONUS
+  // Ensure positive display value (edge case: API sends 0 or negative)
+  return Math.max(bonus, DEFAULT_ABILITY_BONUS)
 }
 
 // Check if all ability score choices are complete
@@ -229,8 +265,8 @@ const finalScores = computed(() => {
       for (const choice of choicesByType.value.abilityScores) {
         const selections = abilityScoreSelections.value.get(choice.id)
         if (selections?.has(abilityCode)) {
-          const metadata = choice.metadata as unknown as AbilityScoreChoiceMetadata | undefined
-          chosenBonus += Number(metadata?.bonus_value ?? 1)
+          const metadata = getChoiceMetadata(choice)
+          chosenBonus += Number(metadata?.bonus_value ?? DEFAULT_ABILITY_BONUS)
         }
       }
     }
@@ -271,12 +307,19 @@ async function saveAndContinue() {
 
   await store.saveAbilityScores(selectedMethod.value, scores)
 
-  // Resolve ability score choices
+  // Resolve ability score choices with error context
   for (const [choiceId, selectedCodes] of abilityScoreSelections.value.entries()) {
     if (selectedCodes.size > 0) {
-      await resolveChoice(choiceId, {
-        selected: Array.from(selectedCodes)
-      })
+      try {
+        await resolveChoice(choiceId, {
+          selected: Array.from(selectedCodes)
+        })
+      } catch (err) {
+        // Re-throw with context so user knows which choice failed
+        const selectedAbilities = Array.from(selectedCodes).join(', ')
+        const message = err instanceof Error ? err.message : 'Unknown error'
+        throw new Error(`Failed to save ability score choice (${selectedAbilities}): ${message}`)
+      }
     }
   }
 
@@ -412,6 +455,9 @@ watch(selectedMethod, (newMethod) => {
             :key="ability.code"
             type="button"
             :data-testid="`ability-choice-${ability.code}`"
+            :aria-label="`${ability.name} (${ability.code})${hasFixedBonus(ability.code) ? ' - fixed bonus, cannot select' : ''}`"
+            :aria-pressed="isAbilitySelected(choice.id, ability.code)"
+            :aria-disabled="hasFixedBonus(ability.code)"
             class="ability-option p-3 rounded-lg border text-center transition-all"
             :class="{
               'border-race bg-race/10 dark:bg-race/20': isAbilitySelected(choice.id, ability.code),
