@@ -493,6 +493,35 @@ export const wizardMockRaces = {
       { modifier_category: 'ability_score', ability_score: { id: 1, code: 'STR', name: 'Strength' }, value: 2 },
       { modifier_category: 'ability_score', ability_score: { id: 3, code: 'CON', name: 'Constitution' }, value: 1 }
     ]
+  }),
+  halfElf: createMockRace({
+    id: 12,
+    name: 'Half-Elf',
+    slug: 'half-elf',
+    full_slug: 'phb:half-elf',
+    speed: 30,
+    subrace_required: false,
+    subraces: [],
+    modifiers: [
+      // Fixed bonus: +2 CHA
+      {
+        id: 2467,
+        modifier_category: 'ability_score',
+        ability_score: { id: 6, code: 'CHA', name: 'Charisma' },
+        value: 2,
+        is_choice: false
+      },
+      // Choice bonus: +1 to 2 different abilities
+      {
+        id: 2468,
+        modifier_category: 'ability_score',
+        ability_score: null,
+        value: 1,
+        is_choice: true,
+        choice_count: 2,
+        choice_constraint: 'different'
+      }
+    ]
   })
 } as const
 
