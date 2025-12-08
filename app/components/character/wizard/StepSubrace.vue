@@ -136,12 +136,18 @@ async function confirmSelection() {
 }
 
 // Initialize from store if already selected (editing existing selection)
-onMounted(() => {
+onMounted(async () => {
   if (selections.value.subrace) {
     // Find the matching subrace in availableSubraces to set local state
     const existingSubrace = availableSubraces.value.find(s => s.id === selections.value.subrace?.id)
+
     if (existingSubrace) {
       localSelectedSubrace.value = existingSubrace
+    } else if (store.selectedSources.length > 0) {
+      // Previously selected subrace is now filtered out by sourcebook selection
+      // Clear it from the store to avoid confusion
+      logger.warn('Previously selected subrace filtered out by sourcebook selection, clearing selection')
+      await store.selectSubrace(null)
     }
   }
 })
@@ -241,7 +247,12 @@ onMounted(() => {
         class="w-12 h-12 text-amber-400 mx-auto mb-4"
       />
       <p class="text-gray-600 dark:text-gray-400">
-        No subraces found for {{ selections.race?.name }}
+        <template v-if="store.selectedSources.length > 0">
+          No subraces found for {{ selections.race?.name }} in selected sourcebooks
+        </template>
+        <template v-else>
+          No subraces found for {{ selections.race?.name }}
+        </template>
       </p>
     </div>
 
