@@ -3,13 +3,14 @@ import { storeToRefs } from 'pinia'
 import { useCharacterWizardStore } from '~/stores/characterWizard'
 import { useCharacterWizard } from '~/composables/useCharacterWizard'
 import type { CharacterAlignment } from '~/types/character'
+import type { PersonalitySelections } from '~/components/character/wizard/PersonalitySection.vue'
 import { logger } from '~/utils/logger'
 
 /**
  * Step: Character Details
  *
- * Allows user to enter character name and select alignment.
- * This step comes near the end of the wizard, after major choices are made.
+ * Allows user to enter character name, select alignment, and optionally
+ * choose personality characteristics from background tables.
  */
 
 const store = useCharacterWizardStore()
@@ -18,6 +19,9 @@ const { nextStep } = useCharacterWizard()
 
 // Toast for user feedback
 const toast = useToast()
+
+// API client for saving personality notes
+const { apiFetch } = useApi()
 
 // Create local refs that sync with store
 const name = computed({
@@ -34,10 +38,103 @@ const alignment = computed({
   }
 })
 
+// Personality selections (local state, saved on continue)
+const personalitySelections = ref<PersonalitySelections>({
+  traits: [],
+  ideal: null,
+  bond: null,
+  flaw: null
+})
+
+// Get data tables from selected background
+// Note: data_tables is typed as unknown[] in generated types, but the API returns EntityDataTableResource[]
+const backgroundDataTables = computed(() => {
+  const tables = store.selections.background?.data_tables
+  if (!tables) return []
+  // Cast from unknown[] - the API contract guarantees EntityDataTableResource[]
+  return tables as import('~/types/api/generated').components['schemas']['EntityDataTableResource'][]
+})
+
+// Get background name for display
+const backgroundName = computed(() => {
+  return store.selections.background?.name || 'Background'
+})
+
+/**
+ * Load existing personality notes when editing a character
+ */
+async function loadExistingNotes() {
+  if (!store.characterId) return
+
+  try {
+    const response = await apiFetch<{
+      data: {
+        personality_trait?: Array<{ content: string }>
+        ideal?: Array<{ content: string }>
+        bond?: Array<{ content: string }>
+        flaw?: Array<{ content: string }>
+      }
+    }>(`/characters/${store.characterId}/notes`)
+
+    const notes = response.data
+
+    // Pre-populate selections from existing notes
+    personalitySelections.value = {
+      traits: notes.personality_trait?.map(n => n.content) || [],
+      ideal: notes.ideal?.[0]?.content || null,
+      bond: notes.bond?.[0]?.content || null,
+      flaw: notes.flaw?.[0]?.content || null
+    }
+  } catch (err) {
+    // Silently fail - notes are optional
+    logger.debug('Could not load existing notes:', err)
+  }
+}
+
+// Load existing notes on mount if editing
+onMounted(() => {
+  if (store.characterId) {
+    loadExistingNotes()
+  }
+})
+
 // Validation: name is required
 const canProceed = computed(() => {
   return name.value.trim().length > 0
 })
+
+/**
+ * Save personality selections as notes via API
+ */
+async function savePersonalityNotes() {
+  if (!store.characterId) return
+
+  const notesToSave: Array<{ category: string, content: string }> = []
+
+  // Add traits (up to 2)
+  for (const trait of personalitySelections.value.traits) {
+    notesToSave.push({ category: 'personality_trait', content: trait })
+  }
+
+  // Add ideal, bond, flaw if selected
+  if (personalitySelections.value.ideal) {
+    notesToSave.push({ category: 'ideal', content: personalitySelections.value.ideal })
+  }
+  if (personalitySelections.value.bond) {
+    notesToSave.push({ category: 'bond', content: personalitySelections.value.bond })
+  }
+  if (personalitySelections.value.flaw) {
+    notesToSave.push({ category: 'flaw', content: personalitySelections.value.flaw })
+  }
+
+  // Save each note
+  for (const note of notesToSave) {
+    await apiFetch(`/characters/${store.characterId}/notes`, {
+      method: 'POST',
+      body: note
+    })
+  }
+}
 
 /**
  * Save details and continue to next step
@@ -47,6 +144,7 @@ async function handleContinue() {
 
   try {
     await store.saveDetails(name.value, alignment.value)
+    await savePersonalityNotes()
     await nextStep()
   } catch (err) {
     logger.error('Failed to save details:', err)
@@ -119,7 +217,7 @@ const alignmentOptions = [
 </script>
 
 <template>
-  <div class="max-w-2xl mx-auto space-y-6">
+  <div class="max-w-4xl mx-auto space-y-6">
     <!-- Header -->
     <div class="text-center">
       <h2 class="text-2xl font-bold text-gray-900 dark:text-white">
@@ -159,6 +257,13 @@ const alignmentOptions = [
         />
       </UFormField>
     </div>
+
+    <!-- Personality Section (from background) -->
+    <CharacterWizardPersonalitySection
+      v-model:selections="personalitySelections"
+      :data-tables="backgroundDataTables"
+      :background-name="backgroundName"
+    />
 
     <!-- Info Text -->
     <div class="text-sm text-gray-600 dark:text-gray-400 text-center space-y-2">
