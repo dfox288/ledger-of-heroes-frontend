@@ -30,7 +30,7 @@ const classesDisplay = computed(() => {
         {{ character.name }}
       </h1>
       <p class="mt-1 text-lg text-gray-600 dark:text-gray-400">
-        <span v-if="character.race">{{ character.race.name }}</span>
+        <span v-if="character.race">{{ character.race.name }}<span v-if="character.size"> ({{ character.size }})</span></span>
         <span v-if="character.race && character.classes?.length"> &bull; </span>
         <span>{{ classesDisplay }}</span>
         <span v-if="character.background"> &bull; {{ character.background.name }}</span>

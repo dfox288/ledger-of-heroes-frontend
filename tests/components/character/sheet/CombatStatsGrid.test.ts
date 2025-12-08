@@ -70,4 +70,71 @@ describe('CharacterSheetCombatStatsGrid', () => {
     })
     expect(wrapper.text()).toContain('+5')
   })
+
+  describe('alternate movement speeds', () => {
+    it('shows fly speed when present', async () => {
+      const wrapper = await mountSuspended(CombatStatsGrid, {
+        props: {
+          character: { ...mockCharacter, speeds: { walk: 30, fly: 50, swim: null, climb: null } },
+          stats: mockStats
+        }
+      })
+      expect(wrapper.text()).toContain('fly 50')
+    })
+
+    it('shows swim speed when present', async () => {
+      const wrapper = await mountSuspended(CombatStatsGrid, {
+        props: {
+          character: { ...mockCharacter, speeds: { walk: 30, fly: null, swim: 30, climb: null } },
+          stats: mockStats
+        }
+      })
+      expect(wrapper.text()).toContain('swim 30')
+    })
+
+    it('shows climb speed when present', async () => {
+      const wrapper = await mountSuspended(CombatStatsGrid, {
+        props: {
+          character: { ...mockCharacter, speeds: { walk: 30, fly: null, swim: null, climb: 30 } },
+          stats: mockStats
+        }
+      })
+      expect(wrapper.text()).toContain('climb 30')
+    })
+
+    it('shows multiple alternate speeds', async () => {
+      const wrapper = await mountSuspended(CombatStatsGrid, {
+        props: {
+          character: { ...mockCharacter, speeds: { walk: 25, fly: 50, swim: 30, climb: null } },
+          stats: mockStats
+        }
+      })
+      expect(wrapper.text()).toContain('fly 50')
+      expect(wrapper.text()).toContain('swim 30')
+    })
+
+    it('hides alternate speeds when all are null', async () => {
+      const wrapper = await mountSuspended(CombatStatsGrid, {
+        props: {
+          character: { ...mockCharacter, speeds: { walk: 30, fly: null, swim: null, climb: null } },
+          stats: mockStats
+        }
+      })
+      expect(wrapper.text()).not.toContain('fly')
+      expect(wrapper.text()).not.toContain('swim')
+      expect(wrapper.text()).not.toContain('climb')
+    })
+
+    it('handles missing speeds object gracefully', async () => {
+      const wrapper = await mountSuspended(CombatStatsGrid, {
+        props: {
+          character: { ...mockCharacter, speeds: null },
+          stats: mockStats
+        }
+      })
+      // Should still show walking speed from character.speed
+      expect(wrapper.text()).toContain('30')
+      expect(wrapper.text()).toContain('ft')
+    })
+  })
 })

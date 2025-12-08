@@ -2,7 +2,7 @@
 <script setup lang="ts">
 import type { Character, CharacterStats } from '~/types/character'
 
-defineProps<{
+const props = defineProps<{
   character: Character
   stats: CharacterStats
 }>()
@@ -11,6 +11,28 @@ function formatModifier(value: number | null): string {
   if (value === null) return '—'
   return value >= 0 ? `+${value}` : `${value}`
 }
+
+/**
+ * Get alternate movement speeds (fly, swim, climb) that have values
+ * Returns array of { type, speed } for display
+ */
+const alternateSpeeds = computed(() => {
+  if (!props.character.speeds) return []
+
+  const speeds: { type: string, speed: number }[] = []
+
+  if (props.character.speeds.fly) {
+    speeds.push({ type: 'fly', speed: props.character.speeds.fly })
+  }
+  if (props.character.speeds.swim) {
+    speeds.push({ type: 'swim', speed: props.character.speeds.swim })
+  }
+  if (props.character.speeds.climb) {
+    speeds.push({ type: 'climb', speed: props.character.speeds.climb })
+  }
+
+  return speeds
+})
 </script>
 
 <template>
@@ -58,6 +80,17 @@ function formatModifier(value: number | null): string {
       </div>
       <div class="text-2xl font-bold text-gray-900 dark:text-white">
         {{ character.speed ?? '—' }} <span class="text-sm font-normal">ft</span>
+      </div>
+      <div
+        v-if="alternateSpeeds.length > 0"
+        class="text-xs text-gray-500 dark:text-gray-400 mt-1"
+      >
+        <span
+          v-for="(alt, index) in alternateSpeeds"
+          :key="alt.type"
+        >
+          {{ alt.type }} {{ alt.speed }}<span v-if="index < alternateSpeeds.length - 1">, </span>
+        </span>
       </div>
     </div>
 

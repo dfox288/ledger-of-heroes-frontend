@@ -75,4 +75,43 @@ describe('CharacterSheetHeader', () => {
     })
     expect(wrapper.find('[data-testid="edit-button"]').exists()).toBe(true)
   })
+
+  describe('size display', () => {
+    it('displays size in parentheses after race name', async () => {
+      const wrapper = await mountSuspended(Header, {
+        props: { character: { ...mockCharacter, size: 'Medium' } }
+      })
+      expect(wrapper.text()).toContain('Dwarf (Medium)')
+    })
+
+    it('displays Small size for halflings', async () => {
+      const wrapper = await mountSuspended(Header, {
+        props: {
+          character: {
+            ...mockCharacter,
+            race: { id: 2, name: 'Halfling', slug: 'halfling' },
+            size: 'Small'
+          }
+        }
+      })
+      expect(wrapper.text()).toContain('Halfling (Small)')
+    })
+
+    it('omits size when null', async () => {
+      const wrapper = await mountSuspended(Header, {
+        props: { character: { ...mockCharacter, size: null } }
+      })
+      // Should show just "Dwarf" without parentheses
+      expect(wrapper.text()).toContain('Dwarf')
+      expect(wrapper.text()).not.toContain('(')
+    })
+
+    it('omits size when race is null', async () => {
+      const wrapper = await mountSuspended(Header, {
+        props: { character: { ...mockCharacter, race: null, size: 'Medium' } }
+      })
+      // No race = no size shown (size is derived from race anyway)
+      expect(wrapper.text()).not.toContain('Medium')
+    })
+  })
 })
