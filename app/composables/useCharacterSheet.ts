@@ -10,6 +10,7 @@ import type {
   CharacterLanguage,
   CharacterSkill,
   CharacterSavingThrow,
+  CharacterNote,
   SkillReference,
   AbilityScoreCode
 } from '~/types/character'
@@ -23,6 +24,7 @@ export interface UseCharacterSheetReturn {
   equipment: ComputedRef<CharacterEquipment[]>
   spells: ComputedRef<CharacterSpell[]>
   languages: ComputedRef<CharacterLanguage[]>
+  notes: ComputedRef<Record<string, CharacterNote[]>>
 
   // Computed/derived
   skills: ComputedRef<CharacterSkill[]>
@@ -92,6 +94,13 @@ export function useCharacterSheet(characterId: Ref<string | number>): UseCharact
       () => apiFetch<{ data: CharacterLanguage[] }>(`/characters/${characterId.value}/languages`)
     )
 
+  // Fetch notes (grouped by category)
+  const { data: notesData, pending: notesPending, refresh: refreshNotes }
+    = useAsyncData(
+      `character-${characterId.value}-notes`,
+      () => apiFetch<{ data: Record<string, CharacterNote[]> }>(`/characters/${characterId.value}/notes`)
+    )
+
   // Fetch skills reference data
   const { data: skillsReference } = useReferenceData<SkillReference>('/skills')
 
@@ -103,6 +112,7 @@ export function useCharacterSheet(characterId: Ref<string | number>): UseCharact
   const equipment = computed(() => equipmentData.value?.data ?? [])
   const spells = computed(() => spellsData.value?.data ?? [])
   const languages = computed(() => languagesData.value?.data ?? [])
+  const notes = computed(() => notesData.value?.data ?? {})
 
   // Computed: Aggregate loading state
   const loading = computed(() =>
@@ -113,6 +123,7 @@ export function useCharacterSheet(characterId: Ref<string | number>): UseCharact
     || equipmentPending.value
     || spellsPending.value
     || languagesPending.value
+    || notesPending.value
   )
 
   // Computed: First error encountered
@@ -186,7 +197,8 @@ export function useCharacterSheet(characterId: Ref<string | number>): UseCharact
       refreshFeatures(),
       refreshEquipment(),
       refreshSpells(),
-      refreshLanguages()
+      refreshLanguages(),
+      refreshNotes()
     ])
   }
 
@@ -198,6 +210,7 @@ export function useCharacterSheet(characterId: Ref<string | number>): UseCharact
     equipment,
     spells,
     languages,
+    notes,
     skills,
     savingThrows,
     loading,

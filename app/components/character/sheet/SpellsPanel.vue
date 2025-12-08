@@ -50,6 +50,20 @@ function formatModifier(value: number): string {
       </div>
     </div>
 
+    <!-- Preparation counter -->
+    <div
+      v-if="stats.preparation_limit !== null"
+      class="text-sm text-gray-500 dark:text-gray-400"
+    >
+      Prepared: {{ stats.prepared_spell_count }} / {{ stats.preparation_limit }}
+    </div>
+
+    <!-- Spell Slots -->
+    <CharacterSheetSpellSlots
+      v-if="Object.keys(stats.spell_slots || {}).length > 0"
+      :spell-slots="stats.spell_slots"
+    />
+
     <!-- Cantrips -->
     <div v-if="cantrips.length > 0">
       <h4 class="text-sm font-semibold text-gray-500 uppercase mb-2">
@@ -68,33 +82,11 @@ function formatModifier(value: number): string {
       </div>
     </div>
 
-    <!-- Leveled Spells -->
-    <div v-if="leveledSpells.length > 0">
-      <h4 class="text-sm font-semibold text-gray-500 uppercase mb-2">
-        Spells
-      </h4>
-      <ul class="space-y-1">
-        <li
-          v-for="spell in leveledSpells"
-          :key="spell.id"
-          class="flex items-center gap-2"
-        >
-          <UIcon
-            :name="spell.is_prepared ? 'i-heroicons-check-circle' : 'i-heroicons-minus-circle'"
-            :class="spell.is_prepared ? 'text-success-500' : 'text-gray-400'"
-            class="w-4 h-4"
-          />
-          <span class="text-gray-900 dark:text-white">{{ spell.spell!.name }}</span>
-          <UBadge
-            color="neutral"
-            variant="subtle"
-            size="xs"
-          >
-            Lvl {{ spell.spell!.level }}
-          </UBadge>
-        </li>
-      </ul>
-    </div>
+    <!-- Leveled Spells (grouped by level) -->
+    <CharacterSheetSpellsByLevel
+      v-if="leveledSpells.length > 0"
+      :spells="leveledSpells"
+    />
 
     <div
       v-if="validSpells.length === 0"

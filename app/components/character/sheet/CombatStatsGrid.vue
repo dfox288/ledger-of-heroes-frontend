@@ -103,12 +103,29 @@ const alternateSpeeds = computed(() => {
       </div>
     </div>
 
-    <div class="bg-gray-50 dark:bg-gray-800 rounded-lg p-4 text-center">
-      <div class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1">
-        Passive Perc
+    <div class="bg-gray-50 dark:bg-gray-800 rounded-lg p-4">
+      <div class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-2 text-center">
+        Passive
       </div>
-      <div class="text-2xl font-bold text-gray-900 dark:text-white">
-        {{ stats.passive_perception ?? '—' }}
+      <div class="space-y-1">
+        <div class="flex justify-between items-center">
+          <span class="text-xs text-gray-600 dark:text-gray-400">Perc</span>
+          <span class="text-lg font-bold text-gray-900 dark:text-white">
+            {{ stats.passive_perception ?? '—' }}
+          </span>
+        </div>
+        <div class="flex justify-between items-center">
+          <span class="text-xs text-gray-600 dark:text-gray-400">Inv</span>
+          <span class="text-lg font-bold text-gray-900 dark:text-white">
+            {{ stats.passive_investigation ?? '—' }}
+          </span>
+        </div>
+        <div class="flex justify-between items-center">
+          <span class="text-xs text-gray-600 dark:text-gray-400">Ins</span>
+          <span class="text-lg font-bold text-gray-900 dark:text-white">
+            {{ stats.passive_insight ?? '—' }}
+          </span>
+        </div>
       </div>
     </div>
   </div>

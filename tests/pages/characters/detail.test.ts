@@ -85,6 +85,8 @@ describe('Character Detail Page', () => {
     armor_class: 18,
     alignment: 'Lawful Good',
     has_inspiration: false,
+    death_save_successes: 0,
+    death_save_failures: 0,
     race: { id: 1, name: 'Dwarf', slug: 'dwarf' },
     class: { id: 2, name: 'Fighter', slug: 'fighter' },
     classes: [],

@@ -20,21 +20,54 @@ const classesDisplay = computed(() => {
     .map(c => `${c.class!.name} ${c.level}`)
     .join(' / ') || 'No class'
 })
+
+/**
+ * Determine the best portrait image source
+ * Prefer thumb, fallback to medium, return null if neither available
+ */
+const portraitSrc = computed(() => {
+  if (!props.character.portrait) return null
+  return props.character.portrait.thumb || props.character.portrait.medium || null
+})
 </script>
 
 <template>
   <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-    <!-- Left: Name and info -->
-    <div>
-      <h1 class="text-3xl font-bold text-gray-900 dark:text-white">
-        {{ character.name }}
-      </h1>
-      <p class="mt-1 text-lg text-gray-600 dark:text-gray-400">
-        <span v-if="character.race">{{ character.race.name }}<span v-if="character.size"> ({{ character.size }})</span></span>
-        <span v-if="character.race && character.classes?.length"> &bull; </span>
-        <span>{{ classesDisplay }}</span>
-        <span v-if="character.background"> &bull; {{ character.background.name }}</span>
-      </p>
+    <!-- Portrait and Name Section -->
+    <div class="flex items-center gap-4">
+      <!-- Portrait -->
+      <div
+        data-testid="portrait-container"
+        class="flex-shrink-0 w-16 h-16 sm:w-20 sm:h-20 rounded-full overflow-hidden bg-gray-100 dark:bg-gray-800 border-2 border-gray-200 dark:border-gray-700 shadow-md"
+      >
+        <img
+          v-if="portraitSrc"
+          data-testid="portrait-image"
+          :src="portraitSrc"
+          :alt="`${character.name} portrait`"
+          class="w-full h-full object-cover"
+        >
+        <UIcon
+          v-else
+          data-testid="portrait-fallback"
+          name="i-heroicons-user-circle-solid"
+          class="w-full h-full text-gray-400 dark:text-gray-600"
+        />
+      </div>
+
+      <!-- Name and info -->
+      <div>
+        <h1 class="text-3xl font-bold text-gray-900 dark:text-white">
+          {{ character.name }}
+        </h1>
+        <p class="mt-1 text-lg text-gray-600 dark:text-gray-400">
+          <span v-if="character.race">{{ character.race.name }}<span v-if="character.size"> ({{ character.size }})</span></span>
+          <span v-if="character.race && character.classes?.length"> &bull; </span>
+          <span>{{ classesDisplay }}</span>
+          <span v-if="character.background"> &bull; {{ character.background.name }}</span>
+          <span v-if="character.alignment"> &bull; {{ character.alignment }}</span>
+        </p>
+      </div>
     </div>
 
     <!-- Right: Badges and actions -->

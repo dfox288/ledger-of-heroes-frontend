@@ -12,7 +12,9 @@ const mockStats = {
   armor_class: 16,
   hit_points: { max: 28, current: 22, temporary: 5 },
   initiative_bonus: 2,
-  passive_perception: 14
+  passive_perception: 14,
+  passive_investigation: 10,
+  passive_insight: 11
 }
 
 describe('CharacterSheetCombatStatsGrid', () => {
@@ -56,12 +58,17 @@ describe('CharacterSheetCombatStatsGrid', () => {
     expect(wrapper.text()).toContain('Prof')
   })
 
-  it('displays passive perception', async () => {
+  it('displays all three passive scores', async () => {
     const wrapper = await mountSuspended(CombatStatsGrid, {
       props: { character: mockCharacter, stats: mockStats }
     })
-    expect(wrapper.text()).toContain('14')
     expect(wrapper.text()).toContain('Passive')
+    expect(wrapper.text()).toContain('Perc')
+    expect(wrapper.text()).toContain('14')
+    expect(wrapper.text()).toContain('Inv')
+    expect(wrapper.text()).toContain('10')
+    expect(wrapper.text()).toContain('Ins')
+    expect(wrapper.text()).toContain('11')
   })
 
   it('shows temporary HP when present', async () => {
@@ -69,6 +76,45 @@ describe('CharacterSheetCombatStatsGrid', () => {
       props: { character: mockCharacter, stats: mockStats }
     })
     expect(wrapper.text()).toContain('+5')
+  })
+
+  it('handles null passive scores gracefully', async () => {
+    const wrapper = await mountSuspended(CombatStatsGrid, {
+      props: {
+        character: mockCharacter,
+        stats: {
+          ...mockStats,
+          passive_perception: null,
+          passive_investigation: null,
+          passive_insight: null
+        }
+      }
+    })
+    // Should show em dashes for all null values
+    const text = wrapper.text()
+    expect(text).toContain('Passive')
+    // Count the em dashes - should be 3 for the passive scores
+    const dashMatches = text.match(/—/g)
+    expect(dashMatches).toBeTruthy()
+    expect(dashMatches!.length).toBeGreaterThanOrEqual(3)
+  })
+
+  it('handles mixed null and valid passive scores', async () => {
+    const wrapper = await mountSuspended(CombatStatsGrid, {
+      props: {
+        character: mockCharacter,
+        stats: {
+          ...mockStats,
+          passive_perception: 14,
+          passive_investigation: null,
+          passive_insight: 11
+        }
+      }
+    })
+    const text = wrapper.text()
+    expect(text).toContain('14')
+    expect(text).toContain('11')
+    expect(text).toContain('—')
   })
 
   describe('alternate movement speeds', () => {

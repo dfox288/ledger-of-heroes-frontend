@@ -28,6 +28,18 @@ export type CharacterAlignment = NonNullable<components['schemas']['CharacterSto
 export type CharacterFeature = components['schemas']['CharacterFeatureResource']
 
 /**
+ * Character note from API
+ * @see CharacterNoteResource in OpenAPI spec
+ */
+export type CharacterNote = components['schemas']['CharacterNoteResource']
+
+/**
+ * Character notes grouped by category from API
+ * @see CharacterNotesGroupedResource in OpenAPI spec
+ */
+export type CharacterNotesGrouped = components['schemas']['CharacterNotesGroupedResource']
+
+/**
  * Character language from API
  * @see CharacterLanguageResource in OpenAPI spec
  */
