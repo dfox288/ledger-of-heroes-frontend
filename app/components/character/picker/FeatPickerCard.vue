@@ -50,10 +50,11 @@ const prerequisitesSummary = computed(() => {
   if (!hasPrerequisites.value) return null
 
   const prereqs = props.feat.prerequisites!
+  const first = prereqs[0]
 
   // Single prerequisite: show full text
-  if (prereqs.length === 1) {
-    return formatPrerequisite(prereqs[0])
+  if (prereqs.length === 1 && first) {
+    return formatPrerequisite(first)
   }
 
   // Multiple prerequisites

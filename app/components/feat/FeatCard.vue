@@ -43,13 +43,16 @@ const prerequisitesSummary = computed(() => {
 
   const prereqs = props.feat.prerequisites!
 
+  const first = prereqs[0]
+  if (!first) return 'Prerequisites required'
+
   // Single prerequisite: show full text
   if (prereqs.length === 1) {
-    return formatPrerequisite(prereqs[0])
+    return formatPrerequisite(first)
   }
 
   // Multiple prerequisites: show first + count
-  const firstText = formatPrerequisite(prereqs[0])
+  const firstText = formatPrerequisite(first)
   const remaining = prereqs.length - 1
 
   return `${firstText} +${remaining} more`

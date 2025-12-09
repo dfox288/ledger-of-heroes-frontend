@@ -14,7 +14,8 @@ const store = useCharacterWizardStore()
 const {
   characterId,
   isLoading,
-  error: storeError
+  error: storeError,
+  effectiveRace
 } = storeToRefs(store)
 const { nextStep } = useCharacterWizard()
 
@@ -63,14 +64,51 @@ async function fetchFeatOptionsForChoice(choice: PendingChoice) {
   }
 }
 
-// Get available feats for a choice
+/**
+ * Check if character meets race prerequisite for a feat
+ * Matches if character's race ID or parent race ID equals the prerequisite race ID
+ */
+function meetsRacePrerequisite(feat: Feat): boolean {
+  if (!feat.prerequisites || feat.prerequisites.length === 0) {
+    return true // No prerequisites = always available
+  }
+
+  const race = effectiveRace.value
+  if (!race) return true // No race selected yet, show all feats
+
+  // Get character's race ID and parent race ID
+  const characterRaceId = race.id
+  const characterParentRaceId = race.parent_race?.id
+
+  // Check each prerequisite
+  for (const prereq of feat.prerequisites) {
+    // Only filter by race prerequisites (frontend can't validate ability scores/proficiencies)
+    if (prereq.race?.id) {
+      const prereqRaceId = prereq.race.id
+      // Character must match the race or be a subrace of it
+      if (characterRaceId !== prereqRaceId && characterParentRaceId !== prereqRaceId) {
+        return false
+      }
+    }
+  }
+
+  return true
+}
+
+// Get available feats for a choice (filtered by prerequisites character can meet)
 function getAvailableFeats(choice: PendingChoice): Feat[] {
+  let feats: Feat[]
+
   // If options are provided inline, use them
   if (choice.options && Array.isArray(choice.options) && choice.options.length > 0) {
-    return choice.options as Feat[]
+    feats = choice.options as Feat[]
+  } else {
+    // Otherwise, use fetched options
+    feats = featOptions.value.get(choice.id) ?? []
   }
-  // Otherwise, use fetched options
-  return featOptions.value.get(choice.id) ?? []
+
+  // Filter out feats with race prerequisites the character doesn't meet
+  return feats.filter(meetsRacePrerequisite)
 }
 
 // Fetch options for all feat choices when they load
