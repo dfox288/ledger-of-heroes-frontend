@@ -75,19 +75,19 @@ const {
 // Local selections: Map<choiceId, Set<abilityCode>>
 const abilityScoreSelections = ref<Map<string, Set<string>>>(new Map())
 
-// Fetch ability_score and feat choices when characterId becomes available
+// Fetch all pending choices when characterId becomes available
 // Using watch instead of onMounted to handle cases where characterId
 // is set after the component mounts (e.g., after character creation)
+//
+// Note: We fetch ALL choices (no type filter) because fetchChoices() replaces
+// the entire choices array. Parallel filtered fetches cause a race condition
+// where the last response wins. The choicesByType computed does client-side
+// filtering, so fetching all choices is the correct approach.
 watch(
   () => store.characterId,
   async (id) => {
     if (id) {
-      // Fetch both ability score and feat choices
-      // Feat choices are needed to get selected feat modifiers for display
-      await Promise.all([
-        fetchChoices('ability_score'),
-        fetchChoices('feat')
-      ])
+      await fetchChoices()
     }
   },
   { immediate: true }
