@@ -7,17 +7,24 @@ const props = defineProps<{
 }>()
 
 /**
- * Only show warning when there are dangling references
+ * Get the dangling reference items array
+ */
+const danglingItems = computed(() => {
+  return props.validationResult?.dangling_references.items ?? []
+})
+
+/**
+ * Only show warning when there are actual dangling references
  */
 const showWarning = computed(() => {
-  return props.validationResult && !props.validationResult.valid
+  return props.validationResult && !props.validationResult.valid && danglingItems.value.length > 0
 })
 
 /**
  * Number of dangling references for display
  */
 const danglingCount = computed(() => {
-  return props.validationResult?.dangling_references.length ?? 0
+  return danglingItems.value.length
 })
 </script>
 
@@ -35,10 +42,10 @@ const danglingCount = computed(() => {
       </p>
       <ul class="list-disc list-inside space-y-1">
         <li
-          v-for="ref in validationResult!.dangling_references"
-          :key="ref.slug"
+          v-for="item in danglingItems"
+          :key="item"
         >
-          {{ ref.message }}
+          {{ item }}
         </li>
       </ul>
     </template>

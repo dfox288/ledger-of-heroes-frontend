@@ -5,7 +5,7 @@ import ValidationWarning from '~/components/character/sheet/ValidationWarning.vu
 
 const mockValidResult = {
   valid: true,
-  dangling_references: [],
+  dangling_references: { items: [] },
   summary: {
     total_references: 5,
     valid_references: 5,
@@ -15,18 +15,12 @@ const mockValidResult = {
 
 const mockInvalidResult = {
   valid: false,
-  dangling_references: [
-    {
-      field: 'race_slug',
-      slug: 'custom:removed-race',
-      message: 'Race "custom:removed-race" no longer exists'
-    },
-    {
-      field: 'class_slug',
-      slug: 'homebrew:deleted-class',
-      message: 'Class "homebrew:deleted-class" no longer exists'
-    }
-  ],
+  dangling_references: {
+    items: [
+      'custom:removed-race',
+      'homebrew:deleted-class'
+    ]
+  },
   summary: {
     total_references: 5,
     valid_references: 3,
@@ -67,8 +61,8 @@ describe('CharacterSheetValidationWarning', () => {
     const wrapper = await mountSuspended(ValidationWarning, {
       props: { validationResult: mockInvalidResult }
     })
-    expect(wrapper.text()).toContain('Race "custom:removed-race" no longer exists')
-    expect(wrapper.text()).toContain('Class "homebrew:deleted-class" no longer exists')
+    expect(wrapper.text()).toContain('custom:removed-race')
+    expect(wrapper.text()).toContain('homebrew:deleted-class')
   })
 
   it('shows count of dangling references', async () => {

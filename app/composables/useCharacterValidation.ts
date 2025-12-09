@@ -2,12 +2,14 @@
 import { ref, type Ref } from 'vue'
 
 /**
- * A single dangling reference where the referenced entity no longer exists
+ * Structure for dangling references from the API
+ * Contains an items array of reference identifiers (slugs/keys)
+ *
+ * Note: The API currently returns just identifiers, not detailed messages.
+ * See GitHub issue for planned enhancement to return richer data.
  */
-export interface DanglingReference {
-  field: string
-  slug: string
-  message: string
+export interface DanglingReferences {
+  items: string[]
 }
 
 /**
@@ -24,7 +26,7 @@ export interface ValidationSummary {
  */
 export interface ValidationResult {
   valid: boolean
-  dangling_references: DanglingReference[]
+  dangling_references: DanglingReferences
   summary: ValidationSummary
 }
 
