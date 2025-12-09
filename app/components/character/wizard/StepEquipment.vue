@@ -34,6 +34,97 @@ const localSelections = ref<Map<string, string>>(new Map())
 // Track item selections for filtered options (choiceId:optionLetter → itemSlug)
 const itemSelections = ref<Map<string, string>>(new Map())
 
+// ============================================================================
+// Gold Alternative Feature
+// ============================================================================
+
+// Equipment mode: 'equipment' (default) or 'gold'
+const equipmentMode = ref<'equipment' | 'gold'>('equipment')
+
+// Gold calculation method: 'average' or 'roll'
+const goldCalculationMethod = ref<'average' | 'roll'>('average')
+
+// Rolled gold amount (null until rolled)
+const rolledGoldAmount = ref<number | null>(null)
+
+/**
+ * Check if the selected class has starting wealth data
+ */
+const hasStartingWealth = computed(() => {
+  return !!selections.value.class?.starting_wealth
+})
+
+/**
+ * Get the starting wealth data from the selected class
+ */
+const startingWealth = computed(() => {
+  return selections.value.class?.starting_wealth ?? null
+})
+
+/**
+ * Calculate the gold amount based on method (average or rolled)
+ */
+const goldAmount = computed(() => {
+  if (!startingWealth.value) return 0
+
+  if (goldCalculationMethod.value === 'average') {
+    return startingWealth.value.average
+  }
+
+  return rolledGoldAmount.value ?? startingWealth.value.average
+})
+
+/**
+ * Roll for starting gold using the class's dice formula
+ * Parses "5d4" format and applies multiplier
+ */
+function rollForGold(): void {
+  if (!startingWealth.value) return
+
+  const { dice, multiplier } = startingWealth.value
+
+  // Parse dice notation (e.g., "5d4" -> count=5, sides=4)
+  const match = dice.match(/(\d+)d(\d+)/)
+  if (!match || !match[1] || !match[2]) {
+    logger.error('Invalid dice notation:', dice)
+    rolledGoldAmount.value = startingWealth.value.average
+    return
+  }
+
+  const count = Number.parseInt(match[1], 10)
+  const sides = Number.parseInt(match[2], 10)
+
+  // Roll the dice
+  let total = 0
+  for (let i = 0; i < count; i++) {
+    total += Math.floor(Math.random() * sides) + 1
+  }
+
+  // Apply multiplier
+  rolledGoldAmount.value = total * multiplier
+  goldCalculationMethod.value = 'roll'
+}
+
+/**
+ * Determine if class equipment section should be shown
+ * Hidden when in gold mode (gold replaces class equipment)
+ */
+const showClassEquipment = computed(() => {
+  return equipmentMode.value === 'equipment'
+})
+
+/**
+ * Determine if background equipment section should be shown
+ * Always shown (background equipment is granted regardless of gold choice)
+ */
+const showBackgroundEquipment = computed(() => {
+  return !!selections.value.background
+})
+
+// ============================================================================
+// End Gold Alternative Feature
+// ============================================================================
+
 // Fetch equipment choices on mount
 onMounted(async () => {
   if (store.characterId) {
@@ -109,8 +200,19 @@ function getItemDisplayName(item: { custom_name?: string | null, item?: { name?:
 
 /**
  * Check if all equipment choices are made
+ * When in gold mode, class equipment choices are skipped
  */
 const allEquipmentChoicesMade = computed(() => {
+  // In gold mode, class equipment choices are skipped (replaced by gold)
+  // Only background equipment choices need to be made
+  if (equipmentMode.value === 'gold') {
+    const backgroundChoices = backgroundEquipmentChoices.value
+    return backgroundChoices.every((choice) => {
+      return localSelections.value.has(choice.id) || choice.remaining === 0
+    })
+  }
+
+  // In equipment mode, all choices must be made
   const equipmentChoices = choicesByType.value.equipment || []
   return equipmentChoices.every((choice) => {
     // Check if there's a local selection
@@ -285,9 +387,106 @@ function formatPackContentItem(content: PackContentResource): string {
       />
     </div>
 
-    <!-- Class Equipment -->
+    <!-- Equipment Mode Toggle (Gold Alternative) -->
     <div
-      v-if="selections.class"
+      v-if="hasStartingWealth && !pending"
+      data-testid="equipment-mode-toggle"
+      class="bg-gray-50 dark:bg-gray-800/50 rounded-lg p-4 border border-gray-200 dark:border-gray-700"
+    >
+      <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div>
+          <h3 class="text-base font-semibold text-gray-900 dark:text-white">
+            Starting Equipment Choice
+          </h3>
+          <p class="text-sm text-gray-600 dark:text-gray-400 mt-1">
+            Take your class's starting equipment, or roll for starting gold
+          </p>
+        </div>
+
+        <div class="flex gap-2">
+          <UButton
+            :color="equipmentMode === 'equipment' ? 'primary' : 'neutral'"
+            :variant="equipmentMode === 'equipment' ? 'solid' : 'outline'"
+            size="sm"
+            @click="equipmentMode = 'equipment'"
+          >
+            <UIcon
+              name="i-heroicons-backpack"
+              class="w-4 h-4 mr-1"
+            />
+            Equipment
+          </UButton>
+          <UButton
+            :color="equipmentMode === 'gold' ? 'primary' : 'neutral'"
+            :variant="equipmentMode === 'gold' ? 'solid' : 'outline'"
+            size="sm"
+            @click="equipmentMode = 'gold'"
+          >
+            <UIcon
+              name="i-heroicons-currency-dollar"
+              class="w-4 h-4 mr-1"
+            />
+            Gold
+          </UButton>
+        </div>
+      </div>
+
+      <!-- Gold Option Details (when gold mode selected) -->
+      <div
+        v-if="equipmentMode === 'gold' && startingWealth"
+        class="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700"
+      >
+        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div>
+            <p class="text-lg font-semibold text-amber-600 dark:text-amber-400">
+              {{ startingWealth.formula }}
+            </p>
+            <p class="text-sm text-gray-600 dark:text-gray-400">
+              Average: {{ startingWealth.average }} gp
+            </p>
+          </div>
+
+          <div class="flex items-center gap-3">
+            <div class="text-right">
+              <p class="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wide">
+                Your Gold
+              </p>
+              <p class="text-2xl font-bold text-amber-600 dark:text-amber-400">
+                {{ goldAmount }} gp
+              </p>
+            </div>
+            <UButton
+              data-testid="roll-gold-btn"
+              color="warning"
+              variant="soft"
+              size="sm"
+              @click="rollForGold"
+            >
+              <UIcon
+                name="i-heroicons-cube"
+                class="w-4 h-4 mr-1"
+              />
+              {{ rolledGoldAmount !== null ? 'Re-roll' : 'Roll' }}
+            </UButton>
+          </div>
+        </div>
+
+        <UAlert
+          class="mt-3"
+          color="info"
+          variant="subtle"
+          icon="i-heroicons-information-circle"
+        >
+          <template #description>
+            Taking gold replaces your class starting equipment. You'll keep your background equipment and can purchase gear from the shop.
+          </template>
+        </UAlert>
+      </div>
+    </div>
+
+    <!-- Class Equipment (hidden when gold mode selected) -->
+    <div
+      v-if="selections.class && showClassEquipment"
       class="space-y-4"
     >
       <h3 class="text-lg font-semibold text-gray-900 dark:text-white border-b pb-2">
@@ -368,13 +567,13 @@ function formatPackContentItem(content: PackContentResource): string {
       />
     </div>
 
-    <!-- Background Equipment -->
+    <!-- Background Equipment (always shown, even in gold mode) -->
     <div
-      v-if="selections.background"
+      v-if="showBackgroundEquipment"
       class="space-y-4"
     >
       <h3 class="text-lg font-semibold text-gray-900 dark:text-white border-b pb-2">
-        From Your Background ({{ selections.background.name }})
+        From Your Background ({{ selections.background?.name }})
       </h3>
 
       <!-- Fixed Items -->
@@ -460,7 +659,7 @@ function formatPackContentItem(content: PackContentResource): string {
         :loading="pending || isSaving"
         @click="handleContinue"
       >
-        Continue with Equipment
+        {{ equipmentMode === 'gold' ? `Continue with ${goldAmount} gp` : 'Continue with Equipment' }}
       </UButton>
     </div>
   </div>
