@@ -4,8 +4,7 @@ import { storeToRefs } from 'pinia'
 import type { CharacterClass } from '~/types'
 import { useCharacterWizardStore } from '~/stores/characterWizard'
 import { useCharacterWizard } from '~/composables/useCharacterWizard'
-import { useDetailModal } from '~/composables/useDetailModal'
-import { useEntitySearch } from '~/composables/useEntitySearch'
+import { useWizardEntitySelection } from '~/composables/useWizardEntitySelection'
 import { wizardErrors } from '~/utils/wizardErrors'
 
 const store = useCharacterWizardStore()
@@ -36,47 +35,31 @@ const { data: classes, pending: loadingClasses } = await useAsyncData(
   }
 )
 
-// Local state
-const localSelectedClass = ref<CharacterClass | null>(null)
-
-// Modal state
-const { open: detailModalOpen, item: detailClass, show: showDetails, close: closeDetails } = useDetailModal<CharacterClass>()
-
-// Search functionality
-const { searchQuery, filtered: filteredClasses } = useEntitySearch(classes)
-
-// Validation: can proceed if class selected
-const canProceed = computed(() => {
-  return localSelectedClass.value !== null
+// Use entity selection composable for selection logic
+const {
+  localSelected: localSelectedClass,
+  searchQuery,
+  filtered: filteredClasses,
+  canProceed,
+  handleSelect: handleClassSelect,
+  confirmSelection,
+  detailModal: { open: detailModalOpen, item: detailClass, show: showDetails, close: closeDetails }
+} = useWizardEntitySelection(classes, {
+  storeAction: (cls) => store.selectClass(cls),
+  existingSelection: computed(() => selections.value.class)
 })
 
 /**
- * Handle class card selection
+ * Confirm selection and navigate to next step
  */
-function handleClassSelect(cls: CharacterClass) {
-  localSelectedClass.value = cls
-}
-
-/**
- * Confirm selection and call store action
- */
-async function confirmSelection() {
-  if (!localSelectedClass.value) return
-
+async function handleConfirm() {
   try {
-    await store.selectClass(localSelectedClass.value)
+    await confirmSelection()
     nextStep()
   } catch (err) {
     wizardErrors.saveFailed(err, toast)
   }
 }
-
-// Initialize from store if already selected
-onMounted(() => {
-  if (selections.value.class) {
-    localSelectedClass.value = selections.value.class
-  }
-})
 </script>
 
 <template>
@@ -172,7 +155,7 @@ onMounted(() => {
         size="lg"
         :disabled="!canProceed || isLoading"
         :loading="isLoading"
-        @click="confirmSelection"
+        @click="handleConfirm"
       >
         {{ isLoading ? 'Saving...' : 'Continue with ' + (localSelectedClass?.name || 'Selection') }}
       </UButton>

@@ -4,14 +4,13 @@ import type { components } from '~/types/api/generated'
 import type { CharacterLanguage } from '~/types/character'
 import { useCharacterWizard } from '~/composables/useCharacterWizard'
 import { useCharacterWizardStore } from '~/stores/characterWizard'
+import { useWizardChoiceSelection } from '~/composables/useWizardChoiceSelection'
 import { wizardErrors } from '~/utils/wizardErrors'
 
 type PendingChoice = components['schemas']['PendingChoiceResource']
 
 const store = useCharacterWizardStore()
-const {
-  isLoading
-} = storeToRefs(store)
+const { isLoading } = storeToRefs(store)
 const { nextStep } = useCharacterWizard()
 
 // Toast for user feedback
@@ -46,7 +45,7 @@ const knownLanguagesBySource = computed(() => {
   }
 })
 
-// Get all known language slugs for easy lookup
+// Get all known language slugs for already-granted validation
 const knownLanguageSlugs = computed(() => {
   const languages = knownLanguagesData.value ?? []
   return new Set(languages.map(l => l.language_slug))
@@ -69,41 +68,38 @@ const {
   resolveChoice
 } = useUnifiedChoices(computed(() => store.characterId))
 
-// Local selections: Map<choiceId, Set<slug>> - NEW selections being made this session
-const localSelections = ref<Map<string, Set<string>>>(new Map())
-
 // Fetch language choices on mount
 onMounted(async () => {
   await fetchChoices('language')
 })
 
-// Initialize localSelections from choice.selected when choices load
-watch(choicesByType, (newVal) => {
-  for (const choice of newVal.languages) {
-    if (!localSelections.value.has(choice.id) && choice.selected.length > 0) {
-      // Initialize from already-resolved selections (slugs from API)
-      const selected = new Set<string>()
-      for (const slug of choice.selected) {
-        selected.add(String(slug))
-      }
-      localSelections.value.set(choice.id, selected)
-    }
+// Use choice selection composable for core selection logic
+const {
+  localSelections,
+  isSaving,
+  getSelectedCount,
+  isOptionSelected,
+  isOptionDisabled,
+  getDisabledReason,
+  allComplete: allLanguageChoicesComplete,
+  handleToggle,
+  saveAllChoices
+} = useWizardChoiceSelection(
+  computed(() => choicesByType.value.languages),
+  {
+    resolveChoice,
+    alreadyGrantedIds: knownLanguageSlugs
   }
-}, { immediate: true })
-
-// Get language choices grouped by source
-const languageChoicesBySource = computed(() => {
-  const choices = choicesByType.value.languages
-  return {
-    race: choices.filter(c => c.source === 'race'),
-    background: choices.filter(c => c.source === 'background')
-  }
-})
+)
 
 // Check if there are any choices to make
 const hasAnyChoices = computed(() => {
   return choicesByType.value.languages.length > 0
 })
+
+// ══════════════════════════════════════════════════════════════
+// Language-specific: Group by source & learnable filter
+// ══════════════════════════════════════════════════════════════
 
 // Type for language options from the API
 interface LanguageOption {
@@ -125,12 +121,21 @@ function getLearnableOptions(options: unknown): LanguageOption[] {
   return (options as LanguageOption[]).filter(opt => opt.is_learnable !== false)
 }
 
+// Get language choices grouped by source
+const languageChoicesBySource = computed(() => {
+  const choices = choicesByType.value.languages
+  return {
+    race: choices.filter(c => c.source === 'race'),
+    background: choices.filter(c => c.source === 'background')
+  }
+})
+
 // Organize data by source for display
 interface SourceDisplayData {
   choice: PendingChoice
   label: string
   entityName: string
-  knownLanguages: Array<{ id: number, name: string }>
+  knownLanguages: Array<{ id: number; name: string }>
 }
 
 const sourceData = computed((): SourceDisplayData[] => {
@@ -143,8 +148,7 @@ const sourceData = computed((): SourceDisplayData[] => {
       label: 'From Race',
       entityName: choice.source_name,
       knownLanguages: choice.selected.map((slug) => {
-        // choice.selected contains full_slug values (e.g., "core:common")
-        const options = choice.options as Array<{ id: number, full_slug?: string, slug: string, name: string }>
+        const options = choice.options as LanguageOption[] | null
         const option = options?.find(o => (o.full_slug ?? o.slug) === String(slug))
         return option ?? { id: 0, name: String(slug) }
       })
@@ -158,8 +162,7 @@ const sourceData = computed((): SourceDisplayData[] => {
       label: 'From Background',
       entityName: choice.source_name,
       knownLanguages: choice.selected.map((slug) => {
-        // choice.selected contains full_slug values (e.g., "core:common")
-        const options = choice.options as Array<{ id: number, full_slug?: string, slug: string, name: string }>
+        const options = choice.options as LanguageOption[] | null
         const option = options?.find(o => (o.full_slug ?? o.slug) === String(slug))
         return option ?? { id: 0, name: String(slug) }
       })
@@ -169,17 +172,14 @@ const sourceData = computed((): SourceDisplayData[] => {
   return sources
 })
 
-// Get selected count for a choice
-function getSelectedCount(choiceId: string): number {
-  return localSelections.value.get(choiceId)?.size ?? 0
+// ══════════════════════════════════════════════════════════════
+// Language-specific helpers for template
+// ══════════════════════════════════════════════════════════════
+
+function isLanguageAlreadyKnown(slug: string): boolean {
+  return knownLanguageSlugs.value.has(slug)
 }
 
-// Check if a language is selected in this choice
-function isLanguageSelected(choiceId: string, slug: string): boolean {
-  return localSelections.value.get(choiceId)?.has(slug) ?? false
-}
-
-// Check if a language is selected in ANY OTHER choice (cross-choice conflict)
 function isLanguageSelectedElsewhere(choiceId: string, slug: string): boolean {
   for (const [otherChoiceId, selectedSlugs] of localSelections.value.entries()) {
     if (otherChoiceId !== choiceId && selectedSlugs.has(slug)) {
@@ -189,85 +189,17 @@ function isLanguageSelectedElsewhere(choiceId: string, slug: string): boolean {
   return false
 }
 
-// Check if a language is already known (from race, class, or background - not a choice)
-function isLanguageAlreadyKnown(slug: string): boolean {
-  return knownLanguageSlugs.value.has(slug)
-}
+// ══════════════════════════════════════════════════════════════
+// Navigation
+// ══════════════════════════════════════════════════════════════
 
-// Check if a language should be disabled (already known OR selected elsewhere)
-function isLanguageDisabled(choiceId: string, slug: string): boolean {
-  return isLanguageAlreadyKnown(slug) || isLanguageSelectedElsewhere(choiceId, slug)
-}
-
-// Get reason why language is disabled
-function getDisabledReason(choiceId: string, slug: string): string | null {
-  if (isLanguageAlreadyKnown(slug)) {
-    return 'Already known'
-  }
-  if (isLanguageSelectedElsewhere(choiceId, slug)) {
-    return `Already selected from ${sourceData.value.find(d => d.choice.id !== choiceId)?.label.toLowerCase() || 'another choice'}`
-  }
-  return null
-}
-
-// Handle language toggle
-function handleLanguageToggle(choice: PendingChoice, slug: string) {
-  const current = getSelectedCount(choice.id)
-  const isSelected = isLanguageSelected(choice.id, slug)
-
-  // Don't allow selecting more than quantity (unless deselecting)
-  if (!isSelected && current >= choice.quantity) return
-
-  // Don't allow selecting a language that's already known or chosen elsewhere
-  if (!isSelected && isLanguageDisabled(choice.id, slug)) return
-
-  // Toggle the selection
-  const selections = localSelections.value.get(choice.id) ?? new Set<string>()
-  const updated = new Set(selections)
-
-  if (updated.has(slug)) {
-    updated.delete(slug)
-  } else {
-    updated.add(slug)
-  }
-
-  localSelections.value.set(choice.id, updated)
-}
-
-// Check if all language choices are complete
-// A choice is complete when remaining === 0 OR localSelections has enough new picks
-const allLanguageChoicesComplete = computed(() => {
-  for (const data of sourceData.value) {
-    const choice = data.choice
-    // If remaining is 0, choice is already complete
-    if (choice.remaining === 0) continue
-    // Otherwise, check if we have enough new selections
-    const newSelections = localSelections.value.get(choice.id)?.size ?? 0
-    const alreadySelected = choice.selected.length
-    if (newSelections + alreadySelected < choice.quantity) {
-      return false
-    }
-  }
-  return true
-})
-
-/**
- * Continue to next step - resolve all choices
- */
 async function handleContinue() {
   isLoading.value = true
 
   try {
-    // Resolve each choice
-    for (const [choiceId, selectedSlugs] of localSelections.value.entries()) {
-      if (selectedSlugs.size > 0) {
-        await resolveChoice(choiceId, {
-          selected: Array.from(selectedSlugs)
-        })
-      }
-    }
+    await saveAllChoices()
 
-    // Clear local selections
+    // Clear local selections after save
     localSelections.value.clear()
 
     // Sync store with backend to update hasLanguageChoices
@@ -303,7 +235,7 @@ async function handleContinue() {
       class="mb-6"
     />
 
-    <!-- Loading State (fetching choices or saving) -->
+    <!-- Loading State -->
     <div
       v-if="(pending || knownLanguagesPending || isLoading) && !choicesError"
       class="flex justify-center py-8"
@@ -314,7 +246,7 @@ async function handleContinue() {
       />
     </div>
 
-    <!-- Known Languages Section (always show if we have known languages) -->
+    <!-- Known Languages Section -->
     <div
       v-if="hasKnownLanguages && !knownLanguagesPending"
       class="mb-8"
@@ -400,7 +332,7 @@ async function handleContinue() {
       </p>
     </div>
 
-    <!-- Language choices by source (hidden during save to prevent DOM patching errors) -->
+    <!-- Language choices by source -->
     <div
       v-else-if="hasAnyChoices && !isLoading && !pending"
       class="space-y-8"
@@ -463,12 +395,12 @@ async function handleContinue() {
               type="button"
               class="language-option p-3 rounded-lg border text-left transition-all"
               :class="{
-                'border-primary bg-primary/10': isLanguageSelected(data.choice.id, option.full_slug ?? option.slug),
-                'border-gray-200 dark:border-gray-700 hover:border-primary/50': !isLanguageSelected(data.choice.id, option.full_slug ?? option.slug) && !isLanguageDisabled(data.choice.id, option.full_slug ?? option.slug),
-                'border-gray-200 dark:border-gray-700 opacity-50 cursor-not-allowed': isLanguageDisabled(data.choice.id, option.full_slug ?? option.slug)
+                'border-primary bg-primary/10': isOptionSelected(data.choice.id, option.full_slug ?? option.slug),
+                'border-gray-200 dark:border-gray-700 hover:border-primary/50': !isOptionSelected(data.choice.id, option.full_slug ?? option.slug) && !isOptionDisabled(data.choice.id, option.full_slug ?? option.slug),
+                'border-gray-200 dark:border-gray-700 opacity-50 cursor-not-allowed': isOptionDisabled(data.choice.id, option.full_slug ?? option.slug)
               }"
-              :disabled="isLanguageDisabled(data.choice.id, option.full_slug ?? option.slug)"
-              @click="handleLanguageToggle(data.choice, option.full_slug ?? option.slug)"
+              :disabled="isOptionDisabled(data.choice.id, option.full_slug ?? option.slug)"
+              @click="handleToggle(data.choice, option.full_slug ?? option.slug)"
             >
               <div class="flex items-center gap-2">
                 <UIcon
@@ -476,20 +408,20 @@ async function handleContinue() {
                     ? 'i-heroicons-check-circle-solid'
                     : isLanguageSelectedElsewhere(data.choice.id, option.full_slug ?? option.slug)
                       ? 'i-heroicons-no-symbol'
-                      : isLanguageSelected(data.choice.id, option.full_slug ?? option.slug)
+                      : isOptionSelected(data.choice.id, option.full_slug ?? option.slug)
                         ? 'i-heroicons-check-circle-solid'
                         : 'i-heroicons-circle'"
                   class="w-5 h-5"
                   :class="{
                     'text-success': isLanguageAlreadyKnown(option.full_slug ?? option.slug),
-                    'text-primary': !isLanguageAlreadyKnown(option.full_slug ?? option.slug) && isLanguageSelected(data.choice.id, option.full_slug ?? option.slug),
-                    'text-gray-400': !isLanguageSelected(data.choice.id, option.full_slug ?? option.slug) && !isLanguageDisabled(data.choice.id, option.full_slug ?? option.slug),
-                    'text-gray-300 dark:text-gray-600': isLanguageDisabled(data.choice.id, option.full_slug ?? option.slug) && !isLanguageAlreadyKnown(option.full_slug ?? option.slug)
+                    'text-primary': !isLanguageAlreadyKnown(option.full_slug ?? option.slug) && isOptionSelected(data.choice.id, option.full_slug ?? option.slug),
+                    'text-gray-400': !isOptionSelected(data.choice.id, option.full_slug ?? option.slug) && !isOptionDisabled(data.choice.id, option.full_slug ?? option.slug),
+                    'text-gray-300 dark:text-gray-600': isOptionDisabled(data.choice.id, option.full_slug ?? option.slug) && !isLanguageAlreadyKnown(option.full_slug ?? option.slug)
                   }"
                 />
                 <span
                   class="font-medium"
-                  :class="{ 'text-gray-400 dark:text-gray-500': isLanguageDisabled(data.choice.id, option.full_slug ?? option.slug) }"
+                  :class="{ 'text-gray-400 dark:text-gray-500': isOptionDisabled(data.choice.id, option.full_slug ?? option.slug) }"
                 >
                   {{ option.name }}
                 </span>

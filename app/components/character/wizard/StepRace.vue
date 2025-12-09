@@ -4,8 +4,7 @@ import { storeToRefs } from 'pinia'
 import type { Race } from '~/types'
 import { useCharacterWizardStore } from '~/stores/characterWizard'
 import { useCharacterWizard } from '~/composables/useCharacterWizard'
-import { useDetailModal } from '~/composables/useDetailModal'
-import { useEntitySearch } from '~/composables/useEntitySearch'
+import { useWizardEntitySelection } from '~/composables/useWizardEntitySelection'
 import { wizardErrors } from '~/utils/wizardErrors'
 
 const store = useCharacterWizardStore()
@@ -40,21 +39,26 @@ const { data: races, pending: loadingRaces } = await useAsyncData(
   }
 )
 
-// Local state
-const localSelectedRace = ref<Race | null>(null)
+// Use entity selection composable for core selection logic
+const {
+  localSelected: localSelectedRace,
+  searchQuery,
+  filtered: filteredRaces,
+  canProceed,
+  confirmSelection,
+  detailModal: { open: detailModalOpen, item: detailRace, show: showDetails, close: closeDetails }
+} = useWizardEntitySelection(races, {
+  storeAction: (race) => store.selectRace(race),
+  existingSelection: computed(() => selections.value.race)
+})
 
-// Detail modal
-const { open: detailModalOpen, item: detailRace, show: showDetails, close: closeDetails } = useDetailModal<Race>()
+// ═══════════════════════════════════════════════════════════════════════════
+// Race-specific: Change confirmation modal (when subrace was previously selected)
+// This is NOT in the composable because only StepRace needs this behavior.
+// ═══════════════════════════════════════════════════════════════════════════
 
-// Confirmation modal state
 const confirmChangeModalOpen = ref(false)
 const pendingRaceChange = ref<Race | null>(null)
-
-// Search functionality - races are already filtered server-side to base races only
-const { searchQuery, filtered: filteredRaces } = useEntitySearch(races)
-
-// Validation: can proceed if race selected
-const canProceed = computed(() => localSelectedRace.value !== null)
 
 /**
  * Handle race card selection
@@ -91,28 +95,16 @@ function cancelRaceChange() {
 }
 
 /**
- * Confirm selection and call store action
- * Note: If the race has subraces, the wizard will automatically
- * show the subrace step next (handled by route navigation)
+ * Confirm selection and navigate to next step
  */
-async function confirmSelection() {
-  if (!localSelectedRace.value) return
-
+async function handleConfirm() {
   try {
-    await store.selectRace(localSelectedRace.value)
+    await confirmSelection()
     nextStep()
   } catch (err) {
     wizardErrors.saveFailed(err, toast)
   }
 }
-
-// Initialize from store if already selected
-onMounted(() => {
-  if (selections.value.race && races.value) {
-    // Find the matching race in our loaded list (for proper reference equality)
-    localSelectedRace.value = races.value.find((r: Race) => r.id === selections.value.race?.id) ?? selections.value.race
-  }
-})
 </script>
 
 <template>
@@ -191,7 +183,7 @@ onMounted(() => {
         size="lg"
         :disabled="!canProceed || isLoading"
         :loading="isLoading"
-        @click="confirmSelection"
+        @click="handleConfirm"
       >
         {{ isLoading ? 'Saving...' : 'Continue with ' + (localSelectedRace?.name || 'Selection') }}
       </UButton>

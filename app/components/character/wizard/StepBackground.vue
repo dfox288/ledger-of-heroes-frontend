@@ -4,8 +4,7 @@ import { storeToRefs } from 'pinia'
 import type { Background } from '~/types'
 import { useCharacterWizardStore } from '~/stores/characterWizard'
 import { useCharacterWizard } from '~/composables/useCharacterWizard'
-import { useDetailModal } from '~/composables/useDetailModal'
-import { useEntitySearch } from '~/composables/useEntitySearch'
+import { useWizardEntitySelection } from '~/composables/useWizardEntitySelection'
 import { wizardErrors } from '~/utils/wizardErrors'
 
 const store = useCharacterWizardStore()
@@ -34,55 +33,32 @@ const { data: backgrounds, pending: loadingBackgrounds } = await useAsyncData(
   }
 )
 
-// Local state
-const localSelectedBackground = ref<Background | null>(null)
-
-// Detail modal
-const { open: detailModalOpen, item: detailBackground, show: showDetails, close: closeDetails } = useDetailModal<Background>()
-
-// Create a computed that ensures we have a proper type for useEntitySearch
-const backgroundsList = computed((): Background[] => {
-  if (!backgrounds.value) return []
-  return backgrounds.value
-})
-
-// Search filter
-const { searchQuery, filtered: filteredBackgrounds } = useEntitySearch(backgroundsList, {
+// Use entity selection composable for selection logic
+const {
+  localSelected: localSelectedBackground,
+  searchQuery,
+  filtered: filteredBackgrounds,
+  canProceed,
+  handleSelect: handleBackgroundSelect,
+  confirmSelection,
+  detailModal: { open: detailModalOpen, item: detailBackground, show: showDetails, close: closeDetails }
+} = useWizardEntitySelection(backgrounds, {
+  storeAction: (background) => store.selectBackground(background),
+  existingSelection: computed(() => selections.value.background),
   searchableFields: ['name', 'feature_name']
 })
 
-// Validation: can proceed if background selected
-const canProceed = computed(() => {
-  return localSelectedBackground.value !== null
-})
-
 /**
- * Handle background card selection
+ * Confirm selection and navigate to next step
  */
-function handleBackgroundSelect(background: Background) {
-  localSelectedBackground.value = background
-}
-
-/**
- * Confirm selection and call store action
- */
-async function confirmSelection() {
-  if (!localSelectedBackground.value) return
-
+async function handleConfirm() {
   try {
-    await store.selectBackground(localSelectedBackground.value)
+    await confirmSelection()
     nextStep()
   } catch (err) {
     wizardErrors.saveFailed(err, toast)
   }
 }
-
-// Initialize from store if already selected
-onMounted(() => {
-  if (selections.value.background) {
-    localSelectedBackground.value = selections.value.background
-  }
-})
 </script>
 
 <template>
@@ -161,7 +137,7 @@ onMounted(() => {
         size="lg"
         :disabled="!canProceed || isLoading"
         :loading="isLoading"
-        @click="confirmSelection"
+        @click="handleConfirm"
       >
         {{ isLoading ? 'Saving...' : 'Continue with ' + (localSelectedBackground?.name || 'Selection') }}
       </UButton>

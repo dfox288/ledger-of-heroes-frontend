@@ -464,17 +464,22 @@ describe('StepBackground - Specific Behavior', () => {
       const vm = wrapper.vm as any
 
       // useAsyncData has transform function that extracts .data from response
-      // This ensures backgrounds is an array, not a response object
-      expect(Array.isArray(vm.backgroundsList) || vm.backgroundsList === null).toBe(true)
+      // This ensures filteredBackgrounds works correctly
+      // Test the public interface (filteredBackgrounds) rather than internal state
+      expect(Array.isArray(vm.filteredBackgrounds)).toBe(true)
     })
 
-    it('provides empty array when backgrounds data is null', async () => {
+    it('provides empty array when no backgrounds match filter', async () => {
       const { wrapper } = await mountWizardStep(StepBackground)
       const vm = wrapper.vm as any
 
-      // backgroundsList computed returns [] if backgrounds.value is falsy
-      // This prevents errors in useEntitySearch
-      expect(vm.backgroundsList).toBeDefined()
+      // Set search to something that won't match
+      vm.searchQuery = 'nonexistent12345'
+      await wrapper.vm.$nextTick()
+
+      // filteredBackgrounds should be an empty array, not undefined
+      expect(vm.filteredBackgrounds).toBeDefined()
+      expect(Array.isArray(vm.filteredBackgrounds)).toBe(true)
     })
   })
 })
