@@ -5,6 +5,7 @@ import type { Spell } from '~/types'
 import type { components } from '~/types/api/generated'
 import { useCharacterWizardStore } from '~/stores/characterWizard'
 import { useCharacterWizard } from '~/composables/useCharacterWizard'
+import { useWizardChoiceSelection } from '~/composables/useWizardChoiceSelection'
 import { normalizeEndpoint } from '~/composables/useApi'
 import { wizardErrors } from '~/utils/wizardErrors'
 
@@ -20,7 +21,7 @@ const {
 } = storeToRefs(store)
 const { nextStep } = useCharacterWizard()
 
-// API client
+// API client for fetching spell options
 const { apiFetch } = useApi()
 
 // Use unified choices composable
@@ -40,13 +41,36 @@ onMounted(async () => {
 // Combined error state
 const error = computed(() => storeError.value || choicesError.value)
 
-// Local tracking for selected spells per choice
-// Map<choiceId, Set<full_slug>> - API expects full_slug format like "phb:blade-ward"
-const selectedSpells = ref<Map<string, Set<string>>>(new Map())
+// Use choice selection composable for core selection logic
+const {
+  localSelections: selectedSpells,
+  isSaving,
+  getSelectedCount,
+  isOptionSelected: isSpellSelectedById,
+  allComplete: canProceed,
+  handleToggle: handleSpellToggleById,
+  saveAllChoices
+} = useWizardChoiceSelection(
+  computed(() => choicesByType.value.spells),
+  { resolveChoice }
+)
 
-// Local cache for fetched spell options
-// Map<choiceId, Spell[]>
-const spellOptions = ref<Map<string, Spell[]>>(new Map())
+// Local cache for fetched spell options (full Spell objects needed for SpellCard display)
+// The composable's getDisplayOptions() returns simplified objects missing level/school/etc.
+const spellOptionsCache = ref<Map<string, Spell[]>>(new Map())
+
+// Fetch full spell options for a choice
+async function fetchSpellOptionsForChoice(choice: PendingChoice) {
+  if (!choice.options_endpoint || spellOptionsCache.value.has(choice.id)) return
+
+  try {
+    const endpoint = normalizeEndpoint(choice.options_endpoint)
+    const response = await apiFetch<{ data: Spell[] }>(endpoint)
+    spellOptionsCache.value.set(choice.id, response.data)
+  } catch (e) {
+    logger.error(`Failed to fetch spell options for ${choice.id}:`, e)
+  }
+}
 
 // Spell choices grouped by subtype
 const cantripChoices = computed(() =>
@@ -61,45 +85,11 @@ const raceSpellChoices = computed(() =>
   choicesByType.value.spells.filter(c => c.source === 'race')
 )
 
-// Fetch options for a choice if not already fetched
-async function fetchSpellOptionsForChoice(choice: PendingChoice) {
-  if (!choice.options_endpoint || spellOptions.value.has(choice.id)) return
-
-  try {
-    // Normalize endpoint: backend returns /api/v1/... but Nitro expects /...
-    const endpoint = normalizeEndpoint(choice.options_endpoint)
-    const response = await apiFetch<{ data: Spell[] }>(endpoint)
-    spellOptions.value.set(choice.id, response.data)
-  } catch (e) {
-    logger.error(`Failed to fetch spell options for ${choice.id}:`, e)
-  }
-}
-
-// Get available spells for a choice
-function getAvailableSpells(choice: PendingChoice): Spell[] {
-  // If options are provided inline, use them
-  if (choice.options && Array.isArray(choice.options)) {
-    return choice.options as Spell[]
-  }
-  // Otherwise, use fetched options
-  return spellOptions.value.get(choice.id) ?? []
-}
-
 // Fetch options for all spell choices when they load
 watch(choicesByType, async (newVal) => {
   const allSpellChoices = newVal.spells
   for (const choice of allSpellChoices) {
     await fetchSpellOptionsForChoice(choice)
-
-    // Initialize selected set from choice.selected (slugs from API)
-    if (!selectedSpells.value.has(choice.id)) {
-      const selected = new Set<string>()
-      for (const spellSlug of choice.selected) {
-        // Ensure it's a string (slug)
-        selected.add(String(spellSlug))
-      }
-      selectedSpells.value.set(choice.id, selected)
-    }
   }
 }, { immediate: true })
 
@@ -140,53 +130,30 @@ const fixedRaceSpells = computed(() =>
   selections.value.race?.spells?.filter(s => !s.is_choice) ?? []
 )
 
-// Get count of selected spells for a choice
-function getSelectedCount(choiceId: string): number {
-  return selectedSpells.value.get(choiceId)?.size ?? 0
-}
-
-// Check if a spell is selected in a choice (by full_slug)
+// Spell-specific wrappers for composable functions (work with Spell objects)
 function isSpellSelected(choiceId: string, spell: Spell): boolean {
   const slug = spell.full_slug ?? spell.slug
-  return selectedSpells.value.get(choiceId)?.has(slug) ?? false
+  return isSpellSelectedById(choiceId, slug)
 }
 
-// Check if a choice is at limit
 function isChoiceAtLimit(choice: PendingChoice): boolean {
   return getSelectedCount(choice.id) >= choice.quantity
 }
 
-// Toggle spell selection for a choice (uses full_slug for API compatibility)
 function handleSpellToggle(choice: PendingChoice, spell: Spell) {
-  const selected = selectedSpells.value.get(choice.id) ?? new Set<string>()
   const spellSlug = spell.full_slug ?? spell.slug
-
-  if (selected.has(spellSlug)) {
-    // Deselect
-    selected.delete(spellSlug)
-  } else {
-    // Don't allow selecting more than limit
-    if (selected.size >= choice.quantity) return
-    selected.add(spellSlug)
-  }
-
-  selectedSpells.value.set(choice.id, selected)
+  handleSpellToggleById(choice, spellSlug)
 }
 
-// Validation: all requirements met?
-const canProceed = computed(() => {
-  // All required spell choices must be complete
-  const requiredChoices = choicesByType.value.spells.filter(c => c.required)
-  for (const choice of requiredChoices) {
-    const selectedCount = getSelectedCount(choice.id)
-    if (selectedCount < choice.quantity) return false
+// Get available spells for a choice (from choice.options or local cache)
+function getAvailableSpells(choice: PendingChoice): Spell[] {
+  // If options are provided inline as Spell objects, use them directly
+  if (choice.options && Array.isArray(choice.options) && choice.options.length > 0) {
+    return choice.options as Spell[]
   }
-  return true
-})
-
-// Saving state
-const isSaving = ref(false)
-const saveError = ref<string | null>(null)
+  // Otherwise, use locally cached full Spell objects (needed for SpellCard display)
+  return spellOptionsCache.value.get(choice.id) ?? []
+}
 
 // Toast for user feedback
 const toast = useToast()
@@ -195,23 +162,11 @@ const toast = useToast()
  * Save spells and continue to next step
  */
 async function handleContinue() {
-  isSaving.value = true
-  saveError.value = null
-
   try {
-    // Resolve all spell choices
-    for (const choice of choicesByType.value.spells) {
-      const selected = selectedSpells.value.get(choice.id)
-      if (selected && selected.size > 0) {
-        await resolveChoice(choice.id, { selected: Array.from(selected) })
-      }
-    }
+    await saveAllChoices()
     nextStep()
   } catch (e) {
-    saveError.value = e instanceof Error ? e.message : 'Failed to save spell choices'
     wizardErrors.choiceResolveFailed(e, toast, 'spell')
-  } finally {
-    isSaving.value = false
   }
 }
 

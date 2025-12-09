@@ -329,7 +329,7 @@ describe('StepFeats - Specific Behavior', () => {
       expect(vm.isSaving).toBe(false)
     })
 
-    it('tracks save error state', async () => {
+    it('error handling is managed by composable', async () => {
       const { wrapper } = await mountWizardStep(StepFeats, {
         storeSetup: (store) => {
           store.selections.race = wizardMockRaces.human
@@ -337,7 +337,9 @@ describe('StepFeats - Specific Behavior', () => {
       })
 
       const vm = wrapper.vm as any
-      expect(vm.saveError).toBeNull()
+      // Error handling is now done via try/catch in handleContinue
+      // and uses wizardErrors.choiceResolveFailed for toast notifications
+      expect(typeof vm.handleContinue).toBe('function')
     })
 
     it('has continue button', async () => {

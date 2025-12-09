@@ -4,15 +4,12 @@ import { storeToRefs } from 'pinia'
 import type { Subclass } from '~/stores/characterWizard'
 import { useCharacterWizardStore } from '~/stores/characterWizard'
 import { useCharacterWizard } from '~/composables/useCharacterWizard'
-import { useDetailModal } from '~/composables/useDetailModal'
+import { useWizardEntitySelection } from '~/composables/useWizardEntitySelection'
 import { wizardErrors } from '~/utils/wizardErrors'
 
 const store = useCharacterWizardStore()
 const { nextStep } = useCharacterWizard()
 const { selections, isLoading, error, sourceFilterString } = storeToRefs(store)
-
-// Detail modal
-const { open: detailModalOpen, item: detailSubclass, show: showDetails, close: closeDetails } = useDetailModal<Subclass>()
 
 // Toast for user feedback
 const toast = useToast()
@@ -53,52 +50,32 @@ const { data: subclasses, pending: loadingSubclasses } = await useAsyncData(
   }
 )
 
-// Local state
-const localSelectedSubclass = ref<Subclass | null>(null)
-const searchQuery = ref('')
-
-// Search functionality
-const filteredSubclasses = computed(() => {
-  if (!subclasses.value) return []
-  if (!searchQuery.value) return subclasses.value
-
-  const query = searchQuery.value.toLowerCase()
-  return subclasses.value.filter(subclass =>
-    subclass.name.toLowerCase().includes(query)
-    || subclass.description?.toLowerCase().includes(query)
-  )
+// Use entity selection composable for selection logic
+const {
+  localSelected: localSelectedSubclass,
+  searchQuery,
+  filtered: filteredSubclasses,
+  canProceed,
+  handleSelect: handleSubclassSelect,
+  confirmSelection,
+  detailModal: { open: detailModalOpen, item: detailSubclass, show: showDetails, close: closeDetails }
+} = useWizardEntitySelection(subclasses, {
+  storeAction: subclass => store.selectSubclass(subclass),
+  existingSelection: computed(() => selections.value.subclass),
+  searchableFields: ['name', 'description']
 })
 
-// Validation: can proceed if subclass selected
-const canProceed = computed(() => localSelectedSubclass.value !== null)
-
 /**
- * Handle subclass card selection
+ * Confirm selection and navigate to next step
  */
-function handleSubclassSelect(subclass: Subclass) {
-  localSelectedSubclass.value = subclass
-}
-
-/**
- * Confirm selection and call store action
- */
-async function confirmSelection() {
-  if (!localSelectedSubclass.value) return
-
+async function handleConfirm() {
   try {
-    await store.selectSubclass(localSelectedSubclass.value)
+    await confirmSelection()
     await nextStep()
   } catch (err) {
     wizardErrors.saveFailed(err, toast)
   }
 }
-
-// Initialize from store if already selected
-onMounted(() => {
-  if (selections.value.subclass) {
-    localSelectedSubclass.value = selections.value.subclass
-  }
-})
 </script>
 
 <template>
@@ -194,7 +171,7 @@ onMounted(() => {
         size="lg"
         :disabled="!canProceed || isLoading"
         :loading="isLoading"
-        @click="confirmSelection"
+        @click="handleConfirm"
       >
         {{ isLoading ? 'Saving...' : 'Continue with ' + (localSelectedSubclass?.name || 'Selection') }}
       </UButton>
