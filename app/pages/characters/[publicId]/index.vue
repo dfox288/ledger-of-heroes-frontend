@@ -133,10 +133,11 @@ const tabItems = computed(() => {
           <CharacterSheetCombatStatsGrid
             :character="character"
             :stats="stats"
+            :currency="character.currency"
           />
 
           <!-- Saving Throws and Skills -->
-          <div class="grid md:grid-cols-3 gap-6">
+          <div class="grid lg:grid-cols-3 gap-6">
             <!-- Saving Throws + Death Saves stacked -->
             <div class="space-y-4">
               <CharacterSheetSavingThrowsList :saving-throws="savingThrows" />
@@ -147,7 +148,7 @@ const tabItems = computed(() => {
             </div>
             <CharacterSheetSkillsList
               :skills="skills"
-              class="md:col-span-2"
+              class="lg:col-span-2"
             />
           </div>
         </div>

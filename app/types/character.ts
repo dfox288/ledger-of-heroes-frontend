@@ -223,6 +223,48 @@ export interface CharacterSpeeds {
 }
 
 /**
+ * Character currency (coin purse)
+ */
+export interface CharacterCurrency {
+  pp: number
+  gp: number
+  ep: number
+  sp: number
+  cp: number
+}
+
+/**
+ * Standard spell slots by level
+ */
+export interface StandardSpellSlots {
+  '1st': number
+  '2nd': number
+  '3rd': number
+  '4th': number
+  '5th': number
+  '6th': number
+  '7th': number
+  '8th': number
+  '9th': number
+}
+
+/**
+ * Pact magic slots (Warlock)
+ */
+export interface PactSpellSlots {
+  slots: number
+  level: number
+}
+
+/**
+ * Character spell slots structure
+ */
+export interface CharacterSpellSlots {
+  standard: StandardSpellSlots
+  pact: PactSpellSlots | null
+}
+
+/**
  * Skill with computed modifier for character sheet display
  */
 export interface CharacterSkill {

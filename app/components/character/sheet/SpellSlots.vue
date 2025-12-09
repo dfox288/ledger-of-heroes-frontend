@@ -9,7 +9,7 @@
  */
 
 const props = defineProps<{
-  spellSlots: Record<string, number>
+  spellSlots: number[] | Record<string, number>
   pactSlots?: { count: number, level: number } | null
 }>()
 
@@ -26,11 +26,19 @@ function ordinal(level: number): string {
 
 /**
  * Get sorted list of spell levels that have slots
- * Filters out level 0 (cantrips don't have slots)
+ * Handles both array format (index 0 = 1st level) and object format
  */
 const sortedLevels = computed(() => {
+  // Handle array format: [2, 0, 0, ...] where index 0 = 1st level slots
+  if (Array.isArray(props.spellSlots)) {
+    return props.spellSlots
+      .map((count, index) => ({ level: index + 1, count })) // Convert 0-indexed to 1-based
+      .filter(({ count }) => count > 0)
+  }
+
+  // Handle object format: { "1": 2, "2": 0, ... }
   return Object.entries(props.spellSlots)
-    .filter(([level, count]) => count > 0 && Number(level) > 0) // Only levels 1+ with slots
+    .filter(([level, count]) => count > 0 && Number(level) > 0)
     .map(([level, count]) => ({ level: Number(level), count }))
     .sort((a, b) => a.level - b.level)
 })

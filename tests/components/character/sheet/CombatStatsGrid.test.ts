@@ -59,33 +59,69 @@ describe('CharacterSheetCombatStatsGrid', () => {
     expect(wrapper.text()).toContain('Prof')
   })
 
-  it('displays inspiration section', async () => {
-    const wrapper = await mountSuspended(CombatStatsGrid, {
-      props: { character: mockCharacter, stats: mockStats }
-    })
-    expect(wrapper.text()).toContain('Inspiration')
-  })
-
-  it('shows filled star when has inspiration', async () => {
+  it('displays currency section', async () => {
     const wrapper = await mountSuspended(CombatStatsGrid, {
       props: {
-        character: { ...mockCharacter, has_inspiration: true },
-        stats: mockStats
+        character: mockCharacter,
+        stats: mockStats,
+        currency: { pp: 5, gp: 100, ep: 10, sp: 50, cp: 200 }
       }
     })
-    const icon = wrapper.find('.text-yellow-500')
-    expect(icon.exists()).toBe(true)
+    expect(wrapper.text()).toContain('Currency')
   })
 
-  it('shows empty star when no inspiration', async () => {
+  it('shows all currency values when provided', async () => {
     const wrapper = await mountSuspended(CombatStatsGrid, {
       props: {
-        character: { ...mockCharacter, has_inspiration: false },
-        stats: mockStats
+        character: mockCharacter,
+        stats: mockStats,
+        currency: { pp: 5, gp: 100, ep: 10, sp: 50, cp: 200 }
       }
     })
-    const icon = wrapper.find('.text-gray-300')
-    expect(icon.exists()).toBe(true)
+    expect(wrapper.text()).toContain('5')
+    expect(wrapper.text()).toContain('100')
+    expect(wrapper.text()).toContain('10')
+    expect(wrapper.text()).toContain('50')
+    expect(wrapper.text()).toContain('200')
+  })
+
+  it('shows placeholder when currency is null', async () => {
+    const wrapper = await mountSuspended(CombatStatsGrid, {
+      props: {
+        character: mockCharacter,
+        stats: mockStats,
+        currency: null
+      }
+    })
+    expect(wrapper.text()).toContain('—')
+  })
+
+  it('shows placeholder when all currencies are zero', async () => {
+    const wrapper = await mountSuspended(CombatStatsGrid, {
+      props: {
+        character: mockCharacter,
+        stats: mockStats,
+        currency: { pp: 0, gp: 0, ep: 0, sp: 0, cp: 0 }
+      }
+    })
+    expect(wrapper.text()).toContain('—')
+  })
+
+  it('only shows non-zero currencies', async () => {
+    const wrapper = await mountSuspended(CombatStatsGrid, {
+      props: {
+        character: mockCharacter,
+        stats: mockStats,
+        currency: { pp: 0, gp: 50, ep: 0, sp: 25, cp: 0 }
+      }
+    })
+    // Should show GP and SP
+    expect(wrapper.text()).toContain('50')
+    expect(wrapper.text()).toContain('25')
+    // Should NOT show coin indicators for zero currencies
+    // (We check by verifying only 2 coin circles exist)
+    const coins = wrapper.findAll('.rounded-full')
+    expect(coins.length).toBe(2)
   })
 
   it('shows temporary HP when present', async () => {

@@ -4,11 +4,15 @@ import { storeToRefs } from 'pinia'
 import type { Subclass } from '~/stores/characterWizard'
 import { useCharacterWizardStore } from '~/stores/characterWizard'
 import { useCharacterWizard } from '~/composables/useCharacterWizard'
+import { useDetailModal } from '~/composables/useDetailModal'
 import { logger } from '~/utils/logger'
 
 const store = useCharacterWizardStore()
 const { nextStep } = useCharacterWizard()
 const { selections, isLoading, error, sourceFilterString } = storeToRefs(store)
+
+// Detail modal
+const { open: detailModalOpen, item: detailSubclass, show: showDetails, close: closeDetails } = useDetailModal<Subclass>()
 
 // Toast for user feedback
 const toast = useToast()
@@ -163,8 +167,10 @@ onMounted(() => {
         v-for="subclass in filteredSubclasses"
         :key="subclass.id"
         :subclass="subclass"
+        :parent-class-slug="selections.class?.slug"
         :selected="localSelectedSubclass?.id === subclass.id"
         @select="handleSubclassSelect"
+        @view-details="showDetails(subclass)"
       />
     </div>
 
@@ -198,5 +204,12 @@ onMounted(() => {
         {{ isLoading ? 'Saving...' : 'Continue with ' + (localSelectedSubclass?.name || 'Selection') }}
       </UButton>
     </div>
+
+    <!-- Detail Modal -->
+    <CharacterPickerSubclassDetailModal
+      :subclass="detailSubclass"
+      :open="detailModalOpen"
+      @close="closeDetails"
+    />
   </div>
 </template>

@@ -60,7 +60,7 @@ function formatModifier(value: number): string {
 
     <!-- Spell Slots -->
     <CharacterSheetSpellSlots
-      v-if="Object.keys(stats.spell_slots || {}).length > 0"
+      v-if="stats.spell_slots && (Array.isArray(stats.spell_slots) ? stats.spell_slots.some(s => s > 0) : Object.values(stats.spell_slots).some(s => s > 0))"
       :spell-slots="stats.spell_slots"
     />
 

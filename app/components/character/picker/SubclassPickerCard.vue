@@ -10,6 +10,8 @@ interface Props {
     source?: { code: string, name: string }
     description?: string
   }
+  /** Parent class slug for background image */
+  parentClassSlug?: string
   selected?: boolean
 }
 
@@ -34,6 +36,15 @@ function handleViewDetails(event: Event) {
   event.stopPropagation()
   emit('view-details')
 }
+
+/**
+ * Get background image from parent class (subclasses use their parent class's image)
+ */
+const { getImagePath } = useEntityImage()
+const backgroundImage = computed(() => {
+  if (!props.parentClassSlug) return null
+  return getImagePath('classes', props.parentClassSlug, 256)
+})
 </script>
 
 <template>
@@ -46,6 +57,13 @@ function handleViewDetails(event: Event) {
     @click="handleCardClick"
   >
     <UCard class="relative overflow-hidden hover:shadow-lg transition-shadow h-full border-2 border-class-300 dark:border-class-700 hover:border-class-500">
+      <!-- Background Image Layer -->
+      <div
+        v-if="backgroundImage"
+        class="absolute inset-0 bg-cover bg-center opacity-15 transition-all duration-300"
+        :style="{ backgroundImage: `url(${backgroundImage})` }"
+      />
+
       <!-- Selected Checkmark -->
       <div
         v-if="selected"

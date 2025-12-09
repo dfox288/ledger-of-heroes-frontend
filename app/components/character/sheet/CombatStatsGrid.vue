@@ -1,10 +1,11 @@
 <!-- app/components/character/sheet/CombatStatsGrid.vue -->
 <script setup lang="ts">
-import type { Character, CharacterStats } from '~/types/character'
+import type { Character, CharacterStats, CharacterCurrency } from '~/types/character'
 
 const props = defineProps<{
   character: Character
   stats: CharacterStats
+  currency?: CharacterCurrency | null
 }>()
 
 function formatModifier(value: number | null): string {
@@ -32,6 +33,28 @@ const alternateSpeeds = computed(() => {
   }
 
   return speeds
+})
+
+/**
+ * Currency display configuration
+ * Only includes currencies with non-zero values
+ */
+const currencyConfig = [
+  { key: 'pp', label: 'P', bg: 'bg-gray-300 dark:bg-gray-500', text: 'text-gray-700 dark:text-gray-200' },
+  { key: 'gp', label: 'G', bg: 'bg-yellow-400 dark:bg-yellow-500', text: 'text-yellow-800 dark:text-yellow-900' },
+  { key: 'ep', label: 'E', bg: 'bg-gray-200 dark:bg-gray-400', text: 'text-gray-600 dark:text-gray-700' },
+  { key: 'sp', label: 'S', bg: 'bg-slate-300 dark:bg-slate-400', text: 'text-slate-700 dark:text-slate-800' },
+  { key: 'cp', label: 'C', bg: 'bg-orange-400 dark:bg-orange-500', text: 'text-orange-800 dark:text-orange-900' }
+] as const
+
+const visibleCurrencies = computed(() => {
+  if (!props.currency) return []
+  return currencyConfig
+    .filter(c => props.currency![c.key as keyof CharacterCurrency] > 0)
+    .map(c => ({
+      ...c,
+      value: props.currency![c.key as keyof CharacterCurrency]
+    }))
 })
 </script>
 
@@ -103,16 +126,37 @@ const alternateSpeeds = computed(() => {
       </div>
     </div>
 
-    <div class="bg-gray-50 dark:bg-gray-800 rounded-lg p-4 text-center">
-      <div class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1">
-        Inspiration
+    <!-- Currency -->
+    <div class="bg-gray-50 dark:bg-gray-800 rounded-lg p-4">
+      <div class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-2 text-center">
+        Currency
       </div>
-      <div class="flex justify-center mt-2">
-        <UIcon
-          :name="character.has_inspiration ? 'i-heroicons-star-solid' : 'i-heroicons-star'"
-          :class="character.has_inspiration ? 'text-yellow-500' : 'text-gray-300 dark:text-gray-600'"
-          class="w-10 h-10"
-        />
+      <!-- Show non-zero currencies in a clean grid -->
+      <div
+        v-if="visibleCurrencies.length > 0"
+        class="flex flex-wrap justify-center gap-x-3 gap-y-1"
+      >
+        <div
+          v-for="coin in visibleCurrencies"
+          :key="coin.key"
+          class="flex items-center gap-1"
+        >
+          <div
+            :class="[coin.bg, 'w-5 h-5 rounded-full flex items-center justify-center']"
+          >
+            <span :class="[coin.text, 'text-[10px] font-black']">{{ coin.label }}</span>
+          </div>
+          <span class="text-sm font-semibold text-gray-900 dark:text-white tabular-nums">
+            {{ coin.value.toLocaleString() }}
+          </span>
+        </div>
+      </div>
+      <!-- Empty state when no currency or all zeros -->
+      <div
+        v-else
+        class="text-center text-gray-400 dark:text-gray-500 text-sm"
+      >
+        —
       </div>
     </div>
   </div>
