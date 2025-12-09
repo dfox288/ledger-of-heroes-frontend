@@ -260,9 +260,9 @@ export function useCharacterWizard(options: UseCharacterWizardOptions = {}) {
         return store.selections.subrace !== null || !store.isSubraceRequired
 
       case 'size':
-        // Size validation happens in StepSize.vue (local selection required before confirm button enables)
-        // Navigation always allows proceeding - the step itself guards with shouldSkip when no choices exist
-        return true
+        // Block until all size choices are complete
+        if (!store.summary) return false
+        return store.summary.pending_choices.size === 0
 
       case 'class':
         return store.selections.class !== null
@@ -274,29 +274,36 @@ export function useCharacterWizard(options: UseCharacterWizardOptions = {}) {
         return store.selections.background !== null
 
       case 'feats':
-        // TODO: Check all required feat choices made
-        return true
+        // Block until all feat choices are complete
+        if (!store.summary) return false
+        return store.summary.pending_choices.feats === 0
 
       case 'abilities':
-        // All scores should be set (not default 10s for standard array)
-        // For now, just check we have a valid method
-        return true
+        // Block until all ability score bonus choices (ASI) are complete
+        // This includes racial +2/+1 bonuses and feat-granted bonuses
+        if (!store.summary) return false
+        return store.summary.pending_choices.asi === 0
 
       case 'proficiencies':
-        // TODO: Check all required choices made
-        return true
+        // Block until all proficiency choices are complete
+        if (!store.summary) return false
+        return store.summary.pending_choices.proficiencies === 0
 
       case 'languages':
-        // TODO: Check all required choices made
-        return true
+        // Block until all language choices are complete
+        if (!store.summary) return false
+        return store.summary.pending_choices.languages === 0
 
       case 'equipment':
-        // TODO: Check all required choices made
+        // Equipment validation is handled locally by StepEquipment component
+        // (allEquipmentChoicesMade computed disables Continue button)
+        // Equipment is not tracked in pending_choices summary
         return true
 
       case 'spells':
-        // TODO: Check correct number of spells selected
-        return true
+        // Block until all spell choices are complete
+        if (!store.summary) return false
+        return store.summary.pending_choices.spells === 0
 
       case 'details':
         // Name is required
