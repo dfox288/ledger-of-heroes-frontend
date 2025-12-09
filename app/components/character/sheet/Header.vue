@@ -8,7 +8,13 @@ const props = defineProps<{
 
 /**
  * Format classes display string
- * Shows each class with its level, separated by " / "
+ * Shows each class with its level and subclass (if any), separated by " / "
+ *
+ * Examples:
+ * - "Cleric 1 (Life Domain)" - single class with subclass
+ * - "Warlock 1 (The Fiend)" - subclass at level 1
+ * - "Fighter 3" - no subclass yet (gets subclass at level 3)
+ * - "Fighter 5 (Champion) / Wizard 2" - multiclass
  */
 const classesDisplay = computed(() => {
   if (!props.character.classes?.length) {
@@ -17,7 +23,16 @@ const classesDisplay = computed(() => {
   return props.character.classes
     // Filter out dangling class references (sourcebook removed)
     .filter(c => c.class !== null)
-    .map(c => `${c.class!.name} ${c.level}`)
+    .map((c) => {
+      const className = c.class!.name
+      const level = c.level
+      const subclassName = c.subclass?.name
+
+      if (subclassName) {
+        return `${className} ${level} (${subclassName})`
+      }
+      return `${className} ${level}`
+    })
     .join(' / ') || 'No class'
 })
 

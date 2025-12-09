@@ -41,6 +41,69 @@ describe('CharacterSheetHeader', () => {
     expect(wrapper.text()).toContain('Cleric 2')
   })
 
+  it('displays subclass name in parentheses when present', async () => {
+    const characterWithSubclass = {
+      ...mockCharacter,
+      classes: [
+        {
+          class: { id: 1, name: 'Cleric', slug: 'cleric' },
+          subclass: { id: 101, name: 'Life Domain', slug: 'cleric-life-domain' },
+          level: 1,
+          is_primary: true
+        }
+      ]
+    }
+    const wrapper = await mountSuspended(Header, {
+      props: { character: characterWithSubclass }
+    })
+    expect(wrapper.text()).toContain('Cleric 1 (Life Domain)')
+  })
+
+  it('displays class without subclass when subclass is null', async () => {
+    const characterWithoutSubclass = {
+      ...mockCharacter,
+      classes: [
+        {
+          class: { id: 1, name: 'Fighter', slug: 'fighter' },
+          subclass: null,
+          level: 2,
+          is_primary: true
+        }
+      ]
+    }
+    const wrapper = await mountSuspended(Header, {
+      props: { character: characterWithoutSubclass }
+    })
+    expect(wrapper.text()).toContain('Fighter 2')
+    expect(wrapper.text()).not.toContain('(')
+  })
+
+  it('displays multiclass with mixed subclass states', async () => {
+    const multiclassCharacter = {
+      ...mockCharacter,
+      classes: [
+        {
+          class: { id: 1, name: 'Warlock', slug: 'warlock' },
+          subclass: { id: 102, name: 'The Fiend', slug: 'warlock-the-fiend' },
+          level: 3,
+          is_primary: true
+        },
+        {
+          class: { id: 2, name: 'Fighter', slug: 'fighter' },
+          subclass: null,
+          level: 2,
+          is_primary: false
+        }
+      ]
+    }
+    const wrapper = await mountSuspended(Header, {
+      props: { character: multiclassCharacter }
+    })
+    expect(wrapper.text()).toContain('Warlock 3 (The Fiend)')
+    expect(wrapper.text()).toContain('Fighter 2')
+    expect(wrapper.text()).toMatch(/Warlock 3 \(The Fiend\) \/ Fighter 2/)
+  })
+
   it('shows Complete badge when is_complete is true', async () => {
     const wrapper = await mountSuspended(Header, {
       props: { character: mockCharacter }
