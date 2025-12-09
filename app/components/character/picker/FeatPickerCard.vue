@@ -1,0 +1,139 @@
+<!-- app/components/character/picker/FeatPickerCard.vue -->
+<script setup lang="ts">
+import type { Feat } from '~/types'
+
+interface Props {
+  feat: Feat
+  selected: boolean
+  disabled?: boolean
+}
+
+const props = withDefaults(defineProps<Props>(), {
+  disabled: false
+})
+
+const emit = defineEmits<{
+  'toggle': [feat: Feat]
+  'view-details': []
+}>()
+
+/**
+ * Check if feat has prerequisites
+ */
+const hasPrerequisites = computed(() => {
+  return props.feat.prerequisites && props.feat.prerequisites.length > 0
+})
+
+/**
+ * Get prerequisites summary for badge
+ */
+const prerequisitesSummary = computed(() => {
+  if (!hasPrerequisites.value) return null
+
+  const prereqs = props.feat.prerequisites!
+
+  // Single prerequisite: show full text
+  if (prereqs.length === 1) {
+    const p = prereqs[0]
+    if (p?.ability_score) {
+      return `${p.ability_score.code} ${p.minimum_value}+`
+    }
+    return p?.description || 'Prerequisites'
+  }
+
+  // Multiple prerequisites
+  return `${prereqs.length} prerequisites`
+})
+
+/**
+ * Check if this is a half-feat (grants +1 to ability score)
+ */
+const isHalfFeat = computed(() => {
+  if (!props.feat.modifiers) return false
+  return props.feat.modifiers.some(
+    m => m.modifier_category === 'ability_score' && m.value === '1'
+  )
+})
+
+function handleClick() {
+  if (!props.disabled) {
+    emit('toggle', props.feat)
+  }
+}
+
+function handleViewDetails(event: Event) {
+  event.stopPropagation()
+  emit('view-details')
+}
+</script>
+
+<template>
+  <div
+    data-testid="feat-card"
+    class="relative p-3 rounded-lg border-2 transition-all cursor-pointer"
+    :class="[
+      disabled ? 'opacity-50 cursor-not-allowed' : '',
+      selected
+        ? 'ring-2 ring-feat-500 border-feat-500 bg-feat-50 dark:bg-feat-900/30'
+        : 'border-gray-200 dark:border-gray-700 hover:border-feat-300'
+    ]"
+    @click="handleClick"
+  >
+    <!-- Selected Checkmark -->
+    <div
+      v-if="selected"
+      data-testid="selected-check"
+      class="absolute top-2 right-2 w-5 h-5 bg-feat-500 rounded-full flex items-center justify-center"
+    >
+      <UIcon
+        name="i-heroicons-check"
+        class="w-3 h-3 text-white"
+      />
+    </div>
+
+    <div class="flex flex-col gap-2">
+      <!-- Top row: badges -->
+      <div class="flex items-center gap-2 flex-wrap">
+        <UBadge
+          v-if="hasPrerequisites"
+          color="warning"
+          variant="subtle"
+          size="md"
+        >
+          {{ prerequisitesSummary }}
+        </UBadge>
+        <UBadge
+          v-else
+          color="success"
+          variant="subtle"
+          size="md"
+        >
+          No Prerequisites
+        </UBadge>
+        <UBadge
+          v-if="isHalfFeat"
+          color="feat"
+          variant="subtle"
+          size="md"
+        >
+          Half-Feat
+        </UBadge>
+      </div>
+
+      <!-- Feat name -->
+      <h4 class="font-semibold text-gray-900 dark:text-white pr-6">
+        {{ feat.name }}
+      </h4>
+
+      <!-- View Details link -->
+      <button
+        data-testid="view-details-btn"
+        type="button"
+        class="text-xs text-feat-600 dark:text-feat-400 hover:underline self-start"
+        @click="handleViewDetails"
+      >
+        View Details
+      </button>
+    </div>
+  </div>
+</template>

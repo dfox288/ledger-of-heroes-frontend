@@ -71,6 +71,14 @@ function createStepRegistry(store: ReturnType<typeof useCharacterWizardStore>): 
       visible: () => true
     },
     {
+      name: 'feats',
+      label: 'Feats',
+      icon: 'i-heroicons-star',
+      visible: () => true,
+      // Skip during navigation if no feat choices to make
+      shouldSkip: () => !store.hasFeatChoices
+    },
+    {
       name: 'abilities',
       label: 'Abilities',
       icon: 'i-heroicons-chart-bar',
@@ -251,6 +259,10 @@ export function useCharacterWizard(options: UseCharacterWizardOptions = {}) {
 
       case 'background':
         return store.selections.background !== null
+
+      case 'feats':
+        // TODO: Check all required feat choices made
+        return true
 
       case 'abilities':
         // All scores should be set (not default 10s for standard array)

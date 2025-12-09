@@ -69,6 +69,7 @@ export interface CharacterSummaryData {
     spells: number
     optional_features: number
     asi: number
+    feats: number
   }
   creation_complete: boolean
   missing_required: string[]
@@ -278,6 +279,14 @@ export const useCharacterWizardStore = defineStore('characterWizard', () => {
   const hasLanguageChoices = computed(() => {
     if (!summary.value) return false
     return summary.value.pending_choices.languages > 0
+  })
+
+  /**
+   * Does this character have feat choices to make?
+   */
+  const hasFeatChoices = computed(() => {
+    if (!summary.value) return false
+    return (summary.value.pending_choices.feats ?? 0) > 0
   })
 
   /**
@@ -818,6 +827,7 @@ export const useCharacterWizardStore = defineStore('characterWizard', () => {
     isSpellcaster,
     hasProficiencyChoices,
     hasLanguageChoices,
+    hasFeatChoices,
     isComplete,
 
     // Computed: Filtering

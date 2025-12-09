@@ -3,7 +3,7 @@ import type { components } from '~/types/api/generated'
 type PendingChoice = components['schemas']['PendingChoiceResource']
 type PendingChoicesResponse = { data: components['schemas']['PendingChoicesResource'] }
 
-type ChoiceType = 'proficiency' | 'language' | 'equipment' | 'spell' | 'subclass' | 'asi_or_feat' | 'optional_feature' | 'expertise' | 'fighting_style' | 'hit_points' | 'ability_score'
+type ChoiceType = 'proficiency' | 'language' | 'equipment' | 'spell' | 'subclass' | 'asi_or_feat' | 'optional_feature' | 'expertise' | 'fighting_style' | 'hit_points' | 'ability_score' | 'feat'
 
 /**
  * Unified choices composable for character creation/advancement
@@ -84,7 +84,8 @@ export function useUnifiedChoices(characterId: Ref<number | null>) {
     subclass: choices.value.find(c => c.type === 'subclass') ?? null,
     asiOrFeat: choices.value.filter(c => c.type === 'asi_or_feat'),
     optionalFeatures: choices.value.filter(c => c.type === 'optional_feature'),
-    abilityScores: choices.value.filter(c => c.type === 'ability_score')
+    abilityScores: choices.value.filter(c => c.type === 'ability_score'),
+    feats: choices.value.filter(c => c.type === 'feat')
   }))
 
   /**
