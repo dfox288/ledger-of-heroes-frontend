@@ -276,6 +276,8 @@ git commit -m "feat: Add feature description
 - Detail 2"
 ```
 
+**NEVER use Claude or Anthropic bylines** in commits, PRs, or GitHub issues. No `Co-Authored-By: Claude`, no `Generated with Claude Code`, no AI attribution.
+
 ### Badge Size Standard
 
 **Always use `size="md"` for UBadge components.** The default `sm` size is too small to read comfortably on cards.
