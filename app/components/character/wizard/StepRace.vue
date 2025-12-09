@@ -18,14 +18,20 @@ const toast = useToast()
 // API client
 const { apiFetch } = useApi()
 
-// Fetch races filtered by selected sourcebooks
+// Fetch only base races (not subraces) filtered by selected sourcebooks
 const { data: races, pending: loadingRaces } = await useAsyncData(
   `builder-races-${sourceFilterString.value}`,
   () => {
-    const filter = sourceFilterString.value
-    const url = filter
-      ? `/races?per_page=100&filter=${encodeURIComponent(filter)}`
-      : '/races?per_page=100'
+    // Always filter for base races only (is_subrace=false)
+    const baseRaceFilter = 'is_subrace=false'
+    const sourceFilter = sourceFilterString.value
+
+    // Combine filters with AND if source filter exists
+    const combinedFilter = sourceFilter
+      ? `${baseRaceFilter} AND ${sourceFilter}`
+      : baseRaceFilter
+
+    const url = `/races?per_page=50&filter=${encodeURIComponent(combinedFilter)}`
     return apiFetch<{ data: Race[] }>(url)
   },
   {
@@ -44,14 +50,8 @@ const { open: detailModalOpen, item: detailRace, show: showDetails, close: close
 const confirmChangeModalOpen = ref(false)
 const pendingRaceChange = ref<Race | null>(null)
 
-// Filter to only show base races (not subraces)
-const baseRaces = computed((): Race[] => {
-  if (!races.value) return []
-  return races.value.filter((race: Race) => !race.parent_race)
-})
-
-// Search functionality
-const { searchQuery, filtered: filteredRaces } = useEntitySearch(baseRaces)
+// Search functionality - races are already filtered server-side to base races only
+const { searchQuery, filtered: filteredRaces } = useEntitySearch(races)
 
 // Validation: can proceed if race selected
 const canProceed = computed(() => localSelectedRace.value !== null)
@@ -114,9 +114,9 @@ async function confirmSelection() {
 
 // Initialize from store if already selected
 onMounted(() => {
-  if (selections.value.race) {
+  if (selections.value.race && races.value) {
     // Find the matching race in our loaded list (for proper reference equality)
-    localSelectedRace.value = baseRaces.value.find((r: Race) => r.id === selections.value.race?.id) ?? selections.value.race
+    localSelectedRace.value = races.value.find((r: Race) => r.id === selections.value.race?.id) ?? selections.value.race
   }
 })
 </script>

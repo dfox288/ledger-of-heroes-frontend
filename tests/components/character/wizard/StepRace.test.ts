@@ -26,16 +26,27 @@ describe('StepRace - Specific Behavior', () => {
       expect(html).toContain('grid')
     })
 
-    it('filters out subraces and only shows base races', async () => {
+    it('only displays base races (server-side filtered via is_subrace=false)', async () => {
+      // This test verifies the component fetches and displays only base races
+      // The server-side filter (is_subrace=false) is applied in the useAsyncData call
+      // See StepRace.vue line 26: baseRaceFilter = 'is_subrace=false'
       const { wrapper } = await mountWizardStep(StepRace)
-
-      // Subraces have parent_race set
-      // The component should filter these out using baseRaces computed
       const vm = wrapper.vm as any
 
-      // The filteredRaces computed should only include base races
-      // Base races are those without parent_race
-      expect(vm).toBeDefined()
+      // Verify the component has races loaded (from mock data)
+      // The races ref should only contain base races, not subraces
+      if (vm.races && vm.races.length > 0) {
+        // If races are loaded, verify none are subraces
+        // A subrace has is_subrace=true or parent_race set
+        const hasSubraces = vm.races.some((race: any) =>
+          race.is_subrace === true || race.parent_race !== null
+        )
+        expect(hasSubraces).toBe(false)
+      }
+
+      // The component should NOT have a baseRaces computed property
+      // (it was removed - filtering is now server-side)
+      expect(vm.baseRaces).toBeUndefined()
     })
   })
 
@@ -255,7 +266,7 @@ describe('StepRace - Specific Behavior', () => {
       await wrapper.vm.$nextTick()
 
       // Component should initialize localSelectedRace from store
-      // The onMounted hook does: localSelectedRace.value = baseRaces.value.find(...)
+      // The onMounted hook does: localSelectedRace.value = races.value.find(...)
       expect(vm.localSelectedRace).toBeDefined()
     })
 

@@ -161,10 +161,31 @@ npm run test:character-stress -- --count=5 --cleanup # Create and delete after t
 7. Run test suite         → Smallest relevant suite
 8. Run npm run lint:fix   → Fix linting
 9. Update CHANGELOG.md    → If user-facing
-10. Commit + Push         → Clear message with Claude footer
+10. Commit + Push         → Clear message, push to feature branch
 11. Create PR             → gh pr create with issue reference
 12. Close GitHub Issue    → Closes automatically via PR merge (or manual close)
 ```
+
+### Bug Fix Workflow (When Tests Already Exist)
+
+When fixing bugs in code that has existing tests:
+
+```
+1. Reproduce the bug      → Understand what's broken
+2. Check existing tests   → Do they test the buggy behavior?
+3. UPDATE TESTS FIRST     → Write/modify tests for CORRECT behavior
+4. Watch tests FAIL       → Confirms test catches the bug
+5. Fix the code           → Make tests pass
+6. Run test suite         → Verify no regressions
+7. Commit + Push          → Include "fix:" prefix
+```
+
+**Critical:** When fixing bugs, do NOT just make existing tests pass. If tests pass with buggy code, the tests are wrong. Update tests to verify the correct behavior BEFORE fixing the code.
+
+**Anti-pattern to avoid:**
+- ❌ Code doesn't match tests → Rewrite code to match tests
+- ❌ Tests pass but behavior is wrong → "Tests pass, ship it"
+- ✅ Code doesn't match tests → Determine correct behavior → Update tests → Fix code
 
 ### Branch Naming Convention
 
@@ -202,12 +223,23 @@ git checkout -b chore/issue-13-storybook-setup
 
 ## Standards
 
-### TDD is Mandatory
+### TDD Mandate
 
-**If tests aren't written FIRST, the feature ISN'T done.**
+**THIS IS NON-NEGOTIABLE.**
+
+### Rejection Criteria
+
+Your work will be **REJECTED** if:
+- Implementation code written before tests
+- Tests skipped ("it's simple")
+- Tests promised "later"
+- Tests written after implementation
+- "Manual testing is enough"
+
+### Vitest Syntax
 
 ```typescript
-// Write test FIRST
+// Vitest uses describe/it/expect
 describe('SpellCard', () => {
   it('displays spell name', async () => {
     const wrapper = await mountSuspended(SpellCard, {
@@ -217,14 +249,23 @@ describe('SpellCard', () => {
   })
 })
 
-// Then implement minimal code to pass
-// Then refactor while keeping tests green
+// Group related tests
+describe('spell filtering', () => {
+  it('filters by level', () => { /* ... */ })
+  it('filters by school', () => { /* ... */ })
+})
 ```
 
-**Rejection criteria:**
-- ❌ Implementation before tests
-- ❌ Tests skipped ("it's simple")
-- ❌ Tests written after implementation
+### Vitest Expectations
+
+```typescript
+expect(value).toBe(expected)           // Strict equality
+expect(value).toEqual(expected)        // Deep equality
+expect(array).toHaveLength(5)
+expect(wrapper).toBeDefined()
+expect(array).toContain('item')
+expect(string).toMatch(/pattern/)
+```
 
 ### Commit Convention
 
@@ -600,7 +641,7 @@ describe('Page Tests', () => {
 Before creating a PR:
 
 - [ ] Working on feature branch (`feature/issue-N-*`)
-- [ ] Tests written FIRST (TDD)
+- [ ] Tests written FIRST (TDD mandate)
 - [ ] All tests pass (domain suite + full suite)
 - [ ] TypeScript compiles (`npm run typecheck`)
 - [ ] ESLint passes (`npm run lint`)
@@ -609,6 +650,8 @@ Before creating a PR:
 - [ ] CHANGELOG.md updated (if user-facing)
 - [ ] Commits pushed to feature branch
 - [ ] **PR created with issue reference** (`Closes #N`)
+
+**If ANY checkbox is unchecked, work is NOT done.**
 
 ---
 
