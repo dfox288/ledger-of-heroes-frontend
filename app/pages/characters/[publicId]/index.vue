@@ -136,6 +136,15 @@ const tabItems = computed(() => {
             :currency="character.currency"
           />
 
+          <!-- Defensive Traits -->
+          <CharacterSheetDefensesPanel
+            :damage-resistances="stats.damage_resistances ?? []"
+            :damage-immunities="stats.damage_immunities ?? []"
+            :damage-vulnerabilities="stats.damage_vulnerabilities ?? []"
+            :condition-advantages="stats.condition_advantages ?? []"
+            :condition-immunities="stats.condition_immunities ?? []"
+          />
+
           <!-- Saving Throws and Skills -->
           <div class="grid lg:grid-cols-3 gap-6">
             <!-- Saving Throws + Death Saves stacked -->
