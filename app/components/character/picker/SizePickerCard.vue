@@ -21,22 +21,41 @@ const emit = defineEmits<{
 }>()
 
 /**
+ * Size-specific icons - keyed by size code
+ */
+const SIZE_ICONS: Record<string, string> = {
+  T: 'i-heroicons-bug-ant',
+  S: 'i-heroicons-arrow-down-circle',
+  M: 'i-heroicons-arrow-up-circle',
+  L: 'i-heroicons-arrows-pointing-out',
+  H: 'i-heroicons-building-office-2',
+  G: 'i-heroicons-globe-americas'
+}
+
+/**
+ * Size-specific descriptions - keyed by size code
+ */
+const SIZE_DESCRIPTIONS: Record<string, string> = {
+  T: 'Tiny creatures occupy a 2½ ft. space. Can move through hostile creatures\' spaces freely.',
+  S: 'Smaller stature. Can move through spaces occupied by larger creatures. Better for sneaking and fitting into tight spaces.',
+  M: 'Standard humanoid size. No special movement restrictions. Most equipment is designed for Medium creatures.',
+  L: 'Large creatures occupy a 10 ft. space. Can grapple larger targets but may have trouble fitting in tight spaces.',
+  H: 'Huge creatures occupy a 15 ft. space. Dominates the battlefield but severely limited in enclosed areas.',
+  G: 'Gargantuan creatures occupy a 20 ft. or larger space. Massive presence but cannot fit in most structures.'
+}
+
+/**
  * Get icon based on size
  */
 const sizeIcon = computed(() => {
-  return props.size.code === 'S'
-    ? 'i-heroicons-arrow-down-circle'
-    : 'i-heroicons-arrow-up-circle'
+  return SIZE_ICONS[props.size.code] ?? 'i-heroicons-question-mark-circle'
 })
 
 /**
  * Get description based on size
  */
 const sizeDescription = computed(() => {
-  if (props.size.code === 'S') {
-    return 'Smaller stature. Can move through spaces occupied by larger creatures. Better for sneaking and fitting into tight spaces.'
-  }
-  return 'Standard humanoid size. No special movement restrictions. Most equipment is designed for Medium creatures.'
+  return SIZE_DESCRIPTIONS[props.size.code] ?? 'Size description not available.'
 })
 
 /**
@@ -85,6 +104,8 @@ function handleCardClick() {
         <!-- Size Icon -->
         <div
           class="w-16 h-16 rounded-full flex items-center justify-center"
+          role="img"
+          :aria-label="`${size.name} size icon`"
           :class="[
             selected
               ? 'bg-race-100 dark:bg-race-800'

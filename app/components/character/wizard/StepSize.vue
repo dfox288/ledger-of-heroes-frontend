@@ -55,11 +55,16 @@ const currentlySelected = computed(() => {
 })
 
 // Get metadata note (e.g., "You are Small or Medium (your choice).")
-// Note: metadata type in generated schema is unknown[] but actual API returns object
+// Note: API schema declares metadata as unknown[] but actual API returns object with note field.
+// Runtime validation ensures we handle both cases safely.
 const choiceNote = computed(() => {
   const choice = sizeChoices.value[0]
-  const metadata = choice?.metadata as { note?: string } | undefined
-  return metadata?.note ?? null
+  const metadata = choice?.metadata
+  // Runtime check: metadata should be object, not array
+  if (metadata && typeof metadata === 'object' && !Array.isArray(metadata)) {
+    return (metadata as { note?: string }).note ?? null
+  }
+  return null
 })
 
 // Validation: can proceed if size is selected
@@ -77,6 +82,10 @@ function handleSizeSelect(size: SizeOption) {
 
 /**
  * Confirm selection and save via choices API
+ *
+ * Error handling strategy:
+ * - If resolveChoice fails: show error, don't proceed (choice not saved)
+ * - If syncWithBackend fails: log warning but proceed (choice IS saved, sync is best-effort)
  */
 async function confirmSelection() {
   if (!localSelectedSize.value || !sizeChoiceId.value) return
@@ -87,10 +96,17 @@ async function confirmSelection() {
     })
 
     // Sync with backend to update character data
-    await store.syncWithBackend()
+    // This is best-effort - if it fails, the choice is already saved
+    try {
+      await store.syncWithBackend()
+    } catch (syncErr) {
+      // Log but don't block - choice is already saved to backend
+      logger.warn('Sync failed but size choice was saved:', syncErr)
+    }
 
     nextStep()
   } catch (err) {
+    // Only show error if the actual choice save failed
     logger.error('Failed to save size selection:', err)
     toast.add({
       title: 'Save Failed',
@@ -147,6 +163,16 @@ onMounted(async () => {
         class="w-8 h-8 animate-spin text-race-500"
       />
     </div>
+
+    <!-- Empty State (no options available after loading completes) -->
+    <UAlert
+      v-else-if="!loading && sizeOptions.length === 0"
+      color="warning"
+      icon="i-heroicons-exclamation-triangle"
+      title="No size options available"
+      description="This race doesn't have size options to choose from. Please go back and select a different race, or contact support if you believe this is an error."
+      class="max-w-2xl mx-auto"
+    />
 
     <!-- Size Grid -->
     <div

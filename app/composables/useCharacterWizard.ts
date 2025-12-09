@@ -260,8 +260,8 @@ export function useCharacterWizard(options: UseCharacterWizardOptions = {}) {
         return store.selections.subrace !== null || !store.isSubraceRequired
 
       case 'size':
-        // Size step is auto-skipped if no choices, so always allow proceed
-        // The actual validation is in the step component
+        // Size validation happens in StepSize.vue (local selection required before confirm button enables)
+        // Navigation always allows proceeding - the step itself guards with shouldSkip when no choices exist
         return true
 
       case 'class':
