@@ -5,6 +5,8 @@ import type { Feat } from '~/types'
 import type { components } from '~/types/api/generated'
 import { useCharacterWizardStore } from '~/stores/characterWizard'
 import { useCharacterWizard } from '~/composables/useCharacterWizard'
+import { useWizardChoiceSelection } from '~/composables/useWizardChoiceSelection'
+import { useDetailModal } from '~/composables/useDetailModal'
 import { wizardErrors } from '~/utils/wizardErrors'
 
 type PendingChoice = components['schemas']['PendingChoiceResource']
@@ -38,16 +40,26 @@ onMounted(async () => {
 // Combined error state
 const error = computed(() => storeError.value || choicesError.value)
 
-// Local tracking for selected feats per choice
-// Map<choiceId, Set<full_slug>> - API expects full_slug format like "phb:alert"
-const selectedFeats = ref<Map<string, Set<string>>>(new Map())
-
-// Local cache for fetched feat options
-// Map<choiceId, Feat[]>
-const featOptions = ref<Map<string, Feat[]>>(new Map())
-
 // Feat choices (all feat-type choices regardless of source)
 const featChoices = computed(() => choicesByType.value.feats)
+
+// Use choice selection composable for core selection logic
+const {
+  localSelections: selectedFeats,
+  isSaving,
+  getSelectedCount,
+  isOptionSelected: isFeatSelectedById,
+  allComplete: canProceed,
+  handleToggle: handleFeatToggleById,
+  saveAllChoices
+} = useWizardChoiceSelection(
+  featChoices,
+  { resolveChoice }
+)
+
+// Local cache for fetched feat options (feats need custom fetching with source param)
+// Map<choiceId, Feat[]>
+const featOptions = ref<Map<string, Feat[]>>(new Map())
 
 /**
  * Determine feat source from choice ID
@@ -128,66 +140,22 @@ function getAvailableFeats(choice: PendingChoice): Feat[] {
 watch(featChoices, async (newVal) => {
   for (const choice of newVal) {
     await fetchFeatOptionsForChoice(choice)
-
-    // Initialize selected set from choice.selected (slugs from API)
-    if (!selectedFeats.value.has(choice.id)) {
-      const selected = new Set<string>()
-      for (const featSlug of choice.selected) {
-        // Ensure it's a string (slug)
-        selected.add(String(featSlug))
-      }
-      selectedFeats.value.set(choice.id, selected)
-    }
   }
 }, { immediate: true })
 
-// Get count of selected feats for a choice
-function getSelectedCount(choiceId: string): number {
-  return selectedFeats.value.get(choiceId)?.size ?? 0
-}
-
-// Check if a feat is selected in a choice (by full_slug)
+// Feat-specific wrappers for composable functions
 function isFeatSelected(choiceId: string, featSlug: string): boolean {
-  return selectedFeats.value.get(choiceId)?.has(featSlug) ?? false
+  return isFeatSelectedById(choiceId, featSlug)
 }
 
-// Check if a choice is at limit
 function isChoiceAtLimit(choice: PendingChoice): boolean {
   return getSelectedCount(choice.id) >= choice.quantity
 }
 
-// Toggle feat selection for a choice (uses full_slug for API compatibility)
 function handleFeatToggle(choice: PendingChoice, feat: Feat) {
-  // Clone the Set to trigger Vue reactivity (mutating existing Set won't trigger updates)
-  const selected = new Set(selectedFeats.value.get(choice.id) ?? [])
   const featSlug = feat.full_slug ?? feat.slug
-
-  if (selected.has(featSlug)) {
-    // Deselect
-    selected.delete(featSlug)
-  } else {
-    // Don't allow selecting more than limit
-    if (selected.size >= choice.quantity) return
-    selected.add(featSlug)
-  }
-
-  selectedFeats.value.set(choice.id, selected)
+  handleFeatToggleById(choice, featSlug)
 }
-
-// Validation: all requirements met?
-const canProceed = computed(() => {
-  // All required feat choices must be complete
-  const requiredChoices = featChoices.value.filter(c => c.required)
-  for (const choice of requiredChoices) {
-    const selectedCount = getSelectedCount(choice.id)
-    if (selectedCount < choice.quantity) return false
-  }
-  return true
-})
-
-// Saving state
-const isSaving = ref(false)
-const saveError = ref<string | null>(null)
 
 // Toast for user feedback
 const toast = useToast()
@@ -196,49 +164,25 @@ const toast = useToast()
  * Save feats and continue to next step
  */
 async function handleContinue() {
-  isSaving.value = true
-  saveError.value = null
-
   try {
-    // Resolve all feat choices
-    for (const choice of featChoices.value) {
-      const selected = selectedFeats.value.get(choice.id)
-      if (selected && selected.size > 0) {
-        await resolveChoice(choice.id, { selected: Array.from(selected) })
-      }
-    }
+    await saveAllChoices()
 
     // Sync store with backend to update hasFeatChoices flag
     await store.syncWithBackend()
 
     nextStep()
   } catch (e) {
-    saveError.value = e instanceof Error ? e.message : 'Failed to save feat choices'
     wizardErrors.choiceResolveFailed(e, toast, 'feat')
-  } finally {
-    isSaving.value = false
   }
 }
 
 // Modal state for feat details
-const detailModalOpen = ref(false)
-const detailFeat = ref<Feat | null>(null)
-
-/**
- * View feat details - open modal
- */
-function handleViewDetails(feat: Feat) {
-  detailFeat.value = feat
-  detailModalOpen.value = true
-}
-
-/**
- * Close detail modal
- */
-function handleCloseModal() {
-  detailModalOpen.value = false
-  detailFeat.value = null
-}
+const {
+  open: detailModalOpen,
+  item: detailFeat,
+  show: handleViewDetails,
+  close: handleCloseModal
+} = useDetailModal<Feat>()
 </script>
 
 <template>

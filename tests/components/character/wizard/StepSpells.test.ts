@@ -203,7 +203,7 @@ describe('StepSpells - Specific Behavior', () => {
   })
 
   describe('Spell Options', () => {
-    it('maintains spell options cache', async () => {
+    it('maintains local spell options cache for full Spell objects', async () => {
       const { wrapper } = await mountWizardStep(StepSpells, {
         storeSetup: (store) => {
           store.selections.class = wizardMockClasses.wizard
@@ -211,8 +211,9 @@ describe('StepSpells - Specific Behavior', () => {
       })
 
       const vm = wrapper.vm as any
-      expect(vm.spellOptions).toBeDefined()
-      expect(vm.spellOptions instanceof Map).toBe(true)
+      // Local cache needed for SpellCard display (needs full Spell objects with level, school, etc.)
+      expect(vm.spellOptionsCache).toBeDefined()
+      expect(vm.spellOptionsCache instanceof Map).toBe(true)
     })
 
     it('has fetchSpellOptionsForChoice method', async () => {
@@ -463,7 +464,7 @@ describe('StepSpells - Specific Behavior', () => {
       expect(vm.isSaving).toBe(false)
     })
 
-    it('tracks save error state', async () => {
+    it('error handling is managed by composable', async () => {
       const { wrapper } = await mountWizardStep(StepSpells, {
         storeSetup: (store) => {
           store.selections.class = wizardMockClasses.wizard
@@ -471,7 +472,9 @@ describe('StepSpells - Specific Behavior', () => {
       })
 
       const vm = wrapper.vm as any
-      expect(vm.saveError).toBeNull()
+      // Error handling is now done via try/catch in handleContinue
+      // and uses wizardErrors.choiceResolveFailed for toast notifications
+      expect(typeof vm.handleContinue).toBe('function')
     })
 
     it('has continue button', async () => {
