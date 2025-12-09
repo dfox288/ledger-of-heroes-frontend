@@ -213,7 +213,7 @@ describe('StepProficiencies - Specific Behavior', () => {
   })
 
   describe('Options Loading', () => {
-    it('maintains options cache', async () => {
+    it('has fetchOptionsIfNeeded function available', async () => {
       const { wrapper } = await mountWizardStep(StepProficiencies, {
         storeSetup: (store) => {
           store.selections.class = wizardMockClasses.fighter
@@ -221,11 +221,11 @@ describe('StepProficiencies - Specific Behavior', () => {
       })
 
       const vm = wrapper.vm as any
-      expect(vm.optionsCache).toBeDefined()
-      expect(vm.optionsCache instanceof Map).toBe(true)
+      // Function is provided by useWizardChoiceSelection composable
+      expect(typeof vm.fetchOptionsIfNeeded).toBe('function')
     })
 
-    it('tracks loading state per choice', async () => {
+    it('has isOptionsLoading function available', async () => {
       const { wrapper } = await mountWizardStep(StepProficiencies, {
         storeSetup: (store) => {
           store.selections.class = wizardMockClasses.fighter
@@ -233,8 +233,8 @@ describe('StepProficiencies - Specific Behavior', () => {
       })
 
       const vm = wrapper.vm as any
-      expect(vm.loadingOptions).toBeDefined()
-      expect(vm.loadingOptions instanceof Set).toBe(true)
+      // Function is provided by useWizardChoiceSelection composable
+      expect(typeof vm.isOptionsLoading).toBe('function')
     })
 
     it('checks if options are loading for a choice', async () => {
@@ -249,7 +249,7 @@ describe('StepProficiencies - Specific Behavior', () => {
       expect(vm.isOptionsLoading({ id: 'test' })).toBe(false)
     })
 
-    it('gets effective options from cache or inline', async () => {
+    it('has getDisplayOptions function available', async () => {
       const { wrapper } = await mountWizardStep(StepProficiencies, {
         storeSetup: (store) => {
           store.selections.class = wizardMockClasses.fighter
@@ -257,15 +257,8 @@ describe('StepProficiencies - Specific Behavior', () => {
       })
 
       const vm = wrapper.vm as any
-      expect(typeof vm.getEffectiveOptions).toBe('function')
-
-      // Inline options take precedence
-      const inlineChoice = { id: 'test', options: [{ id: 1, name: 'Option 1' }] }
-      expect(vm.getEffectiveOptions(inlineChoice)).toEqual([{ id: 1, name: 'Option 1' }])
-
-      // Empty array when no options and no cache
-      const emptyChoice = { id: 'test2', options: [] }
-      expect(vm.getEffectiveOptions(emptyChoice)).toEqual([])
+      // Function is provided by useWizardChoiceSelection composable
+      expect(typeof vm.getDisplayOptions).toBe('function')
     })
   })
 
@@ -281,7 +274,7 @@ describe('StepProficiencies - Specific Behavior', () => {
       expect(typeof vm.getDisplayOptions).toBe('function')
     })
 
-    it('transforms proficiency_type options to display format', async () => {
+    it('transforms options with inline data to display format', async () => {
       const { wrapper } = await mountWizardStep(StepProficiencies, {
         storeSetup: (store) => {
           store.selections.class = wizardMockClasses.fighter
@@ -290,13 +283,19 @@ describe('StepProficiencies - Specific Behavior', () => {
 
       const vm = wrapper.vm as any
 
-      // Mock a choice with proficiency_type options
-      vm.optionsCache.set('test', [
-        { proficiency_type: { id: 1, name: 'Gaming Set' } }
-      ])
+      // Test inline options transformation (actual format from API)
+      const choiceWithOptions = {
+        id: 'test',
+        options: [
+          { slug: 'athletics', name: 'Athletics' },
+          { full_slug: 'core:stealth', name: 'Stealth' }
+        ]
+      }
 
-      const result = vm.getDisplayOptions({ id: 'test', options: [] })
-      expect(result[0].name).toBe('Gaming Set')
+      const result = vm.getDisplayOptions(choiceWithOptions)
+      expect(result).toHaveLength(2)
+      expect(result[0].name).toBe('Athletics')
+      expect(result[1].name).toBe('Stealth')
     })
   })
 

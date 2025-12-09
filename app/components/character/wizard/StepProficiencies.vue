@@ -3,8 +3,7 @@
 import type { components } from '~/types/api/generated'
 import { useCharacterWizard } from '~/composables/useCharacterWizard'
 import { useCharacterWizardStore } from '~/stores/characterWizard'
-import { normalizeEndpoint } from '~/composables/useApi'
-import { logger } from '~/utils/logger'
+import { useWizardChoiceSelection } from '~/composables/useWizardChoiceSelection'
 import { wizardErrors } from '~/utils/wizardErrors'
 
 type ProficiencyResource = components['schemas']['ProficiencyResource']
@@ -37,68 +36,27 @@ onMounted(async () => {
   }
 })
 
-// Local state for tracking selections (before save)
-const localSelections = ref<Map<string, Set<string>>>(new Map())
-
-// Initialize local selections from already-resolved choices
-watch(() => choicesByType.value.proficiencies, (choices) => {
-  if (!choices) return
-  for (const choice of choices) {
-    if (choice.selected && choice.selected.length > 0) {
-      localSelections.value.set(choice.id, new Set(choice.selected))
-    }
-  }
-}, { immediate: true })
-
-// ══════════════════════════════════════════════════════════════
-// Options fetching for dynamic endpoints
-// ══════════════════════════════════════════════════════════════
-
-const optionsCache = ref<Map<string, unknown[]>>(new Map())
-const loadingOptions = ref<Set<string>>(new Set())
-
-async function fetchOptionsIfNeeded(choice: PendingChoice): Promise<void> {
-  // If options are already provided, no need to fetch
-  if (choice.options && choice.options.length > 0) return
-
-  // If no endpoint provided, nothing to fetch
-  if (!choice.options_endpoint) return
-
-  // Check cache
-  if (optionsCache.value.has(choice.id)) return
-
-  // Already loading
-  if (loadingOptions.value.has(choice.id)) return
-
-  loadingOptions.value.add(choice.id)
-
-  try {
-    // Normalize endpoint: backend returns /api/v1/... but Nitro expects /...
-    const endpoint = normalizeEndpoint(choice.options_endpoint)
-    const response = await apiFetch<{ data: unknown[] }>(endpoint)
-    if (response?.data) {
-      optionsCache.value.set(choice.id, response.data)
-    }
-  } catch (err) {
-    logger.warn(`Failed to fetch options for choice ${choice.id}:`, err)
-  } finally {
-    loadingOptions.value.delete(choice.id)
-  }
-}
-
-function getEffectiveOptions(choice: PendingChoice): unknown[] {
-  if (choice.options && choice.options.length > 0) {
-    return choice.options
-  }
-  return optionsCache.value.get(choice.id) ?? []
-}
-
-function isOptionsLoading(choice: PendingChoice): boolean {
-  return loadingOptions.value.has(choice.id)
-}
+// Use choice selection composable for core selection logic
+const {
+  localSelections,
+  isSaving,
+  getSelectedCount,
+  isOptionSelected,
+  isOptionDisabled,
+  getDisabledReason,
+  allComplete: allProficiencyChoicesComplete,
+  handleToggle: handleOptionToggle,
+  saveAllChoices,
+  fetchOptionsIfNeeded,
+  getDisplayOptions,
+  isOptionsLoading
+} = useWizardChoiceSelection(
+  computed(() => choicesByType.value.proficiencies),
+  { resolveChoice }
+)
 
 // ══════════════════════════════════════════════════════════════
-// Granted Proficiencies
+// Granted Proficiencies (Step-specific display logic)
 // ══════════════════════════════════════════════════════════════
 
 interface GrantedProficiencyGroup {
@@ -250,7 +208,6 @@ const proficiencyChoicesBySource = computed<ChoicesBySource[]>(() => {
     sources.push({
       source: 'class',
       label: 'From Class',
-      // Use source_name from API (reliable after reload) with fallback to store
       entityName: bySource.class[0]?.source_name ?? selections.value.class?.name ?? 'Unknown',
       choices: bySource.class
     })
@@ -291,67 +248,8 @@ watch(proficiencyChoicesBySource, async (sources) => {
 }, { immediate: true })
 
 // ══════════════════════════════════════════════════════════════
-// Selection Logic
+// Choice label helper
 // ══════════════════════════════════════════════════════════════
-
-function getSelectedCount(choiceId: string): number {
-  return localSelections.value.get(choiceId)?.size ?? 0
-}
-
-function isOptionSelected(choiceId: string, optionId: string | number): boolean {
-  const selected = localSelections.value.get(choiceId)
-  if (!selected) return false
-  return selected.has(String(optionId))
-}
-
-function handleOptionToggle(choice: PendingChoice, optionId: string | number) {
-  const id = String(optionId)
-  const current = localSelections.value.get(choice.id) ?? new Set<string>()
-  const updated = new Set(current)
-
-  if (updated.has(id)) {
-    updated.delete(id)
-  } else {
-    // Don't allow selection if quantity limit reached
-    if (updated.size >= choice.quantity) return
-    updated.add(id)
-  }
-
-  localSelections.value.set(choice.id, updated)
-}
-
-// ══════════════════════════════════════════════════════════════
-// Option Display Helpers
-// ══════════════════════════════════════════════════════════════
-
-interface OptionDisplay {
-  id: string // Slug identifier (full_slug or slug) - see #318
-  name: string
-}
-
-function getDisplayOptions(choice: PendingChoice): OptionDisplay[] {
-  const options = getEffectiveOptions(choice)
-  return options.map((rawOpt: unknown) => {
-    const opt = rawOpt as Record<string, unknown>
-
-    // Handle nested skill options (from endpoint fetch)
-    if (opt.skill) {
-      const skill = opt.skill as { slug: string, name: string }
-      return { id: skill.slug, name: skill.name }
-    }
-
-    // Handle nested proficiency_type options (from endpoint fetch)
-    if (opt.proficiency_type) {
-      const profType = opt.proficiency_type as { slug: string, name: string }
-      return { id: profType.slug, name: profType.name }
-    }
-
-    // Handle flat options from API (type, full_slug, slug, name format)
-    // Use full_slug for unique identification (includes source prefix) - see #318
-    const slug = (opt.full_slug as string) ?? (opt.slug as string)
-    return { id: slug, name: (opt.name as string) ?? 'Unknown' }
-  })
-}
 
 function getChoiceLabel(choice: PendingChoice): string {
   const subtype = choice.subtype ?? 'proficiency'
@@ -372,46 +270,14 @@ function getChoiceLabel(choice: PendingChoice): string {
 }
 
 // ══════════════════════════════════════════════════════════════
-// Save Logic
+// Navigation
 // ══════════════════════════════════════════════════════════════
-
-const allProficiencyChoicesComplete = computed(() => {
-  const choices = choicesByType.value.proficiencies
-  if (!choices || choices.length === 0) return true
-
-  for (const choice of choices) {
-    const selectedCount = getSelectedCount(choice.id)
-    if (selectedCount < choice.quantity) {
-      return false
-    }
-  }
-
-  return true
-})
-
-const isSaving = ref(false)
 
 async function handleContinue() {
   if (!allProficiencyChoicesComplete.value) return
 
-  isSaving.value = true
-
   try {
-    // Resolve each choice with local selections
-    const choices = choicesByType.value.proficiencies ?? []
-    for (const choice of choices) {
-      const selected = localSelections.value.get(choice.id)
-      if (!selected || selected.size === 0) continue
-
-      // Only resolve if there are new selections (different from already selected)
-      const currentSelected = new Set(choice.selected)
-      const hasChanges = selected.size !== currentSelected.size
-        || [...selected].some(id => !currentSelected.has(id))
-
-      if (hasChanges) {
-        await resolveChoice(choice.id, { selected: Array.from(selected) })
-      }
-    }
+    await saveAllChoices()
 
     // Sync store with backend to update hasProficiencyChoices
     await store.syncWithBackend()
@@ -420,8 +286,6 @@ async function handleContinue() {
     await nextStep()
   } catch (err) {
     wizardErrors.choiceResolveFailed(err, toast, 'proficiency')
-  } finally {
-    isSaving.value = false
   }
 }
 </script>
@@ -559,8 +423,10 @@ async function handleContinue() {
               class="skill-option p-3 rounded-lg border text-left transition-all"
               :class="{
                 'border-primary bg-primary/10': isOptionSelected(choice.id, option.id),
-                'border-gray-200 dark:border-gray-700 hover:border-primary/50': !isOptionSelected(choice.id, option.id)
+                'border-gray-200 dark:border-gray-700 hover:border-primary/50': !isOptionSelected(choice.id, option.id) && !isOptionDisabled(choice.id, option.id),
+                'border-gray-200 dark:border-gray-700 opacity-50 cursor-not-allowed': isOptionDisabled(choice.id, option.id)
               }"
+              :disabled="isOptionDisabled(choice.id, option.id)"
               @click="handleOptionToggle(choice, option.id)"
             >
               <div class="flex items-center gap-2">
@@ -574,6 +440,12 @@ async function handleContinue() {
                 />
                 <span class="font-medium">{{ option.name }}</span>
               </div>
+              <p
+                v-if="getDisabledReason(choice.id, option.id)"
+                class="text-xs text-gray-400 dark:text-gray-500 mt-1 ml-7"
+              >
+                {{ getDisabledReason(choice.id, option.id) }}
+              </p>
             </button>
           </div>
         </div>
