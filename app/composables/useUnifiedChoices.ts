@@ -50,7 +50,21 @@ export function useUnifiedChoices(characterId: Ref<number | null>) {
   /**
    * Fetch all pending choices (optionally filtered by type)
    *
+   * When a type filter is provided, this function MERGES the results into
+   * the existing choices array (replacing only choices of that type).
+   * This allows parallel fetchChoices calls without race conditions.
+   *
+   * Without a type filter, all choices are replaced (full refresh).
+   *
    * @param type - Optional choice type filter
+   *
+   * @example
+   * // Safe parallel fetching (no race condition)
+   * await Promise.all([
+   *   fetchChoices('equipment'),      // Merges equipment choices
+   *   fetchChoices('equipment_mode')  // Merges equipment_mode choices
+   * ])
+   * // Both choice types are now in choices.value
    */
   async function fetchChoices(type?: ChoiceType) {
     if (!characterId.value) return
@@ -63,7 +77,17 @@ export function useUnifiedChoices(characterId: Ref<number | null>) {
       const response = await apiFetch<PendingChoicesResponse>(
         `/characters/${characterId.value}/pending-choices${query}`
       )
-      choices.value = response.data.choices
+
+      if (type) {
+        // Filtered fetch: merge results (remove old choices of this type, add new ones)
+        // This prevents race conditions when multiple fetchChoices run in parallel
+        const otherChoices = choices.value.filter(c => c.type !== type)
+        choices.value = [...otherChoices, ...response.data.choices]
+      } else {
+        // Unfiltered fetch: replace all choices
+        choices.value = response.data.choices
+      }
+
       summary.value = response.data.summary
     } catch (e) {
       error.value = e instanceof Error ? e.message : 'Failed to fetch choices'

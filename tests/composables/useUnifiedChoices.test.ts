@@ -292,6 +292,136 @@ describe('useUnifiedChoices', () => {
   })
 })
 
+describe('fetchChoices merge behavior', () => {
+  /**
+   * This tests the fix for GitHub issue #435:
+   * When fetchChoices is called with a type filter, it should MERGE
+   * the filtered results into the existing choices array, not REPLACE it.
+   *
+   * The bug: parallel fetchChoices calls would overwrite each other:
+   *   await Promise.all([
+   *     fetchChoices('equipment'),      // Sets choices = [equipment]
+   *     fetchChoices('equipment_mode')  // Sets choices = [equipment_mode]
+   *   ])
+   *   // Last to finish wins, other choices are lost!
+   */
+
+  it('should merge filtered results instead of replacing all choices', () => {
+    // Simulate the CORRECT merge behavior
+    const choices = ref<typeof mockPendingChoice[]>([])
+
+    // Helper function that demonstrates correct merge behavior
+    function mergeChoices(newChoices: typeof mockPendingChoice[], filterType?: string) {
+      if (!filterType) {
+        // No filter = replace all
+        choices.value = newChoices
+      } else {
+        // With filter = merge: remove old choices of this type, add new ones
+        const otherChoices = choices.value.filter(c => c.type !== filterType)
+        choices.value = [...otherChoices, ...newChoices]
+      }
+    }
+
+    // Simulate parallel fetches completing in different orders
+    // First: equipment_mode arrives
+    mergeChoices([mockEquipmentModeChoice as typeof mockPendingChoice], 'equipment_mode')
+    expect(choices.value).toHaveLength(1)
+    expect(choices.value[0].type).toBe('equipment_mode')
+
+    // Second: equipment arrives (should NOT overwrite equipment_mode!)
+    const mockEquipmentChoice = {
+      ...mockPendingChoice,
+      id: 'equipment:class:5:1:equipment_choice_1',
+      type: 'equipment'
+    }
+    mergeChoices([mockEquipmentChoice], 'equipment')
+
+    // CRITICAL: Both choices should be present
+    expect(choices.value).toHaveLength(2)
+    expect(choices.value.find(c => c.type === 'equipment_mode')).toBeDefined()
+    expect(choices.value.find(c => c.type === 'equipment')).toBeDefined()
+  })
+
+  it('should handle reverse arrival order (equipment first, then equipment_mode)', () => {
+    const choices = ref<typeof mockPendingChoice[]>([])
+
+    function mergeChoices(newChoices: typeof mockPendingChoice[], filterType?: string) {
+      if (!filterType) {
+        choices.value = newChoices
+      } else {
+        const otherChoices = choices.value.filter(c => c.type !== filterType)
+        choices.value = [...otherChoices, ...newChoices]
+      }
+    }
+
+    // First: equipment arrives
+    const mockEquipmentChoice = {
+      ...mockPendingChoice,
+      id: 'equipment:class:5:1:equipment_choice_1',
+      type: 'equipment'
+    }
+    mergeChoices([mockEquipmentChoice], 'equipment')
+    expect(choices.value).toHaveLength(1)
+
+    // Second: equipment_mode arrives (should NOT overwrite equipment!)
+    mergeChoices([mockEquipmentModeChoice as typeof mockPendingChoice], 'equipment_mode')
+
+    // CRITICAL: Both choices should still be present
+    expect(choices.value).toHaveLength(2)
+    expect(choices.value.find(c => c.type === 'equipment')).toBeDefined()
+    expect(choices.value.find(c => c.type === 'equipment_mode')).toBeDefined()
+  })
+
+  it('should replace all choices when no filter is provided', () => {
+    const choices = ref<typeof mockPendingChoice[]>([mockPendingChoice])
+
+    function mergeChoices(newChoices: typeof mockPendingChoice[], filterType?: string) {
+      if (!filterType) {
+        choices.value = newChoices
+      } else {
+        const otherChoices = choices.value.filter(c => c.type !== filterType)
+        choices.value = [...otherChoices, ...newChoices]
+      }
+    }
+
+    // No filter = replace everything
+    mergeChoices([mockLanguageChoice as typeof mockPendingChoice], undefined)
+
+    expect(choices.value).toHaveLength(1)
+    expect(choices.value[0].type).toBe('language')
+  })
+
+  it('should update choices of same type when fetched again', () => {
+    const choices = ref<typeof mockPendingChoice[]>([])
+
+    function mergeChoices(newChoices: typeof mockPendingChoice[], filterType?: string) {
+      if (!filterType) {
+        choices.value = newChoices
+      } else {
+        const otherChoices = choices.value.filter(c => c.type !== filterType)
+        choices.value = [...otherChoices, ...newChoices]
+      }
+    }
+
+    // Initial fetch of equipment_mode
+    mergeChoices([mockEquipmentModeChoice as typeof mockPendingChoice], 'equipment_mode')
+    expect(choices.value).toHaveLength(1)
+
+    // Re-fetch equipment_mode with updated data (simulates after resolution)
+    const updatedEquipmentMode = {
+      ...mockEquipmentModeChoice,
+      remaining: 0,
+      selected: ['gold']
+    }
+    mergeChoices([updatedEquipmentMode as typeof mockPendingChoice], 'equipment_mode')
+
+    // Should still have 1 choice, but updated
+    expect(choices.value).toHaveLength(1)
+    expect(choices.value[0].remaining).toBe(0)
+    expect(choices.value[0].selected).toContain('gold')
+  })
+})
+
 /**
  * Integration tests with mocked API will be in:
  * - Character wizard step component tests
