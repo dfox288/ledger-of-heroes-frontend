@@ -5,7 +5,6 @@ import type { Feat } from '~/types'
 import type { components } from '~/types/api/generated'
 import { useCharacterWizardStore } from '~/stores/characterWizard'
 import { useCharacterWizard } from '~/composables/useCharacterWizard'
-import { normalizeEndpoint } from '~/composables/useApi'
 import { logger } from '~/utils/logger'
 
 type PendingChoice = components['schemas']['PendingChoiceResource']
@@ -50,13 +49,27 @@ const featOptions = ref<Map<string, Feat[]>>(new Map())
 // Feat choices (all feat-type choices regardless of source)
 const featChoices = computed(() => choicesByType.value.feats)
 
-// Fetch options for a choice if not already fetched
+/**
+ * Determine feat source from choice ID
+ * Choice IDs follow pattern: feat|{source}|... (e.g., feat|race|phb:human-variant|1|bonus_feat)
+ */
+function getFeatSourceFromChoiceId(choiceId: string): 'race' | 'asi' {
+  const parts = choiceId.split('|')
+  const source = parts[1] // Second part is the source
+  return source === 'race' ? 'race' : 'asi'
+}
+
+// Fetch options for a choice using the character-specific available-feats endpoint
 async function fetchFeatOptionsForChoice(choice: PendingChoice) {
-  if (!choice.options_endpoint || featOptions.value.has(choice.id)) return
+  if (featOptions.value.has(choice.id)) return
+  if (!characterId.value) return
 
   try {
-    // Normalize endpoint: backend returns /api/v1/... but Nitro expects /...
-    const endpoint = normalizeEndpoint(choice.options_endpoint)
+    // Use new available-feats endpoint with source parameter
+    // For race feats: excludes ability score prerequisite feats (RAW compliant)
+    // For ASI feats: checks all prerequisites against current character stats
+    const source = getFeatSourceFromChoiceId(choice.id)
+    const endpoint = `/characters/${characterId.value}/available-feats?source=${source}&per_page=200`
     const response = await apiFetch<{ data: Feat[] }>(endpoint)
     featOptions.value.set(choice.id, response.data)
   } catch (e) {
