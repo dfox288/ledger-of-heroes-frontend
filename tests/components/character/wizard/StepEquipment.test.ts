@@ -550,6 +550,30 @@ describe('StepEquipment - Specific Behavior', () => {
         // Without startingWealth data, rollForGold returns early
         expect(vm.rolledGoldAmount).toBeNull()
       })
+
+      it('resets gold state when switching from gold to equipment mode', async () => {
+        const { wrapper } = await mountWizardStep(StepEquipment, {
+          storeSetup: (store) => {
+            store.selections.class = wizardMockClasses.fighter
+          }
+        })
+
+        const vm = wrapper.vm as any
+
+        // Set to gold mode with a rolled amount
+        vm.equipmentMode = 'gold'
+        vm.rolledGoldAmount = 150
+        vm.goldCalculationMethod = 'roll'
+        await wrapper.vm.$nextTick()
+
+        // Switch back to equipment mode
+        vm.equipmentMode = 'equipment'
+        await wrapper.vm.$nextTick()
+
+        // State should be reset
+        expect(vm.rolledGoldAmount).toBeNull()
+        expect(vm.goldCalculationMethod).toBe('average')
+      })
     })
 
     describe('Equipment Mode Validation', () => {

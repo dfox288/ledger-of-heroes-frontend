@@ -87,7 +87,7 @@ function rollForGold(): void {
   const match = dice.match(/(\d+)d(\d+)/)
   if (!match || !match[1] || !match[2]) {
     logger.error('Invalid dice notation:', dice)
-    rolledGoldAmount.value = startingWealth.value.average
+    // Don't set rolled amount on invalid dice - keep using average method
     return
   }
 
@@ -100,10 +100,21 @@ function rollForGold(): void {
     total += Math.floor(Math.random() * sides) + 1
   }
 
-  // Apply multiplier
+  // Apply multiplier and update state
   rolledGoldAmount.value = total * multiplier
   goldCalculationMethod.value = 'roll'
 }
+
+/**
+ * Reset gold state when switching back to equipment mode
+ * This prevents stale roll data from persisting
+ */
+watch(equipmentMode, (newMode) => {
+  if (newMode === 'equipment') {
+    rolledGoldAmount.value = null
+    goldCalculationMethod.value = 'average'
+  }
+})
 
 /**
  * Determine if class equipment section should be shown
@@ -403,10 +414,15 @@ function formatPackContentItem(content: PackContentResource): string {
           </p>
         </div>
 
-        <div class="flex gap-2">
+        <div
+          class="flex gap-2"
+          role="group"
+          aria-label="Starting equipment choice"
+        >
           <UButton
             :color="equipmentMode === 'equipment' ? 'primary' : 'neutral'"
             :variant="equipmentMode === 'equipment' ? 'solid' : 'outline'"
+            :aria-pressed="equipmentMode === 'equipment'"
             size="sm"
             @click="equipmentMode = 'equipment'"
           >
@@ -419,6 +435,7 @@ function formatPackContentItem(content: PackContentResource): string {
           <UButton
             :color="equipmentMode === 'gold' ? 'primary' : 'neutral'"
             :variant="equipmentMode === 'gold' ? 'solid' : 'outline'"
+            :aria-pressed="equipmentMode === 'gold'"
             size="sm"
             @click="equipmentMode = 'gold'"
           >
