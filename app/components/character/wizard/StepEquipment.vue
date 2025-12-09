@@ -9,6 +9,45 @@ import { wizardErrors } from '~/utils/wizardErrors'
 type EntityItemResource = components['schemas']['EntityItemResource']
 type PackContentResource = components['schemas']['PackContentResource']
 
+/**
+ * Starting wealth metadata structure from backend equipment_mode choice
+ */
+interface StartingWealthData {
+  dice: string
+  multiplier: number
+  average: number
+  formula: string
+}
+
+/**
+ * Metadata structure for equipment_mode choice
+ * gold_amount is present when the choice has been resolved with gold mode
+ */
+interface EquipmentModeMetadata {
+  starting_wealth?: StartingWealthData
+  gold_amount?: number
+}
+
+/**
+ * Type guard to validate equipment_mode choice metadata
+ * Ensures the metadata has the expected structure before use
+ */
+function isEquipmentModeMetadata(metadata: unknown): metadata is EquipmentModeMetadata {
+  if (!metadata || typeof metadata !== 'object') return false
+  const meta = metadata as Record<string, unknown>
+  // starting_wealth is optional but if present must have required fields
+  if (meta.starting_wealth !== undefined) {
+    const sw = meta.starting_wealth
+    if (!sw || typeof sw !== 'object') return false
+    const swObj = sw as Record<string, unknown>
+    if (typeof swObj.dice !== 'string') return false
+    if (typeof swObj.multiplier !== 'number') return false
+    if (typeof swObj.average !== 'number') return false
+    if (typeof swObj.formula !== 'string') return false
+  }
+  return true
+}
+
 const store = useCharacterWizardStore()
 const { selections } = storeToRefs(store)
 const { nextStep } = useCharacterWizard()
@@ -64,20 +103,22 @@ const hasEquipmentModeChoice = computed(() => !!equipmentModeChoice.value)
 
 /**
  * Get starting wealth data from backend choice metadata (preferred source)
+ * Uses type guard to validate metadata structure before accessing
  */
-const backendStartingWealth = computed(() => {
-  const metadata = equipmentModeChoice.value?.metadata as { starting_wealth?: {
-    dice: string
-    multiplier: number
-    average: number
-    formula: string
-  } } | undefined
-  return metadata?.starting_wealth ?? null
+const backendStartingWealth = computed((): StartingWealthData | null => {
+  const metadata = equipmentModeChoice.value?.metadata
+  if (!isEquipmentModeMetadata(metadata)) return null
+  return metadata.starting_wealth ?? null
 })
 
 /**
  * Check if starting wealth option is available
  * True if backend provides equipment_mode choice OR class has starting_wealth data
+ *
+ * FALLBACK PATTERN: We check both sources because:
+ * 1. Backend choice is authoritative when present (includes formatted formula)
+ * 2. Class data fallback ensures UI works during initial load before choices fetch
+ * 3. Maintains backward compatibility if backend doesn't return the choice
  */
 const hasStartingWealth = computed(() => {
   return hasEquipmentModeChoice.value || !!selections.value.class?.starting_wealth
@@ -85,9 +126,12 @@ const hasStartingWealth = computed(() => {
 
 /**
  * Get the starting wealth data (prefers backend choice metadata over class data)
- * Backend metadata includes formatted formula for display
+ *
+ * FALLBACK PATTERN: Same as hasStartingWealth - backend is authoritative but
+ * class data provides fallback for initial render and backward compatibility.
+ * Backend metadata includes formatted formula string for better display.
  */
-const startingWealth = computed(() => {
+const startingWealth = computed((): StartingWealthData | null => {
   return backendStartingWealth.value ?? selections.value.class?.starting_wealth ?? null
 })
 
@@ -176,11 +220,11 @@ function initializeFromBackendChoice() {
   }
 
   // Restore rolled gold amount if previously saved (gold mode only)
-  // The backend may store gold_amount in metadata when resolving the choice
-  if (selected === 'gold') {
-    const metadata = choice.metadata as { gold_amount?: number } | undefined
-    if (metadata?.gold_amount) {
-      rolledGoldAmount.value = metadata.gold_amount
+  // The backend stores gold_amount in metadata when the choice was resolved
+  if (selected === 'gold' && isEquipmentModeMetadata(choice.metadata)) {
+    const goldAmountFromBackend = choice.metadata.gold_amount
+    if (goldAmountFromBackend !== undefined) {
+      rolledGoldAmount.value = goldAmountFromBackend
       goldCalculationMethod.value = 'roll'
     }
   }
@@ -350,11 +394,20 @@ async function handleContinue() {
   try {
     // 1. Save equipment_mode choice FIRST (this affects what equipment choices exist)
     if (hasEquipmentModeChoice.value) {
-      await saveEquipmentModeChoice()
+      try {
+        await saveEquipmentModeChoice()
+      } catch (err) {
+        logger.error('Failed to save equipment mode choice:', err)
+        wizardErrors.choiceResolveFailed(err, toast, 'equipment mode')
+        return
+      }
 
       // If gold mode selected, skip equipment choices entirely
       // Backend handles clearing class equipment and granting gold
       if (equipmentMode.value === 'gold') {
+        // Explicitly refetch to verify backend cleared equipment choices
+        // This ensures consistent state before proceeding
+        await fetchChoices('equipment')
         nextStep()
         return
       }
