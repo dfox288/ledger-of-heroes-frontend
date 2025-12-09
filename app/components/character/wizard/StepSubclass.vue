@@ -34,7 +34,10 @@ const { data: subclasses, pending: loadingSubclasses } = await useAsyncData(
     if (sourceFilterString.value && store.selectedSources.length > 0) {
       return response.data.filter((subclass) => {
         // No source info = include by default (data incomplete, don't hide)
-        if (!subclass.source) return true
+        if (!subclass.source) {
+          logger.warn(`Subclass "${subclass.name}" has missing source info`)
+          return true
+        }
         return store.selectedSources.includes(subclass.source.code)
       })
     }
