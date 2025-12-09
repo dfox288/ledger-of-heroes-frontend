@@ -2,7 +2,7 @@
 
 **Most documentation has moved to the wrapper project.**
 
-See: `../dnd-rulebook-project/docs/frontend/`
+See: `../wrapper/docs/frontend/`
 
 ## What's Here
 
@@ -17,13 +17,13 @@ All new plans, handovers, proposals, and reference docs go to the wrapper repo:
 
 ```bash
 # Plans
-../dnd-rulebook-project/docs/frontend/plans/YYYY-MM-DD-topic-design.md
+../wrapper/docs/frontend/plans/YYYY-MM-DD-topic-design.md
 
 # Handovers
-../dnd-rulebook-project/docs/frontend/handovers/SESSION-HANDOVER-YYYY-MM-DD-topic.md
+../wrapper/docs/frontend/handovers/SESSION-HANDOVER-YYYY-MM-DD-topic.md
 
 # After writing a handover, update the symlink:
-ln -sf ../../dnd-rulebook-project/docs/frontend/handovers/SESSION-HANDOVER-YYYY-MM-DD-topic.md LATEST-HANDOVER.md
+ln -sf ../../wrapper/docs/frontend/handovers/SESSION-HANDOVER-YYYY-MM-DD-topic.md LATEST-HANDOVER.md
 ```
 
 ## Why Centralized?

@@ -7,13 +7,13 @@ Check for open issues assigned to this team (frontend).
 Run this command to check your inbox:
 
 ```bash
-gh issue list --repo dfox288/dnd-rulebook-project --label "frontend" --state open
+gh issue list --repo dfox288/ledger-of-heroes --label "frontend" --state open
 ```
 
 Also check issues assigned to "both" teams:
 
 ```bash
-gh issue list --repo dfox288/dnd-rulebook-project --label "both" --state open
+gh issue list --repo dfox288/ledger-of-heroes --label "both" --state open
 ```
 
 Summarize:

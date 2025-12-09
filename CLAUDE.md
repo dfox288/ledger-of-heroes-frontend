@@ -4,7 +4,7 @@ This file provides guidance to Claude Code when working with this repository.
 
 ## Overview
 
-Nuxt 4.x frontend for D&D 5e Compendium. Consumes REST API from `../importer` (Laravel backend).
+Nuxt 4.x frontend for D&D 5e Compendium. Consumes REST API from `../backend` (Laravel backend).
 
 **Tech Stack:** Nuxt 4.x | NuxtUI 4.x | TypeScript | Vitest | Playwright | Pinia | Docker
 
@@ -16,7 +16,7 @@ Nuxt 4.x frontend for D&D 5e Compendium. Consumes REST API from `../importer` (L
 - `docs/PROJECT-STATUS.md` - Metrics and current status
 - `docs/LATEST-HANDOVER.md` - Latest session handover (symlink to wrapper)
 
-**Tasks & Issues:** [GitHub Issues](https://github.com/dfox288/dnd-rulebook-project/issues) (shared with backend)
+**Tasks & Issues:** [GitHub Issues](https://github.com/dfox288/ledger-of-heroes/issues) (shared with backend)
 
 ---
 
@@ -25,7 +25,7 @@ Nuxt 4.x frontend for D&D 5e Compendium. Consumes REST API from `../importer` (L
 **All documentation (plans, handovers, proposals, reference) lives in the wrapper repo:**
 
 ```
-../dnd-rulebook-project/docs/frontend/
+../wrapper/docs/frontend/
 ├── handovers/   # Session handovers
 ├── plans/       # Implementation plans
 ├── proposals/   # API enhancement proposals
@@ -35,19 +35,19 @@ Nuxt 4.x frontend for D&D 5e Compendium. Consumes REST API from `../importer` (L
 
 | Doc Type | Write To |
 |----------|----------|
-| **Plans** | `../dnd-rulebook-project/docs/frontend/plans/YYYY-MM-DD-topic-design.md` |
-| **Handovers** | `../dnd-rulebook-project/docs/frontend/handovers/SESSION-HANDOVER-YYYY-MM-DD-topic.md` |
-| **Proposals** | `../dnd-rulebook-project/docs/frontend/proposals/` |
-| **Reference** | `../dnd-rulebook-project/docs/frontend/reference/` |
+| **Plans** | `../wrapper/docs/frontend/plans/YYYY-MM-DD-topic-design.md` |
+| **Handovers** | `../wrapper/docs/frontend/handovers/SESSION-HANDOVER-YYYY-MM-DD-topic.md` |
+| **Proposals** | `../wrapper/docs/frontend/proposals/` |
+| **Reference** | `../wrapper/docs/frontend/reference/` |
 
 **Stays local:** `docs/PROJECT-STATUS.md`, `docs/LATEST-HANDOVER.md` (symlink), `docs/README.md`
 
 ### Session Handover Workflow
 
-1. Write handover to wrapper: `../dnd-rulebook-project/docs/frontend/handovers/SESSION-HANDOVER-YYYY-MM-DD-topic.md`
+1. Write handover to wrapper: `../wrapper/docs/frontend/handovers/SESSION-HANDOVER-YYYY-MM-DD-topic.md`
 2. Update symlink:
    ```bash
-   ln -sf ../../dnd-rulebook-project/docs/frontend/handovers/SESSION-HANDOVER-YYYY-MM-DD-topic.md docs/LATEST-HANDOVER.md
+   ln -sf ../../wrapper/docs/frontend/handovers/SESSION-HANDOVER-YYYY-MM-DD-topic.md docs/LATEST-HANDOVER.md
    ```
 3. Commit to BOTH repos:
    - Wrapper repo: the new handover file
@@ -57,19 +57,19 @@ Nuxt 4.x frontend for D&D 5e Compendium. Consumes REST API from `../importer` (L
 
 ## Cross-Project Coordination
 
-Use GitHub Issues in `dfox288/dnd-rulebook-project` for bugs, API issues, and cross-cutting concerns.
+Use GitHub Issues in `dfox288/ledger-of-heroes` for bugs, API issues, and cross-cutting concerns.
 
 ### Check Your Inbox (do this at session start)
 
 ```bash
-gh issue list --repo dfox288/dnd-rulebook-project --label "frontend" --state open
+gh issue list --repo dfox288/ledger-of-heroes --label "frontend" --state open
 ```
 
 ### Create an Issue
 
 ```bash
 # When you discover an API problem or cross-cutting bug
-gh issue create --repo dfox288/dnd-rulebook-project \
+gh issue create --repo dfox288/ledger-of-heroes \
   --title "Brief description" \
   --label "backend,bug,from:frontend" \
   --body "Details here"
@@ -86,7 +86,7 @@ gh issue create --repo dfox288/dnd-rulebook-project \
 Issues close automatically when PR merges if the PR body contains `Closes #N`. For manual closure:
 
 ```bash
-gh issue close 42 --repo dfox288/dnd-rulebook-project --comment "Fixed in PR #123"
+gh issue close 42 --repo dfox288/ledger-of-heroes --comment "Fixed in PR #123"
 ```
 
 ---
@@ -531,7 +531,7 @@ const data = await apiFetch('/spells')
 
 ### Backend
 
-**Location:** `../importer` | **Base URL:** `http://localhost:8080/api/v1` | **Docs:** `http://localhost:8080/docs/api`
+**Location:** `../backend` | **Base URL:** `http://localhost:8080/api/v1` | **Docs:** `http://localhost:8080/docs/api`
 
 ### Meilisearch Filter Syntax
 
@@ -593,7 +593,7 @@ docs/
 ├── LATEST-HANDOVER.md  # Symlink → wrapper repo handover
 └── README.md           # Points to wrapper for all other docs
 
-# All other docs in: ../dnd-rulebook-project/docs/frontend/
+# All other docs in: ../wrapper/docs/frontend/
 ```
 
 ---
@@ -602,7 +602,7 @@ docs/
 
 ```bash
 # 1. Start backend first
-cd ../importer && docker compose up -d
+cd ../backend && docker compose up -d
 
 # 2. Start frontend
 cd ../frontend && docker compose up -d
