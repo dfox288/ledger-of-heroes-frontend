@@ -24,6 +24,7 @@ const stepComponents: Record<string, Component> = {
   sourcebooks: defineAsyncComponent(() => import('~/components/character/wizard/StepSourcebooks.vue')),
   race: defineAsyncComponent(() => import('~/components/character/wizard/StepRace.vue')),
   subrace: defineAsyncComponent(() => import('~/components/character/wizard/StepSubrace.vue')),
+  size: defineAsyncComponent(() => import('~/components/character/wizard/StepSize.vue')),
   class: defineAsyncComponent(() => import('~/components/character/wizard/StepClass.vue')),
   subclass: defineAsyncComponent(() => import('~/components/character/wizard/StepSubclass.vue')),
   background: defineAsyncComponent(() => import('~/components/character/wizard/StepBackground.vue')),

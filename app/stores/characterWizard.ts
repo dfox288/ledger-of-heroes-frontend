@@ -70,6 +70,7 @@ export interface CharacterSummaryData {
     optional_features: number
     asi: number
     feats: number
+    size: number
   }
   creation_complete: boolean
   missing_required: string[]
@@ -294,6 +295,15 @@ export const useCharacterWizardStore = defineStore('characterWizard', () => {
     // Fall back to checking pending feats count
     if (!summary.value) return false
     return (summary.value.pending_choices.feats ?? 0) > 0
+  })
+
+  /**
+   * Does this character have size choices to make?
+   * True for races like Custom Lineage that allow choosing Small or Medium
+   */
+  const hasSizeChoices = computed(() => {
+    if (!summary.value) return false
+    return (summary.value.pending_choices.size ?? 0) > 0
   })
 
   /**
@@ -845,6 +855,7 @@ export const useCharacterWizardStore = defineStore('characterWizard', () => {
     hasProficiencyChoices,
     hasLanguageChoices,
     hasFeatChoices,
+    hasSizeChoices,
     isComplete,
 
     // Computed: Filtering

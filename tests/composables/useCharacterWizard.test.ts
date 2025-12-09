@@ -323,6 +323,41 @@ describe('useCharacterWizard', () => {
     })
   })
 
+  describe('size step visibility', () => {
+    it('size step is always in activeSteps (uses shouldSkip for navigation)', () => {
+      const route = createMockRoute()
+      const { activeSteps } = useCharacterWizard({ route })
+      const stepNames = activeSteps.value.map(s => s.name)
+
+      expect(stepNames).toContain('size')
+    })
+
+    it('size step has shouldSkip true when no size choices', () => {
+      const route = createMockRoute()
+      const { activeSteps } = useCharacterWizard({ route })
+      const sizeStep = activeSteps.value.find(s => s.name === 'size')
+
+      // Without summary data, hasSizeChoices is false so shouldSkip returns true
+      expect(sizeStep?.shouldSkip?.()).toBe(true)
+    })
+
+    it('size step comes after subrace and before class in step order', () => {
+      const store = useCharacterWizardStore()
+      store.selections.race = mockElf // has subraces
+
+      const route = createMockRoute()
+      const { activeSteps } = useCharacterWizard({ route })
+      const stepNames = activeSteps.value.map(s => s.name)
+
+      const subraceIndex = stepNames.indexOf('subrace')
+      const sizeIndex = stepNames.indexOf('size')
+      const classIndex = stepNames.indexOf('class')
+
+      expect(subraceIndex).toBeLessThan(sizeIndex)
+      expect(sizeIndex).toBeLessThan(classIndex)
+    })
+  })
+
   describe('nextStepInfo / previousStepInfo', () => {
     it('nextStepInfo returns the next step', () => {
       const route = createMockRoute('/characters/new/sourcebooks')

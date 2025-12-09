@@ -53,6 +53,14 @@ function createStepRegistry(store: ReturnType<typeof useCharacterWizardStore>): 
       visible: () => store.needsSubraceStep
     },
     {
+      name: 'size',
+      label: 'Size',
+      icon: 'i-heroicons-arrows-up-down',
+      visible: () => true,
+      // Skip during navigation if no size choices to make
+      shouldSkip: () => !store.hasSizeChoices
+    },
+    {
       name: 'class',
       label: 'Class',
       icon: 'i-heroicons-shield-check',
@@ -250,6 +258,11 @@ export function useCharacterWizard(options: UseCharacterWizardOptions = {}) {
       case 'subrace':
         // Can proceed if subrace selected OR if subrace is optional
         return store.selections.subrace !== null || !store.isSubraceRequired
+
+      case 'size':
+        // Size step is auto-skipped if no choices, so always allow proceed
+        // The actual validation is in the step component
+        return true
 
       case 'class':
         return store.selections.class !== null
