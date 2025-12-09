@@ -51,7 +51,7 @@ const prerequisitesSummary = computed(() => {
 const isHalfFeat = computed(() => {
   if (!props.feat.modifiers) return false
   return props.feat.modifiers.some(
-    m => m.modifier_category === 'ability_score' && m.value === '1'
+    m => m.modifier_category === 'ability_score' && String(m.value) === '1'
   )
 })
 
@@ -70,6 +70,10 @@ function handleViewDetails(event: Event) {
 <template>
   <div
     data-testid="feat-card"
+    role="button"
+    :aria-label="`Select ${feat.name} feat`"
+    :aria-pressed="selected"
+    :tabindex="disabled ? -1 : 0"
     class="relative p-3 rounded-lg border-2 transition-all cursor-pointer"
     :class="[
       disabled ? 'opacity-50 cursor-not-allowed' : '',
@@ -78,6 +82,8 @@ function handleViewDetails(event: Event) {
         : 'border-gray-200 dark:border-gray-700 hover:border-feat-300'
     ]"
     @click="handleClick"
+    @keydown.enter="handleClick"
+    @keydown.space.prevent="handleClick"
   >
     <!-- Selected Checkmark -->
     <div

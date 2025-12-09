@@ -107,7 +107,8 @@ function isChoiceAtLimit(choice: PendingChoice): boolean {
 
 // Toggle feat selection for a choice (uses full_slug for API compatibility)
 function handleFeatToggle(choice: PendingChoice, feat: Feat) {
-  const selected = selectedFeats.value.get(choice.id) ?? new Set<string>()
+  // Clone the Set to trigger Vue reactivity (mutating existing Set won't trigger updates)
+  const selected = new Set(selectedFeats.value.get(choice.id) ?? [])
   const featSlug = feat.full_slug ?? feat.slug
 
   if (selected.has(featSlug)) {
