@@ -1,5 +1,5 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { ref, computed } from 'vue'
+import { describe, it, expect } from 'vitest'
+import { ref } from 'vue'
 
 /**
  * Tests for useUnifiedChoices composable
@@ -49,6 +49,27 @@ const mockLanguageChoice = {
   metadata: []
 }
 
+const mockEquipmentModeChoice = {
+  id: 'equipment_mode|class|phb:fighter|1|starting_equipment',
+  type: 'equipment_mode',
+  subtype: null,
+  source: 'class',
+  source_name: 'Fighter',
+  level_granted: 1,
+  required: true,
+  quantity: 1,
+  remaining: 1,
+  selected: [],
+  options: [
+    { value: 'equipment', label: 'Take Starting Equipment' },
+    { value: 'gold', label: 'Take Starting Gold', description: '5d4 × 10 gp' }
+  ],
+  options_endpoint: null,
+  metadata: {
+    starting_wealth: { dice: '5d4', multiplier: 10, average: 125, formula: '5d4 × 10 gp' }
+  }
+}
+
 const mockSummary = {
   total_pending: 2,
   required_pending: 2,
@@ -94,6 +115,24 @@ describe('useUnifiedChoices', () => {
       const subclass = choices.find(c => c.type === 'subclass') ?? null
       expect(subclass).not.toBeNull()
       expect(subclass?.id).toBe('subclass:class:5:3:subclass_choice')
+    })
+
+    it('finds equipment_mode choice when present', () => {
+      const choices = [mockPendingChoice, mockEquipmentModeChoice]
+
+      const equipmentMode = choices.find(c => c.type === 'equipment_mode') ?? null
+
+      expect(equipmentMode).not.toBeNull()
+      expect(equipmentMode?.id).toBe('equipment_mode|class|phb:fighter|1|starting_equipment')
+      expect(equipmentMode?.metadata).toHaveProperty('starting_wealth')
+    })
+
+    it('returns null for equipmentMode when no equipment_mode choice exists', () => {
+      const choices = [mockPendingChoice, mockLanguageChoice]
+
+      const equipmentMode = choices.find(c => c.type === 'equipment_mode') ?? null
+
+      expect(equipmentMode).toBeNull()
     })
   })
 
@@ -193,6 +232,7 @@ describe('useUnifiedChoices', () => {
         'proficiency',
         'language',
         'equipment',
+        'equipment_mode',
         'spell',
         'subclass',
         'asi_or_feat',
