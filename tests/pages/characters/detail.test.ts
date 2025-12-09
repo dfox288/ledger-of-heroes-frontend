@@ -36,7 +36,10 @@ const mockStats = {
   },
   saving_throws: { STR: 5, DEX: 1, CON: 4, INT: 0, WIS: 1, CHA: -1 },
   proficiency_bonus: 2,
-  spellcasting: null
+  spellcasting: null,
+  passive_perception: 11,
+  passive_investigation: 10,
+  passive_insight: 11
 }
 
 // Mock skills for reference data

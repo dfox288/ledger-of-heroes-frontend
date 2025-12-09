@@ -23,9 +23,11 @@ vi.stubGlobal('requestAnimationFrame', (callback: FrameRequestCallback) => {
 vi.stubGlobal('cancelAnimationFrame', vi.fn())
 
 // Mock browser history API for Vue Router
-// Vue Router's finalizeNavigation uses history.replaceState
+// Vue Router's finalizeNavigation uses history.replaceState, state, scrollRestoration, and length
 vi.stubGlobal('history', {
-  state: {},
+  state: { current: '/', position: 0, replaced: true },
+  length: 1,
+  scrollRestoration: 'auto',
   replaceState: vi.fn(),
   pushState: vi.fn(),
   go: vi.fn(),
