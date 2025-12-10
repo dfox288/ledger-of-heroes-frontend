@@ -203,6 +203,7 @@ onMounted(async () => {
     <!-- Confirm Button -->
     <div class="flex justify-center pt-4">
       <UButton
+        data-testid="continue-button"
         size="lg"
         :disabled="!canProceed || loading"
         :loading="loading"

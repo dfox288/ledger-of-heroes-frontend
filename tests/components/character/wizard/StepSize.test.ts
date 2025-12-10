@@ -157,9 +157,8 @@ describe('StepSize', () => {
     it('disables continue button when no size selected', async () => {
       setupStore()
       const wrapper = await mountSuspended(StepSize)
-      const buttons = wrapper.findAll('button')
-      const continueButton = buttons.find(b => b.text().includes('Continue'))
-      expect(continueButton?.attributes('disabled')).toBeDefined()
+      const continueButton = wrapper.find('[data-testid="continue-button"]')
+      expect(continueButton.attributes('disabled')).toBeDefined()
     })
 
     it('enables continue button after size selection', async () => {
@@ -171,9 +170,8 @@ describe('StepSize', () => {
       await card.trigger('click')
       await wrapper.vm.$nextTick()
 
-      const buttons = wrapper.findAll('button')
-      const continueButton = buttons.find(b => b.text().includes('Continue'))
-      expect(continueButton?.attributes('disabled')).toBeUndefined()
+      const continueButton = wrapper.find('[data-testid="continue-button"]')
+      expect(continueButton.attributes('disabled')).toBeUndefined()
     })
 
     it('shows selected size name in continue button', async () => {
@@ -200,9 +198,8 @@ describe('StepSize', () => {
       await wrapper.vm.$nextTick()
 
       // Click continue button
-      const buttons = wrapper.findAll('button')
-      const continueButton = buttons.find(b => b.text().includes('Continue'))
-      await continueButton?.trigger('click')
+      const continueButton = wrapper.find('[data-testid="continue-button"]')
+      await continueButton.trigger('click')
 
       expect(mockResolveChoice).toHaveBeenCalledWith(101, {
         selected: ['S']
