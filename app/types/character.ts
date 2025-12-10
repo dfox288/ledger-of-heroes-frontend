@@ -148,7 +148,7 @@ export interface ConditionImmunity {
  * Skill advantage trait (advantage on skill checks)
  *
  * Note: Not in OpenAPI spec yet. Type defined manually based on API response.
- * @see Backend issue for OpenAPI documentation update
+ * @see https://github.com/dfox288/ledger-of-heroes/issues/433
  */
 export interface SkillAdvantage {
   /** Skill name (e.g., "Deception", "Performance") */

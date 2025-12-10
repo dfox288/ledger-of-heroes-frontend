@@ -12,13 +12,21 @@ function formatModifier(mod: number): string {
 }
 
 /**
- * Get unconditional advantage for a skill (if any)
- * Only returns advantages where condition is null
+ * Map of skill slugs to their advantages for O(1) lookup
+ * Only includes unconditional advantages (condition === null)
  */
+const advantageMap = computed(() => {
+  const map = new Map<string, SkillAdvantage>()
+  props.skillAdvantages?.forEach((adv) => {
+    if (adv.condition === null) {
+      map.set(adv.skill_slug, adv)
+    }
+  })
+  return map
+})
+
 function getAdvantage(slug: string): SkillAdvantage | undefined {
-  return props.skillAdvantages?.find(
-    adv => adv.skill_slug === slug && adv.condition === null
-  )
+  return advantageMap.value.get(slug)
 }
 </script>
 
@@ -62,6 +70,7 @@ function getAdvantage(slug: string): SkillAdvantage | undefined {
           <UIcon
             name="i-heroicons-bolt"
             class="w-4 h-4 text-warning-500"
+            role="img"
             data-testid="advantage-icon"
             :aria-label="`Has advantage from ${getAdvantage(skill.slug)!.source}`"
           />
