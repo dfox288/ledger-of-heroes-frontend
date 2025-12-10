@@ -84,6 +84,14 @@ config.global.stubs = {
     name: 'RouterLink',
     props: ['to'],
     template: '<a :href="to"><slot /></a>'
+  },
+  // Mock UTooltip to avoid TooltipProvider context requirement
+  // NuxtUI 4 uses Reka UI which requires a provider hierarchy.
+  // In tests, we just render the slot content directly.
+  UTooltip: {
+    name: 'UTooltip',
+    props: ['text'],
+    template: '<span data-testid="tooltip-wrapper"><slot /></span>'
   }
 }
 

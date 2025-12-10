@@ -145,6 +145,23 @@ export interface ConditionImmunity {
 }
 
 /**
+ * Skill advantage trait (advantage on skill checks)
+ *
+ * Note: Not in OpenAPI spec yet. Type defined manually based on API response.
+ * @see Backend issue for OpenAPI documentation update
+ */
+export interface SkillAdvantage {
+  /** Skill name (e.g., "Deception", "Performance") */
+  skill: string
+  /** Skill slug for matching (e.g., "deception", "performance") */
+  skill_slug: string
+  /** Optional condition text (e.g., "related to stonework"). Null = unconditional. */
+  condition: string | null
+  /** Source of the advantage (e.g., "Actor", "Stonecunning") */
+  source: string
+}
+
+/**
  * Character stats with strongly-typed ability score keys
  *
  * Extends the generated type with stricter typing for ability_scores

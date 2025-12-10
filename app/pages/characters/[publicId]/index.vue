@@ -22,6 +22,7 @@ const {
   languages,
   notes,
   skills,
+  skillAdvantages,
   savingThrows,
   hitDice,
   loading,
@@ -157,6 +158,7 @@ const tabItems = computed(() => {
             </div>
             <CharacterSheetSkillsList
               :skills="skills"
+              :skill-advantages="skillAdvantages"
               class="lg:col-span-2"
             />
           </div>
