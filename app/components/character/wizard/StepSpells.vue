@@ -47,6 +47,8 @@ const {
   isSaving,
   getSelectedCount,
   isOptionSelected: isSpellSelectedById,
+  isOptionDisabled: isSpellDisabledById,
+  getDisabledReason: getSpellDisabledReasonById,
   allComplete: canProceed,
   handleToggle: handleSpellToggleById,
   saveAllChoices
@@ -144,8 +146,21 @@ function isSpellSelected(choiceId: string, spell: Spell): boolean {
   return isSpellSelectedById(choiceId, slug)
 }
 
-function isChoiceAtLimit(choice: PendingChoice): boolean {
-  return getSelectedCount(choice.id) >= choice.quantity
+function isSpellDisabled(choiceId: string, spell: Spell): boolean {
+  const slug = spell.full_slug ?? spell.slug
+  // Disabled if: already selected elsewhere OR at limit (and not selected in this choice)
+  return isSpellDisabledById(choiceId, slug)
+    || (!isSpellSelectedById(choiceId, slug) && isChoiceAtLimit(choiceId))
+}
+
+function getSpellDisabledReason(choiceId: string, spell: Spell): string | null {
+  const slug = spell.full_slug ?? spell.slug
+  return getSpellDisabledReasonById(choiceId, slug)
+}
+
+function isChoiceAtLimit(choiceId: string): boolean {
+  const choice = choicesByType.value.spells.find(c => c.id === choiceId)
+  return choice ? getSelectedCount(choiceId) >= choice.quantity : false
 }
 
 function handleSpellToggle(choice: PendingChoice, spell: Spell) {
@@ -324,7 +339,8 @@ const {
             :key="spell.id"
             :spell="spell"
             :selected="isSpellSelected(choice.id, spell)"
-            :disabled="!isSpellSelected(choice.id, spell) && isChoiceAtLimit(choice)"
+            :disabled="isSpellDisabled(choice.id, spell)"
+            :disabled-reason="getSpellDisabledReason(choice.id, spell)"
             @toggle="handleSpellToggle(choice, spell)"
             @view-details="handleViewDetails(spell)"
           />
@@ -356,7 +372,8 @@ const {
             :key="spell.id"
             :spell="spell"
             :selected="isSpellSelected(choice.id, spell)"
-            :disabled="!isSpellSelected(choice.id, spell) && isChoiceAtLimit(choice)"
+            :disabled="isSpellDisabled(choice.id, spell)"
+            :disabled-reason="getSpellDisabledReason(choice.id, spell)"
             @toggle="handleSpellToggle(choice, spell)"
             @view-details="handleViewDetails(spell)"
           />
@@ -388,7 +405,8 @@ const {
             :key="spell.id"
             :spell="spell"
             :selected="isSpellSelected(choice.id, spell)"
-            :disabled="!isSpellSelected(choice.id, spell) && isChoiceAtLimit(choice)"
+            :disabled="isSpellDisabled(choice.id, spell)"
+            :disabled-reason="getSpellDisabledReason(choice.id, spell)"
             @toggle="handleSpellToggle(choice, spell)"
             @view-details="handleViewDetails(spell)"
           />
@@ -420,7 +438,8 @@ const {
             :key="spell.id"
             :spell="spell"
             :selected="isSpellSelected(choice.id, spell)"
-            :disabled="!isSpellSelected(choice.id, spell) && isChoiceAtLimit(choice)"
+            :disabled="isSpellDisabled(choice.id, spell)"
+            :disabled-reason="getSpellDisabledReason(choice.id, spell)"
             @toggle="handleSpellToggle(choice, spell)"
             @view-details="handleViewDetails(spell)"
           />

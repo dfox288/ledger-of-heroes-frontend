@@ -6,10 +6,12 @@ interface Props {
   spell: Spell
   selected: boolean
   disabled?: boolean
+  disabledReason?: string | null
 }
 
 const props = withDefaults(defineProps<Props>(), {
-  disabled: false
+  disabled: false,
+  disabledReason: null
 })
 
 const emit = defineEmits<{
@@ -79,6 +81,18 @@ function handleViewDetails(event: Event) {
       />
     </div>
 
+    <!-- Already Selected Elsewhere Indicator -->
+    <div
+      v-else-if="disabled && disabledReason"
+      data-testid="disabled-indicator"
+      class="absolute top-2 right-2 w-5 h-5 bg-success-500 rounded-full flex items-center justify-center"
+    >
+      <UIcon
+        name="i-heroicons-check"
+        class="w-3 h-3 text-white"
+      />
+    </div>
+
     <div class="flex flex-col gap-2">
       <!-- Top row: badges -->
       <div class="flex items-center gap-2 flex-wrap">
@@ -119,6 +133,19 @@ function handleViewDetails(event: Event) {
       <h4 class="font-semibold text-gray-900 dark:text-white pr-6">
         {{ spell.name }}
       </h4>
+
+      <!-- Disabled reason text -->
+      <p
+        v-if="disabled && disabledReason"
+        data-testid="disabled-reason"
+        class="text-xs text-success-600 dark:text-success-400 flex items-center gap-1"
+      >
+        <UIcon
+          name="i-heroicons-check-circle"
+          class="w-3 h-3"
+        />
+        {{ disabledReason }}
+      </p>
 
       <!-- View Details link -->
       <button
