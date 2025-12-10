@@ -30,6 +30,30 @@ describe('CharacterSheetFeaturesPanel', () => {
     })
     expect(wrapper.text()).toContain('No features')
   })
+
+  it('displays subclass features under Subclass Features heading', async () => {
+    const subclassFeatures = [
+      { id: 1, source: 'subclass', feature: { name: 'Divine Domain: Life Domain', description: 'Life domain focus' } },
+      { id: 2, source: 'subclass', feature: { name: 'Disciple of Life', description: 'Healing spells are more effective' } }
+    ]
+    const wrapper = await mountSuspended(FeaturesPanel, {
+      props: { features: subclassFeatures }
+    })
+    expect(wrapper.text()).toContain('Divine Domain: Life Domain')
+    expect(wrapper.text()).toContain('Disciple of Life')
+    expect(wrapper.text()).toContain('Subclass Features')
+  })
+
+  it('displays feat features under Feats heading', async () => {
+    const featFeatures = [
+      { id: 1, source: 'feat', feature: { name: 'Actor', description: 'Skilled at mimicry' } }
+    ]
+    const wrapper = await mountSuspended(FeaturesPanel, {
+      props: { features: featFeatures }
+    })
+    expect(wrapper.text()).toContain('Actor')
+    expect(wrapper.text()).toContain('Feats')
+  })
 })
 
 describe('CharacterSheetProficienciesPanel', () => {

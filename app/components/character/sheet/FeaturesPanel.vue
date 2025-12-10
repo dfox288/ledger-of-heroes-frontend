@@ -11,8 +11,10 @@ const props = withDefaults(defineProps<{
 const featuresBySource = computed(() => {
   const grouped: Record<string, CharacterFeature[]> = {
     class: [],
+    subclass: [],
     race: [],
-    background: []
+    background: [],
+    feat: []
   }
   // Defensive check for async mounting scenarios
   const featuresList = props.features
@@ -30,8 +32,10 @@ const featuresBySource = computed(() => {
 
 const sourceLabels: Record<string, string> = {
   class: 'Class Features',
+  subclass: 'Subclass Features',
   race: 'Racial Traits',
-  background: 'Background Feature'
+  background: 'Background Feature',
+  feat: 'Feats'
 }
 </script>
 
