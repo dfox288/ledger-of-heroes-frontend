@@ -20,15 +20,25 @@ const toggleJson = () => {
   }
 }
 
-const copyJson = () => {
+const copyJson = async () => {
   if (props.data) {
-    navigator.clipboard.writeText(JSON.stringify(props.data, null, 2))
-    toast.add({
-      title: 'Copied!',
-      description: 'JSON copied to clipboard',
-      icon: 'i-heroicons-clipboard-document-check',
-      color: 'success',
-    })
+    try {
+      await navigator.clipboard.writeText(JSON.stringify(props.data, null, 2))
+      toast.add({
+        title: 'Copied!',
+        description: 'JSON copied to clipboard',
+        icon: 'i-heroicons-clipboard-document-check',
+        color: 'success',
+      })
+    }
+    catch {
+      toast.add({
+        title: 'Copy failed',
+        description: 'Could not copy to clipboard',
+        icon: 'i-heroicons-exclamation-triangle',
+        color: 'error',
+      })
+    }
   }
 }
 </script>
