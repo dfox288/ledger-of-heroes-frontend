@@ -6,6 +6,10 @@ const props = defineProps<{
   character: Character
 }>()
 
+const emit = defineEmits<{
+  'level-up': []
+}>()
+
 /**
  * Format classes display string
  * Shows each class with its level and subclass (if any), separated by " / "
@@ -44,6 +48,27 @@ const portraitSrc = computed(() => {
   if (!props.character.portrait) return null
   return props.character.portrait.thumb || props.character.portrait.medium || null
 })
+
+/**
+ * Calculate total character level from classes
+ */
+const totalLevel = computed(() => {
+  if (!props.character.classes?.length) return 1
+  return props.character.classes.reduce((sum, c) => sum + (c.level || 0), 0)
+})
+
+/**
+ * Can this character level up?
+ * - Must be complete (not a draft)
+ * - Must be under max level (20)
+ */
+const canLevelUp = computed(() => {
+  return props.character.is_complete && totalLevel.value < 20
+})
+
+function handleLevelUp() {
+  emit('level-up')
+}
 </script>
 
 <template>
@@ -110,6 +135,19 @@ const portraitSrc = computed(() => {
       >
         {{ character.is_complete ? 'Complete' : 'Draft' }}
       </UBadge>
+
+      <!-- Level Up Button (for complete characters under level 20) -->
+      <UButton
+        v-if="canLevelUp"
+        data-testid="level-up-button"
+        variant="soft"
+        color="primary"
+        size="sm"
+        icon="i-heroicons-arrow-trending-up"
+        @click="handleLevelUp"
+      >
+        Level Up
+      </UButton>
 
       <!-- Edit Button (for incomplete characters) -->
       <UButton

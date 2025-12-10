@@ -315,4 +315,83 @@ describe('CharacterSheetHeader', () => {
       expect(icon.classes()).toContain('text-gray-400')
     })
   })
+
+  describe('level-up button', () => {
+    it('shows level-up button for complete characters under level 20', async () => {
+      const character = {
+        ...mockCharacter,
+        is_complete: true,
+        classes: [
+          { class: { id: 1, name: 'Fighter', slug: 'fighter' }, level: 5, is_primary: true }
+        ]
+      }
+      const wrapper = await mountSuspended(Header, {
+        props: { character }
+      })
+
+      expect(wrapper.find('[data-testid="level-up-button"]').exists()).toBe(true)
+    })
+
+    it('hides level-up button for incomplete characters', async () => {
+      const character = {
+        ...mockCharacter,
+        is_complete: false,
+        classes: [
+          { class: { id: 1, name: 'Fighter', slug: 'fighter' }, level: 3, is_primary: true }
+        ]
+      }
+      const wrapper = await mountSuspended(Header, {
+        props: { character }
+      })
+
+      expect(wrapper.find('[data-testid="level-up-button"]').exists()).toBe(false)
+    })
+
+    it('hides level-up button at max level (20)', async () => {
+      const character = {
+        ...mockCharacter,
+        is_complete: true,
+        classes: [
+          { class: { id: 1, name: 'Fighter', slug: 'fighter' }, level: 20, is_primary: true }
+        ]
+      }
+      const wrapper = await mountSuspended(Header, {
+        props: { character }
+      })
+
+      expect(wrapper.find('[data-testid="level-up-button"]').exists()).toBe(false)
+    })
+
+    it('hides level-up button for multiclass at total level 20', async () => {
+      const character = {
+        ...mockCharacter,
+        is_complete: true,
+        classes: [
+          { class: { id: 1, name: 'Fighter', slug: 'fighter' }, level: 15, is_primary: true },
+          { class: { id: 2, name: 'Rogue', slug: 'rogue' }, level: 5, is_primary: false }
+        ]
+      }
+      const wrapper = await mountSuspended(Header, {
+        props: { character }
+      })
+
+      expect(wrapper.find('[data-testid="level-up-button"]').exists()).toBe(false)
+    })
+
+    it('emits level-up event when clicked', async () => {
+      const character = {
+        ...mockCharacter,
+        is_complete: true,
+        classes: [
+          { class: { id: 1, name: 'Fighter', slug: 'fighter' }, level: 5, is_primary: true }
+        ]
+      }
+      const wrapper = await mountSuspended(Header, {
+        props: { character }
+      })
+
+      await wrapper.find('[data-testid="level-up-button"]').trigger('click')
+      expect(wrapper.emitted('level-up')).toBeTruthy()
+    })
+  })
 })
