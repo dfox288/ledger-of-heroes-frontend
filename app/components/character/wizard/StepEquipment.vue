@@ -8,6 +8,26 @@ import { wizardErrors } from '~/utils/wizardErrors'
 
 type EntityItemResource = components['schemas']['EntityItemResource']
 type PackContentResource = components['schemas']['PackContentResource']
+type PendingChoice = components['schemas']['PendingChoiceResource']
+
+/**
+ * Equipment option structure from backend
+ */
+interface EquipmentOption {
+  option: string
+  label?: string
+  is_category?: boolean
+  /** Number of items available in category (NOT selections needed) */
+  category_item_count?: number
+  /** Number of items the user should select from the category */
+  select_count?: number
+  items?: Array<{
+    full_slug?: string
+    slug?: string
+    is_fixed?: boolean
+    quantity?: number
+  }>
+}
 
 /**
  * Starting wealth metadata structure from backend equipment_mode choice
@@ -179,14 +199,45 @@ function rollForGold(): void {
   goldCalculationMethod.value = 'roll'
 }
 
+// Track if we're currently switching modes (to prevent duplicate API calls)
+const isSwitchingMode = ref(false)
+
 /**
- * Reset gold state when switching back to equipment mode
- * This prevents stale roll data from persisting
+ * Handle equipment mode changes
+ * - When switching to equipment: reset gold state, update backend, refetch equipment choices
+ * - When switching to gold: no immediate action (choices will be cleared on Continue)
+ *
+ * CRITICAL: If user previously saved gold mode, the backend removed equipment choices.
+ * When they switch back to equipment mode, we must:
+ * 1. Tell the backend we're switching back to equipment mode
+ * 2. Refetch equipment choices (backend restores them when mode changes back)
  */
-watch(equipmentMode, (newMode) => {
-  if (newMode === 'equipment') {
+watch(equipmentMode, async (newMode, oldMode) => {
+  if (newMode === 'equipment' && oldMode === 'gold') {
+    // Reset gold state
     rolledGoldAmount.value = null
     goldCalculationMethod.value = 'average'
+
+    // Only update backend if equipment_mode choice was previously resolved
+    // (i.e., user had saved gold mode before)
+    const modeChoice = equipmentModeChoice.value
+    if (modeChoice && modeChoice.selected.includes('gold') && !isSwitchingMode.value) {
+      isSwitchingMode.value = true
+      try {
+        // Update backend: switch from gold back to equipment mode
+        // This tells the backend to restore equipment choices
+        await saveEquipmentModeChoice()
+
+        // Clear local selections since we're getting fresh choices
+        localSelections.value.clear()
+        itemSelections.value.clear()
+
+        // Refetch equipment choices - backend should now provide them
+        await fetchChoices('equipment')
+      } finally {
+        isSwitchingMode.value = false
+      }
+    }
   }
 })
 
@@ -334,25 +385,115 @@ function getItemDisplayName(item: { custom_name?: string | null, item?: { name?:
 }
 
 /**
+ * Get the selected option for a choice
+ */
+function getSelectedOption(choice: PendingChoice): EquipmentOption | null {
+  const selectedLetter = localSelections.value.get(choice.id)
+  if (!selectedLetter) return null
+
+  const options = (choice.options as EquipmentOption[] | null) ?? []
+  return options.find(opt => opt.option === selectedLetter) ?? null
+}
+
+/**
+ * Check if an option requires item selection (is a category choice)
+ * Uses backend's is_category flag if available, falls back to heuristic
+ */
+function optionRequiresItemSelection(option: EquipmentOption): boolean {
+  // Use backend's is_category flag if available (authoritative)
+  if (option.is_category !== undefined) {
+    return option.is_category
+  }
+
+  // Fallback heuristic: 3+ items with same quantity = category
+  const items = option.items ?? []
+  if (items.length < 3) return false
+
+  const firstQuantity = items[0]?.quantity ?? 1
+  return items.every(item => (item.quantity ?? 1) === firstQuantity)
+}
+
+/**
+ * Get number of item selections required for a category option
+ *
+ * NOTE: category_item_count is the number of items IN the category,
+ * NOT the number of selections needed. Use select_count instead.
+ */
+function getRequiredItemCount(option: EquipmentOption): number {
+  // Use backend's explicit select_count if available
+  if (option.select_count !== undefined && option.select_count > 0) {
+    return option.select_count
+  }
+
+  // Default: most category choices are "pick one from this list"
+  return 1
+}
+
+/**
+ * Count how many items have been selected for a choice option
+ * Checks both primary key (choiceId:optionLetter) and indexed keys (choiceId:optionLetter:N)
+ */
+function countItemSelections(choiceId: string, optionLetter: string): number {
+  let count = 0
+
+  // Check primary key
+  const primaryKey = `${choiceId}:${optionLetter}`
+  if (itemSelections.value.has(primaryKey)) {
+    count++
+  }
+
+  // Check indexed keys (choiceId:optionLetter:N)
+  for (const key of itemSelections.value.keys()) {
+    if (key.startsWith(`${choiceId}:${optionLetter}:`) && key !== primaryKey) {
+      count++
+    }
+  }
+
+  return count
+}
+
+/**
+ * Check if a choice is fully satisfied (option selected + item selections if needed)
+ */
+function isChoiceFullySatisfied(choice: PendingChoice): boolean {
+  // If backend says remaining is 0, choice is already resolved
+  if (choice.remaining === 0) return true
+
+  // Must have an option selected
+  const selectedLetter = localSelections.value.get(choice.id)
+  if (!selectedLetter) return false
+
+  // Get the selected option
+  const selectedOption = getSelectedOption(choice)
+  if (!selectedOption) return false
+
+  // If option requires item selection (is_category), verify items are selected
+  if (optionRequiresItemSelection(selectedOption)) {
+    const requiredCount = getRequiredItemCount(selectedOption)
+    const selectedCount = countItemSelections(choice.id, selectedLetter)
+    return selectedCount >= requiredCount
+  }
+
+  // Non-category option: just having the option selected is enough
+  return true
+}
+
+/**
  * Check if all equipment choices are made
  * When in gold mode, class equipment choices are skipped
+ * For category choices, also validates that item selections are complete
  */
 const allEquipmentChoicesMade = computed(() => {
   // In gold mode, class equipment choices are skipped (replaced by gold)
   // Only background equipment choices need to be made
   if (equipmentMode.value === 'gold') {
     const backgroundChoices = backgroundEquipmentChoices.value
-    return backgroundChoices.every((choice) => {
-      return localSelections.value.has(choice.id) || choice.remaining === 0
-    })
+    return backgroundChoices.every(isChoiceFullySatisfied)
   }
 
-  // In equipment mode, all choices must be made
+  // In equipment mode, all choices must be made (including item selections for categories)
   const equipmentChoices = choicesByType.value.equipment || []
-  return equipmentChoices.every((choice) => {
-    // Check if there's a local selection
-    return localSelections.value.has(choice.id) || choice.remaining === 0
-  })
+  return equipmentChoices.every(isChoiceFullySatisfied)
 })
 
 // Saving state

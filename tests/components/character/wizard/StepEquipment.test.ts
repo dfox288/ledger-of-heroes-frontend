@@ -574,6 +574,18 @@ describe('StepEquipment - Specific Behavior', () => {
         expect(vm.rolledGoldAmount).toBeNull()
         expect(vm.goldCalculationMethod).toBe('average')
       })
+
+      it('tracks mode switching state to prevent duplicate API calls', async () => {
+        const { wrapper } = await mountWizardStep(StepEquipment, {
+          storeSetup: (store) => {
+            store.selections.class = wizardMockClasses.fighter
+          }
+        })
+
+        const vm = wrapper.vm as any
+        // isSwitchingMode should exist and be false initially
+        expect(vm.isSwitchingMode).toBe(false)
+      })
     })
 
     describe('Equipment Mode Validation', () => {
@@ -643,6 +655,319 @@ describe('StepEquipment - Specific Behavior', () => {
         const vm = wrapper.vm as any
         // The computed exists
         expect(vm.startingWealth === null || typeof vm.startingWealth === 'object').toBe(true)
+      })
+    })
+  })
+
+  describe('Category Equipment Choices (is_category flag)', () => {
+    // These tests verify the fix for GitHub issue #461:
+    // Equipment choices with is_category=true require item selections,
+    // not just option selection
+
+    describe('optionRequiresItemSelection helper', () => {
+      it('returns true when is_category flag is true', async () => {
+        const { wrapper } = await mountWizardStep(StepEquipment, {
+          storeSetup: (store) => {
+            store.selections.class = wizardMockClasses.fighter
+          }
+        })
+
+        const vm = wrapper.vm as any
+        const categoryOption = {
+          option: '`',
+          label: 'any two simple weapons',
+          is_category: true,
+          items: [
+            { full_slug: 'phb:club', quantity: 2, is_fixed: false },
+            { full_slug: 'phb:dagger', quantity: 2, is_fixed: false }
+          ]
+        }
+
+        expect(vm.optionRequiresItemSelection(categoryOption)).toBe(true)
+      })
+
+      it('returns false when is_category flag is false', async () => {
+        const { wrapper } = await mountWizardStep(StepEquipment, {
+          storeSetup: (store) => {
+            store.selections.class = wizardMockClasses.fighter
+          }
+        })
+
+        const vm = wrapper.vm as any
+        const fixedOption = {
+          option: 'a',
+          label: 'studded leather armor',
+          is_category: false,
+          items: [{ full_slug: 'phb:studded-leather', quantity: 1, is_fixed: true }]
+        }
+
+        expect(vm.optionRequiresItemSelection(fixedOption)).toBe(false)
+      })
+
+      it('falls back to heuristic when is_category is undefined', async () => {
+        const { wrapper } = await mountWizardStep(StepEquipment, {
+          storeSetup: (store) => {
+            store.selections.class = wizardMockClasses.fighter
+          }
+        })
+
+        const vm = wrapper.vm as any
+
+        // 3+ items with same quantity = category (heuristic)
+        const likelyCategoryOption = {
+          option: 'a',
+          items: [
+            { quantity: 1 },
+            { quantity: 1 },
+            { quantity: 1 }
+          ]
+        }
+        expect(vm.optionRequiresItemSelection(likelyCategoryOption)).toBe(true)
+
+        // 2 items = not a category (heuristic)
+        const simpleOption = {
+          option: 'a',
+          items: [{ quantity: 1 }, { quantity: 1 }]
+        }
+        expect(vm.optionRequiresItemSelection(simpleOption)).toBe(false)
+      })
+    })
+
+    describe('getRequiredItemCount helper', () => {
+      it('uses select_count when provided', async () => {
+        const { wrapper } = await mountWizardStep(StepEquipment, {
+          storeSetup: (store) => {
+            store.selections.class = wizardMockClasses.fighter
+          }
+        })
+
+        const vm = wrapper.vm as any
+        const option = {
+          option: '`',
+          is_category: true,
+          select_count: 2,
+          category_item_count: 14, // Number of items in category, NOT selections
+          items: [
+            { quantity: 1 },
+            { quantity: 1 },
+            { quantity: 1 }
+          ]
+        }
+
+        expect(vm.getRequiredItemCount(option)).toBe(2)
+      })
+
+      it('defaults to 1 when select_count not provided', async () => {
+        const { wrapper } = await mountWizardStep(StepEquipment, {
+          storeSetup: (store) => {
+            store.selections.class = wizardMockClasses.fighter
+          }
+        })
+
+        const vm = wrapper.vm as any
+        const option = {
+          option: '`',
+          is_category: true,
+          category_item_count: 14, // This is NOT used for selection count
+          items: [
+            { quantity: 3 },
+            { quantity: 3 }
+          ]
+        }
+
+        // Should default to 1, not use category_item_count or item quantity
+        expect(vm.getRequiredItemCount(option)).toBe(1)
+      })
+    })
+
+    describe('countItemSelections helper', () => {
+      it('counts primary key selection', async () => {
+        const { wrapper } = await mountWizardStep(StepEquipment, {
+          storeSetup: (store) => {
+            store.selections.class = wizardMockClasses.fighter
+          }
+        })
+
+        const vm = wrapper.vm as any
+        vm.itemSelections.set('choice-1:`', 'phb:club')
+
+        expect(vm.countItemSelections('choice-1', '`')).toBe(1)
+      })
+
+      it('counts indexed key selections', async () => {
+        const { wrapper } = await mountWizardStep(StepEquipment, {
+          storeSetup: (store) => {
+            store.selections.class = wizardMockClasses.fighter
+          }
+        })
+
+        const vm = wrapper.vm as any
+        vm.itemSelections.set('choice-1:`', 'phb:club')
+        vm.itemSelections.set('choice-1:`:1', 'phb:dagger')
+
+        expect(vm.countItemSelections('choice-1', '`')).toBe(2)
+      })
+
+      it('returns 0 when no selections exist', async () => {
+        const { wrapper } = await mountWizardStep(StepEquipment, {
+          storeSetup: (store) => {
+            store.selections.class = wizardMockClasses.fighter
+          }
+        })
+
+        const vm = wrapper.vm as any
+        expect(vm.countItemSelections('nonexistent', 'a')).toBe(0)
+      })
+    })
+
+    describe('isChoiceFullySatisfied helper', () => {
+      it('returns true when choice.remaining is 0', async () => {
+        const { wrapper } = await mountWizardStep(StepEquipment, {
+          storeSetup: (store) => {
+            store.selections.class = wizardMockClasses.fighter
+          }
+        })
+
+        const vm = wrapper.vm as any
+        const resolvedChoice = { id: 'test', remaining: 0, options: [] }
+
+        expect(vm.isChoiceFullySatisfied(resolvedChoice)).toBe(true)
+      })
+
+      it('returns false when no option is selected', async () => {
+        const { wrapper } = await mountWizardStep(StepEquipment, {
+          storeSetup: (store) => {
+            store.selections.class = wizardMockClasses.fighter
+          }
+        })
+
+        const vm = wrapper.vm as any
+        const unresolvedChoice = {
+          id: 'test',
+          remaining: 1,
+          options: [{ option: 'a', is_category: false }]
+        }
+
+        expect(vm.isChoiceFullySatisfied(unresolvedChoice)).toBe(false)
+      })
+
+      it('returns true for non-category choice with option selected', async () => {
+        const { wrapper } = await mountWizardStep(StepEquipment, {
+          storeSetup: (store) => {
+            store.selections.class = wizardMockClasses.fighter
+          }
+        })
+
+        const vm = wrapper.vm as any
+        const choice = {
+          id: 'test',
+          remaining: 1,
+          options: [
+            { option: 'a', is_category: false, items: [{ is_fixed: true }] },
+            { option: 'b', is_category: false, items: [{ is_fixed: true }] }
+          ]
+        }
+
+        // Select option 'a'
+        vm.localSelections.set('test', 'a')
+        await wrapper.vm.$nextTick()
+
+        expect(vm.isChoiceFullySatisfied(choice)).toBe(true)
+      })
+
+      it('returns false for category choice without item selections', async () => {
+        const { wrapper } = await mountWizardStep(StepEquipment, {
+          storeSetup: (store) => {
+            store.selections.class = wizardMockClasses.fighter
+          }
+        })
+
+        const vm = wrapper.vm as any
+        const categoryChoice = {
+          id: 'test-category',
+          remaining: 1,
+          options: [{
+            option: '`',
+            is_category: true,
+            select_count: 1, // User must select 1 item
+            category_item_count: 14, // 14 items available (not used for validation)
+            items: [
+              { full_slug: 'phb:club', quantity: 1, is_fixed: false },
+              { full_slug: 'phb:dagger', quantity: 1, is_fixed: false }
+            ]
+          }]
+        }
+
+        // Select the category option but don't select items
+        vm.localSelections.set('test-category', '`')
+        await wrapper.vm.$nextTick()
+
+        expect(vm.isChoiceFullySatisfied(categoryChoice)).toBe(false)
+      })
+
+      it('returns true for category choice with all required item selections', async () => {
+        const { wrapper } = await mountWizardStep(StepEquipment, {
+          storeSetup: (store) => {
+            store.selections.class = wizardMockClasses.fighter
+          }
+        })
+
+        const vm = wrapper.vm as any
+        const categoryChoice = {
+          id: 'test-category',
+          remaining: 1,
+          options: [{
+            option: '`',
+            is_category: true,
+            select_count: 2, // User must select 2 items (e.g., "two martial weapons")
+            category_item_count: 14, // 14 items available
+            items: [
+              { full_slug: 'phb:club', quantity: 1, is_fixed: false },
+              { full_slug: 'phb:dagger', quantity: 1, is_fixed: false }
+            ]
+          }]
+        }
+
+        // Select the category option
+        vm.localSelections.set('test-category', '`')
+        // Select 2 items (matching select_count)
+        vm.itemSelections.set('test-category:`', 'phb:club')
+        vm.itemSelections.set('test-category:`:1', 'phb:dagger')
+        await wrapper.vm.$nextTick()
+
+        expect(vm.isChoiceFullySatisfied(categoryChoice)).toBe(true)
+      })
+
+      it('returns false for category choice with insufficient item selections', async () => {
+        const { wrapper } = await mountWizardStep(StepEquipment, {
+          storeSetup: (store) => {
+            store.selections.class = wizardMockClasses.fighter
+          }
+        })
+
+        const vm = wrapper.vm as any
+        const categoryChoice = {
+          id: 'test-category',
+          remaining: 1,
+          options: [{
+            option: '`',
+            is_category: true,
+            select_count: 2, // User must select 2 items
+            category_item_count: 14, // 14 items available
+            items: [
+              { full_slug: 'phb:club', quantity: 1, is_fixed: false },
+              { full_slug: 'phb:dagger', quantity: 1, is_fixed: false }
+            ]
+          }]
+        }
+
+        // Select the category option
+        vm.localSelections.set('test-category', '`')
+        // Only select 1 item (need 2 per select_count)
+        vm.itemSelections.set('test-category:`', 'phb:club')
+        await wrapper.vm.$nextTick()
+
+        expect(vm.isChoiceFullySatisfied(categoryChoice)).toBe(false)
       })
     })
   })
