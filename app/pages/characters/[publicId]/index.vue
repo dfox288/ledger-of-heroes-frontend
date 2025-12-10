@@ -8,6 +8,7 @@
  *
  * URL: /characters/:publicId (e.g., /characters/shadow-warden-q3x9)
  */
+import { useCharacterLevelUpStore, type CharacterClassEntry } from '~/stores/characterLevelUp'
 
 const route = useRoute()
 const publicId = computed(() => route.params.publicId as string)
@@ -26,8 +27,44 @@ const {
   savingThrows,
   hitDice,
   loading,
-  error
+  error,
+  refresh
 } = useCharacterSheet(publicId)
+
+// Level-up wizard store
+const levelUpStore = useCharacterLevelUpStore()
+
+/**
+ * Handle level-up button click from header
+ * Opens the level-up wizard with current character data
+ */
+function handleLevelUp() {
+  if (!character.value) return
+
+  // Map API classes to store-compatible format
+  // Uses type assertion since API returns compatible but slightly different structure
+  const classEntries = (character.value.classes ?? []).map(c => ({
+    class: c.class as CharacterClassEntry['class'],
+    level: c.level,
+    subclass: c.subclass ? { name: c.subclass.name, slug: c.subclass.slug } : null,
+    is_primary: c.is_primary
+  }))
+
+  levelUpStore.openWizard(
+    character.value.id,
+    character.value.public_id,
+    classEntries,
+    character.value.classes?.reduce((sum, c) => sum + (c.level || 0), 0) ?? 1
+  )
+}
+
+/**
+ * Handle level-up completion
+ * Refreshes character data to show new level
+ */
+async function handleLevelUpComplete() {
+  await refresh()
+}
 
 // Validation - check for dangling references when sourcebooks are removed
 const characterId = computed(() => character.value?.id ?? null)
@@ -104,7 +141,10 @@ const tabItems = computed(() => {
       class="space-y-6"
     >
       <!-- Header -->
-      <CharacterSheetHeader :character="character" />
+      <CharacterSheetHeader
+        :character="character"
+        @level-up="handleLevelUp"
+      />
 
       <!-- Validation Warning - shows when sourcebook content was removed -->
       <CharacterSheetValidationWarning :validation-result="validationResult" />
@@ -203,5 +243,8 @@ const tabItems = computed(() => {
         </template>
       </UTabs>
     </div>
+
+    <!-- Level-Up Wizard Modal -->
+    <CharacterLevelupLevelUpWizard @level-up-complete="handleLevelUpComplete" />
   </div>
 </template>

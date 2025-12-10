@@ -63,7 +63,6 @@ const emit = defineEmits<{
 <template>
   <UModal
     v-model:open="store.isOpen"
-    :ui="{ width: 'max-w-6xl' }"
     fullscreen
     :prevent-close="true"
   >
