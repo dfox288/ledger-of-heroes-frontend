@@ -14,6 +14,7 @@ export default defineEventHandler(async (event) => {
   const params = new URLSearchParams()
   if (query.max_level) params.append('max_level', String(query.max_level))
   if (query.include_known) params.append('include_known', String(query.include_known))
+  if (query.class) params.append('class', String(query.class))
 
   const queryString = params.toString() ? `?${params.toString()}` : ''
 
