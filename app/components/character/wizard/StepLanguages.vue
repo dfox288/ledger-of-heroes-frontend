@@ -41,7 +41,8 @@ const knownLanguagesBySource = computed(() => {
   return {
     race: languages.filter(l => l.source === 'race'),
     class: languages.filter(l => l.source === 'class'),
-    background: languages.filter(l => l.source === 'background')
+    background: languages.filter(l => l.source === 'background'),
+    subclass_feature: languages.filter(l => l.source === 'subclass_feature')
   }
 })
 
@@ -126,7 +127,9 @@ const languageChoicesBySource = computed(() => {
   const choices = choicesByType.value.languages
   return {
     race: choices.filter(c => c.source === 'race'),
-    background: choices.filter(c => c.source === 'background')
+    background: choices.filter(c => c.source === 'background'),
+    class: choices.filter(c => c.source === 'class'),
+    subclass_feature: choices.filter(c => c.source === 'subclass_feature')
   }
 })
 
@@ -138,36 +141,41 @@ interface SourceDisplayData {
   knownLanguages: Array<{ id: number, name: string }>
 }
 
+// Helper to get source label
+function getSourceLabel(source: string): string {
+  const labels: Record<string, string> = {
+    race: 'From Race',
+    background: 'From Background',
+    class: 'From Class',
+    subclass_feature: 'From Subclass'
+  }
+  return labels[source] ?? `From ${source}`
+}
+
 const sourceData = computed((): SourceDisplayData[] => {
   const sources: SourceDisplayData[] = []
 
-  // Race choices
-  for (const choice of languageChoicesBySource.value.race) {
-    sources.push({
-      choice,
-      label: 'From Race',
-      entityName: choice.source_name,
-      knownLanguages: choice.selected.map((slug) => {
-        const options = choice.options as LanguageOption[] | null
-        const option = options?.find(o => (o.full_slug ?? o.slug) === String(slug))
-        return option ?? { id: 0, name: String(slug) }
+  // Helper to add choices from a source
+  const addSourceChoices = (sourceChoices: typeof choicesByType.value.languages, source: string) => {
+    for (const choice of sourceChoices) {
+      sources.push({
+        choice,
+        label: getSourceLabel(source),
+        entityName: choice.source_name,
+        knownLanguages: choice.selected.map((slug) => {
+          const options = choice.options as LanguageOption[] | null
+          const option = options?.find(o => (o.full_slug ?? o.slug) === String(slug))
+          return option ?? { id: 0, name: String(slug) }
+        })
       })
-    })
+    }
   }
 
-  // Background choices
-  for (const choice of languageChoicesBySource.value.background) {
-    sources.push({
-      choice,
-      label: 'From Background',
-      entityName: choice.source_name,
-      knownLanguages: choice.selected.map((slug) => {
-        const options = choice.options as LanguageOption[] | null
-        const option = options?.find(o => (o.full_slug ?? o.slug) === String(slug))
-        return option ?? { id: 0, name: String(slug) }
-      })
-    })
-  }
+  // Add choices from each source type
+  addSourceChoices(languageChoicesBySource.value.race, 'race')
+  addSourceChoices(languageChoicesBySource.value.background, 'background')
+  addSourceChoices(languageChoicesBySource.value.class, 'class')
+  addSourceChoices(languageChoicesBySource.value.subclass_feature, 'subclass_feature')
 
   return sources
 })
@@ -305,6 +313,24 @@ async function handleContinue() {
               v-for="lang in knownLanguagesBySource.background"
               :key="lang.id"
               color="background"
+              variant="subtle"
+              size="md"
+            >
+              {{ lang.language?.name || lang.language_slug }}
+            </UBadge>
+          </div>
+        </div>
+
+        <!-- From Subclass -->
+        <div v-if="knownLanguagesBySource.subclass_feature.length > 0">
+          <p class="text-sm font-medium text-gray-600 dark:text-gray-400 mb-2">
+            From Subclass:
+          </p>
+          <div class="flex flex-wrap gap-2">
+            <UBadge
+              v-for="lang in knownLanguagesBySource.subclass_feature"
+              :key="lang.id"
+              color="class"
               variant="subtle"
               size="md"
             >

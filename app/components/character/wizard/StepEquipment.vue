@@ -336,6 +336,11 @@ const backgroundEquipmentChoices = computed(() =>
   (choicesByType.value.equipment || []).filter(c => c.source === 'background')
 )
 
+// Subclass feature equipment choices (rare but supported for future-proofing)
+const subclassFeatureEquipmentChoices = computed(() =>
+  (choicesByType.value.equipment || []).filter(c => c.source === 'subclass_feature')
+)
+
 /**
  * Handle equipment choice selection
  */
@@ -485,10 +490,12 @@ function isChoiceFullySatisfied(choice: PendingChoice): boolean {
  */
 const allEquipmentChoicesMade = computed(() => {
   // In gold mode, class equipment choices are skipped (replaced by gold)
-  // Only background equipment choices need to be made
+  // Background and subclass feature equipment choices still need to be made
   if (equipmentMode.value === 'gold') {
     const backgroundChoices = backgroundEquipmentChoices.value
+    const subclassChoices = subclassFeatureEquipmentChoices.value
     return backgroundChoices.every(isChoiceFullySatisfied)
+      && subclassChoices.every(isChoiceFullySatisfied)
   }
 
   // In equipment mode, all choices must be made (including item selections for categories)
@@ -941,6 +948,24 @@ function formatPackContentItem(content: PackContentResource): string {
       <!-- Choice Groups -->
       <CharacterWizardEquipmentChoiceList
         :choices="backgroundEquipmentChoices"
+        :local-selections="localSelections"
+        :item-selections="itemSelections"
+        @select="handleChoiceSelect"
+        @item-select="handleItemSelect"
+      />
+    </div>
+
+    <!-- Subclass Feature Equipment (rare but supported) -->
+    <div
+      v-if="subclassFeatureEquipmentChoices.length > 0"
+      class="space-y-4"
+    >
+      <h3 class="text-lg font-semibold text-gray-900 dark:text-white border-b pb-2">
+        From Your Subclass
+      </h3>
+
+      <CharacterWizardEquipmentChoiceList
+        :choices="subclassFeatureEquipmentChoices"
         :local-selections="localSelections"
         :item-selections="itemSelections"
         @select="handleChoiceSelect"

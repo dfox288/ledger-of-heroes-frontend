@@ -85,6 +85,14 @@ const raceSpellChoices = computed(() =>
   choicesByType.value.spells.filter(c => c.source === 'race')
 )
 
+// Subclass feature spell choices (cantrips will also appear in cantripChoices)
+// This catches any subclass_feature spell choices that aren't cantrips
+const subclassFeatureSpellChoices = computed(() =>
+  choicesByType.value.spells.filter(c =>
+    c.source === 'subclass_feature' && c.subtype !== 'cantrip'
+  )
+)
+
 // Fetch options for all spell choices when they load
 watch(choicesByType, async (newVal) => {
   const allSpellChoices = newVal.spells
@@ -364,6 +372,38 @@ const {
         <div class="flex items-center justify-between border-b pb-2">
           <h3 class="text-lg font-semibold text-gray-900 dark:text-white">
             1st Level Spells ({{ choice.source_name }})
+          </h3>
+          <UBadge
+            :color="getSelectedCount(choice.id) >= choice.quantity ? 'success' : 'warning'"
+            variant="subtle"
+            size="md"
+          >
+            {{ getSelectedCount(choice.id) }} of {{ choice.quantity }}
+          </UBadge>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+          <CharacterSpellCard
+            v-for="spell in getAvailableSpells(choice)"
+            :key="spell.id"
+            :spell="spell"
+            :selected="isSpellSelected(choice.id, spell)"
+            :disabled="!isSpellSelected(choice.id, spell) && isChoiceAtLimit(choice)"
+            @toggle="handleSpellToggle(choice, spell)"
+            @view-details="handleViewDetails(spell)"
+          />
+        </div>
+      </div>
+
+      <!-- Subclass Feature Spell Choices (non-cantrip) -->
+      <div
+        v-for="choice in subclassFeatureSpellChoices"
+        :key="choice.id"
+        class="space-y-4"
+      >
+        <div class="flex items-center justify-between border-b pb-2">
+          <h3 class="text-lg font-semibold text-gray-900 dark:text-white">
+            Spells ({{ choice.source_name }})
           </h3>
           <UBadge
             :color="getSelectedCount(choice.id) >= choice.quantity ? 'success' : 'warning'"

@@ -66,10 +66,24 @@ interface GrantedProficiencyGroup {
   items: ProficiencyResource[]
 }
 
+// Valid source types for proficiency choices
+type ProficiencySource = 'class' | 'race' | 'background' | 'subclass_feature'
+
 interface GrantedProficienciesBySource {
-  source: 'class' | 'race' | 'background'
+  source: ProficiencySource
   entityName: string
   groups: GrantedProficiencyGroup[]
+}
+
+// Helper to get human-readable source labels
+function getSourceLabel(source: string): string {
+  const labels: Record<string, string> = {
+    class: 'Class',
+    race: 'Race',
+    background: 'Background',
+    subclass_feature: 'Subclass'
+  }
+  return labels[source] ?? source
 }
 
 function getProficiencyTypeLabel(type: string): string {
@@ -185,7 +199,7 @@ const hasAnyGranted = computed(() => grantedBySource.value.length > 0)
 // ══════════════════════════════════════════════════════════════
 
 interface ChoicesBySource {
-  source: 'class' | 'race' | 'background'
+  source: ProficiencySource
   label: string
   entityName: string
   choices: PendingChoice[]
@@ -201,7 +215,8 @@ const proficiencyChoicesBySource = computed<ChoicesBySource[]>(() => {
   const bySource = {
     class: choices.filter(c => c.source === 'class'),
     race: choices.filter(c => c.source === 'race'),
-    background: choices.filter(c => c.source === 'background')
+    background: choices.filter(c => c.source === 'background'),
+    subclass_feature: choices.filter(c => c.source === 'subclass_feature')
   }
 
   if (bySource.class.length > 0) {
@@ -228,6 +243,15 @@ const proficiencyChoicesBySource = computed<ChoicesBySource[]>(() => {
       label: 'From Background',
       entityName: bySource.background[0]?.source_name ?? selections.value.background?.name ?? 'Unknown',
       choices: bySource.background
+    })
+  }
+
+  if (bySource.subclass_feature.length > 0) {
+    sources.push({
+      source: 'subclass_feature',
+      label: 'From Subclass',
+      entityName: bySource.subclass_feature[0]?.source_name ?? 'Subclass Feature',
+      choices: bySource.subclass_feature
     })
   }
 
@@ -333,7 +357,7 @@ async function handleContinue() {
         class="space-y-4"
       >
         <h3 class="text-lg font-semibold text-gray-900 dark:text-white border-b pb-2">
-          From Your {{ sourceData.source === 'class' ? 'Class' : sourceData.source === 'race' ? 'Race' : 'Background' }} ({{ sourceData.entityName }})
+          From Your {{ getSourceLabel(sourceData.source) }} ({{ sourceData.entityName }})
         </h3>
 
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">

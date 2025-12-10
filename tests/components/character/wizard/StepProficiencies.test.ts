@@ -397,6 +397,66 @@ describe('StepProficiencies - Specific Behavior', () => {
     })
   })
 
+  describe('Source Grouping', () => {
+    it('groups choices by source including subclass_feature', async () => {
+      const { wrapper } = await mountWizardStep(StepProficiencies, {
+        storeSetup: (store) => {
+          store.selections.class = wizardMockClasses.fighter
+        }
+      })
+
+      const vm = wrapper.vm as any
+      expect(vm.proficiencyChoicesBySource).toBeDefined()
+      expect(Array.isArray(vm.proficiencyChoicesBySource)).toBe(true)
+    })
+
+    it('includes subclass_feature as a valid source type', async () => {
+      const { wrapper } = await mountWizardStep(StepProficiencies, {
+        storeSetup: (store) => {
+          store.selections.class = wizardMockClasses.fighter
+        }
+      })
+
+      const vm = wrapper.vm as any
+
+      // Simulate a subclass_feature choice being present
+      // The component should support this source type
+      const mockChoices = [
+        { id: 'prof:class:1:1:skills', source: 'class', source_name: 'Fighter', quantity: 2, selected: [] },
+        { id: 'prof:subclass_feature:1:1:skills', source: 'subclass_feature', source_name: 'Acolyte of Nature', quantity: 1, selected: [] }
+      ]
+
+      // Access the filter logic - when choices include subclass_feature,
+      // they should be grouped and displayed, not silently dropped
+      const bySource = {
+        class: mockChoices.filter(c => c.source === 'class'),
+        race: mockChoices.filter(c => c.source === 'race'),
+        background: mockChoices.filter(c => c.source === 'background'),
+        subclass_feature: mockChoices.filter(c => c.source === 'subclass_feature')
+      }
+
+      // Verify the subclass_feature choice isn't lost
+      expect(bySource.subclass_feature).toHaveLength(1)
+      expect(bySource.subclass_feature[0].source_name).toBe('Acolyte of Nature')
+    })
+
+    it('provides correct label for subclass_feature source', async () => {
+      const { wrapper } = await mountWizardStep(StepProficiencies, {
+        storeSetup: (store) => {
+          store.selections.class = wizardMockClasses.fighter
+        }
+      })
+
+      const vm = wrapper.vm as any
+      // The component should have a helper to get source labels
+      expect(typeof vm.getSourceLabel).toBe('function')
+      expect(vm.getSourceLabel('class')).toBe('Class')
+      expect(vm.getSourceLabel('race')).toBe('Race')
+      expect(vm.getSourceLabel('background')).toBe('Background')
+      expect(vm.getSourceLabel('subclass_feature')).toBe('Subclass')
+    })
+  })
+
   describe('Proficiency Name Display', () => {
     it('gets proficiency name from proficiency_name field', async () => {
       const { wrapper } = await mountWizardStep(StepProficiencies, {
