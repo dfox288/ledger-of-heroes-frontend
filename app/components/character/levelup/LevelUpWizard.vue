@@ -67,6 +67,7 @@ const emit = defineEmits<{
 
 <template>
   <UModal
+    v-if="store.isOpen"
     v-model:open="store.isOpen"
     fullscreen
     :prevent-close="true"
