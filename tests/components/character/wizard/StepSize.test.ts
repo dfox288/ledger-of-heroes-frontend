@@ -60,7 +60,7 @@ const mockRace = {
   full_slug: 'halfling',
   description: 'The comforts of home are the goals of most halflings\' lives.',
   speed: 25,
-  sources: [{ code: 'PHB', name: "Player's Handbook", pages: '26' }]
+  sources: [{ code: 'PHB', name: 'Player\'s Handbook', pages: '26' }]
 }
 
 // Helper to reset mock state to defaults

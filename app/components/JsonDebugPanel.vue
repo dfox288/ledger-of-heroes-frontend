@@ -28,15 +28,14 @@ const copyJson = async () => {
         title: 'Copied!',
         description: 'JSON copied to clipboard',
         icon: 'i-heroicons-clipboard-document-check',
-        color: 'success',
+        color: 'success'
       })
-    }
-    catch {
+    } catch {
       toast.add({
         title: 'Copy failed',
         description: 'Could not copy to clipboard',
         icon: 'i-heroicons-exclamation-triangle',
-        color: 'error',
+        color: 'error'
       })
     }
   }
