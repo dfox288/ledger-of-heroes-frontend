@@ -68,7 +68,7 @@ const sourceLabels: Record<string, string> = {
               </div>
               <div
                 v-if="feature.feature?.description"
-                class="text-sm text-gray-600 dark:text-gray-400 mt-1 line-clamp-2"
+                class="text-sm text-gray-600 dark:text-gray-400 mt-1 whitespace-pre-line"
               >
                 {{ feature.feature.description }}
               </div>
