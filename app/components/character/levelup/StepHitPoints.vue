@@ -1,6 +1,6 @@
 <script setup lang="ts">
 const props = defineProps<{
-  characterId: number | null
+  characterId: number
   nextStep: () => void
   hitDie: number
   conModifier: number
@@ -12,7 +12,7 @@ const emit = defineEmits<{
 
 // Use unified choices for HP choice resolution
 const { resolveChoice, fetchChoices, choicesByType } = useUnifiedChoices(
-  computed(() => props.characterId!)
+  computed(() => props.characterId)
 )
 
 // Local state

@@ -16,7 +16,8 @@ const currentStepIndex = computed(() =>
 
 const progressPercent = computed(() => {
   if (props.activeSteps.length <= 1) return 100
-  return Math.round((currentStepIndex.value / (props.activeSteps.length - 1)) * 100)
+  const index = Math.max(0, currentStepIndex.value) // Guard against -1
+  return Math.round((index / (props.activeSteps.length - 1)) * 100)
 })
 
 function getStepUrl(stepName: string): string {
