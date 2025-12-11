@@ -45,9 +45,6 @@ export const useCharacterLevelUpStore = defineStore('characterLevelUp', () => {
   /** Is the wizard modal open? */
   const isOpen = ref(false)
 
-  /** Current wizard step */
-  const currentStepName = ref<string>('class-selection')
-
   /** Result from level-up API call */
   const levelUpResult = ref<LevelUpResult | null>(null)
 
@@ -117,6 +114,9 @@ export const useCharacterLevelUpStore = defineStore('characterLevelUp', () => {
     pendingChoices.value.some(c => c.type === 'proficiency')
   )
 
+  /** Is a level-up in progress? (API called, awaiting choices) */
+  const isLevelUpInProgress = computed(() => levelUpResult.value !== null)
+
   // ══════════════════════════════════════════════════════════════
   // ACTIONS
   // ══════════════════════════════════════════════════════════════
@@ -134,7 +134,6 @@ export const useCharacterLevelUpStore = defineStore('characterLevelUp', () => {
     publicId.value = charPublicId
     characterClasses.value = classes
     totalLevel.value = level
-    currentStepName.value = 'class-selection'
     levelUpResult.value = null
     selectedClassSlug.value = null
     error.value = null
@@ -207,13 +206,6 @@ export const useCharacterLevelUpStore = defineStore('characterLevelUp', () => {
   }
 
   /**
-   * Navigate to a specific step
-   */
-  function goToStep(stepName: string) {
-    currentStepName.value = stepName
-  }
-
-  /**
    * Reset all wizard state
    */
   function reset() {
@@ -222,9 +214,9 @@ export const useCharacterLevelUpStore = defineStore('characterLevelUp', () => {
     characterClasses.value = []
     totalLevel.value = 0
     isOpen.value = false
-    currentStepName.value = 'class-selection'
     levelUpResult.value = null
     selectedClassSlug.value = null
+    pendingChoices.value = []
     isLoading.value = false
     error.value = null
   }
@@ -238,7 +230,6 @@ export const useCharacterLevelUpStore = defineStore('characterLevelUp', () => {
     characterId,
     publicId,
     isOpen,
-    currentStepName,
     levelUpResult,
     selectedClassSlug,
     characterClasses,
@@ -257,12 +248,12 @@ export const useCharacterLevelUpStore = defineStore('characterLevelUp', () => {
     hasFeatureChoices,
     hasLanguageChoices,
     hasProficiencyChoices,
+    isLevelUpInProgress,
 
     // Actions
     openWizard,
     closeWizard,
     levelUp,
-    goToStep,
     reset,
     fetchPendingChoices,
     refreshChoices
