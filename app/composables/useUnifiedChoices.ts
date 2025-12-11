@@ -112,7 +112,10 @@ export function useUnifiedChoices(characterId: Ref<number | null>) {
     abilityScores: choices.value.filter(c => c.type === 'ability_score'),
     feats: choices.value.filter(c => c.type === 'feat'),
     sizes: choices.value.filter(c => c.type === 'size'),
-    hitPoints: choices.value.filter(c => c.type === 'hit_points')
+    hitPoints: choices.value.filter(c => c.type === 'hit_points'),
+    // Feature choice groupings
+    fightingStyles: choices.value.filter(c => c.type === 'fighting_style'),
+    expertise: choices.value.filter(c => c.type === 'expertise')
   }))
 
   /**
