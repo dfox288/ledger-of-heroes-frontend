@@ -638,6 +638,69 @@ describe('Page Tests', () => {
 
 ---
 
+## Testing with MSW (Integration Tests)
+
+MSW (Mock Service Worker) intercepts network requests at the service worker level for realistic API testing. Use MSW for integration tests that need to test actual fetch logic.
+
+### When to Use MSW vs vi.mock()
+
+| Approach | Use For |
+|----------|---------|
+| **vi.mock()** | Unit tests, isolated component logic |
+| **MSW** | Integration tests, API flow testing, error handling |
+
+### Basic Usage
+
+```typescript
+import { server, http, HttpResponse } from '@/tests/msw/server'
+import { humanFighterL1 } from '@/tests/msw/fixtures/characters'
+
+beforeAll(() => server.listen())
+afterEach(() => server.resetHandlers())
+afterAll(() => server.close())
+
+it('loads character data', async () => {
+  const response = await fetch(`/api/characters/${humanFighterL1.character.public_id}`)
+  const data = await response.json()
+  expect(data.data.name).toBe('Thorin Ironforge')
+})
+
+// Override handler for specific test
+it('handles API errors', async () => {
+  server.use(
+    http.get('/api/characters/:id', () => {
+      return HttpResponse.json({ error: 'Not found' }, { status: 404 })
+    })
+  )
+  // Test error handling...
+})
+```
+
+### Directory Structure
+
+```
+tests/
+├── msw/
+│   ├── server.ts           # MSW server setup
+│   ├── handlers/
+│   │   ├── index.ts        # All handlers export
+│   │   ├── characters.ts   # Character endpoints
+│   │   └── reference.ts    # Reference data endpoints
+│   └── fixtures/
+│       └── characters/
+│           ├── human-fighter-l1.ts
+│           └── draft-cleric-l1.ts
+└── integration/            # Tests using MSW
+```
+
+### Adding New Fixtures
+
+1. Create fixture in `tests/msw/fixtures/` based on API types
+2. Add handler in `tests/msw/handlers/` to serve fixture
+3. Export from `handlers/index.ts`
+
+---
+
 ## Success Checklist
 
 Before creating a PR:
