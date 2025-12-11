@@ -13,6 +13,10 @@ const mockGoToStep = vi.fn()
 const mockLevelUpResult = ref<unknown>(null)
 const mockNeedsClassSelection = ref(true)
 const mockCurrentStepName = ref('class-selection')
+const mockHasSpellChoices = ref(false)
+const mockHasFeatureChoices = ref(false)
+const mockHasLanguageChoices = ref(false)
+const mockHasProficiencyChoices = ref(false)
 
 vi.mock('~/stores/characterLevelUp', () => ({
   useCharacterLevelUpStore: vi.fn(() => ({
@@ -20,6 +24,10 @@ vi.mock('~/stores/characterLevelUp', () => ({
     get levelUpResult() { return mockLevelUpResult.value },
     get needsClassSelection() { return mockNeedsClassSelection.value },
     get currentStepName() { return mockCurrentStepName.value },
+    get hasSpellChoices() { return mockHasSpellChoices.value },
+    get hasFeatureChoices() { return mockHasFeatureChoices.value },
+    get hasLanguageChoices() { return mockHasLanguageChoices.value },
+    get hasProficiencyChoices() { return mockHasProficiencyChoices.value },
     goToStep: mockGoToStep
   }))
 }))
@@ -40,6 +48,10 @@ describe('useLevelUpWizard', () => {
     mockLevelUpResult.value = null
     mockNeedsClassSelection.value = true
     mockCurrentStepName.value = 'class-selection'
+    mockHasSpellChoices.value = false
+    mockHasFeatureChoices.value = false
+    mockHasLanguageChoices.value = false
+    mockHasProficiencyChoices.value = false
   })
 
   describe('stepRegistry', () => {
@@ -78,6 +90,42 @@ describe('useLevelUpWizard', () => {
       expect(asiStep).toBeDefined()
       expect(asiStep?.label).toBe('ASI / Feat')
     })
+
+    it('includes feature-choices step with correct label and icon', () => {
+      const { stepRegistry } = useLevelUpWizard()
+
+      const featureStep = stepRegistry.find(s => s.name === 'feature-choices')
+      expect(featureStep).toBeDefined()
+      expect(featureStep?.label).toBe('Features')
+      expect(featureStep?.icon).toBe('i-heroicons-puzzle-piece')
+    })
+
+    it('includes spells step with correct label and icon', () => {
+      const { stepRegistry } = useLevelUpWizard()
+
+      const spellsStep = stepRegistry.find(s => s.name === 'spells')
+      expect(spellsStep).toBeDefined()
+      expect(spellsStep?.label).toBe('Spells')
+      expect(spellsStep?.icon).toBe('i-heroicons-sparkles')
+    })
+
+    it('includes languages step with correct label and icon', () => {
+      const { stepRegistry } = useLevelUpWizard()
+
+      const languagesStep = stepRegistry.find(s => s.name === 'languages')
+      expect(languagesStep).toBeDefined()
+      expect(languagesStep?.label).toBe('Languages')
+      expect(languagesStep?.icon).toBe('i-heroicons-language')
+    })
+
+    it('includes proficiencies step with correct label and icon', () => {
+      const { stepRegistry } = useLevelUpWizard()
+
+      const proficienciesStep = stepRegistry.find(s => s.name === 'proficiencies')
+      expect(proficienciesStep).toBeDefined()
+      expect(proficienciesStep?.label).toBe('Proficiencies')
+      expect(proficienciesStep?.icon).toBe('i-heroicons-academic-cap')
+    })
   })
 
   describe('activeSteps', () => {
@@ -96,6 +144,171 @@ describe('useLevelUpWizard', () => {
 
       const classStep = activeSteps.value.find(s => s.name === 'class-selection')
       expect(classStep).toBeUndefined()
+    })
+  })
+
+  describe('step order', () => {
+    it('has correct step order when all steps are visible', () => {
+      // Enable all steps
+      mockNeedsClassSelection.value = true
+      mockLevelUpResult.value = { hp_choice_pending: true, asi_pending: true }
+      mockHasFeatureChoices.value = true
+      mockHasSpellChoices.value = true
+      mockHasLanguageChoices.value = true
+      mockHasProficiencyChoices.value = true
+
+      const { activeSteps } = useLevelUpWizard()
+
+      // Extract step names in order
+      const stepNames = activeSteps.value.map(s => s.name)
+
+      // Expected order: class-selection -> subclass -> hit-points -> asi-feat -> feature-choices -> spells -> languages -> proficiencies -> summary
+      const expectedOrder = [
+        'class-selection',
+        'subclass',
+        'hit-points',
+        'asi-feat',
+        'feature-choices',
+        'spells',
+        'languages',
+        'proficiencies',
+        'summary'
+      ]
+
+      // Filter expected order to only visible steps
+      const visibleExpectedOrder = expectedOrder.filter(name => stepNames.includes(name))
+
+      expect(stepNames).toEqual(visibleExpectedOrder)
+    })
+
+    it('has feature-choices after asi-feat', () => {
+      mockLevelUpResult.value = { hp_choice_pending: true, asi_pending: true }
+      mockHasFeatureChoices.value = true
+
+      const { activeSteps } = useLevelUpWizard()
+      const stepNames = activeSteps.value.map(s => s.name)
+
+      const asiIndex = stepNames.indexOf('asi-feat')
+      const featureIndex = stepNames.indexOf('feature-choices')
+
+      expect(featureIndex).toBeGreaterThan(asiIndex)
+    })
+
+    it('has spells after feature-choices', () => {
+      mockHasFeatureChoices.value = true
+      mockHasSpellChoices.value = true
+
+      const { activeSteps } = useLevelUpWizard()
+      const stepNames = activeSteps.value.map(s => s.name)
+
+      const featureIndex = stepNames.indexOf('feature-choices')
+      const spellsIndex = stepNames.indexOf('spells')
+
+      expect(spellsIndex).toBeGreaterThan(featureIndex)
+    })
+
+    it('has languages after spells', () => {
+      mockHasSpellChoices.value = true
+      mockHasLanguageChoices.value = true
+
+      const { activeSteps } = useLevelUpWizard()
+      const stepNames = activeSteps.value.map(s => s.name)
+
+      const spellsIndex = stepNames.indexOf('spells')
+      const languagesIndex = stepNames.indexOf('languages')
+
+      expect(languagesIndex).toBeGreaterThan(spellsIndex)
+    })
+
+    it('has proficiencies after languages', () => {
+      mockHasLanguageChoices.value = true
+      mockHasProficiencyChoices.value = true
+
+      const { activeSteps } = useLevelUpWizard()
+      const stepNames = activeSteps.value.map(s => s.name)
+
+      const languagesIndex = stepNames.indexOf('languages')
+      const proficienciesIndex = stepNames.indexOf('proficiencies')
+
+      expect(proficienciesIndex).toBeGreaterThan(languagesIndex)
+    })
+
+    it('has summary as last step', () => {
+      mockHasFeatureChoices.value = true
+      mockHasSpellChoices.value = true
+      mockHasLanguageChoices.value = true
+      mockHasProficiencyChoices.value = true
+
+      const { activeSteps } = useLevelUpWizard()
+      const lastStep = activeSteps.value[activeSteps.value.length - 1]
+
+      expect(lastStep.name).toBe('summary')
+    })
+  })
+
+  describe('step visibility logic', () => {
+    it('shows feature-choices when hasFeatureChoices is true', () => {
+      mockHasFeatureChoices.value = true
+      const { activeSteps } = useLevelUpWizard()
+
+      const featureStep = activeSteps.value.find(s => s.name === 'feature-choices')
+      expect(featureStep).toBeDefined()
+    })
+
+    it('hides feature-choices when hasFeatureChoices is false', () => {
+      mockHasFeatureChoices.value = false
+      const { activeSteps } = useLevelUpWizard()
+
+      const featureStep = activeSteps.value.find(s => s.name === 'feature-choices')
+      expect(featureStep).toBeUndefined()
+    })
+
+    it('shows spells when hasSpellChoices is true', () => {
+      mockHasSpellChoices.value = true
+      const { activeSteps } = useLevelUpWizard()
+
+      const spellsStep = activeSteps.value.find(s => s.name === 'spells')
+      expect(spellsStep).toBeDefined()
+    })
+
+    it('hides spells when hasSpellChoices is false', () => {
+      mockHasSpellChoices.value = false
+      const { activeSteps } = useLevelUpWizard()
+
+      const spellsStep = activeSteps.value.find(s => s.name === 'spells')
+      expect(spellsStep).toBeUndefined()
+    })
+
+    it('shows languages when hasLanguageChoices is true', () => {
+      mockHasLanguageChoices.value = true
+      const { activeSteps } = useLevelUpWizard()
+
+      const languagesStep = activeSteps.value.find(s => s.name === 'languages')
+      expect(languagesStep).toBeDefined()
+    })
+
+    it('hides languages when hasLanguageChoices is false', () => {
+      mockHasLanguageChoices.value = false
+      const { activeSteps } = useLevelUpWizard()
+
+      const languagesStep = activeSteps.value.find(s => s.name === 'languages')
+      expect(languagesStep).toBeUndefined()
+    })
+
+    it('shows proficiencies when hasProficiencyChoices is true', () => {
+      mockHasProficiencyChoices.value = true
+      const { activeSteps } = useLevelUpWizard()
+
+      const proficienciesStep = activeSteps.value.find(s => s.name === 'proficiencies')
+      expect(proficienciesStep).toBeDefined()
+    })
+
+    it('hides proficiencies when hasProficiencyChoices is false', () => {
+      mockHasProficiencyChoices.value = false
+      const { activeSteps } = useLevelUpWizard()
+
+      const proficienciesStep = activeSteps.value.find(s => s.name === 'proficiencies')
+      expect(proficienciesStep).toBeUndefined()
     })
   })
 
