@@ -617,22 +617,25 @@ describe('characterWizard store', () => {
       expect(mockApiFetch).not.toHaveBeenCalled()
     })
 
-    it('fetches stats and summary in parallel', async () => {
+    it('fetches stats, summary, and pending-choices in parallel', async () => {
       const store = useCharacterWizardStore()
       store.characterId = 42
 
       const mockStats = { hp: 12, ac: 15 }
       const mockSummary = { creation_complete: false, pending_choices: {} }
+      const mockPendingChoices = { choices: [] }
 
       mockApiFetch
         .mockResolvedValueOnce({ data: mockStats })
         .mockResolvedValueOnce({ data: mockSummary })
+        .mockResolvedValueOnce({ data: mockPendingChoices })
 
       await store.syncWithBackend()
 
-      expect(mockApiFetch).toHaveBeenCalledTimes(2)
+      expect(mockApiFetch).toHaveBeenCalledTimes(3)
       expect(mockApiFetch).toHaveBeenCalledWith('/characters/42/stats')
       expect(mockApiFetch).toHaveBeenCalledWith('/characters/42/summary')
+      expect(mockApiFetch).toHaveBeenCalledWith('/characters/42/pending-choices')
       expect(store.stats).toEqual(mockStats)
       expect(store.summary).toEqual(mockSummary)
     })
@@ -767,11 +770,12 @@ describe('characterWizard store', () => {
             race: { slug: 'phb:elf' }
           }
         })
-        // Second: full race details fetched from /races/elf
+        // Second: full race details fetched from /races/phb:elf
         .mockResolvedValueOnce({ data: mockElf })
-        // Third/Fourth: stats and summary
+        // Third/Fourth/Fifth: stats, summary, pending-choices
         .mockResolvedValueOnce({ data: {} }) // stats
         .mockResolvedValueOnce({ data: {} }) // summary
+        .mockResolvedValueOnce({ data: {} }) // pending-choices
 
       await store.loadCharacter('noble-mage-xyz')
 
@@ -780,7 +784,7 @@ describe('characterWizard store', () => {
       expect(store.selections.name).toBe('Gandalf')
       // Full race data is now fetched from /races/{slug}
       expect(store.selections.race?.id).toBe(mockElf.id)
-      expect(mockApiFetch).toHaveBeenCalledWith('/races/elf')
+      expect(mockApiFetch).toHaveBeenCalledWith('/races/phb:elf')
     })
 
     it('sets error on failure', async () => {

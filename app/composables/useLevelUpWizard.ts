@@ -96,7 +96,7 @@ function createStepRegistry(store: ReturnType<typeof useCharacterLevelUpStore>):
   ]
 }
 
-export function useLevelUpWizard(options: UseLevelUpWizardOptions) {
+export function useLevelUpWizard(options?: UseLevelUpWizardOptions) {
   const store = useCharacterLevelUpStore()
 
   // Create step registry with store access
@@ -114,9 +114,9 @@ export function useLevelUpWizard(options: UseLevelUpWizardOptions) {
   )
 
   /**
-   * Current step name - from URL (options.currentStep)
+   * Current step name - from URL (options.currentStep) or store fallback
    */
-  const currentStepName = computed(() => options.currentStep)
+  const currentStepName = computed(() => options?.currentStep ?? store.currentStepName)
 
   /**
    * Current step index within active steps
@@ -162,16 +162,33 @@ export function useLevelUpWizard(options: UseLevelUpWizardOptions) {
   // ══════════════════════════════════════════════════════════════
 
   function getStepUrl(stepName: string): string {
+    if (!options?.publicId) {
+      throw new Error('options required')
+    }
     return `/characters/${options.publicId}/level-up/${stepName}`
   }
 
   function getPreviewUrl(): string {
+    if (!options?.publicId) {
+      throw new Error('options required')
+    }
     return `/characters/${options.publicId}/level-up`
   }
 
   // ══════════════════════════════════════════════════════════════
   // NAVIGATION
   // ══════════════════════════════════════════════════════════════
+
+  /**
+   * Navigate to a step - uses URL navigation if options provided, store navigation otherwise
+   */
+  async function navigateToStep(stepName: string): Promise<void> {
+    if (options?.publicId) {
+      await navigateTo(getStepUrl(stepName))
+    } else {
+      store.goToStep(stepName)
+    }
+  }
 
   /**
    * Navigate to next step, skipping any steps that should be skipped
@@ -182,7 +199,7 @@ export function useLevelUpWizard(options: UseLevelUpWizardOptions) {
     while (nextIndex < activeSteps.value.length) {
       const next = activeSteps.value[nextIndex]
       if (next && !next.shouldSkip?.()) {
-        await navigateTo(getStepUrl(next.name))
+        await navigateToStep(next.name)
         return
       }
       nextIndex++
@@ -198,7 +215,7 @@ export function useLevelUpWizard(options: UseLevelUpWizardOptions) {
     while (prevIndex >= 0) {
       const prev = activeSteps.value[prevIndex]
       if (prev && !prev.shouldSkip?.()) {
-        await navigateTo(getStepUrl(prev.name))
+        await navigateToStep(prev.name)
         return
       }
       prevIndex--
@@ -211,7 +228,7 @@ export function useLevelUpWizard(options: UseLevelUpWizardOptions) {
   async function goToStep(stepName: string): Promise<void> {
     const step = activeSteps.value.find(s => s.name === stepName)
     if (step) {
-      await navigateTo(getStepUrl(stepName))
+      await navigateToStep(stepName)
     }
   }
 

@@ -42,43 +42,43 @@ const cardConfigs = [
     name: 'SpellCard',
     component: SpellCard,
     props: { spell: createMockSpell() },
-    expectedLink: '/spells/fireball'
+    expectedLink: '/spells/phb:fireball'
   },
   {
     name: 'ItemCard',
     component: ItemCard,
     props: { item: createMockItem() },
-    expectedLink: '/items/longsword'
+    expectedLink: '/items/phb:longsword'
   },
   {
     name: 'MonsterCard',
     component: MonsterCard,
     props: { monster: createMockMonster() },
-    expectedLink: '/monsters/ancient-red-dragon'
+    expectedLink: '/monsters/mm:ancient-red-dragon'
   },
   {
     name: 'ClassCard',
     component: ClassCard,
     props: { characterClass: createMockClass() },
-    expectedLink: '/classes/wizard'
+    expectedLink: '/classes/phb:wizard'
   },
   {
     name: 'RaceCard',
     component: RaceCard,
     props: { race: createMockRace() },
-    expectedLink: '/races/elf'
+    expectedLink: '/races/phb:elf'
   },
   {
     name: 'BackgroundCard',
     component: BackgroundCard,
     props: { background: createMockBackground() },
-    expectedLink: '/backgrounds/acolyte'
+    expectedLink: '/backgrounds/phb:acolyte'
   },
   {
     name: 'FeatCard',
     component: FeatCard,
     props: { feat: createMockFeat() },
-    expectedLink: '/feats/war-caster'
+    expectedLink: '/feats/phb:war-caster'
   }
 ]
 

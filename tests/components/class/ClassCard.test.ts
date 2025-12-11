@@ -14,7 +14,7 @@ describe('ClassCard', () => {
     propName: 'characterClass',
     mockFactory: createMockClass,
     entityName: 'Wizard',
-    linkPath: '/classes/wizard',
+    linkPath: '/classes/phb:wizard',
     optionalFields: ['primary_ability', 'spellcasting_ability', 'sources']
   })
 

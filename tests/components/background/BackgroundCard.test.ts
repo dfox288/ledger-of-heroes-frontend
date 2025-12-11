@@ -14,7 +14,7 @@ describe('BackgroundCard', () => {
     propName: 'background',
     mockFactory: createMockBackground,
     entityName: 'Acolyte',
-    linkPath: '/backgrounds/acolyte',
+    linkPath: '/backgrounds/phb:acolyte',
     optionalFields: ['feature_name', 'proficiencies', 'sources']
   })
 

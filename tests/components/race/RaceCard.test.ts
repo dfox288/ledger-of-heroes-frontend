@@ -14,7 +14,7 @@ describe('RaceCard', () => {
     propName: 'race',
     mockFactory: createMockRace,
     entityName: 'Elf',
-    linkPath: '/races/elf',
+    linkPath: '/races/phb:elf',
     optionalFields: ['size', 'parent_race', 'sources']
   })
 

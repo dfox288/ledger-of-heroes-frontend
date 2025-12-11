@@ -72,10 +72,8 @@ describe('characterLevelUp store', () => {
       expect(store.isOpen).toBe(false)
     })
 
-    it('starts on class-selection step', () => {
-      const store = useCharacterLevelUpStore()
-      expect(store.currentStepName).toBe('class-selection')
-    })
+    // Note: currentStepName moved to useLevelUpWizard composable
+    // Step navigation is now URL-based, not stored in Pinia
 
     it('starts with no loading state', () => {
       const store = useCharacterLevelUpStore()
@@ -147,14 +145,8 @@ describe('characterLevelUp store', () => {
     })
   })
 
-  describe('goToStep', () => {
-    it('changes current step', () => {
-      const store = useCharacterLevelUpStore()
-      store.goToStep('hit-points')
-
-      expect(store.currentStepName).toBe('hit-points')
-    })
-  })
+  // Note: goToStep moved to useLevelUpWizard composable
+  // Step navigation is now URL-based via navigateTo()
 
   describe('computed: isMulticlass', () => {
     it('returns false for single-class characters', () => {
@@ -250,7 +242,9 @@ describe('characterLevelUp store', () => {
 
   describe('levelUp action', () => {
     it('calls API with correct parameters', async () => {
-      mockApiFetch.mockResolvedValueOnce(mockLevelUpResult)
+      mockApiFetch
+        .mockResolvedValueOnce({ data: mockLevelUpResult }) // level-up
+        .mockResolvedValueOnce({ data: { choices: [], summary: {} } }) // pending-choices
       const store = useCharacterLevelUpStore()
       store.openWizard(123, 'shadow-warden-q3x9', mockCharacterClasses, 3)
 
@@ -263,7 +257,9 @@ describe('characterLevelUp store', () => {
     })
 
     it('stores level up result on success', async () => {
-      mockApiFetch.mockResolvedValueOnce(mockLevelUpResult)
+      mockApiFetch
+        .mockResolvedValueOnce({ data: mockLevelUpResult }) // level-up
+        .mockResolvedValueOnce({ data: { choices: [], summary: {} } }) // pending-choices
       const store = useCharacterLevelUpStore()
       store.openWizard(123, 'shadow-warden-q3x9', mockCharacterClasses, 3)
 
@@ -276,9 +272,11 @@ describe('characterLevelUp store', () => {
 
     it('sets loading state during API call', async () => {
       let resolvePromise: (value: unknown) => void
-      mockApiFetch.mockImplementationOnce(() => new Promise((resolve) => {
-        resolvePromise = resolve
-      }))
+      mockApiFetch
+        .mockImplementationOnce(() => new Promise((resolve) => {
+          resolvePromise = resolve
+        }))
+        .mockResolvedValueOnce({ data: { choices: [], summary: {} } }) // pending-choices
 
       const store = useCharacterLevelUpStore()
       store.openWizard(123, 'shadow-warden-q3x9', mockCharacterClasses, 3)
@@ -286,7 +284,7 @@ describe('characterLevelUp store', () => {
       const promise = store.levelUp('phb:fighter')
       expect(store.isLoading).toBe(true)
 
-      resolvePromise!(mockLevelUpResult)
+      resolvePromise!({ data: mockLevelUpResult })
       await promise
 
       expect(store.isLoading).toBe(false)
@@ -449,9 +447,9 @@ describe('characterLevelUp store', () => {
       ]
 
       // First call: level-up, Second call: pending choices
-      // API returns { data: { choices: [...], summary: {...} } }
+      // API returns { data: { ... } } wrapper
       mockApiFetch
-        .mockResolvedValueOnce(mockLevelUpResult)
+        .mockResolvedValueOnce({ data: mockLevelUpResult })
         .mockResolvedValueOnce({ data: { choices: mockChoices, summary: {} } })
 
       const store = useCharacterLevelUpStore()
