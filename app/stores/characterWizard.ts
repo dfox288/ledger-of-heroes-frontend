@@ -71,6 +71,9 @@ export interface CharacterSummaryData {
     asi: number
     feats: number
     size: number
+    expertise?: number
+    fighting_style?: number
+    optional_feature?: number
   }
   creation_complete: boolean
   missing_required: string[]
@@ -304,6 +307,17 @@ export const useCharacterWizardStore = defineStore('characterWizard', () => {
   const hasSizeChoices = computed(() => {
     if (!summary.value) return false
     return (summary.value.pending_choices.size ?? 0) > 0
+  })
+
+  /**
+   * Does this character have feature choices to make?
+   * (fighting_style, expertise, optional_feature)
+   */
+  const hasFeatureChoices = computed(() => {
+    if (!summary.value) return false
+    return (summary.value.pending_choices.expertise ?? 0) > 0
+      || (summary.value.pending_choices.fighting_style ?? 0) > 0
+      || (summary.value.pending_choices.optional_feature ?? 0) > 0
   })
 
   /**
@@ -856,6 +870,7 @@ export const useCharacterWizardStore = defineStore('characterWizard', () => {
     hasLanguageChoices,
     hasFeatChoices,
     hasSizeChoices,
+    hasFeatureChoices,
     isComplete,
 
     // Computed: Filtering

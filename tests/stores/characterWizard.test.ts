@@ -1031,4 +1031,121 @@ describe('characterWizard store', () => {
       expect(store.hasFeatChoices).toBe(false)
     })
   })
+
+  describe('hasFeatureChoices computed', () => {
+    it('returns false when no summary', () => {
+      const store = useCharacterWizardStore()
+      expect(store.hasFeatureChoices).toBe(false)
+    })
+
+    it('returns false when no feature choices exist', () => {
+      const store = useCharacterWizardStore()
+      store.summary = {
+        character: { id: 1, name: 'Test', total_level: 1 },
+        pending_choices: {
+          proficiencies: 0,
+          languages: 0,
+          spells: 0,
+          optional_features: 0,
+          asi: 0,
+          feats: 0,
+          size: 0,
+          expertise: 0,
+          fighting_style: 0,
+          optional_feature: 0
+        },
+        creation_complete: false,
+        missing_required: []
+      }
+      expect(store.hasFeatureChoices).toBe(false)
+    })
+
+    it('returns true when expertise choices exist', () => {
+      const store = useCharacterWizardStore()
+      store.summary = {
+        character: { id: 1, name: 'Test', total_level: 1 },
+        pending_choices: {
+          proficiencies: 0,
+          languages: 0,
+          spells: 0,
+          optional_features: 0,
+          asi: 0,
+          feats: 0,
+          size: 0,
+          expertise: 2,
+          fighting_style: 0,
+          optional_feature: 0
+        },
+        creation_complete: false,
+        missing_required: []
+      }
+      expect(store.hasFeatureChoices).toBe(true)
+    })
+
+    it('returns true when fighting_style choices exist', () => {
+      const store = useCharacterWizardStore()
+      store.summary = {
+        character: { id: 1, name: 'Test', total_level: 1 },
+        pending_choices: {
+          proficiencies: 0,
+          languages: 0,
+          spells: 0,
+          optional_features: 0,
+          asi: 0,
+          feats: 0,
+          size: 0,
+          expertise: 0,
+          fighting_style: 1,
+          optional_feature: 0
+        },
+        creation_complete: false,
+        missing_required: []
+      }
+      expect(store.hasFeatureChoices).toBe(true)
+    })
+
+    it('returns true when optional_feature choices exist', () => {
+      const store = useCharacterWizardStore()
+      store.summary = {
+        character: { id: 1, name: 'Test', total_level: 1 },
+        pending_choices: {
+          proficiencies: 0,
+          languages: 0,
+          spells: 0,
+          optional_features: 0,
+          asi: 0,
+          feats: 0,
+          size: 0,
+          expertise: 0,
+          fighting_style: 0,
+          optional_feature: 1
+        },
+        creation_complete: false,
+        missing_required: []
+      }
+      expect(store.hasFeatureChoices).toBe(true)
+    })
+
+    it('returns true when multiple feature choice types exist', () => {
+      const store = useCharacterWizardStore()
+      store.summary = {
+        character: { id: 1, name: 'Test', total_level: 1 },
+        pending_choices: {
+          proficiencies: 0,
+          languages: 0,
+          spells: 0,
+          optional_features: 0,
+          asi: 0,
+          feats: 0,
+          size: 0,
+          expertise: 2,
+          fighting_style: 1,
+          optional_feature: 0
+        },
+        creation_complete: false,
+        missing_required: []
+      }
+      expect(store.hasFeatureChoices).toBe(true)
+    })
+  })
 })
