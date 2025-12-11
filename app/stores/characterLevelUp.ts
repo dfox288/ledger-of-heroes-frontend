@@ -11,6 +11,9 @@
 import { defineStore } from 'pinia'
 import type { LevelUpResult } from '~/types/character'
 import type { CharacterClass } from '~/types'
+import type { components } from '~/types/api/generated'
+
+type PendingChoice = components['schemas']['PendingChoiceResource']
 
 // ════════════════════════════════════════════════════════════════
 // TYPES
@@ -56,6 +59,9 @@ export const useCharacterLevelUpStore = defineStore('characterLevelUp', () => {
   /** Character's total level */
   const totalLevel = ref<number>(0)
 
+  /** Pending choices for this level-up */
+  const pendingChoices = ref<PendingChoice[]>([])
+
   /** Loading state */
   const isLoading = ref(false)
 
@@ -82,6 +88,28 @@ export const useCharacterLevelUpStore = defineStore('characterLevelUp', () => {
     if (!levelUpResult.value) return false
     return !levelUpResult.value.hp_choice_pending && !levelUpResult.value.asi_pending
   })
+
+  /** Does character have pending spell choices? */
+  const hasSpellChoices = computed(() =>
+    pendingChoices.value.some(c => c.type === 'spell')
+  )
+
+  /** Does character have pending feature choices (fighting_style, expertise, optional_feature)? */
+  const hasFeatureChoices = computed(() =>
+    pendingChoices.value.some(c =>
+      ['fighting_style', 'expertise', 'optional_feature'].includes(c.type)
+    )
+  )
+
+  /** Does character have pending language choices? */
+  const hasLanguageChoices = computed(() =>
+    pendingChoices.value.some(c => c.type === 'language')
+  )
+
+  /** Does character have pending proficiency choices? */
+  const hasProficiencyChoices = computed(() =>
+    pendingChoices.value.some(c => c.type === 'proficiency')
+  )
 
   // ══════════════════════════════════════════════════════════════
   // ACTIONS
@@ -177,6 +205,7 @@ export const useCharacterLevelUpStore = defineStore('characterLevelUp', () => {
     selectedClassSlug,
     characterClasses,
     totalLevel,
+    pendingChoices,
     isLoading,
     error,
 
@@ -185,6 +214,10 @@ export const useCharacterLevelUpStore = defineStore('characterLevelUp', () => {
     isFirstMulticlassOpportunity,
     needsClassSelection,
     isComplete,
+    hasSpellChoices,
+    hasFeatureChoices,
+    hasLanguageChoices,
+    hasProficiencyChoices,
 
     // Actions
     openWizard,

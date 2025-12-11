@@ -311,4 +311,67 @@ describe('characterLevelUp store', () => {
       await expect(store.levelUp('phb:fighter')).rejects.toThrow('No character selected')
     })
   })
+
+  describe('pending choices state', () => {
+    it('initializes with empty pending choices', () => {
+      const store = useCharacterLevelUpStore()
+      expect(store.pendingChoices).toEqual([])
+    })
+
+    it('computes hasSpellChoices from pending choices', () => {
+      const store = useCharacterLevelUpStore()
+      expect(store.hasSpellChoices).toBe(false)
+
+      store.pendingChoices = [
+        { id: 'spell-1', type: 'spell', quantity: 2, source: 'class', source_name: 'Wizard' }
+      ]
+
+      expect(store.hasSpellChoices).toBe(true)
+    })
+
+    it('computes hasFeatureChoices for fighting_style', () => {
+      const store = useCharacterLevelUpStore()
+      store.pendingChoices = [
+        { id: 'fs-1', type: 'fighting_style', quantity: 1, source: 'class', source_name: 'Fighter' }
+      ]
+
+      expect(store.hasFeatureChoices).toBe(true)
+    })
+
+    it('computes hasFeatureChoices for expertise', () => {
+      const store = useCharacterLevelUpStore()
+      store.pendingChoices = [
+        { id: 'exp-1', type: 'expertise', quantity: 2, source: 'class', source_name: 'Rogue' }
+      ]
+
+      expect(store.hasFeatureChoices).toBe(true)
+    })
+
+    it('computes hasFeatureChoices for optional_feature', () => {
+      const store = useCharacterLevelUpStore()
+      store.pendingChoices = [
+        { id: 'of-1', type: 'optional_feature', quantity: 2, source: 'class', source_name: 'Warlock' }
+      ]
+
+      expect(store.hasFeatureChoices).toBe(true)
+    })
+
+    it('computes hasLanguageChoices from pending choices', () => {
+      const store = useCharacterLevelUpStore()
+      store.pendingChoices = [
+        { id: 'lang-1', type: 'language', quantity: 3, source: 'feat', source_name: 'Linguist' }
+      ]
+
+      expect(store.hasLanguageChoices).toBe(true)
+    })
+
+    it('computes hasProficiencyChoices from pending choices', () => {
+      const store = useCharacterLevelUpStore()
+      store.pendingChoices = [
+        { id: 'prof-1', type: 'proficiency', quantity: 3, source: 'feat', source_name: 'Skilled' }
+      ]
+
+      expect(store.hasProficiencyChoices).toBe(true)
+    })
+  })
 })
