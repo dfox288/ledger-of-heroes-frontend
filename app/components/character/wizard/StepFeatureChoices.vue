@@ -41,7 +41,9 @@ const {
   getDisplayOptions,
   fetchOptionsIfNeeded,
   isOptionsLoading,
-  saveAllChoices
+  allComplete,
+  saveAllChoices,
+  isSaving
 } = useWizardChoiceSelection(
   computed(() => [
     ...fightingStyleChoices.value,
@@ -70,6 +72,8 @@ watch([fightingStyleChoices, expertiseChoices, optionalFeatureChoices], async ()
 
 // Continue handler
 async function handleContinue() {
+  if (!allComplete.value) return
+
   try {
     await saveAllChoices()
     props.nextStep()
@@ -362,10 +366,11 @@ async function handleContinue() {
       <UButton
         data-testid="continue-btn"
         size="lg"
-        :loading="loadingChoices"
+        :disabled="!allComplete || loadingChoices || isSaving"
+        :loading="loadingChoices || isSaving"
         @click="handleContinue"
       >
-        Continue
+        {{ hasAnyChoices ? 'Continue with Features' : 'Continue' }}
       </UButton>
     </div>
   </div>

@@ -26,7 +26,7 @@ const { apiFetch } = useApi()
 
 const { data: characterData, pending: loading, error } = await useAsyncData(
   `level-up-character-${publicId.value}`,
-  () => apiFetch<{ data: { id: number; public_id: string; name: string; classes: any[] } }>(
+  () => apiFetch<{ data: { id: number, public_id: string, name: string, classes: any[] } }>(
     `/characters/${publicId.value}`
   )
 )
