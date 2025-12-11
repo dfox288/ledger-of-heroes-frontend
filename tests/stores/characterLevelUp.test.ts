@@ -374,4 +374,103 @@ describe('characterLevelUp store', () => {
       expect(store.hasProficiencyChoices).toBe(true)
     })
   })
+
+  describe('fetchPendingChoices', () => {
+    it('fetches and stores pending choices', async () => {
+      const mockChoices = [
+        { id: 'spell-1', type: 'spell', quantity: 2, source: 'class', source_name: 'Wizard' },
+        { id: 'fs-1', type: 'fighting_style', quantity: 1, source: 'class', source_name: 'Fighter' }
+      ]
+      mockApiFetch.mockResolvedValueOnce({ data: mockChoices })
+
+      const store = useCharacterLevelUpStore()
+      store.characterId = 1
+      store.publicId = 'test-char-abc'
+
+      await store.fetchPendingChoices()
+
+      expect(mockApiFetch).toHaveBeenCalledWith(
+        '/characters/test-char-abc/pending-choices'
+      )
+      expect(store.pendingChoices).toEqual(mockChoices)
+    })
+
+    it('handles API errors gracefully without throwing', async () => {
+      const error = new Error('Network error')
+      mockApiFetch.mockRejectedValueOnce(error)
+
+      const store = useCharacterLevelUpStore()
+      store.characterId = 1
+      store.publicId = 'test-char-abc'
+
+      // Should not throw
+      await expect(store.fetchPendingChoices()).resolves.toBeUndefined()
+
+      // Choices should remain empty
+      expect(store.pendingChoices).toEqual([])
+    })
+
+    it('does nothing when publicId is null', async () => {
+      const store = useCharacterLevelUpStore()
+      store.characterId = 1
+      store.publicId = null
+
+      await store.fetchPendingChoices()
+
+      expect(mockApiFetch).not.toHaveBeenCalled()
+    })
+  })
+
+  describe('refreshChoices', () => {
+    it('calls fetchPendingChoices', async () => {
+      const mockChoices = [
+        { id: 'lang-1', type: 'language', quantity: 1, source: 'feat', source_name: 'Linguist' }
+      ]
+      mockApiFetch.mockResolvedValueOnce({ data: mockChoices })
+
+      const store = useCharacterLevelUpStore()
+      store.characterId = 1
+      store.publicId = 'test-char-xyz'
+
+      await store.refreshChoices()
+
+      expect(mockApiFetch).toHaveBeenCalledWith(
+        '/characters/test-char-xyz/pending-choices'
+      )
+      expect(store.pendingChoices).toEqual(mockChoices)
+    })
+  })
+
+  describe('levelUp action - fetches pending choices', () => {
+    it('calls fetchPendingChoices after successful level-up', async () => {
+      const mockChoices = [
+        { id: 'spell-1', type: 'spell', quantity: 2, source: 'class', source_name: 'Wizard' }
+      ]
+
+      // First call: level-up, Second call: pending choices
+      mockApiFetch
+        .mockResolvedValueOnce(mockLevelUpResult)
+        .mockResolvedValueOnce({ data: mockChoices })
+
+      const store = useCharacterLevelUpStore()
+      store.openWizard(123, 'shadow-warden-q3x9', mockCharacterClasses, 3)
+
+      await store.levelUp('phb:wizard')
+
+      // Verify both API calls were made
+      expect(mockApiFetch).toHaveBeenCalledTimes(2)
+      expect(mockApiFetch).toHaveBeenNthCalledWith(
+        1,
+        '/characters/shadow-warden-q3x9/classes/phb:wizard/level-up',
+        { method: 'POST' }
+      )
+      expect(mockApiFetch).toHaveBeenNthCalledWith(
+        2,
+        '/characters/shadow-warden-q3x9/pending-choices'
+      )
+
+      // Verify choices were stored
+      expect(store.pendingChoices).toEqual(mockChoices)
+    })
+  })
 })

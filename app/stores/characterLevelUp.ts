@@ -12,6 +12,7 @@ import { defineStore } from 'pinia'
 import type { LevelUpResult } from '~/types/character'
 import type { CharacterClass } from '~/types'
 import type { components } from '~/types/api/generated'
+import { logger } from '~/utils/logger'
 
 type PendingChoice = components['schemas']['PendingChoiceResource']
 
@@ -159,6 +160,10 @@ export const useCharacterLevelUpStore = defineStore('characterLevelUp', () => {
 
       levelUpResult.value = result
       selectedClassSlug.value = classSlug
+
+      // Fetch pending choices after successful level-up
+      await fetchPendingChoices()
+
       return result
     } catch (e) {
       error.value = e instanceof Error ? e.message : 'Failed to level up'
@@ -166,6 +171,32 @@ export const useCharacterLevelUpStore = defineStore('characterLevelUp', () => {
     } finally {
       isLoading.value = false
     }
+  }
+
+  /**
+   * Fetch pending choices for the character
+   * Called after level-up and after each choice is resolved
+   */
+  async function fetchPendingChoices(): Promise<void> {
+    if (!publicId.value) return
+
+    try {
+      const response = await apiFetch<{ data: PendingChoice[] }>(
+        `/characters/${publicId.value}/pending-choices`
+      )
+      pendingChoices.value = response.data
+    } catch (e) {
+      // Don't fail silently - log but don't throw
+      logger.error('Failed to fetch pending choices:', e)
+    }
+  }
+
+  /**
+   * Refresh choices - alias for fetchPendingChoices
+   * Used after completing a step to update visibility of downstream steps
+   */
+  async function refreshChoices(): Promise<void> {
+    await fetchPendingChoices()
   }
 
   /**
@@ -224,6 +255,8 @@ export const useCharacterLevelUpStore = defineStore('characterLevelUp', () => {
     closeWizard,
     levelUp,
     goToStep,
-    reset
+    reset,
+    fetchPendingChoices,
+    refreshChoices
   }
 })
