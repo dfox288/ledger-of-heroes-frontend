@@ -185,6 +185,69 @@ async function handleContinue() {
       </div>
     </section>
 
+    <!-- Expertise Section -->
+    <section
+      v-if="expertiseChoices.length > 0"
+      data-testid="expertise-section"
+      class="space-y-4"
+    >
+      <div v-for="choice in expertiseChoices" :key="choice.id" class="space-y-4">
+        <div class="flex items-center justify-between border-b pb-2">
+          <h3 class="text-lg font-semibold text-gray-900 dark:text-white">
+            Expertise ({{ choice.source_name }})
+          </h3>
+          <UBadge
+            :color="getSelectedCount(choice.id) >= choice.quantity ? 'success' : 'warning'"
+            variant="subtle"
+            size="md"
+          >
+            {{ getSelectedCount(choice.id) }} of {{ choice.quantity }}
+          </UBadge>
+        </div>
+
+        <p class="text-sm text-gray-600 dark:text-gray-400">
+          Choose skills to gain expertise in. Your proficiency bonus is doubled for these skills.
+        </p>
+
+        <div v-if="isOptionsLoading(choice)" class="flex items-center gap-2 p-4 text-gray-500">
+          <UIcon name="i-heroicons-arrow-path" class="w-5 h-5 animate-spin" />
+          <span>Loading options...</span>
+        </div>
+
+        <div v-else class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+          <button
+            v-for="option in getDisplayOptions(choice)"
+            :key="option.id"
+            :data-testid="`expertise-option-${option.id}`"
+            type="button"
+            class="p-3 rounded-lg border text-left transition-all"
+            :class="{
+              'border-primary bg-primary/10': isOptionSelected(choice.id, option.id),
+              'border-gray-200 dark:border-gray-700 hover:border-primary/50': !isOptionSelected(choice.id, option.id) && !isOptionDisabled(choice.id, option.id),
+              'opacity-50 cursor-not-allowed': isOptionDisabled(choice.id, option.id)
+            }"
+            :disabled="isOptionDisabled(choice.id, option.id)"
+            @click="handleOptionToggle(choice, option.id)"
+          >
+            <div class="flex items-center gap-2">
+              <UIcon
+                :name="isOptionSelected(choice.id, option.id) ? 'i-heroicons-check-circle-solid' : 'i-heroicons-circle'"
+                class="w-5 h-5 flex-shrink-0"
+                :class="{
+                  'text-primary': isOptionSelected(choice.id, option.id),
+                  'text-gray-400': !isOptionSelected(choice.id, option.id)
+                }"
+              />
+              <span class="font-medium">{{ option.name }}</span>
+            </div>
+            <p v-if="getDisabledReason(choice.id, option.id)" class="text-xs text-gray-400 mt-1 ml-7">
+              {{ getDisabledReason(choice.id, option.id) }}
+            </p>
+          </button>
+        </div>
+      </div>
+    </section>
+
     <!-- Continue Button -->
     <div class="flex justify-center pt-4">
       <UButton

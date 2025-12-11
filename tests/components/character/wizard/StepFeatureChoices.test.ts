@@ -201,4 +201,45 @@ describe('StepFeatureChoices', () => {
       expect(section.exists()).toBe(false)
     })
   })
+
+  describe('expertise section', () => {
+    it('displays expertise section when choices exist', async () => {
+      currentMockChoices = mockExpertiseChoice
+      const wrapper = await mountSuspended(StepFeatureChoices, {
+        props: {
+          characterId: 123,
+          nextStep: vi.fn()
+        }
+      })
+
+      const section = wrapper.find('[data-testid="expertise-section"]')
+      expect(section.exists()).toBe(true)
+    })
+
+    it('shows expertise section title with source name', async () => {
+      currentMockChoices = mockExpertiseChoice
+      const wrapper = await mountSuspended(StepFeatureChoices, {
+        props: {
+          characterId: 123,
+          nextStep: vi.fn()
+        }
+      })
+
+      expect(wrapper.text()).toContain('Expertise')
+      expect(wrapper.text()).toContain('Rogue')
+    })
+
+    it('does not show expertise section when no choices', async () => {
+      currentMockChoices = mockFightingStyleChoice
+      const wrapper = await mountSuspended(StepFeatureChoices, {
+        props: {
+          characterId: 123,
+          nextStep: vi.fn()
+        }
+      })
+
+      const section = wrapper.find('[data-testid="expertise-section"]')
+      expect(section.exists()).toBe(false)
+    })
+  })
 })
