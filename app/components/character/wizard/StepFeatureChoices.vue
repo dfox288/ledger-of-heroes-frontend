@@ -1,10 +1,7 @@
 <!-- app/components/character/wizard/StepFeatureChoices.vue -->
 <script setup lang="ts">
-import type { components } from '~/types/api/generated'
 import { useWizardChoiceSelection } from '~/composables/useWizardChoiceSelection'
 import { wizardErrors } from '~/utils/wizardErrors'
-
-type PendingChoice = components['schemas']['PendingChoiceResource']
 
 const props = defineProps<{
   characterId: number
@@ -44,7 +41,6 @@ const {
   getDisplayOptions,
   fetchOptionsIfNeeded,
   isOptionsLoading,
-  allComplete,
   saveAllChoices
 } = useWizardChoiceSelection(
   computed(() => [
@@ -130,7 +126,11 @@ async function handleContinue() {
       data-testid="fighting-style-section"
       class="space-y-4"
     >
-      <div v-for="choice in fightingStyleChoices" :key="choice.id" class="space-y-4">
+      <div
+        v-for="choice in fightingStyleChoices"
+        :key="choice.id"
+        class="space-y-4"
+      >
         <div class="flex items-center justify-between border-b pb-2">
           <h3 class="text-lg font-semibold text-gray-900 dark:text-white">
             Fighting Style ({{ choice.source_name }})
@@ -144,12 +144,21 @@ async function handleContinue() {
           </UBadge>
         </div>
 
-        <div v-if="isOptionsLoading(choice)" class="flex items-center gap-2 p-4 text-gray-500">
-          <UIcon name="i-heroicons-arrow-path" class="w-5 h-5 animate-spin" />
+        <div
+          v-if="isOptionsLoading(choice)"
+          class="flex items-center gap-2 p-4 text-gray-500"
+        >
+          <UIcon
+            name="i-heroicons-arrow-path"
+            class="w-5 h-5 animate-spin"
+          />
           <span>Loading options...</span>
         </div>
 
-        <div v-else class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div
+          v-else
+          class="grid grid-cols-1 md:grid-cols-2 gap-4"
+        >
           <button
             v-for="option in getDisplayOptions(choice)"
             :key="option.id"
@@ -174,8 +183,13 @@ async function handleContinue() {
                 }"
               />
               <div>
-                <p class="font-semibold">{{ option.name }}</p>
-                <p v-if="option.description" class="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                <p class="font-semibold">
+                  {{ option.name }}
+                </p>
+                <p
+                  v-if="option.description"
+                  class="text-sm text-gray-600 dark:text-gray-400 mt-1"
+                >
                   {{ option.description }}
                 </p>
               </div>
@@ -191,7 +205,11 @@ async function handleContinue() {
       data-testid="expertise-section"
       class="space-y-4"
     >
-      <div v-for="choice in expertiseChoices" :key="choice.id" class="space-y-4">
+      <div
+        v-for="choice in expertiseChoices"
+        :key="choice.id"
+        class="space-y-4"
+      >
         <div class="flex items-center justify-between border-b pb-2">
           <h3 class="text-lg font-semibold text-gray-900 dark:text-white">
             Expertise ({{ choice.source_name }})
@@ -209,12 +227,21 @@ async function handleContinue() {
           Choose skills to gain expertise in. Your proficiency bonus is doubled for these skills.
         </p>
 
-        <div v-if="isOptionsLoading(choice)" class="flex items-center gap-2 p-4 text-gray-500">
-          <UIcon name="i-heroicons-arrow-path" class="w-5 h-5 animate-spin" />
+        <div
+          v-if="isOptionsLoading(choice)"
+          class="flex items-center gap-2 p-4 text-gray-500"
+        >
+          <UIcon
+            name="i-heroicons-arrow-path"
+            class="w-5 h-5 animate-spin"
+          />
           <span>Loading options...</span>
         </div>
 
-        <div v-else class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+        <div
+          v-else
+          class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3"
+        >
           <button
             v-for="option in getDisplayOptions(choice)"
             :key="option.id"
@@ -240,7 +267,10 @@ async function handleContinue() {
               />
               <span class="font-medium">{{ option.name }}</span>
             </div>
-            <p v-if="getDisabledReason(choice.id, option.id)" class="text-xs text-gray-400 mt-1 ml-7">
+            <p
+              v-if="getDisabledReason(choice.id, option.id)"
+              class="text-xs text-gray-400 mt-1 ml-7"
+            >
               {{ getDisabledReason(choice.id, option.id) }}
             </p>
           </button>
