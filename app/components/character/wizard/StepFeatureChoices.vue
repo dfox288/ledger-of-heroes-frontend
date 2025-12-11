@@ -1,12 +1,28 @@
 <!-- app/components/character/wizard/StepFeatureChoices.vue -->
 <script setup lang="ts">
+import { useCharacterWizard } from '~/composables/useCharacterWizard'
+import { useCharacterWizardStore } from '~/stores/characterWizard'
 import { useWizardChoiceSelection } from '~/composables/useWizardChoiceSelection'
 import { wizardErrors } from '~/utils/wizardErrors'
 
-const props = defineProps<{
-  characterId: number
-  nextStep: () => void
-}>()
+// Props for store-agnostic usage (enables use in both creation and level-up wizards)
+const props = withDefaults(defineProps<{
+  characterId?: number
+  nextStep?: () => void
+  refreshAfterSave?: () => Promise<void>
+}>(), {
+  characterId: undefined,
+  nextStep: undefined,
+  refreshAfterSave: undefined
+})
+
+// Fallback to store if props not provided (backward compatibility)
+const store = useCharacterWizardStore()
+const wizardNav = useCharacterWizard()
+
+// Use prop or store value
+const effectiveCharacterId = computed(() => props.characterId ?? store.characterId)
+const effectiveNextStep = computed(() => props.nextStep ?? wizardNav.nextStep)
 
 const toast = useToast()
 
@@ -17,12 +33,16 @@ const {
   error: choicesError,
   fetchChoices,
   resolveChoice
-} = useUnifiedChoices(computed(() => props.characterId))
+} = useUnifiedChoices(effectiveCharacterId)
 
 // Feature choice categories
 const fightingStyleChoices = computed(() => choicesByType.value.fightingStyles ?? [])
 const expertiseChoices = computed(() => choicesByType.value.expertise ?? [])
-const optionalFeatureChoices = computed(() => choicesByType.value.optionalFeatures ?? [])
+// Filter out optional_feature choices with subtype "fighting_style" - those are duplicates
+// of the dedicated fighting_style type choices shown in the Fighting Style section
+const optionalFeatureChoices = computed(() =>
+  (choicesByType.value.optionalFeatures ?? []).filter(c => c.subtype !== 'fighting_style')
+)
 
 // Combined: any feature choices exist?
 const hasAnyChoices = computed(() =>
@@ -76,7 +96,13 @@ async function handleContinue() {
 
   try {
     await saveAllChoices()
-    props.nextStep()
+
+    // Refresh choices if callback provided (level-up context)
+    if (props.refreshAfterSave) {
+      await props.refreshAfterSave()
+    }
+
+    effectiveNextStep.value()
   } catch (e) {
     wizardErrors.choiceResolveFailed(e, toast, 'feature')
   }

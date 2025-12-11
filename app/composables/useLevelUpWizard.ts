@@ -35,8 +35,8 @@ function createStepRegistry(store: ReturnType<typeof useCharacterLevelUpStore>):
       name: 'subclass',
       label: 'Subclass',
       icon: 'i-heroicons-star',
-      visible: () => false, // Will be set based on level-up result
-      shouldSkip: () => true // Skip unless subclass choice pending
+      visible: () => store.hasSubclassChoice,
+      shouldSkip: () => !store.hasSubclassChoice
     },
     {
       name: 'hit-points',

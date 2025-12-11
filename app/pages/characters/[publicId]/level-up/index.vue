@@ -26,7 +26,7 @@ const { apiFetch } = useApi()
 
 const { data: characterData, pending: loading, error } = await useAsyncData(
   `level-up-character-${publicId.value}`,
-  () => apiFetch<{ data: { id: number, public_id: string, name: string, classes: any[] } }>(
+  () => apiFetch<{ data: { id: number, public_id: string, name: string, classes: any[], is_complete: boolean } }>(
     `/characters/${publicId.value}`
   )
 )
@@ -79,6 +79,48 @@ onMounted(async () => {
     characterStats.value = statsResponse.data
   } catch (e) {
     characterStats.value = { constitution_modifier: 0 }
+  }
+
+  // Check if character is incomplete (has pending choices from a previous level-up)
+  // If so, resume from there instead of triggering a new level-up
+  const isCharacterIncomplete = character.value?.is_complete === false
+
+  if (isCharacterIncomplete) {
+    // Fetch pending choices to determine which step to resume from
+    await store.fetchPendingChoices()
+
+    // Determine the appropriate step based on pending choices (in wizard order)
+    const hasSubclassChoice = store.pendingChoices.some(c => c.type === 'subclass')
+    const hasHpChoice = store.pendingChoices.some(c => c.type === 'hit_points')
+    const hasAsiChoice = store.pendingChoices.some(c => c.type === 'asi_or_feat')
+    const hasFeatureChoice = store.pendingChoices.some(c =>
+      ['fighting_style', 'expertise', 'optional_feature'].includes(c.type)
+    )
+    const hasSpellChoice = store.pendingChoices.some(c => c.type === 'spell')
+    const hasLanguageChoice = store.pendingChoices.some(c => c.type === 'language')
+    const hasProficiencyChoice = store.pendingChoices.some(c => c.type === 'proficiency')
+
+    if (hasSubclassChoice) {
+      store.goToStep('subclass')
+    } else if (hasHpChoice) {
+      store.goToStep('hit-points')
+    } else if (hasAsiChoice) {
+      store.goToStep('asi-feat')
+    } else if (hasFeatureChoice) {
+      store.goToStep('feature-choices')
+    } else if (hasSpellChoice) {
+      store.goToStep('spells')
+    } else if (hasLanguageChoice) {
+      store.goToStep('languages')
+    } else if (hasProficiencyChoice) {
+      store.goToStep('proficiencies')
+    } else {
+      // Default to summary if no specific choices found
+      store.goToStep('summary')
+    }
+
+    isInitializing.value = false
+    return
   }
 
   // Auto-advance for single-class characters (multiclass not yet supported)
@@ -227,8 +269,11 @@ useSeoMeta({
           class="mb-6"
         />
 
-        <!-- Step Content -->
-        <template v-else>
+        <!-- Step Content - Key ensures proper unmount/mount on step change -->
+        <div
+          v-else
+          :key="store.currentStepName"
+        >
           <!-- Class Selection Step (placeholder for multiclass) -->
           <div v-if="store.currentStepName === 'class-selection'">
             <div class="max-w-2xl mx-auto text-center py-12">
@@ -251,6 +296,13 @@ useSeoMeta({
             </div>
           </div>
 
+          <!-- Subclass Step -->
+          <CharacterLevelupStepSubclassChoice
+            v-else-if="store.currentStepName === 'subclass'"
+            :character-id="store.characterId!"
+            :next-step="nextStep"
+          />
+
           <!-- Hit Points Step -->
           <CharacterLevelupStepHitPoints
             v-else-if="store.currentStepName === 'hit-points'"
@@ -264,12 +316,36 @@ useSeoMeta({
             v-else-if="store.currentStepName === 'asi-feat'"
           />
 
+          <!-- Feature Choices Step (Fighting Style, Expertise, etc.) -->
+          <CharacterWizardStepFeatureChoices
+            v-else-if="store.currentStepName === 'feature-choices'"
+            :character-id="store.characterId!"
+            :next-step="nextStep"
+            :refresh-after-save="store.refreshChoices"
+          />
+
           <!-- Spells Step -->
           <CharacterWizardStepSpells
             v-else-if="store.currentStepName === 'spells'"
           />
 
-          <!-- Summary Step -->
+          <!-- Languages Step -->
+          <CharacterWizardStepLanguages
+            v-else-if="store.currentStepName === 'languages'"
+            :character-id="store.characterId!"
+            :next-step="nextStep"
+            :refresh-after-save="store.refreshChoices"
+          />
+
+          <!-- Proficiencies Step -->
+          <CharacterWizardStepProficiencies
+            v-else-if="store.currentStepName === 'proficiencies'"
+            :character-id="store.characterId!"
+            :next-step="nextStep"
+            :refresh-after-save="store.refreshChoices"
+          />
+
+          <!-- Summary Step (for fresh level-ups with result) -->
           <CharacterLevelupStepLevelUpSummary
             v-else-if="store.currentStepName === 'summary' && store.levelUpResult"
             :level-up-result="store.levelUpResult"
@@ -278,6 +354,30 @@ useSeoMeta({
             @complete="handleComplete"
           />
 
+          <!-- Summary Step (for resumed level-ups without result) -->
+          <div
+            v-else-if="store.currentStepName === 'summary' && !store.levelUpResult"
+            class="max-w-2xl mx-auto text-center py-12"
+          >
+            <UIcon
+              name="i-heroicons-check-circle"
+              class="w-16 h-16 mx-auto text-success-500 mb-4"
+            />
+            <h2 class="text-2xl font-semibold text-gray-900 dark:text-white mb-2">
+              Level-Up Complete!
+            </h2>
+            <p class="text-gray-500 mb-6">
+              All choices have been made. Your character is ready.
+            </p>
+            <UButton
+              color="primary"
+              size="lg"
+              @click="handleComplete"
+            >
+              Return to Character
+            </UButton>
+          </div>
+
           <!-- Fallback -->
           <div
             v-else
@@ -285,7 +385,7 @@ useSeoMeta({
           >
             <p>Unknown step: {{ store.currentStepName }}</p>
           </div>
-        </template>
+        </div>
       </main>
 
       <!-- Footer Navigation -->

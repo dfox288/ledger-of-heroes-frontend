@@ -135,7 +135,7 @@ function handleComplete() {
 
       <!-- Features Gained Card -->
       <div
-        v-if="levelUpResult.features_gained.length > 0"
+        v-if="levelUpResult.features_gained?.length > 0"
         class="bg-white dark:bg-gray-800 rounded-xl p-4 shadow-sm border border-gray-200 dark:border-gray-700"
       >
         <div class="flex items-center gap-3 mb-3">

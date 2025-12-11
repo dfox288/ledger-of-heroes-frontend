@@ -60,13 +60,15 @@ function handleAverageClick() {
 }
 
 async function handleConfirm() {
-  // Capture value before any async operations
+  // Capture values before any async operations
   const hpValue = hpGained.value
+  const method = selectedMethod.value
 
-  console.log('[HP Step] handleConfirm called, hpGained:', hpValue)
+  console.log('[HP Step] handleConfirm called, method:', method, 'hpGained:', hpValue)
 
-  if (hpValue === null) {
-    console.log('[HP Step] hpGained is null, returning early')
+  if (!method || hpValue === null) {
+    console.log('[HP Step] method or hpGained is null, returning early')
+    error.value = 'Please select a method (Roll or Average) first.'
     return
   }
 
@@ -87,12 +89,17 @@ async function handleConfirm() {
       return
     }
 
-    console.log('[HP Step] Resolving choice with selected:', hpValue)
+    // Backend expects { selected: ["roll"|"average"|"manual"] } format (same as other choices)
+    // The value in selected array determines the method
+    const payload = {
+      selected: [method]
+    }
 
-    // Backend expects { selected: [string] } format for HP choices
-    await resolveChoice(firstChoice.id, {
-      selected: [String(hpValue)]
-    })
+    console.log('[HP Step] Resolving choice:', firstChoice.id, 'with payload:', JSON.stringify(payload))
+
+    await resolveChoice(firstChoice.id, payload)
+
+    console.log('[HP Step] Choice resolved successfully')
 
     emit('choice-made', hpGained.value)
     nextStep()

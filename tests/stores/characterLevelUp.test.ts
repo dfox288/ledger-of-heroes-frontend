@@ -381,7 +381,8 @@ describe('characterLevelUp store', () => {
         { id: 'spell-1', type: 'spell', quantity: 2, source: 'class', source_name: 'Wizard' },
         { id: 'fs-1', type: 'fighting_style', quantity: 1, source: 'class', source_name: 'Fighter' }
       ]
-      mockApiFetch.mockResolvedValueOnce({ data: mockChoices })
+      // API returns { data: { choices: [...], summary: {...} } }
+      mockApiFetch.mockResolvedValueOnce({ data: { choices: mockChoices, summary: {} } })
 
       const store = useCharacterLevelUpStore()
       store.characterId = 1
@@ -426,7 +427,8 @@ describe('characterLevelUp store', () => {
       const mockChoices = [
         { id: 'lang-1', type: 'language', quantity: 1, source: 'feat', source_name: 'Linguist' }
       ]
-      mockApiFetch.mockResolvedValueOnce({ data: mockChoices })
+      // API returns { data: { choices: [...], summary: {...} } }
+      mockApiFetch.mockResolvedValueOnce({ data: { choices: mockChoices, summary: {} } })
 
       const store = useCharacterLevelUpStore()
       store.characterId = 1
@@ -448,9 +450,10 @@ describe('characterLevelUp store', () => {
       ]
 
       // First call: level-up, Second call: pending choices
+      // API returns { data: { choices: [...], summary: {...} } }
       mockApiFetch
         .mockResolvedValueOnce(mockLevelUpResult)
-        .mockResolvedValueOnce({ data: mockChoices })
+        .mockResolvedValueOnce({ data: { choices: mockChoices, summary: {} } })
 
       const store = useCharacterLevelUpStore()
       store.openWizard(123, 'shadow-warden-q3x9', mockCharacterClasses, 3)

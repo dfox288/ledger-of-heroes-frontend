@@ -13,9 +13,11 @@ type PendingChoice = components['schemas']['PendingChoiceResource']
 const props = withDefaults(defineProps<{
   characterId?: number
   nextStep?: () => void
+  refreshAfterSave?: () => Promise<void>
 }>(), {
   characterId: undefined,
-  nextStep: undefined
+  nextStep: undefined,
+  refreshAfterSave: undefined
 })
 
 // Fallback to store if props not provided (backward compatibility)
@@ -224,8 +226,12 @@ async function handleContinue() {
     // Clear local selections after save
     localSelections.value.clear()
 
-    // Sync store with backend to update hasLanguageChoices
-    await store.syncWithBackend()
+    // Refresh choices - use prop if provided (level-up), otherwise sync wizard store
+    if (props.refreshAfterSave) {
+      await props.refreshAfterSave()
+    } else {
+      await store.syncWithBackend()
+    }
 
     effectiveNextStep.value()
   } catch (e) {

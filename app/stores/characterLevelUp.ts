@@ -90,6 +90,11 @@ export const useCharacterLevelUpStore = defineStore('characterLevelUp', () => {
     return !levelUpResult.value.hp_choice_pending && !levelUpResult.value.asi_pending
   })
 
+  /** Does character have pending subclass choice? */
+  const hasSubclassChoice = computed(() =>
+    pendingChoices.value.some(c => c.type === 'subclass')
+  )
+
   /** Does character have pending spell choices? */
   const hasSpellChoices = computed(() =>
     pendingChoices.value.some(c => c.type === 'spell')
@@ -153,18 +158,19 @@ export const useCharacterLevelUpStore = defineStore('characterLevelUp', () => {
     error.value = null
 
     try {
-      const result = await apiFetch<LevelUpResult>(
+      const response = await apiFetch<{ data: LevelUpResult }>(
         `/characters/${publicId.value}/classes/${classSlug}/level-up`,
         { method: 'POST' }
       )
 
-      levelUpResult.value = result
+      // API returns { data: { ... } }, extract the inner data
+      levelUpResult.value = response.data
       selectedClassSlug.value = classSlug
 
       // Fetch pending choices after successful level-up
       await fetchPendingChoices()
 
-      return result
+      return response.data
     } catch (e) {
       error.value = e instanceof Error ? e.message : 'Failed to level up'
       throw e
@@ -181,10 +187,11 @@ export const useCharacterLevelUpStore = defineStore('characterLevelUp', () => {
     if (!publicId.value) return
 
     try {
-      const response = await apiFetch<{ data: PendingChoice[] }>(
+      const response = await apiFetch<{ data: { choices: PendingChoice[], summary: unknown } }>(
         `/characters/${publicId.value}/pending-choices`
       )
-      pendingChoices.value = response.data
+      // API returns { data: { choices: [...], summary: {...} } }
+      pendingChoices.value = response.data?.choices ?? []
     } catch (e) {
       // Don't fail silently - log but don't throw
       logger.error('Failed to fetch pending choices:', e)
@@ -245,6 +252,7 @@ export const useCharacterLevelUpStore = defineStore('characterLevelUp', () => {
     isFirstMulticlassOpportunity,
     needsClassSelection,
     isComplete,
+    hasSubclassChoice,
     hasSpellChoices,
     hasFeatureChoices,
     hasLanguageChoices,
