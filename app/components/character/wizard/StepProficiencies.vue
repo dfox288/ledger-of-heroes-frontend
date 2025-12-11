@@ -9,10 +9,25 @@ import { wizardErrors } from '~/utils/wizardErrors'
 type ProficiencyResource = components['schemas']['ProficiencyResource']
 type PendingChoice = components['schemas']['PendingChoiceResource']
 
+// Props for store-agnostic usage
+const props = withDefaults(defineProps<{
+  characterId?: number
+  nextStep?: () => void
+}>(), {
+  characterId: undefined,
+  nextStep: undefined
+})
+
+// Fallback to store if props not provided (backward compatibility)
 const store = useCharacterWizardStore()
+const wizardNav = useCharacterWizard()
+
+// Use prop or store value
+const effectiveCharacterId = computed(() => props.characterId ?? store.characterId)
+const effectiveNextStep = computed(() => props.nextStep ?? wizardNav.nextStep)
+
 const { apiFetch } = useApi()
 const { selections } = storeToRefs(store)
-const { nextStep } = useCharacterWizard()
 
 // Toast for user feedback
 const toast = useToast()
@@ -27,11 +42,11 @@ const {
   error: choicesError,
   fetchChoices,
   resolveChoice
-} = useUnifiedChoices(computed(() => store.characterId))
+} = useUnifiedChoices(effectiveCharacterId)
 
 // Fetch on mount
 onMounted(async () => {
-  if (store.characterId) {
+  if (effectiveCharacterId.value) {
     await fetchChoices('proficiency')
   }
 })
@@ -67,7 +82,7 @@ interface GrantedProficiencyGroup {
 }
 
 // Valid source types for proficiency choices
-type ProficiencySource = 'class' | 'race' | 'background' | 'subclass_feature'
+type ProficiencySource = 'class' | 'race' | 'background' | 'subclass_feature' | 'feat'
 
 interface GrantedProficienciesBySource {
   source: ProficiencySource
@@ -81,7 +96,8 @@ function getSourceLabel(source: string): string {
     class: 'Class',
     race: 'Race',
     background: 'Background',
-    subclass_feature: 'Subclass'
+    subclass_feature: 'Subclass',
+    feat: 'Feat'
   }
   return labels[source] ?? source
 }
@@ -216,7 +232,8 @@ const proficiencyChoicesBySource = computed<ChoicesBySource[]>(() => {
     class: choices.filter(c => c.source === 'class'),
     race: choices.filter(c => c.source === 'race'),
     background: choices.filter(c => c.source === 'background'),
-    subclass_feature: choices.filter(c => c.source === 'subclass_feature')
+    subclass_feature: choices.filter(c => c.source === 'subclass_feature'),
+    feat: choices.filter(c => c.source === 'feat')
   }
 
   if (bySource.class.length > 0) {
@@ -252,6 +269,15 @@ const proficiencyChoicesBySource = computed<ChoicesBySource[]>(() => {
       label: 'From Subclass',
       entityName: bySource.subclass_feature[0]?.source_name ?? 'Subclass Feature',
       choices: bySource.subclass_feature
+    })
+  }
+
+  if (bySource.feat.length > 0) {
+    sources.push({
+      source: 'feat',
+      label: 'From Feat',
+      entityName: bySource.feat[0]?.source_name ?? 'Feat',
+      choices: bySource.feat
     })
   }
 
@@ -307,7 +333,7 @@ async function handleContinue() {
     await store.syncWithBackend()
 
     // Move to next step
-    await nextStep()
+    effectiveNextStep.value()
   } catch (err) {
     wizardErrors.choiceResolveFailed(err, toast, 'proficiency')
   }
