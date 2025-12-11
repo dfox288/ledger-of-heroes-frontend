@@ -1,22 +1,32 @@
 <!-- app/components/character/levelup/LevelUpSidebar.vue -->
 <script setup lang="ts">
-import { useLevelUpWizard } from '~/composables/useLevelUpWizard'
-import { useCharacterLevelUpStore } from '~/stores/characterLevelUp'
+import type { LevelUpStep } from '~/types/character'
 
-const store = useCharacterLevelUpStore()
-const { activeSteps, currentStepIndex, progressPercent, goToStep } = useLevelUpWizard()
+interface Props {
+  activeSteps: LevelUpStep[]
+  currentStep: string
+  publicId: string
+}
+
+const props = defineProps<Props>()
+
+const currentStepIndex = computed(() =>
+  props.activeSteps.findIndex(s => s.name === props.currentStep)
+)
+
+const progressPercent = computed(() => {
+  if (props.activeSteps.length <= 1) return 100
+  return Math.round((currentStepIndex.value / (props.activeSteps.length - 1)) * 100)
+})
+
+function getStepUrl(stepName: string): string {
+  return `/characters/${props.publicId}/level-up/${stepName}`
+}
 
 function getStepStatus(stepIndex: number): 'completed' | 'current' | 'future' {
   if (stepIndex < currentStepIndex.value) return 'completed'
   if (stepIndex === currentStepIndex.value) return 'current'
   return 'future'
-}
-
-function handleStepClick(stepName: string, stepIndex: number) {
-  // Only allow navigating to completed steps
-  if (stepIndex < currentStepIndex.value) {
-    goToStep(stepName)
-  }
 }
 </script>
 
@@ -53,17 +63,15 @@ function handleStepClick(stepName: string, stepIndex: number) {
           v-for="(step, index) in activeSteps"
           :key="step.name"
         >
-          <button
-            type="button"
+          <NuxtLink
+            :to="getStepStatus(index) === 'future' ? undefined : getStepUrl(step.name)"
             :data-testid="`step-item-${step.name}`"
             class="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-left transition-colors"
             :class="{
               'bg-primary-50 dark:bg-primary-900/20 text-primary-700 dark:text-primary-300': getStepStatus(index) === 'current',
-              'text-gray-900 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer': getStepStatus(index) === 'completed',
-              'text-gray-400 dark:text-gray-500 cursor-not-allowed': getStepStatus(index) === 'future'
+              'text-gray-900 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700': getStepStatus(index) === 'completed',
+              'text-gray-400 dark:text-gray-500 cursor-not-allowed pointer-events-none': getStepStatus(index) === 'future'
             }"
-            :disabled="getStepStatus(index) === 'future'"
-            @click="handleStepClick(step.name, index)"
           >
             <!-- Step indicator -->
             <span
@@ -90,7 +98,7 @@ function handleStepClick(stepName: string, stepIndex: number) {
               />
               <span class="truncate">{{ step.label }}</span>
             </span>
-          </button>
+          </NuxtLink>
         </li>
       </ul>
     </nav>
