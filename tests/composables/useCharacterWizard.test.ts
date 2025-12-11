@@ -403,4 +403,90 @@ describe('useCharacterWizard', () => {
       expect(previousStepInfo.value?.name).toBe('abilities')
     })
   })
+
+  describe('feature-choices step', () => {
+    it('includes feature-choices step in registry', () => {
+      const route = createMockRoute()
+      const { stepRegistry } = useCharacterWizard({ route })
+      const step = stepRegistry.find(s => s.name === 'feature-choices')
+
+      expect(step).toBeDefined()
+      expect(step?.label).toBe('Features')
+      expect(step?.icon).toBe('i-heroicons-puzzle-piece')
+    })
+
+    it('feature-choices step is positioned after proficiencies and before languages', () => {
+      const route = createMockRoute()
+      const { stepRegistry } = useCharacterWizard({ route })
+      const stepNames = stepRegistry.map(s => s.name)
+
+      const proficienciesIdx = stepNames.indexOf('proficiencies')
+      const featureChoicesIdx = stepNames.indexOf('feature-choices')
+      const languagesIdx = stepNames.indexOf('languages')
+
+      expect(proficienciesIdx).toBeGreaterThan(-1)
+      expect(featureChoicesIdx).toBeGreaterThan(-1)
+      expect(languagesIdx).toBeGreaterThan(-1)
+      expect(proficienciesIdx).toBeLessThan(featureChoicesIdx)
+      expect(featureChoicesIdx).toBeLessThan(languagesIdx)
+    })
+
+    it('feature-choices step visibility is driven by store.hasFeatureChoices', () => {
+      const store = useCharacterWizardStore()
+      const route = createMockRoute()
+      const { stepRegistry } = useCharacterWizard({ route })
+      const step = stepRegistry.find(s => s.name === 'feature-choices')
+
+      // Initially no feature choices (no summary data)
+      expect(step?.visible()).toBe(false)
+
+      // Simulate feature choices exist
+      store.summary = {
+        character: { id: 1, name: 'Test', total_level: 1 },
+        pending_choices: {
+          proficiencies: 0,
+          languages: 0,
+          spells: 0,
+          optional_features: 0,
+          asi: 0,
+          feats: 0,
+          size: 0,
+          fighting_style: 1
+        },
+        creation_complete: false,
+        missing_required: []
+      }
+
+      expect(step?.visible()).toBe(true)
+    })
+
+    it('feature-choices step is complete when no pending choices', () => {
+      const store = useCharacterWizardStore()
+      const route = createMockRoute()
+      const { stepRegistry } = useCharacterWizard({ route })
+      const step = stepRegistry.find(s => s.name === 'feature-choices')
+
+      // No choices means step is complete (should be skipped)
+      expect(step?.visible()).toBe(false)
+
+      // With choices, step is visible (not complete)
+      store.summary = {
+        character: { id: 1, name: 'Test', total_level: 1 },
+        pending_choices: {
+          proficiencies: 0,
+          languages: 0,
+          spells: 0,
+          optional_features: 0,
+          asi: 0,
+          feats: 0,
+          size: 0,
+          expertise: 2
+        },
+        creation_complete: false,
+        missing_required: []
+      }
+
+      expect(step?.visible()).toBe(true)
+    })
+  })
 })
