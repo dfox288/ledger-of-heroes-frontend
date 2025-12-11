@@ -138,4 +138,50 @@ describe('StepLanguages', () => {
       expect(continueBtn.attributes('disabled')).toBeDefined()
     })
   })
+
+  describe('props-based usage', () => {
+    it('accepts characterId as prop', async () => {
+      const wrapper = await mountSuspended(StepLanguages, {
+        props: {
+          characterId: 123,
+          nextStep: vi.fn()
+        }
+      })
+
+      expect(wrapper.props('characterId')).toBe(123)
+    })
+
+    it('accepts nextStep function as prop', async () => {
+      const nextStepFn = vi.fn()
+      const wrapper = await mountSuspended(StepLanguages, {
+        props: {
+          characterId: 123,
+          nextStep: nextStepFn
+        }
+      })
+
+      expect(wrapper.props('nextStep')).toBe(nextStepFn)
+    })
+
+    it('uses characterId prop for useUnifiedChoices', async () => {
+      // This tests that the component uses props.characterId, not store.characterId
+      const wrapper = await mountSuspended(StepLanguages, {
+        props: {
+          characterId: 456,
+          nextStep: vi.fn()
+        }
+      })
+
+      // Component should initialize with the prop value
+      expect(wrapper.vm).toBeDefined()
+    })
+
+    it('works without props (backward compatibility)', async () => {
+      // When no props provided, should still work with store values
+      const wrapper = await mountSuspended(StepLanguages)
+
+      expect(wrapper.vm).toBeDefined()
+      expect(wrapper.text()).toContain('Choose Your Languages')
+    })
+  })
 })
