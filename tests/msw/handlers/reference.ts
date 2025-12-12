@@ -10,10 +10,10 @@ const API_BASE = '/api'
 
 // Mock reference data
 const sources = [
-  { id: 1, code: 'PHB', name: "Player's Handbook", category: 'Core Rulebooks', publication_year: 2014 },
-  { id: 2, code: 'DMG', name: "Dungeon Master's Guide", category: 'Core Rulebooks', publication_year: 2014 },
-  { id: 3, code: 'XGE', name: "Xanathar's Guide to Everything", category: 'Expansion', publication_year: 2017 },
-  { id: 4, code: 'TCE', name: "Tasha's Cauldron of Everything", category: 'Expansion', publication_year: 2020 }
+  { id: 1, code: 'PHB', name: 'Player\'s Handbook', category: 'Core Rulebooks', publication_year: 2014 },
+  { id: 2, code: 'DMG', name: 'Dungeon Master\'s Guide', category: 'Core Rulebooks', publication_year: 2014 },
+  { id: 3, code: 'XGE', name: 'Xanathar\'s Guide to Everything', category: 'Expansion', publication_year: 2017 },
+  { id: 4, code: 'TCE', name: 'Tasha\'s Cauldron of Everything', category: 'Expansion', publication_year: 2020 }
 ]
 
 const races = [
@@ -31,7 +31,7 @@ const races = [
       { ability_score: { id: 5, code: 'WIS', name: 'Wisdom' }, bonus: 1 },
       { ability_score: { id: 6, code: 'CHA', name: 'Charisma' }, bonus: 1 }
     ],
-    sources: [{ code: 'PHB', name: "Player's Handbook" }]
+    sources: [{ code: 'PHB', name: 'Player\'s Handbook' }]
   },
   {
     id: 2,
@@ -43,7 +43,7 @@ const races = [
       { ability_score: { id: 2, code: 'DEX', name: 'Dexterity' }, bonus: 2 }
     ],
     has_subraces: true,
-    sources: [{ code: 'PHB', name: "Player's Handbook" }]
+    sources: [{ code: 'PHB', name: 'Player\'s Handbook' }]
   }
 ]
 
@@ -57,7 +57,7 @@ const classes = [
     spellcasting_ability: null,
     subclass_level: 3,
     starting_wealth: { dice_count: 5, dice_type: 10, multiplier: 10, average: 125 },
-    sources: [{ code: 'PHB', name: "Player's Handbook" }]
+    sources: [{ code: 'PHB', name: 'Player\'s Handbook' }]
   },
   {
     id: 2,
@@ -68,7 +68,7 @@ const classes = [
     spellcasting_ability: { id: 4, code: 'INT', name: 'Intelligence' },
     subclass_level: 2,
     starting_wealth: { dice_count: 4, dice_type: 4, multiplier: 10, average: 100 },
-    sources: [{ code: 'PHB', name: "Player's Handbook" }]
+    sources: [{ code: 'PHB', name: 'Player\'s Handbook' }]
   }
 ]
 
@@ -78,14 +78,14 @@ const backgrounds = [
     name: 'Acolyte',
     slug: 'phb:acolyte',
     feature_name: 'Shelter of the Faithful',
-    sources: [{ code: 'PHB', name: "Player's Handbook" }]
+    sources: [{ code: 'PHB', name: 'Player\'s Handbook' }]
   },
   {
     id: 2,
     name: 'Soldier',
     slug: 'phb:soldier',
     feature_name: 'Military Rank',
-    sources: [{ code: 'PHB', name: "Player's Handbook" }]
+    sources: [{ code: 'PHB', name: 'Player\'s Handbook' }]
   }
 ]
 

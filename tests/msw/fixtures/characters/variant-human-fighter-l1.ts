@@ -224,7 +224,7 @@ const pendingChoices: { choices: PendingChoice[] } = {
           { slug: 'phb:leather-armor', quantity: 1 },
           { slug: 'phb:longbow', quantity: 1 },
           { slug: 'phb:arrow', quantity: 20 }
-        ]}
+        ] }
       ]
     }
   ]
@@ -268,7 +268,7 @@ const variantHumanRaceWithModifiers = {
       description: 'You gain proficiency in one skill of your choice'
     }
   ],
-  sources: [{ code: 'PHB', name: "Player's Handbook" }]
+  sources: [{ code: 'PHB', name: 'Player\'s Handbook' }]
 }
 
 export const variantHumanFighterL1 = {

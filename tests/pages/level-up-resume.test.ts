@@ -9,9 +9,7 @@
 import { describe, it, expect, beforeEach } from 'vitest'
 import { setActivePinia, createPinia } from 'pinia'
 import { useCharacterLevelUpStore } from '~/stores/characterLevelUp'
-import { halflingRogueL4 } from '../msw/fixtures/characters'
-import { highElfWizardL2 } from '../msw/fixtures/characters'
-import { humanFighterL3 } from '../msw/fixtures/characters'
+import { halflingRogueL4, highElfWizardL2, humanFighterL3 } from '../msw/fixtures/characters'
 
 // ════════════════════════════════════════════════════════════════
 // HELPER: Resume Step Detection
@@ -134,7 +132,7 @@ describe('Level-Up Resume Logic', () => {
       // Combine both subclass and ASI choices
       store.pendingChoices = [
         ...highElfWizardL2.pendingChoices.choices, // subclass
-        ...halflingRogueL4.pendingChoices.choices  // ASI
+        ...halflingRogueL4.pendingChoices.choices // ASI
       ]
 
       const firstStep = determineFirstStep(store)

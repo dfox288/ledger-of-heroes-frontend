@@ -114,7 +114,7 @@ const stats: CharacterStats = {
   proficiencies: {
     armor: ['Light Armor'],
     weapons: ['Simple Weapons', 'Hand Crossbows', 'Longswords', 'Rapiers', 'Shortswords'],
-    tools: ["Thieves' Tools", 'Gaming Set (Dice)'],
+    tools: ['Thieves\' Tools', 'Gaming Set (Dice)'],
     languages: ['Common', 'Halfling', 'Thieves\' Cant']
   },
   spellcasting: null

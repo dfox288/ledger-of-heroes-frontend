@@ -16,10 +16,10 @@
  * - Different spellcasting ability (INT vs WIS)
  */
 
-import { describe, it, expect, beforeAll, afterAll, afterEach, beforeEach } from 'vitest'
+import { describe, it, expect } from 'vitest'
 import { mountSuspended } from '@nuxt/test-utils/runtime'
-import { setActivePinia, createPinia } from 'pinia'
-import { server, http, HttpResponse } from '../../msw/server'
+import { http, HttpResponse } from '../../msw/server'
+import { useIntegrationTestSetup, server } from '../../helpers/integrationSetup'
 import { highElfWizardL1 } from '../../msw/fixtures/characters/high-elf-wizard-l1'
 
 // Import step components
@@ -29,30 +29,10 @@ import StepSubrace from '~/components/character/wizard/StepSubrace.vue'
 import { useCharacterWizardStore } from '~/stores/characterWizard'
 
 // ════════════════════════════════════════════════════════════════
-// MSW SERVER SETUP
+// TEST SETUP (replaces ~15 lines of MSW/Pinia boilerplate)
 // ════════════════════════════════════════════════════════════════
 
-beforeAll(() => {
-  server.listen({ onUnhandledRequest: 'warn' })
-})
-
-afterEach(() => {
-  server.resetHandlers()
-})
-
-afterAll(() => {
-  server.close()
-})
-
-// ════════════════════════════════════════════════════════════════
-// PINIA SETUP
-// ════════════════════════════════════════════════════════════════
-
-beforeEach(() => {
-  setActivePinia(createPinia())
-  const store = useCharacterWizardStore()
-  store.reset()
-})
+useIntegrationTestSetup()
 
 // ════════════════════════════════════════════════════════════════
 // API INTEGRATION TESTS
@@ -110,7 +90,7 @@ describe('High Elf Wizard - API Integration', () => {
                   ability_bonuses: [
                     { ability_score: { id: 4, code: 'INT', name: 'Intelligence' }, bonus: 1 }
                   ],
-                  sources: [{ code: 'PHB', name: "Player's Handbook" }]
+                  sources: [{ code: 'PHB', name: 'Player\'s Handbook' }]
                 },
                 {
                   id: 4,
@@ -119,7 +99,7 @@ describe('High Elf Wizard - API Integration', () => {
                   ability_bonuses: [
                     { ability_score: { id: 5, code: 'WIS', name: 'Wisdom' }, bonus: 1 }
                   ],
-                  sources: [{ code: 'PHB', name: "Player's Handbook" }]
+                  sources: [{ code: 'PHB', name: 'Player\'s Handbook' }]
                 },
                 {
                   id: 5,
@@ -128,7 +108,7 @@ describe('High Elf Wizard - API Integration', () => {
                   ability_bonuses: [
                     { ability_score: { id: 6, code: 'CHA', name: 'Charisma' }, bonus: 1 }
                   ],
-                  sources: [{ code: 'PHB', name: "Player's Handbook" }]
+                  sources: [{ code: 'PHB', name: 'Player\'s Handbook' }]
                 }
               ]
             })
@@ -198,7 +178,7 @@ describe('High Elf Wizard - Store State', () => {
           { id: 3, name: 'High Elf', slug: 'phb:high-elf' },
           { id: 4, name: 'Wood Elf', slug: 'phb:wood-elf' }
         ],
-        sources: [{ code: 'PHB', name: "Player's Handbook" }]
+        sources: [{ code: 'PHB', name: 'Player\'s Handbook' }]
       }
 
       expect(store.needsSubraceStep).toBe(true)
@@ -214,7 +194,7 @@ describe('High Elf Wizard - Store State', () => {
         speed: 30,
         size: { id: 1, name: 'Medium', code: 'M' },
         // Without subraces array, needsSubraceStep is false
-        sources: [{ code: 'PHB', name: "Player's Handbook" }]
+        sources: [{ code: 'PHB', name: 'Player\'s Handbook' }]
       }
 
       expect(store.needsSubraceStep).toBe(false)
@@ -230,7 +210,7 @@ describe('High Elf Wizard - Store State', () => {
         ability_bonuses: [
           { ability_score: { id: 4, code: 'INT', name: 'Intelligence' }, bonus: 1 }
         ],
-        sources: [{ code: 'PHB', name: "Player's Handbook" }]
+        sources: [{ code: 'PHB', name: 'Player\'s Handbook' }]
       }
 
       expect(store.selections.subrace?.name).toBe('High Elf')
@@ -250,7 +230,7 @@ describe('High Elf Wizard - Store State', () => {
         primary_ability: { id: 4, code: 'INT', name: 'Intelligence' },
         spellcasting_ability: { id: 4, code: 'INT', name: 'Intelligence' },
         subclass_level: 2, // Wizard picks at level 2
-        sources: [{ code: 'PHB', name: "Player's Handbook" }]
+        sources: [{ code: 'PHB', name: 'Player\'s Handbook' }]
       }
 
       expect(store.needsSubclassStep).toBe(false)
@@ -267,7 +247,7 @@ describe('High Elf Wizard - Store State', () => {
         primary_ability: { id: 4, code: 'INT', name: 'Intelligence' },
         spellcasting_ability: { id: 4, code: 'INT', name: 'Intelligence' },
         subclass_level: 2,
-        sources: [{ code: 'PHB', name: "Player's Handbook" }],
+        sources: [{ code: 'PHB', name: 'Player\'s Handbook' }],
         level_progression: [
           { level: 1, cantrips_known: 3, spells_known: null }
         ]
@@ -292,7 +272,7 @@ describe('High Elf Wizard - Store State', () => {
           { id: 3, name: 'High Elf', slug: 'phb:high-elf' },
           { id: 4, name: 'Wood Elf', slug: 'phb:wood-elf' }
         ],
-        sources: [{ code: 'PHB', name: "Player's Handbook" }]
+        sources: [{ code: 'PHB', name: 'Player\'s Handbook' }]
       }
 
       // Set subrace (High Elf)
@@ -303,7 +283,7 @@ describe('High Elf Wizard - Store State', () => {
         ability_bonuses: [
           { ability_score: { id: 4, code: 'INT', name: 'Intelligence' }, bonus: 1 }
         ],
-        sources: [{ code: 'PHB', name: "Player's Handbook" }]
+        sources: [{ code: 'PHB', name: 'Player\'s Handbook' }]
       }
 
       // Set class (Wizard)
@@ -315,7 +295,7 @@ describe('High Elf Wizard - Store State', () => {
         primary_ability: { id: 4, code: 'INT', name: 'Intelligence' },
         spellcasting_ability: { id: 4, code: 'INT', name: 'Intelligence' },
         subclass_level: 2,
-        sources: [{ code: 'PHB', name: "Player's Handbook" }],
+        sources: [{ code: 'PHB', name: 'Player\'s Handbook' }],
         level_progression: [
           { level: 1, cantrips_known: 3, spells_known: null }
         ]
@@ -327,7 +307,7 @@ describe('High Elf Wizard - Store State', () => {
         name: 'Sage',
         slug: 'phb:sage',
         feature_name: 'Researcher',
-        sources: [{ code: 'PHB', name: "Player's Handbook" }]
+        sources: [{ code: 'PHB', name: 'Player\'s Handbook' }]
       }
 
       // Set name
@@ -511,7 +491,7 @@ describe('High Elf Wizard - Subrace Behavior', () => {
         slug: 'phb:human',
         speed: 30,
         size: { id: 1, name: 'Medium', code: 'M' },
-        sources: [{ code: 'PHB', name: "Player's Handbook" }]
+        sources: [{ code: 'PHB', name: 'Player\'s Handbook' }]
       }
       expect(store.needsSubraceStep).toBe(false)
 
@@ -526,7 +506,7 @@ describe('High Elf Wizard - Subrace Behavior', () => {
           { id: 3, name: 'High Elf', slug: 'phb:high-elf' },
           { id: 4, name: 'Wood Elf', slug: 'phb:wood-elf' }
         ],
-        sources: [{ code: 'PHB', name: "Player's Handbook" }]
+        sources: [{ code: 'PHB', name: 'Player\'s Handbook' }]
       }
       expect(store.needsSubraceStep).toBe(true)
     })
@@ -546,13 +526,13 @@ describe('High Elf Wizard - Subrace Behavior', () => {
         subraces: [
           { id: 3, name: 'High Elf', slug: 'phb:high-elf' }
         ],
-        sources: [{ code: 'PHB', name: "Player's Handbook" }]
+        sources: [{ code: 'PHB', name: 'Player\'s Handbook' }]
       }
       store.selections.subrace = {
         id: 3,
         name: 'High Elf',
         slug: 'phb:high-elf',
-        sources: [{ code: 'PHB', name: "Player's Handbook" }]
+        sources: [{ code: 'PHB', name: 'Player\'s Handbook' }]
       }
 
       expect(store.selections.subrace?.name).toBe('High Elf')

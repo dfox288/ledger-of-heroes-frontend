@@ -125,10 +125,10 @@ const summary: CharacterSummary = {
   status: 'draft',
   pending_choices: {
     total: 4,
-    proficiency: 1,  // Class skill choice
-    equipment: 1,    // Equipment choice
-    spell: 1,        // Cantrip/spell selection
-    language: 1,     // Background language
+    proficiency: 1, // Class skill choice
+    equipment: 1, // Equipment choice
+    spell: 1, // Cantrip/spell selection
+    language: 1, // Background language
     ability_score: 0,
     feature: 0,
     fighting_style: 0,
