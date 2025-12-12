@@ -111,6 +111,159 @@ async function handleDeathSaveUpdate(field: 'successes' | 'failures', value: num
   }
 }
 
+// ============================================================================
+// HP Management (Play Mode)
+// ============================================================================
+
+/**
+ * Local reactive state for HP
+ * Needed because stats from useAsyncData doesn't propagate mutations
+ */
+const localHitPoints = reactive({
+  current: 0,
+  max: 0,
+  temporary: 0
+})
+
+/** Prevents race conditions from rapid clicks */
+const isUpdatingHp = ref(false)
+
+// Sync local HP state when stats data loads
+watch(() => stats.value, (newStats) => {
+  if (newStats?.hit_points) {
+    localHitPoints.current = newStats.hit_points.current ?? 0
+    localHitPoints.max = newStats.hit_points.max ?? 0
+    localHitPoints.temporary = newStats.hit_points.temporary ?? 0
+  }
+}, { immediate: true })
+
+/**
+ * Handle HP changes from HpEditModal
+ * Applies D&D rules: temp HP absorbs damage first, healing caps at max
+ */
+async function handleHpChange(delta: number) {
+  if (isUpdatingHp.value || !character.value) return
+
+  isUpdatingHp.value = true
+
+  // Calculate new values using D&D rules
+  const { applyHpDelta } = await import('~/composables/useHpCalculations')
+  const { newCurrentHp, newTempHp } = applyHpDelta({
+    delta,
+    currentHp: localHitPoints.current,
+    maxHp: localHitPoints.max,
+    tempHp: localHitPoints.temporary
+  })
+
+  // Optimistic update
+  const oldCurrent = localHitPoints.current
+  const oldTemp = localHitPoints.temporary
+  localHitPoints.current = newCurrentHp
+  localHitPoints.temporary = newTempHp
+
+  try {
+    await apiFetch(`/characters/${character.value.id}`, {
+      method: 'PATCH',
+      body: {
+        current_hit_points: newCurrentHp,
+        temp_hit_points: newTempHp
+      }
+    })
+  } catch (err) {
+    // Rollback on error
+    localHitPoints.current = oldCurrent
+    localHitPoints.temporary = oldTemp
+    logger.error('Failed to update HP:', err)
+    toast.add({
+      title: 'Failed to save',
+      description: 'Could not update hit points',
+      color: 'error'
+    })
+  } finally {
+    isUpdatingHp.value = false
+  }
+}
+
+/**
+ * Handle temp HP set from TempHpModal
+ * D&D rule: Temp HP doesn't stack - keep higher value
+ */
+async function handleTempHpSet(value: number) {
+  if (isUpdatingHp.value || !character.value) return
+
+  isUpdatingHp.value = true
+
+  // D&D rule: keep higher value
+  const { applyTempHp } = await import('~/composables/useHpCalculations')
+  const newTempHp = applyTempHp({
+    newTempHp: value,
+    currentTempHp: localHitPoints.temporary
+  })
+
+  const oldTemp = localHitPoints.temporary
+  localHitPoints.temporary = newTempHp
+
+  try {
+    await apiFetch(`/characters/${character.value.id}`, {
+      method: 'PATCH',
+      body: { temp_hit_points: newTempHp }
+    })
+  } catch (err) {
+    localHitPoints.temporary = oldTemp
+    logger.error('Failed to set temp HP:', err)
+    toast.add({
+      title: 'Failed to save',
+      description: 'Could not set temporary hit points',
+      color: 'error'
+    })
+  } finally {
+    isUpdatingHp.value = false
+  }
+}
+
+/**
+ * Handle temp HP clear from TempHpModal
+ */
+async function handleTempHpClear() {
+  if (isUpdatingHp.value || !character.value) return
+
+  isUpdatingHp.value = true
+  const oldTemp = localHitPoints.temporary
+  localHitPoints.temporary = 0
+
+  try {
+    await apiFetch(`/characters/${character.value.id}`, {
+      method: 'PATCH',
+      body: { temp_hit_points: 0 }
+    })
+  } catch (err) {
+    localHitPoints.temporary = oldTemp
+    logger.error('Failed to clear temp HP:', err)
+    toast.add({
+      title: 'Failed to save',
+      description: 'Could not clear temporary hit points',
+      color: 'error'
+    })
+  } finally {
+    isUpdatingHp.value = false
+  }
+}
+
+/**
+ * Computed stats that uses local HP values when in play mode
+ * Falls back to server data when not in play mode
+ */
+const displayStats = computed(() => {
+  if (!stats.value) return null
+
+  return {
+    ...stats.value,
+    hit_points: isPlayMode.value
+      ? { current: localHitPoints.current, max: localHitPoints.max, temporary: localHitPoints.temporary }
+      : stats.value.hit_points
+  }
+})
+
 // Validation - check for dangling references when sourcebooks are removed
 const characterId = computed(() => character.value?.id ?? null)
 const { validationResult, validateReferences } = useCharacterValidation(characterId)
@@ -224,9 +377,14 @@ const tabItems = computed(() => {
         <div class="space-y-6">
           <!-- Combat Stats Grid -->
           <CharacterSheetCombatStatsGrid
+            v-if="displayStats"
             :character="character"
-            :stats="stats"
+            :stats="displayStats"
             :currency="character.currency"
+            :editable="isPlayMode"
+            @hp-change="handleHpChange"
+            @temp-hp-set="handleTempHpSet"
+            @temp-hp-clear="handleTempHpClear"
           />
 
           <!-- Defensive Traits -->

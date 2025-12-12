@@ -130,14 +130,17 @@ const visibleCurrencies = computed(() => {
         +{{ stats.hit_points.temporary }} temp
       </div>
       <!-- Add Temp HP button (only when editable) -->
-      <button
+      <UButton
         v-if="editable"
         data-testid="add-temp-hp-btn"
-        class="text-xs text-primary-600 dark:text-primary-400 hover:underline mt-1"
+        size="xs"
+        variant="link"
+        color="primary"
+        class="mt-1"
         @click.stop="isTempHpModalOpen = true"
       >
         + Add Temp HP
-      </button>
+      </UButton>
     </div>
 
     <div class="bg-gray-50 dark:bg-gray-800 rounded-lg p-4 text-center">
