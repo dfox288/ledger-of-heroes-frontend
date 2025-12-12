@@ -6,7 +6,53 @@ const props = defineProps<{
   character: Character
   stats: CharacterStats
   currency?: CharacterCurrency | null
+  editable?: boolean
 }>()
+
+const emit = defineEmits<{
+  'hp-change': [delta: number]
+  'temp-hp-set': [value: number]
+  'temp-hp-clear': []
+}>()
+
+// =========================================================================
+// Modal State
+// =========================================================================
+
+const isHpModalOpen = ref(false)
+const isTempHpModalOpen = ref(false)
+
+// =========================================================================
+// HP Cell Click Handler
+// =========================================================================
+
+function handleHpCellClick() {
+  if (!props.editable) return
+  isHpModalOpen.value = true
+}
+
+// =========================================================================
+// Modal Event Handlers
+// =========================================================================
+
+function handleHpChange(delta: number) {
+  emit('hp-change', delta)
+  isHpModalOpen.value = false
+}
+
+function handleTempHpSet(value: number) {
+  emit('temp-hp-set', value)
+  isTempHpModalOpen.value = false
+}
+
+function handleTempHpClear() {
+  emit('temp-hp-clear')
+  isTempHpModalOpen.value = false
+}
+
+// =========================================================================
+// Utility Functions
+// =========================================================================
 
 function formatModifier(value: number | null): string {
   if (value === null) return '—'
@@ -61,7 +107,14 @@ const visibleCurrencies = computed(() => {
 <template>
   <div class="grid grid-cols-3 gap-3">
     <!-- Row 1: HP, AC, Initiative -->
-    <div class="bg-gray-50 dark:bg-gray-800 rounded-lg p-4 text-center">
+    <div
+      data-testid="hp-cell"
+      :class="[
+        'bg-gray-50 dark:bg-gray-800 rounded-lg p-4 text-center',
+        editable ? 'cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors' : ''
+      ]"
+      @click="handleHpCellClick"
+    >
       <div class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1">
         HP
       </div>
@@ -76,6 +129,15 @@ const visibleCurrencies = computed(() => {
       >
         +{{ stats.hit_points.temporary }} temp
       </div>
+      <!-- Add Temp HP button (only when editable) -->
+      <button
+        v-if="editable"
+        data-testid="add-temp-hp-btn"
+        class="text-xs text-primary-600 dark:text-primary-400 hover:underline mt-1"
+        @click.stop="isTempHpModalOpen = true"
+      >
+        + Add Temp HP
+      </button>
     </div>
 
     <div class="bg-gray-50 dark:bg-gray-800 rounded-lg p-4 text-center">
@@ -160,4 +222,21 @@ const visibleCurrencies = computed(() => {
       </div>
     </div>
   </div>
+
+  <!-- HP Edit Modal -->
+  <CharacterSheetHpEditModal
+    v-model:open="isHpModalOpen"
+    :current-hp="stats.hit_points?.current ?? 0"
+    :max-hp="stats.hit_points?.max ?? 0"
+    :temp-hp="stats.hit_points?.temporary ?? 0"
+    @apply="handleHpChange"
+  />
+
+  <!-- Temp HP Modal -->
+  <CharacterSheetTempHpModal
+    v-model:open="isTempHpModalOpen"
+    :current-temp-hp="stats.hit_points?.temporary ?? 0"
+    @apply="handleTempHpSet"
+    @clear="handleTempHpClear"
+  />
 </template>

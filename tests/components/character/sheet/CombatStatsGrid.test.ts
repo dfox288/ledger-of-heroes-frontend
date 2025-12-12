@@ -197,4 +197,150 @@ describe('CharacterSheetCombatStatsGrid', () => {
       expect(wrapper.text()).toContain('ft')
     })
   })
+
+  // =========================================================================
+  // Editable Mode Tests
+  // =========================================================================
+
+  describe('editable mode', () => {
+    describe('props', () => {
+      it('accepts editable prop', async () => {
+        const wrapper = await mountSuspended(CombatStatsGrid, {
+          props: { character: mockCharacter, stats: mockStats, editable: true }
+        })
+        expect(wrapper.props('editable')).toBe(true)
+      })
+
+      it('defaults editable to false', async () => {
+        const wrapper = await mountSuspended(CombatStatsGrid, {
+          props: { character: mockCharacter, stats: mockStats }
+        })
+        expect(wrapper.props('editable')).toBeFalsy()
+      })
+    })
+
+    describe('HP cell interactivity', () => {
+      it('HP cell has data-testid', async () => {
+        const wrapper = await mountSuspended(CombatStatsGrid, {
+          props: { character: mockCharacter, stats: mockStats, editable: true }
+        })
+        const hpCell = wrapper.find('[data-testid="hp-cell"]')
+        expect(hpCell.exists()).toBe(true)
+      })
+
+      it('HP cell has cursor-pointer when editable', async () => {
+        const wrapper = await mountSuspended(CombatStatsGrid, {
+          props: { character: mockCharacter, stats: mockStats, editable: true }
+        })
+        const hpCell = wrapper.find('[data-testid="hp-cell"]')
+        expect(hpCell.classes()).toContain('cursor-pointer')
+      })
+
+      it('HP cell does not have cursor-pointer when not editable', async () => {
+        const wrapper = await mountSuspended(CombatStatsGrid, {
+          props: { character: mockCharacter, stats: mockStats, editable: false }
+        })
+        const hpCell = wrapper.find('[data-testid="hp-cell"]')
+        expect(hpCell.classes()).not.toContain('cursor-pointer')
+      })
+    })
+
+    describe('Add Temp HP button', () => {
+      it('shows Add Temp HP button when editable', async () => {
+        const wrapper = await mountSuspended(CombatStatsGrid, {
+          props: { character: mockCharacter, stats: mockStats, editable: true }
+        })
+        const addTempHpBtn = wrapper.find('[data-testid="add-temp-hp-btn"]')
+        expect(addTempHpBtn.exists()).toBe(true)
+      })
+
+      it('hides Add Temp HP button when not editable', async () => {
+        const wrapper = await mountSuspended(CombatStatsGrid, {
+          props: { character: mockCharacter, stats: mockStats, editable: false }
+        })
+        const addTempHpBtn = wrapper.find('[data-testid="add-temp-hp-btn"]')
+        expect(addTempHpBtn.exists()).toBe(false)
+      })
+    })
+
+    describe('modal state', () => {
+      it('opens HP modal when HP cell clicked', async () => {
+        const wrapper = await mountSuspended(CombatStatsGrid, {
+          props: { character: mockCharacter, stats: mockStats, editable: true }
+        })
+        const vm = wrapper.vm as any
+
+        expect(vm.isHpModalOpen).toBe(false)
+
+        const hpCell = wrapper.find('[data-testid="hp-cell"]')
+        await hpCell.trigger('click')
+
+        expect(vm.isHpModalOpen).toBe(true)
+      })
+
+      it('does not open HP modal when not editable', async () => {
+        const wrapper = await mountSuspended(CombatStatsGrid, {
+          props: { character: mockCharacter, stats: mockStats, editable: false }
+        })
+        const vm = wrapper.vm as any
+
+        const hpCell = wrapper.find('[data-testid="hp-cell"]')
+        await hpCell.trigger('click')
+
+        expect(vm.isHpModalOpen).toBe(false)
+      })
+
+      it('opens Temp HP modal when Add Temp HP clicked', async () => {
+        const wrapper = await mountSuspended(CombatStatsGrid, {
+          props: { character: mockCharacter, stats: mockStats, editable: true }
+        })
+        const vm = wrapper.vm as any
+
+        expect(vm.isTempHpModalOpen).toBe(false)
+
+        const addTempHpBtn = wrapper.find('[data-testid="add-temp-hp-btn"]')
+        await addTempHpBtn.trigger('click')
+
+        expect(vm.isTempHpModalOpen).toBe(true)
+      })
+    })
+
+    describe('event emissions', () => {
+      it('emits hp-change when HP modal applies', async () => {
+        const wrapper = await mountSuspended(CombatStatsGrid, {
+          props: { character: mockCharacter, stats: mockStats, editable: true }
+        })
+        const vm = wrapper.vm as any
+
+        // Simulate modal apply
+        vm.handleHpChange(-12)
+
+        expect(wrapper.emitted('hp-change')).toBeTruthy()
+        expect(wrapper.emitted('hp-change')![0]).toEqual([-12])
+      })
+
+      it('emits temp-hp-set when Temp HP modal applies', async () => {
+        const wrapper = await mountSuspended(CombatStatsGrid, {
+          props: { character: mockCharacter, stats: mockStats, editable: true }
+        })
+        const vm = wrapper.vm as any
+
+        vm.handleTempHpSet(10)
+
+        expect(wrapper.emitted('temp-hp-set')).toBeTruthy()
+        expect(wrapper.emitted('temp-hp-set')![0]).toEqual([10])
+      })
+
+      it('emits temp-hp-clear when Temp HP modal clears', async () => {
+        const wrapper = await mountSuspended(CombatStatsGrid, {
+          props: { character: mockCharacter, stats: mockStats, editable: true }
+        })
+        const vm = wrapper.vm as any
+
+        vm.handleTempHpClear()
+
+        expect(wrapper.emitted('temp-hp-clear')).toBeTruthy()
+      })
+    })
+  })
 })
