@@ -280,24 +280,24 @@ export function useCharacterWizard(options: UseCharacterWizardOptions = {}) {
         return store.selections.background !== null
 
       case 'feats':
-        // Block until all feat choices are complete
-        if (!store.summary) return false
+        // Allow if summary not loaded yet; block if pending feats remain
+        if (!store.summary) return true
         return store.summary.pending_choices.feats === 0
 
       case 'abilities':
-        // Block until all ability score bonus choices (ASI) are complete
+        // Allow if summary not loaded yet; block if pending ASI bonuses remain
         // This includes racial +2/+1 bonuses and feat-granted bonuses
-        if (!store.summary) return false
+        if (!store.summary) return true
         return store.summary.pending_choices.asi === 0
 
       case 'proficiencies':
-        // Block until all proficiency choices are complete
-        if (!store.summary) return false
+        // Allow if summary not loaded yet; block if pending proficiency choices remain
+        if (!store.summary) return true
         return store.summary.pending_choices.proficiencies === 0
 
       case 'languages':
-        // Block until all language choices are complete
-        if (!store.summary) return false
+        // Allow if summary not loaded yet; block if pending language choices remain
+        if (!store.summary) return true
         return store.summary.pending_choices.languages === 0
 
       case 'equipment':
@@ -307,8 +307,8 @@ export function useCharacterWizard(options: UseCharacterWizardOptions = {}) {
         return true
 
       case 'spells':
-        // Block until all spell choices are complete
-        if (!store.summary) return false
+        // Allow if summary not loaded yet; block if pending spell selections remain
+        if (!store.summary) return true
         return store.summary.pending_choices.spells === 0
 
       case 'details':
