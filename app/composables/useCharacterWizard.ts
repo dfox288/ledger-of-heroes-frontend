@@ -281,7 +281,7 @@ export function useCharacterWizard(options: UseCharacterWizardOptions = {}) {
 
       case 'feats':
         // Allow if summary not loaded yet; block if pending feats remain
-        if (!store.summary) return true
+        if (!store.summary?.pending_choices) return true
         return store.summary.pending_choices.feats === 0
 
       case 'abilities':
@@ -291,12 +291,12 @@ export function useCharacterWizard(options: UseCharacterWizardOptions = {}) {
 
       case 'proficiencies':
         // Allow if summary not loaded yet; block if pending proficiency choices remain
-        if (!store.summary) return true
+        if (!store.summary?.pending_choices) return true
         return store.summary.pending_choices.proficiencies === 0
 
       case 'languages':
         // Allow if summary not loaded yet; block if pending language choices remain
-        if (!store.summary) return true
+        if (!store.summary?.pending_choices) return true
         return store.summary.pending_choices.languages === 0
 
       case 'equipment':
@@ -307,7 +307,7 @@ export function useCharacterWizard(options: UseCharacterWizardOptions = {}) {
 
       case 'spells':
         // Allow if summary not loaded yet; block if pending spell selections remain
-        if (!store.summary) return true
+        if (!store.summary?.pending_choices) return true
         return store.summary.pending_choices.spells === 0
 
       case 'details':
