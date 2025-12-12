@@ -268,12 +268,11 @@ async function checkApiConnectivity(): Promise<boolean> {
 // ════════════════════════════════════════════════════════════════
 
 interface ChoiceOption {
-  full_slug?: string
-  slug?: string
+  slug?: string // Source-prefixed (e.g., "phb:fireball") - see #506
   code?: string // For ability_score choices (STR, DEX, etc.)
   name: string
   option?: string // "a" or "b" for equipment
-  items?: Array<{ full_slug: string, is_fixed: boolean }>
+  items?: Array<{ slug: string, is_fixed: boolean }>
   is_category?: boolean
   is_fixed?: boolean
 }
@@ -327,12 +326,12 @@ async function resolveChoice(
   })
 }
 
-async function fetchOptionsFromEndpoint(endpoint: string): Promise<Array<{ full_slug: string, name: string }>> {
+async function fetchOptionsFromEndpoint(endpoint: string): Promise<Array<{ slug: string, name: string }>> {
   // The endpoint is relative to the API, e.g., "/api/v1/characters/13/available-spells"
   // We need to call it relative to our API_BASE
   const cleanEndpoint = endpoint.replace('/api/v1', '')
 
-  const response = await apiFetch<{ data: Array<{ full_slug: string, name: string }> | null }>(cleanEndpoint)
+  const response = await apiFetch<{ data: Array<{ slug: string, name: string }> | null }>(cleanEndpoint)
 
   // Handle null/undefined data
   if (!response.data || !Array.isArray(response.data)) {
@@ -350,7 +349,7 @@ async function pickRandomChoiceSelection(choice: PendingChoice): Promise<{ selec
       // Filter out already-known items if metadata provides them
       const known = choice.metadata?.known_languages || []
       const available = choice.options
-        .map(o => o.full_slug || o.slug)
+        .map(o => o.slug)
         .filter((slug): slug is string => !!slug && !known.includes(slug))
 
       // Use quantity (total needed) not remaining (may be partially filled)
@@ -373,7 +372,7 @@ async function pickRandomChoiceSelection(choice: PendingChoice): Promise<{ selec
         const selectableItems = equipOption.items.filter(i => !i.is_fixed)
 
         // Pick one item from the category
-        const pickedItem = pickRandom(selectableItems.map(i => i.full_slug))
+        const pickedItem = pickRandom(selectableItems.map(i => i.slug))
 
         // Backend expects item_selections as object keyed by option letter
         return {
@@ -395,7 +394,7 @@ async function pickRandomChoiceSelection(choice: PendingChoice): Promise<{ selec
             console.warn(`    ⚠️  No spells available from endpoint`)
             return { selected: [] }
           }
-          const spellSlugs = spells.map(s => s.full_slug).filter(Boolean)
+          const spellSlugs = spells.map(s => s.slug).filter(Boolean)
           return { selected: pickRandomN(spellSlugs, Math.min(choice.quantity, spellSlugs.length)) }
         } catch (err) {
           console.warn(`    ⚠️  Failed to fetch spells: ${err instanceof Error ? err.message : String(err)}`)
@@ -405,7 +404,7 @@ async function pickRandomChoiceSelection(choice: PendingChoice): Promise<{ selec
 
       // Use inline options if provided
       const available = (choice.options || [])
-        .map(o => o.full_slug || o.slug)
+        .map(o => o.slug)
         .filter((slug): slug is string => !!slug)
 
       if (available.length === 0) {
@@ -426,7 +425,7 @@ async function pickRandomChoiceSelection(choice: PendingChoice): Promise<{ selec
             console.warn(`    ⚠️  No options available from ${choice.options_endpoint}`)
             return { selected: [] }
           }
-          return { selected: pickRandomN(features.map(f => f.full_slug), Math.min(choice.remaining, features.length)) }
+          return { selected: pickRandomN(features.map(f => f.slug), Math.min(choice.remaining, features.length)) }
         } catch (err) {
           console.warn(`    ⚠️  Failed to fetch options: ${err instanceof Error ? err.message : String(err)}`)
           return { selected: [] }
@@ -434,7 +433,7 @@ async function pickRandomChoiceSelection(choice: PendingChoice): Promise<{ selec
       }
 
       const available = (choice.options || [])
-        .map(o => o.full_slug || o.slug)
+        .map(o => o.slug)
         .filter((slug): slug is string => !!slug)
 
       return { selected: pickRandomN(available, Math.min(choice.quantity, available.length)) }

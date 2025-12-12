@@ -9,63 +9,63 @@ describe('CharacterSheetSpellsByLevel', () => {
     // 1st level spells (mix of prepared and not prepared)
     {
       id: 1,
-      spell: { name: 'Detect Magic', level: 1, slug: 'detect-magic', full_slug: 'phb:detect-magic' },
+      spell: { name: 'Detect Magic', level: 1, slug: 'phb:detect-magic' },
       is_prepared: true,
       is_always_prepared: false
     },
     {
       id: 2,
-      spell: { name: 'Mage Armor', level: 1, slug: 'mage-armor', full_slug: 'phb:mage-armor' },
+      spell: { name: 'Mage Armor', level: 1, slug: 'phb:mage-armor' },
       is_prepared: true,
       is_always_prepared: false
     },
     {
       id: 3,
-      spell: { name: 'Magic Missile', level: 1, slug: 'magic-missile', full_slug: 'phb:magic-missile' },
+      spell: { name: 'Magic Missile', level: 1, slug: 'phb:magic-missile' },
       is_prepared: true,
       is_always_prepared: false
     },
     {
       id: 4,
-      spell: { name: 'Shield', level: 1, slug: 'shield', full_slug: 'phb:shield' },
+      spell: { name: 'Shield', level: 1, slug: 'phb:shield' },
       is_prepared: true,
       is_always_prepared: false
     },
     {
       id: 5,
-      spell: { name: 'Charm Person', level: 1, slug: 'charm-person', full_slug: 'phb:charm-person' },
+      spell: { name: 'Charm Person', level: 1, slug: 'phb:charm-person' },
       is_prepared: false,
       is_always_prepared: false
     },
     {
       id: 6,
-      spell: { name: 'Sleep', level: 1, slug: 'sleep', full_slug: 'phb:sleep' },
+      spell: { name: 'Sleep', level: 1, slug: 'phb:sleep' },
       is_prepared: false,
       is_always_prepared: false
     },
     // 2nd level spells
     {
       id: 7,
-      spell: { name: 'Hold Person', level: 2, slug: 'hold-person', full_slug: 'phb:hold-person' },
+      spell: { name: 'Hold Person', level: 2, slug: 'phb:hold-person' },
       is_prepared: true,
       is_always_prepared: false
     },
     {
       id: 8,
-      spell: { name: 'Misty Step', level: 2, slug: 'misty-step', full_slug: 'phb:misty-step' },
+      spell: { name: 'Misty Step', level: 2, slug: 'phb:misty-step' },
       is_prepared: true,
       is_always_prepared: false
     },
     {
       id: 9,
-      spell: { name: 'Invisibility', level: 2, slug: 'invisibility', full_slug: 'phb:invisibility' },
+      spell: { name: 'Invisibility', level: 2, slug: 'phb:invisibility' },
       is_prepared: false,
       is_always_prepared: false
     },
     // 3rd level spell
     {
       id: 10,
-      spell: { name: 'Fireball', level: 3, slug: 'fireball', full_slug: 'phb:fireball' },
+      spell: { name: 'Fireball', level: 3, slug: 'phb:fireball' },
       is_prepared: true,
       is_always_prepared: false
     }
@@ -169,7 +169,7 @@ describe('CharacterSheetSpellsByLevel', () => {
     const firstLevelOnly: CharacterSpell[] = [
       {
         id: 1,
-        spell: { name: 'Detect Magic', level: 1, slug: 'detect-magic', full_slug: 'phb:detect-magic' },
+        spell: { name: 'Detect Magic', level: 1, slug: 'phb:detect-magic' },
         is_prepared: true,
         is_always_prepared: false
       }
@@ -198,7 +198,7 @@ describe('CharacterSheetSpellsByLevel', () => {
     const spellsWithNull: CharacterSpell[] = [
       {
         id: 1,
-        spell: { name: 'Detect Magic', level: 1, slug: 'detect-magic', full_slug: 'phb:detect-magic' },
+        spell: { name: 'Detect Magic', level: 1, slug: 'phb:detect-magic' },
         is_prepared: true,
         is_always_prepared: false
       },
@@ -221,12 +221,12 @@ describe('CharacterSheetSpellsByLevel', () => {
 
   it('uses correct ordinal formatting for spell levels', async () => {
     const multiLevelSpells: CharacterSpell[] = [
-      { id: 1, spell: { name: 'Spell 1', level: 1, slug: 's1', full_slug: 'phb:s1' }, is_prepared: true, is_always_prepared: false },
-      { id: 2, spell: { name: 'Spell 2', level: 2, slug: 's2', full_slug: 'phb:s2' }, is_prepared: true, is_always_prepared: false },
-      { id: 3, spell: { name: 'Spell 3', level: 3, slug: 's3', full_slug: 'phb:s3' }, is_prepared: true, is_always_prepared: false },
-      { id: 4, spell: { name: 'Spell 4', level: 4, slug: 's4', full_slug: 'phb:s4' }, is_prepared: true, is_always_prepared: false },
-      { id: 5, spell: { name: 'Spell 5', level: 5, slug: 's5', full_slug: 'phb:s5' }, is_prepared: true, is_always_prepared: false },
-      { id: 6, spell: { name: 'Spell 9', level: 9, slug: 's9', full_slug: 'phb:s9' }, is_prepared: true, is_always_prepared: false }
+      { id: 1, spell: { name: 'Spell 1', level: 1, slug: 's1', slug: 'phb:s1' }, is_prepared: true, is_always_prepared: false },
+      { id: 2, spell: { name: 'Spell 2', level: 2, slug: 's2', slug: 'phb:s2' }, is_prepared: true, is_always_prepared: false },
+      { id: 3, spell: { name: 'Spell 3', level: 3, slug: 's3', slug: 'phb:s3' }, is_prepared: true, is_always_prepared: false },
+      { id: 4, spell: { name: 'Spell 4', level: 4, slug: 's4', slug: 'phb:s4' }, is_prepared: true, is_always_prepared: false },
+      { id: 5, spell: { name: 'Spell 5', level: 5, slug: 's5', slug: 'phb:s5' }, is_prepared: true, is_always_prepared: false },
+      { id: 6, spell: { name: 'Spell 9', level: 9, slug: 's9', slug: 'phb:s9' }, is_prepared: true, is_always_prepared: false }
     ]
 
     const wrapper = await mountSuspended(SpellsByLevel, {
@@ -245,7 +245,7 @@ describe('CharacterSheetSpellsByLevel', () => {
     const singleSpell: CharacterSpell[] = [
       {
         id: 1,
-        spell: { name: 'Fireball', level: 3, slug: 'fireball', full_slug: 'phb:fireball' },
+        spell: { name: 'Fireball', level: 3, slug: 'phb:fireball' },
         is_prepared: true,
         is_always_prepared: false
       }
@@ -261,10 +261,10 @@ describe('CharacterSheetSpellsByLevel', () => {
 
   it('maintains prepared spells first, then unprepared, both alphabetically', async () => {
     const mixedSpells: CharacterSpell[] = [
-      { id: 1, spell: { name: 'Zebra Spell', level: 1, slug: 'z', full_slug: 'phb:z' }, is_prepared: false, is_always_prepared: false },
-      { id: 2, spell: { name: 'Alpha Spell', level: 1, slug: 'a', full_slug: 'phb:a' }, is_prepared: true, is_always_prepared: false },
-      { id: 3, spell: { name: 'Beta Spell', level: 1, slug: 'b', full_slug: 'phb:b' }, is_prepared: false, is_always_prepared: false },
-      { id: 4, spell: { name: 'Gamma Spell', level: 1, slug: 'g', full_slug: 'phb:g' }, is_prepared: true, is_always_prepared: false }
+      { id: 1, spell: { name: 'Zebra Spell', level: 1, slug: 'z', slug: 'phb:z' }, is_prepared: false, is_always_prepared: false },
+      { id: 2, spell: { name: 'Alpha Spell', level: 1, slug: 'a', slug: 'phb:a' }, is_prepared: true, is_always_prepared: false },
+      { id: 3, spell: { name: 'Beta Spell', level: 1, slug: 'b', slug: 'phb:b' }, is_prepared: false, is_always_prepared: false },
+      { id: 4, spell: { name: 'Gamma Spell', level: 1, slug: 'g', slug: 'phb:g' }, is_prepared: true, is_always_prepared: false }
     ]
 
     const wrapper = await mountSuspended(SpellsByLevel, {

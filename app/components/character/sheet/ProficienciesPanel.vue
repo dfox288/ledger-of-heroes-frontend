@@ -43,7 +43,7 @@ const proficienciesByCategory = computed(() => {
         <div class="flex flex-wrap gap-2">
           <UBadge
             v-for="prof in profs"
-            :key="prof.id"
+            :key="prof.id ?? prof.proficiency_type_slug"
             color="neutral"
             variant="subtle"
             size="md"

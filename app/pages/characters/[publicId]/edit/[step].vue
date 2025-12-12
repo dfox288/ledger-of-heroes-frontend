@@ -21,21 +21,22 @@ import WizardLayout from '~/components/character/wizard/WizardLayout.vue'
  * Using defineAsyncComponent for lazy loading each step
  */
 const stepComponents: Record<string, Component> = {
-  sourcebooks: defineAsyncComponent(() => import('~/components/character/wizard/StepSourcebooks.vue')),
-  race: defineAsyncComponent(() => import('~/components/character/wizard/StepRace.vue')),
-  subrace: defineAsyncComponent(() => import('~/components/character/wizard/StepSubrace.vue')),
-  size: defineAsyncComponent(() => import('~/components/character/wizard/StepSize.vue')),
-  class: defineAsyncComponent(() => import('~/components/character/wizard/StepClass.vue')),
-  subclass: defineAsyncComponent(() => import('~/components/character/wizard/StepSubclass.vue')),
-  background: defineAsyncComponent(() => import('~/components/character/wizard/StepBackground.vue')),
-  feats: defineAsyncComponent(() => import('~/components/character/wizard/StepFeats.vue')),
-  abilities: defineAsyncComponent(() => import('~/components/character/wizard/StepAbilities.vue')),
-  proficiencies: defineAsyncComponent(() => import('~/components/character/wizard/StepProficiencies.vue')),
-  languages: defineAsyncComponent(() => import('~/components/character/wizard/StepLanguages.vue')),
-  equipment: defineAsyncComponent(() => import('~/components/character/wizard/StepEquipment.vue')),
-  spells: defineAsyncComponent(() => import('~/components/character/wizard/StepSpells.vue')),
-  details: defineAsyncComponent(() => import('~/components/character/wizard/StepDetails.vue')),
-  review: defineAsyncComponent(() => import('~/components/character/wizard/StepReview.vue'))
+  'sourcebooks': defineAsyncComponent(() => import('~/components/character/wizard/StepSourcebooks.vue')),
+  'race': defineAsyncComponent(() => import('~/components/character/wizard/StepRace.vue')),
+  'subrace': defineAsyncComponent(() => import('~/components/character/wizard/StepSubrace.vue')),
+  'size': defineAsyncComponent(() => import('~/components/character/wizard/StepSize.vue')),
+  'class': defineAsyncComponent(() => import('~/components/character/wizard/StepClass.vue')),
+  'subclass': defineAsyncComponent(() => import('~/components/character/wizard/StepSubclass.vue')),
+  'background': defineAsyncComponent(() => import('~/components/character/wizard/StepBackground.vue')),
+  'feats': defineAsyncComponent(() => import('~/components/character/wizard/StepFeats.vue')),
+  'abilities': defineAsyncComponent(() => import('~/components/character/wizard/StepAbilities.vue')),
+  'proficiencies': defineAsyncComponent(() => import('~/components/character/wizard/StepProficiencies.vue')),
+  'feature-choices': defineAsyncComponent(() => import('~/components/character/wizard/StepFeatureChoices.vue')),
+  'languages': defineAsyncComponent(() => import('~/components/character/wizard/StepLanguages.vue')),
+  'equipment': defineAsyncComponent(() => import('~/components/character/wizard/StepEquipment.vue')),
+  'spells': defineAsyncComponent(() => import('~/components/character/wizard/StepSpells.vue')),
+  'details': defineAsyncComponent(() => import('~/components/character/wizard/StepDetails.vue')),
+  'review': defineAsyncComponent(() => import('~/components/character/wizard/StepReview.vue'))
 }
 
 // ════════════════════════════════════════════════════════════════

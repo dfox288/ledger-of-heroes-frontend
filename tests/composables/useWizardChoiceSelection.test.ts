@@ -13,7 +13,7 @@ interface MockPendingChoice {
   quantity: number
   remaining: number
   selected: string[]
-  options: Array<{ slug: string, full_slug?: string, name: string }> | null
+  options: Array<{ slug: string, name: string }> | null
   options_endpoint: string | null
 }
 
@@ -52,10 +52,10 @@ const mockLanguageChoices: MockPendingChoice[] = [
     remaining: 1,
     selected: [],
     options: [
-      { slug: 'dwarvish', full_slug: 'core:dwarvish', name: 'Dwarvish' },
-      { slug: 'elvish', full_slug: 'core:elvish', name: 'Elvish' },
-      { slug: 'giant', full_slug: 'core:giant', name: 'Giant' },
-      { slug: 'gnomish', full_slug: 'core:gnomish', name: 'Gnomish' }
+      { slug: 'core:dwarvish', name: 'Dwarvish' },
+      { slug: 'core:elvish', name: 'Elvish' },
+      { slug: 'core:giant', name: 'Giant' },
+      { slug: 'core:gnomish', name: 'Gnomish' }
     ],
     options_endpoint: null
   },
@@ -69,10 +69,10 @@ const mockLanguageChoices: MockPendingChoice[] = [
     remaining: 2,
     selected: [],
     options: [
-      { slug: 'dwarvish', full_slug: 'core:dwarvish', name: 'Dwarvish' },
-      { slug: 'elvish', full_slug: 'core:elvish', name: 'Elvish' },
-      { slug: 'giant', full_slug: 'core:giant', name: 'Giant' },
-      { slug: 'gnomish', full_slug: 'core:gnomish', name: 'Gnomish' }
+      { slug: 'core:dwarvish', name: 'Dwarvish' },
+      { slug: 'core:elvish', name: 'Elvish' },
+      { slug: 'core:giant', name: 'Giant' },
+      { slug: 'core:gnomish', name: 'Gnomish' }
     ],
     options_endpoint: null
   }
@@ -458,7 +458,7 @@ describe('useWizardChoiceSelection', () => {
       expect(options[0]).toEqual({ id: 'acrobatics', name: 'Acrobatics' })
     })
 
-    it('uses full_slug when available', () => {
+    it('uses prefixed slug for display options', () => {
       const choices = computed(() => mockLanguageChoices as unknown as MockPendingChoice[])
 
       const { getDisplayOptions } = useWizardChoiceSelection(choices, {

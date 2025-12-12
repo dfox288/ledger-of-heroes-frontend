@@ -9,9 +9,25 @@ import { wizardErrors } from '~/utils/wizardErrors'
 
 type PendingChoice = components['schemas']['PendingChoiceResource']
 
+// Props for store-agnostic usage (enables use in both creation and level-up wizards)
+const props = withDefaults(defineProps<{
+  characterId?: number
+  nextStep?: () => void
+  refreshAfterSave?: () => Promise<void>
+}>(), {
+  characterId: undefined,
+  nextStep: undefined,
+  refreshAfterSave: undefined
+})
+
+// Fallback to store if props not provided (backward compatibility)
 const store = useCharacterWizardStore()
 const { isLoading } = storeToRefs(store)
-const { nextStep } = useCharacterWizard()
+const wizardNav = useCharacterWizard()
+
+// Use prop or store value
+const effectiveCharacterId = computed(() => props.characterId ?? store.characterId)
+const effectiveNextStep = computed(() => props.nextStep ?? wizardNav.nextStep)
 
 // Toast for user feedback
 const toast = useToast()
@@ -24,15 +40,15 @@ const { apiFetch } = useApi()
 // ══════════════════════════════════════════════════════════════
 
 const { data: knownLanguagesData, pending: knownLanguagesPending } = await useAsyncData(
-  `wizard-known-languages-${store.characterId}`,
+  `wizard-known-languages-${effectiveCharacterId.value}`,
   async () => {
-    if (!store.characterId) return []
+    if (!effectiveCharacterId.value) return []
     const response = await apiFetch<{ data: CharacterLanguage[] }>(
-      `/characters/${store.characterId}/languages`
+      `/characters/${effectiveCharacterId.value}/languages`
     )
     return response.data
   },
-  { watch: [computed(() => store.characterId)] }
+  { watch: [effectiveCharacterId] }
 )
 
 // Group known languages by source
@@ -41,7 +57,8 @@ const knownLanguagesBySource = computed(() => {
   return {
     race: languages.filter(l => l.source === 'race'),
     class: languages.filter(l => l.source === 'class'),
-    background: languages.filter(l => l.source === 'background')
+    background: languages.filter(l => l.source === 'background'),
+    subclass_feature: languages.filter(l => l.source === 'subclass_feature')
   }
 })
 
@@ -66,7 +83,7 @@ const {
   error: choicesError,
   fetchChoices,
   resolveChoice
-} = useUnifiedChoices(computed(() => store.characterId))
+} = useUnifiedChoices(effectiveCharacterId)
 
 // Fetch language choices on mount
 onMounted(async () => {
@@ -104,7 +121,6 @@ const hasAnyChoices = computed(() => {
 // Type for language options from the API
 interface LanguageOption {
   id: number
-  full_slug?: string
   slug: string
   name: string
   script?: string
@@ -126,7 +142,9 @@ const languageChoicesBySource = computed(() => {
   const choices = choicesByType.value.languages
   return {
     race: choices.filter(c => c.source === 'race'),
-    background: choices.filter(c => c.source === 'background')
+    background: choices.filter(c => c.source === 'background'),
+    class: choices.filter(c => c.source === 'class'),
+    subclass_feature: choices.filter(c => c.source === 'subclass_feature')
   }
 })
 
@@ -138,36 +156,41 @@ interface SourceDisplayData {
   knownLanguages: Array<{ id: number, name: string }>
 }
 
+// Helper to get source label
+function getSourceLabel(source: string): string {
+  const labels: Record<string, string> = {
+    race: 'From Race',
+    background: 'From Background',
+    class: 'From Class',
+    subclass_feature: 'From Subclass'
+  }
+  return labels[source] ?? `From ${source}`
+}
+
 const sourceData = computed((): SourceDisplayData[] => {
   const sources: SourceDisplayData[] = []
 
-  // Race choices
-  for (const choice of languageChoicesBySource.value.race) {
-    sources.push({
-      choice,
-      label: 'From Race',
-      entityName: choice.source_name,
-      knownLanguages: choice.selected.map((slug) => {
-        const options = choice.options as LanguageOption[] | null
-        const option = options?.find(o => (o.full_slug ?? o.slug) === String(slug))
-        return option ?? { id: 0, name: String(slug) }
+  // Helper to add choices from a source
+  const addSourceChoices = (sourceChoices: typeof choicesByType.value.languages, source: string) => {
+    for (const choice of sourceChoices) {
+      sources.push({
+        choice,
+        label: getSourceLabel(source),
+        entityName: choice.source_name,
+        knownLanguages: choice.selected.map((slug) => {
+          const options = choice.options as LanguageOption[] | null
+          const option = options?.find(o => o.slug === String(slug))
+          return option ?? { id: 0, name: String(slug) }
+        })
       })
-    })
+    }
   }
 
-  // Background choices
-  for (const choice of languageChoicesBySource.value.background) {
-    sources.push({
-      choice,
-      label: 'From Background',
-      entityName: choice.source_name,
-      knownLanguages: choice.selected.map((slug) => {
-        const options = choice.options as LanguageOption[] | null
-        const option = options?.find(o => (o.full_slug ?? o.slug) === String(slug))
-        return option ?? { id: 0, name: String(slug) }
-      })
-    })
-  }
+  // Add choices from each source type
+  addSourceChoices(languageChoicesBySource.value.race, 'race')
+  addSourceChoices(languageChoicesBySource.value.background, 'background')
+  addSourceChoices(languageChoicesBySource.value.class, 'class')
+  addSourceChoices(languageChoicesBySource.value.subclass_feature, 'subclass_feature')
 
   return sources
 })
@@ -202,10 +225,14 @@ async function handleContinue() {
     // Clear local selections after save
     localSelections.value.clear()
 
-    // Sync store with backend to update hasLanguageChoices
-    await store.syncWithBackend()
+    // Refresh choices - use prop if provided (level-up), otherwise sync wizard store
+    if (props.refreshAfterSave) {
+      await props.refreshAfterSave()
+    } else {
+      await store.syncWithBackend()
+    }
 
-    await nextStep()
+    effectiveNextStep.value()
   } catch (e) {
     wizardErrors.choiceResolveFailed(e, toast, 'language')
   } finally {
@@ -312,6 +339,24 @@ async function handleContinue() {
             </UBadge>
           </div>
         </div>
+
+        <!-- From Subclass -->
+        <div v-if="knownLanguagesBySource.subclass_feature.length > 0">
+          <p class="text-sm font-medium text-gray-600 dark:text-gray-400 mb-2">
+            From Subclass:
+          </p>
+          <div class="flex flex-wrap gap-2">
+            <UBadge
+              v-for="lang in knownLanguagesBySource.subclass_feature"
+              :key="lang.id"
+              color="class"
+              variant="subtle"
+              size="md"
+            >
+              {{ lang.language?.name || lang.language_slug }}
+            </UBadge>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -391,46 +436,46 @@ async function handleContinue() {
           <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
             <button
               v-for="option in getLearnableOptions(data.choice.options)"
-              :key="option.full_slug ?? option.slug"
+              :key="option.slug"
               type="button"
               class="language-option p-3 rounded-lg border text-left transition-all"
               :class="{
-                'border-primary bg-primary/10': isOptionSelected(data.choice.id, option.full_slug ?? option.slug),
-                'border-gray-200 dark:border-gray-700 hover:border-primary/50': !isOptionSelected(data.choice.id, option.full_slug ?? option.slug) && !isOptionDisabled(data.choice.id, option.full_slug ?? option.slug),
-                'border-gray-200 dark:border-gray-700 opacity-50 cursor-not-allowed': isOptionDisabled(data.choice.id, option.full_slug ?? option.slug)
+                'border-primary bg-primary/10': isOptionSelected(data.choice.id, option.slug),
+                'border-gray-200 dark:border-gray-700 hover:border-primary/50': !isOptionSelected(data.choice.id, option.slug) && !isOptionDisabled(data.choice.id, option.slug),
+                'border-gray-200 dark:border-gray-700 opacity-50 cursor-not-allowed': isOptionDisabled(data.choice.id, option.slug)
               }"
-              :disabled="isOptionDisabled(data.choice.id, option.full_slug ?? option.slug)"
-              @click="handleToggle(data.choice, option.full_slug ?? option.slug)"
+              :disabled="isOptionDisabled(data.choice.id, option.slug)"
+              @click="handleToggle(data.choice, option.slug)"
             >
               <div class="flex items-center gap-2">
                 <UIcon
-                  :name="isLanguageAlreadyKnown(option.full_slug ?? option.slug)
+                  :name="isLanguageAlreadyKnown(option.slug)
                     ? 'i-heroicons-check-circle-solid'
-                    : isLanguageSelectedElsewhere(data.choice.id, option.full_slug ?? option.slug)
+                    : isLanguageSelectedElsewhere(data.choice.id, option.slug)
                       ? 'i-heroicons-no-symbol'
-                      : isOptionSelected(data.choice.id, option.full_slug ?? option.slug)
+                      : isOptionSelected(data.choice.id, option.slug)
                         ? 'i-heroicons-check-circle-solid'
                         : 'i-heroicons-circle'"
                   class="w-5 h-5"
                   :class="{
-                    'text-success': isLanguageAlreadyKnown(option.full_slug ?? option.slug),
-                    'text-primary': !isLanguageAlreadyKnown(option.full_slug ?? option.slug) && isOptionSelected(data.choice.id, option.full_slug ?? option.slug),
-                    'text-gray-400': !isOptionSelected(data.choice.id, option.full_slug ?? option.slug) && !isOptionDisabled(data.choice.id, option.full_slug ?? option.slug),
-                    'text-gray-300 dark:text-gray-600': isOptionDisabled(data.choice.id, option.full_slug ?? option.slug) && !isLanguageAlreadyKnown(option.full_slug ?? option.slug)
+                    'text-success': isLanguageAlreadyKnown(option.slug),
+                    'text-primary': !isLanguageAlreadyKnown(option.slug) && isOptionSelected(data.choice.id, option.slug),
+                    'text-gray-400': !isOptionSelected(data.choice.id, option.slug) && !isOptionDisabled(data.choice.id, option.slug),
+                    'text-gray-300 dark:text-gray-600': isOptionDisabled(data.choice.id, option.slug) && !isLanguageAlreadyKnown(option.slug)
                   }"
                 />
                 <span
                   class="font-medium"
-                  :class="{ 'text-gray-400 dark:text-gray-500': isOptionDisabled(data.choice.id, option.full_slug ?? option.slug) }"
+                  :class="{ 'text-gray-400 dark:text-gray-500': isOptionDisabled(data.choice.id, option.slug) }"
                 >
                   {{ option.name }}
                 </span>
               </div>
               <p
-                v-if="getDisabledReason(data.choice.id, option.full_slug ?? option.slug)"
+                v-if="getDisabledReason(data.choice.id, option.slug)"
                 class="text-xs text-gray-400 dark:text-gray-500 mt-1 ml-7"
               >
-                {{ getDisabledReason(data.choice.id, option.full_slug ?? option.slug) }}
+                {{ getDisabledReason(data.choice.id, option.slug) }}
               </p>
               <p
                 v-else-if="option.script"

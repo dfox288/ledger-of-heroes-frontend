@@ -9,10 +9,27 @@ import { wizardErrors } from '~/utils/wizardErrors'
 type ProficiencyResource = components['schemas']['ProficiencyResource']
 type PendingChoice = components['schemas']['PendingChoiceResource']
 
+// Props for store-agnostic usage
+const props = withDefaults(defineProps<{
+  characterId?: number
+  nextStep?: () => void
+  refreshAfterSave?: () => Promise<void>
+}>(), {
+  characterId: undefined,
+  nextStep: undefined,
+  refreshAfterSave: undefined
+})
+
+// Fallback to store if props not provided (backward compatibility)
 const store = useCharacterWizardStore()
+const wizardNav = useCharacterWizard()
+
+// Use prop or store value
+const effectiveCharacterId = computed(() => props.characterId ?? store.characterId)
+const effectiveNextStep = computed(() => props.nextStep ?? wizardNav.nextStep)
+
 const { apiFetch } = useApi()
 const { selections } = storeToRefs(store)
-const { nextStep } = useCharacterWizard()
 
 // Toast for user feedback
 const toast = useToast()
@@ -27,11 +44,11 @@ const {
   error: choicesError,
   fetchChoices,
   resolveChoice
-} = useUnifiedChoices(computed(() => store.characterId))
+} = useUnifiedChoices(effectiveCharacterId)
 
 // Fetch on mount
 onMounted(async () => {
-  if (store.characterId) {
+  if (effectiveCharacterId.value) {
     await fetchChoices('proficiency')
   }
 })
@@ -66,10 +83,25 @@ interface GrantedProficiencyGroup {
   items: ProficiencyResource[]
 }
 
+// Valid source types for proficiency choices
+type ProficiencySource = 'class' | 'race' | 'background' | 'subclass_feature' | 'feat'
+
 interface GrantedProficienciesBySource {
-  source: 'class' | 'race' | 'background'
+  source: ProficiencySource
   entityName: string
   groups: GrantedProficiencyGroup[]
+}
+
+// Helper to get human-readable source labels
+function getSourceLabel(source: string): string {
+  const labels: Record<string, string> = {
+    class: 'Class',
+    race: 'Race',
+    background: 'Background',
+    subclass_feature: 'Subclass',
+    feat: 'Feat'
+  }
+  return labels[source] ?? source
 }
 
 function getProficiencyTypeLabel(type: string): string {
@@ -185,7 +217,7 @@ const hasAnyGranted = computed(() => grantedBySource.value.length > 0)
 // ══════════════════════════════════════════════════════════════
 
 interface ChoicesBySource {
-  source: 'class' | 'race' | 'background'
+  source: ProficiencySource
   label: string
   entityName: string
   choices: PendingChoice[]
@@ -201,7 +233,9 @@ const proficiencyChoicesBySource = computed<ChoicesBySource[]>(() => {
   const bySource = {
     class: choices.filter(c => c.source === 'class'),
     race: choices.filter(c => c.source === 'race'),
-    background: choices.filter(c => c.source === 'background')
+    background: choices.filter(c => c.source === 'background'),
+    subclass_feature: choices.filter(c => c.source === 'subclass_feature'),
+    feat: choices.filter(c => c.source === 'feat')
   }
 
   if (bySource.class.length > 0) {
@@ -228,6 +262,24 @@ const proficiencyChoicesBySource = computed<ChoicesBySource[]>(() => {
       label: 'From Background',
       entityName: bySource.background[0]?.source_name ?? selections.value.background?.name ?? 'Unknown',
       choices: bySource.background
+    })
+  }
+
+  if (bySource.subclass_feature.length > 0) {
+    sources.push({
+      source: 'subclass_feature',
+      label: 'From Subclass',
+      entityName: bySource.subclass_feature[0]?.source_name ?? 'Subclass Feature',
+      choices: bySource.subclass_feature
+    })
+  }
+
+  if (bySource.feat.length > 0) {
+    sources.push({
+      source: 'feat',
+      label: 'From Feat',
+      entityName: bySource.feat[0]?.source_name ?? 'Feat',
+      choices: bySource.feat
     })
   }
 
@@ -279,11 +331,15 @@ async function handleContinue() {
   try {
     await saveAllChoices()
 
-    // Sync store with backend to update hasProficiencyChoices
-    await store.syncWithBackend()
+    // Refresh choices - use prop if provided (level-up), otherwise sync wizard store
+    if (props.refreshAfterSave) {
+      await props.refreshAfterSave()
+    } else {
+      await store.syncWithBackend()
+    }
 
     // Move to next step
-    await nextStep()
+    effectiveNextStep.value()
   } catch (err) {
     wizardErrors.choiceResolveFailed(err, toast, 'proficiency')
   }
@@ -333,7 +389,7 @@ async function handleContinue() {
         class="space-y-4"
       >
         <h3 class="text-lg font-semibold text-gray-900 dark:text-white border-b pb-2">
-          From Your {{ sourceData.source === 'class' ? 'Class' : sourceData.source === 'race' ? 'Race' : 'Background' }} ({{ sourceData.entityName }})
+          From Your {{ getSourceLabel(sourceData.source) }} ({{ sourceData.entityName }})
         </h3>
 
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">

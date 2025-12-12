@@ -128,5 +128,43 @@ describe('useEntityImage', () => {
       const result = getImagePath('skills', 'animal-handling', 256)
       expect(result).toBe('/images/generated/conversions/256/skills/stability-ai/animal-handling.webp')
     })
+
+    // Namespaced slug conversion (colon → double-dash)
+    describe('namespaced slugs', () => {
+      it('converts colon to double-dash for spells', () => {
+        const result = getImagePath('spells', 'phb:fireball', 256)
+        expect(result).toBe('/images/generated/conversions/256/spells/stability-ai/phb--fireball.webp')
+      })
+
+      it('converts colon to double-dash for classes', () => {
+        const result = getImagePath('classes', 'phb:wizard', 256)
+        expect(result).toBe('/images/generated/conversions/256/classes/stability-ai/phb--wizard.webp')
+      })
+
+      it('converts colon to double-dash for races', () => {
+        const result = getImagePath('races', 'phb:dragonborn', 256)
+        expect(result).toBe('/images/generated/conversions/256/races/stability-ai/phb--dragonborn.webp')
+      })
+
+      it('converts colon to double-dash for items', () => {
+        const result = getImagePath('items', 'dmg:vorpal-sword', 512)
+        expect(result).toBe('/images/generated/conversions/512/items/stability-ai/dmg--vorpal-sword.webp')
+      })
+
+      it('converts colon to double-dash for original size', () => {
+        const result = getImagePath('monsters', 'mm:ancient-red-dragon', 'original')
+        expect(result).toBe('/images/generated/monsters/stability-ai/mm--ancient-red-dragon.webp')
+      })
+
+      it('handles slugs without namespace (backwards compatible)', () => {
+        const result = getImagePath('skills', 'acrobatics', 256)
+        expect(result).toBe('/images/generated/conversions/256/skills/stability-ai/acrobatics.webp')
+      })
+
+      it('handles multiple hyphens with namespace', () => {
+        const result = getImagePath('feats', 'phb:war-caster', 256)
+        expect(result).toBe('/images/generated/conversions/256/feats/stability-ai/phb--war-caster.webp')
+      })
+    })
   })
 })

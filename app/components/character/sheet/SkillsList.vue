@@ -1,13 +1,32 @@
 <!-- app/components/character/sheet/SkillsList.vue -->
 <script setup lang="ts">
-import type { CharacterSkill } from '~/types/character'
+import type { CharacterSkill, SkillAdvantage } from '~/types/character'
 
-defineProps<{
+const props = defineProps<{
   skills: CharacterSkill[]
+  skillAdvantages?: SkillAdvantage[]
 }>()
 
 function formatModifier(mod: number): string {
   return mod >= 0 ? `+${mod}` : `${mod}`
+}
+
+/**
+ * Map of skill slugs to their advantages for O(1) lookup
+ * Only includes unconditional advantages (condition === null)
+ */
+const advantageMap = computed(() => {
+  const map = new Map<string, SkillAdvantage>()
+  props.skillAdvantages?.forEach((adv) => {
+    if (adv.condition === null) {
+      map.set(adv.skill_slug, adv)
+    }
+  })
+  return map
+})
+
+function getAdvantage(slug: string): SkillAdvantage | undefined {
+  return advantageMap.value.get(slug)
 }
 </script>
 
@@ -21,6 +40,7 @@ function formatModifier(mod: number): string {
         v-for="skill in skills"
         :key="skill.id"
         class="flex items-center gap-2 py-1"
+        data-testid="skill-row"
       >
         <!-- Proficiency/Expertise indicator -->
         <div
@@ -42,6 +62,19 @@ function formatModifier(mod: number): string {
         <span class="text-sm text-gray-700 dark:text-gray-300 flex-1">
           {{ skill.name }}
         </span>
+        <!-- Advantage indicator -->
+        <UTooltip
+          v-if="getAdvantage(skill.slug)"
+          :text="`Advantage (${getAdvantage(skill.slug)!.source})`"
+        >
+          <UIcon
+            name="i-heroicons-bolt"
+            class="w-4 h-4 text-warning-500"
+            role="img"
+            data-testid="advantage-icon"
+            :aria-label="`Has advantage from ${getAdvantage(skill.slug)!.source}`"
+          />
+        </UTooltip>
         <!-- Ability code -->
         <span class="text-xs text-gray-400 dark:text-gray-500 uppercase">
           {{ skill.ability_code }}

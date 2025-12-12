@@ -14,7 +14,7 @@ describe('FeatCard', () => {
     propName: 'feat',
     mockFactory: createMockFeat,
     entityName: 'War Caster',
-    linkPath: '/feats/war-caster',
+    linkPath: '/feats/phb:war-caster',
     optionalFields: ['prerequisites', 'modifiers', 'sources']
   })
 

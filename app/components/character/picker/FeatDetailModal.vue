@@ -38,7 +38,7 @@ const prerequisitesList = computed(() => {
     if (prereq.ability_score) {
       return `${prereq.ability_score.name} ${prereq.minimum_value}+`
     }
-    if (prereq.race?.full_slug) {
+    if (prereq.race?.slug) {
       return prereq.race.name
     }
     if (prereq.skill?.slug) {

@@ -248,6 +248,46 @@ describe('useUnifiedChoices', () => {
     })
   })
 
+  describe('choicesByType groupings - feature choices', () => {
+    it('groups fighting_style choices', () => {
+      const fightingStyleChoice = {
+        ...mockPendingChoice,
+        id: 'fs-1',
+        type: 'fighting_style',
+        quantity: 1,
+        source: 'class',
+        source_name: 'Fighter'
+      }
+      const choices = [fightingStyleChoice]
+
+      const grouped = {
+        fightingStyles: choices.filter(c => c.type === 'fighting_style')
+      }
+
+      expect(grouped.fightingStyles).toHaveLength(1)
+      expect(grouped.fightingStyles[0].type).toBe('fighting_style')
+    })
+
+    it('groups expertise choices', () => {
+      const expertiseChoice = {
+        ...mockPendingChoice,
+        id: 'exp-1',
+        type: 'expertise',
+        quantity: 2,
+        source: 'class',
+        source_name: 'Rogue'
+      }
+      const choices = [expertiseChoice]
+
+      const grouped = {
+        expertise: choices.filter(c => c.type === 'expertise')
+      }
+
+      expect(grouped.expertise).toHaveLength(1)
+      expect(grouped.expertise[0].quantity).toBe(2)
+    })
+  })
+
   describe('error handling logic', () => {
     it('extracts message from Error instance', () => {
       const error = new Error('API request failed')

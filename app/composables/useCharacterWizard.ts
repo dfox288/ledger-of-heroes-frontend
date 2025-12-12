@@ -101,6 +101,12 @@ function createStepRegistry(store: ReturnType<typeof useCharacterWizardStore>): 
       shouldSkip: () => !store.hasProficiencyChoices
     },
     {
+      name: 'feature-choices',
+      label: 'Features',
+      icon: 'i-heroicons-puzzle-piece',
+      visible: () => store.hasFeatureChoices
+    },
+    {
       name: 'languages',
       label: 'Languages',
       icon: 'i-heroicons-language',

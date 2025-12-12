@@ -1,0 +1,107 @@
+<!-- app/components/character/levelup/LevelUpSidebar.vue -->
+<script setup lang="ts">
+import type { LevelUpStep } from '~/types/character'
+
+interface Props {
+  activeSteps: LevelUpStep[]
+  currentStep: string
+  publicId: string
+}
+
+const props = defineProps<Props>()
+
+const currentStepIndex = computed(() =>
+  props.activeSteps.findIndex(s => s.name === props.currentStep)
+)
+
+const progressPercent = computed(() => {
+  if (props.activeSteps.length <= 1) return 100
+  const index = Math.max(0, currentStepIndex.value) // Guard against -1
+  return Math.round((index / (props.activeSteps.length - 1)) * 100)
+})
+
+function getStepUrl(stepName: string): string {
+  return `/characters/${props.publicId}/level-up/${stepName}`
+}
+
+function getStepStatus(stepIndex: number): 'completed' | 'current' | 'future' {
+  if (stepIndex < currentStepIndex.value) return 'completed'
+  if (stepIndex === currentStepIndex.value) return 'current'
+  return 'future'
+}
+</script>
+
+<template>
+  <aside
+    data-testid="level-up-sidebar"
+    class="bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 flex flex-col h-full"
+  >
+    <!-- Header -->
+    <div class="p-4 border-b border-gray-200 dark:border-gray-700">
+      <h2 class="text-lg font-semibold text-gray-900 dark:text-white">
+        Level Up
+      </h2>
+      <div class="mt-2">
+        <div
+          class="h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden"
+          data-testid="progress-bar"
+        >
+          <div
+            class="h-full bg-primary transition-all duration-300"
+            :style="{ width: `${progressPercent}%` }"
+          />
+        </div>
+        <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">
+          {{ progressPercent }}% complete
+        </p>
+      </div>
+    </div>
+
+    <!-- Step List -->
+    <nav class="flex-1 overflow-y-auto p-2">
+      <ul class="space-y-1">
+        <li
+          v-for="(step, index) in activeSteps"
+          :key="step.name"
+        >
+          <NuxtLink
+            :to="getStepStatus(index) === 'future' ? undefined : getStepUrl(step.name)"
+            :data-testid="`step-item-${step.name}`"
+            class="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-left transition-colors"
+            :class="{
+              'bg-primary-50 dark:bg-primary-900/20 text-primary-700 dark:text-primary-300': getStepStatus(index) === 'current',
+              'text-gray-900 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700': getStepStatus(index) === 'completed',
+              'text-gray-400 dark:text-gray-500 cursor-not-allowed pointer-events-none': getStepStatus(index) === 'future'
+            }"
+          >
+            <!-- Step indicator -->
+            <span
+              class="flex-shrink-0 w-6 h-6 flex items-center justify-center rounded-full text-xs font-medium"
+              :class="{
+                'bg-primary text-white': getStepStatus(index) === 'completed',
+                'bg-primary-100 dark:bg-primary-900 text-primary-700 dark:text-primary-300 ring-2 ring-primary': getStepStatus(index) === 'current',
+                'bg-gray-200 dark:bg-gray-700 text-gray-500': getStepStatus(index) === 'future'
+              }"
+            >
+              <UIcon
+                v-if="getStepStatus(index) === 'completed'"
+                name="i-heroicons-check"
+                class="w-4 h-4"
+              />
+              <span v-else>{{ index + 1 }}</span>
+            </span>
+
+            <!-- Step label -->
+            <span class="flex items-center gap-2 flex-1 min-w-0">
+              <UIcon
+                :name="step.icon"
+                class="w-4 h-4 flex-shrink-0"
+              />
+              <span class="truncate">{{ step.label }}</span>
+            </span>
+          </NuxtLink>
+        </li>
+      </ul>
+    </nav>
+  </aside>
+</template>

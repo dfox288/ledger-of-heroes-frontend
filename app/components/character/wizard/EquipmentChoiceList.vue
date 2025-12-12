@@ -7,14 +7,13 @@ type PendingChoice = components['schemas']['PendingChoiceResource']
 interface PackContent {
   quantity: number | string
   name: string
-  full_slug?: string
+  slug?: string
 }
 
 interface EquipmentItem {
   id: number
   name: string
   slug?: string
-  full_slug?: string
   quantity: number
   contents?: PackContent[]
 }
@@ -29,6 +28,12 @@ interface EquipmentOption {
   label?: string
   items: EquipmentItem[]
   item_filter?: ItemFilter
+  /** Backend flag indicating this option requires selecting specific items from a category */
+  is_category?: boolean
+  /** Number of items available in category (NOT the number of selections needed) */
+  category_item_count?: number
+  /** Number of items the user should select from the category (e.g., 2 for "two martial weapons") */
+  select_count?: number
 }
 
 interface Props {
@@ -93,11 +98,18 @@ function getItemsDisplay(option: EquipmentOption): string {
  * Check if an option requires the player to choose item(s) from many
  * This is different from fixed items where all items are included
  *
- * Patterns detected:
+ * Uses backend's is_category flag as authoritative source when available.
+ * Falls back to heuristic detection for backward compatibility:
  * 1. 3+ items each with quantity 1 = "pick one from this list" (e.g., "any simple weapon")
  * 2. 3+ items ALL with same quantity > 1 = "pick N from this list" (e.g., "two martial weapons")
  */
 function requiresItemChoice(option: EquipmentOption): boolean {
+  // Use backend's is_category flag if available (authoritative)
+  if (option.is_category !== undefined) {
+    return option.is_category
+  }
+
+  // Fallback heuristic for backward compatibility
   if (option.items.length < 3) {
     return false
   }
@@ -112,16 +124,27 @@ function requiresItemChoice(option: EquipmentOption): boolean {
 
 /**
  * Get the number of selections required for an option
- * For "two martial weapons" where all items have quantity=2, returns 2
- * For "any simple weapon" where all items have quantity=1, returns 1
+ *
+ * Priority order:
+ * 1. select_count from backend (explicit selection count)
+ * 2. Fall back to 1 (most category choices are "pick one")
+ *
+ * NOTE: category_item_count is the number of items IN the category,
+ * NOT the number of selections needed. Don't confuse these!
+ *
+ * The old heuristic (using item quantity) was incorrect - quantity means
+ * "how many of this item you receive", not "how many selections to make".
+ * For example, "two martial weapons" has items with quantity=1 (you get 1 of each
+ * weapon you select), but you select 2 items total.
  */
 function getRequiredSelectionCount(option: EquipmentOption): number {
-  if (option.items.length === 0) return 1
+  // Use backend's explicit select_count if available
+  if (option.select_count !== undefined && option.select_count > 0) {
+    return option.select_count
+  }
 
-  const firstQuantity = option.items[0]?.quantity ?? 1
-  const allSameQuantity = option.items.every(item => item.quantity === firstQuantity)
-
-  return allSameQuantity ? firstQuantity : 1
+  // Default: most category choices are "pick one from this list"
+  return 1
 }
 
 /**
@@ -345,7 +368,7 @@ function isSelected(choiceId: string, optionLetter: string): boolean {
               </span>
               <USelectMenu
                 :model-value="getSelectedItem(choice.id, option.option, selectionIndex)"
-                :items="(option.items ?? []).map(item => ({ label: item.name, value: item.full_slug || item.slug || String(item.id) }))"
+                :items="(option.items ?? []).map(item => ({ label: item.name, value: item.slug || String(item.id) }))"
                 :placeholder="`Select item ${selectionIndex + 1}...`"
                 value-key="value"
                 class="flex-1"

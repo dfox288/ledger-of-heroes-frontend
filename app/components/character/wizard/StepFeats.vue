@@ -153,8 +153,7 @@ function isChoiceAtLimit(choice: PendingChoice): boolean {
 }
 
 function handleFeatToggle(choice: PendingChoice, feat: Feat) {
-  const featSlug = feat.full_slug ?? feat.slug
-  handleFeatToggleById(choice, featSlug)
+  handleFeatToggleById(choice, feat.slug)
 }
 
 // Toast for user feedback
@@ -241,8 +240,8 @@ const {
             v-for="feat in getAvailableFeats(choice)"
             :key="feat.id"
             :feat="feat"
-            :selected="isFeatSelected(choice.id, feat.full_slug ?? feat.slug)"
-            :disabled="!isFeatSelected(choice.id, feat.full_slug ?? feat.slug) && isChoiceAtLimit(choice)"
+            :selected="isFeatSelected(choice.id, feat.slug)"
+            :disabled="!isFeatSelected(choice.id, feat.slug) && isChoiceAtLimit(choice)"
             @toggle="handleFeatToggle(choice, feat)"
             @view-details="handleViewDetails(feat)"
           />

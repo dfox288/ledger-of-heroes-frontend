@@ -78,17 +78,21 @@ export function useUnifiedChoices(characterId: Ref<number | null>) {
         `/characters/${characterId.value}/pending-choices${query}`
       )
 
+      // Defensive check: handle undefined or malformed response
+      const responseChoices = response?.data?.choices ?? []
+      const responseSummary = response?.data?.summary ?? null
+
       if (type) {
         // Filtered fetch: merge results (remove old choices of this type, add new ones)
         // This prevents race conditions when multiple fetchChoices run in parallel
         const otherChoices = choices.value.filter(c => c.type !== type)
-        choices.value = [...otherChoices, ...response.data.choices]
+        choices.value = [...otherChoices, ...responseChoices]
       } else {
         // Unfiltered fetch: replace all choices
-        choices.value = response.data.choices
+        choices.value = responseChoices
       }
 
-      summary.value = response.data.summary
+      summary.value = responseSummary
     } catch (e) {
       error.value = e instanceof Error ? e.message : 'Failed to fetch choices'
       throw e
@@ -111,7 +115,11 @@ export function useUnifiedChoices(characterId: Ref<number | null>) {
     optionalFeatures: choices.value.filter(c => c.type === 'optional_feature'),
     abilityScores: choices.value.filter(c => c.type === 'ability_score'),
     feats: choices.value.filter(c => c.type === 'feat'),
-    sizes: choices.value.filter(c => c.type === 'size')
+    sizes: choices.value.filter(c => c.type === 'size'),
+    hitPoints: choices.value.filter(c => c.type === 'hit_points'),
+    // Feature choice groupings
+    fightingStyles: choices.value.filter(c => c.type === 'fighting_style'),
+    expertise: choices.value.filter(c => c.type === 'expertise')
   }))
 
   /**

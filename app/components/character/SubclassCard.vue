@@ -4,9 +4,8 @@ interface Props {
   subclass: {
     id: number
     name: string
+    /** Source-prefixed slug (e.g., "phb:evoker") - see #506 */
     slug: string
-    /** Full slug for API references (e.g., "phb:evoker") - see #318 */
-    full_slug: string
     source?: { code: string, name: string }
     description?: string
   }

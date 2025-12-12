@@ -62,16 +62,37 @@ describe('Character Wizard - Step Router', () => {
   describe('Step Registry', () => {
     it('has correct step component mappings defined', () => {
       // Test the step registry directly by checking the page source
-      // All 13 steps should be defined
+      // All 14 steps should be defined (including feature-choices)
       const expectedSteps = [
-        'sourcebooks', 'race', 'subrace', 'class', 'subclass',
-        'background', 'abilities', 'proficiencies', 'languages',
-        'equipment', 'spells', 'details', 'review'
+        'sourcebooks', 'race', 'subrace', 'size', 'class', 'subclass',
+        'background', 'feats', 'abilities', 'proficiencies', 'feature-choices',
+        'languages', 'equipment', 'spells', 'details', 'review'
       ]
 
       // We verify this by checking that the page was created with these mappings
       // The fact that it mounts proves the registry exists
-      expect(expectedSteps.length).toBe(13)
+      expect(expectedSteps.length).toBe(16)
+    })
+  })
+
+  describe('Feature Choices Step', () => {
+    it('renders feature-choices step without throwing 404 error', async () => {
+      // This will throw an error if 'feature-choices' is not in the stepComponents registry
+      // because the page checks stepComponent.value and throws a 404 if null
+      let threwError = false
+      try {
+        const wrapper = await mountSuspended(StepRouterPage, {
+          route: '/characters/new/feature-choices'
+        })
+        expect(wrapper.exists()).toBe(true)
+      } catch (error: any) {
+        if (error.message?.includes('Unknown wizard step') || error.statusCode === 404) {
+          threwError = true
+        }
+      }
+
+      // Should not have thrown a 404 error
+      expect(threwError).toBe(false)
     })
   })
 })

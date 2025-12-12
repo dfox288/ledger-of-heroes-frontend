@@ -73,12 +73,16 @@ export function useEntityImage() {
         return null
       }
 
+      // Convert namespaced slug to filesystem-safe filename
+      // e.g., "phb:fireball" → "phb--fireball"
+      const filename = slug.replace(':', '--')
+
       // Build path based on size
       if (size === 'original') {
-        return `/images/generated/${folderName}/${provider}/${slug}.webp`
+        return `/images/generated/${folderName}/${provider}/${filename}.webp`
       }
 
-      return `/images/generated/conversions/${size}/${folderName}/${provider}/${slug}.webp`
+      return `/images/generated/conversions/${size}/${folderName}/${provider}/${filename}.webp`
     }
   }
 }

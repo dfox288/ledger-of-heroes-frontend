@@ -76,8 +76,7 @@ export function createMockSpell(overrides: Partial<Spell> = {}): Spell {
   return {
     id: 1,
     name: 'Fireball',
-    slug: 'fireball',
-    full_slug: 'phb:fireball',
+    slug: 'phb:fireball',
     level: 3,
     school: {
       id: 5,
@@ -115,8 +114,7 @@ export function createMockItem(overrides: Partial<Item> = {}): Item {
   return {
     id: 1,
     name: 'Longsword',
-    slug: 'longsword',
-    full_slug: 'phb:longsword',
+    slug: 'phb:longsword',
     rarity: 'common',
     item_type: {
       id: 5,
@@ -184,8 +182,7 @@ export function createMockItem(overrides: Partial<Item> = {}): Item {
 export function createMockMonster(overrides: Partial<Monster> = {}): Monster {
   return {
     id: 1,
-    slug: 'ancient-red-dragon',
-    full_slug: 'mm:ancient-red-dragon',
+    slug: 'mm:ancient-red-dragon',
     name: 'Ancient Red Dragon',
     size: { id: 6, code: 'G', name: 'Gargantuan' },
     type: 'dragon',
@@ -239,8 +236,7 @@ export function createMockClass(overrides: Partial<CharacterClass> = {}): Charac
   return {
     id: 1,
     name: 'Wizard',
-    slug: 'wizard',
-    full_slug: 'phb:wizard',
+    slug: 'phb:wizard',
     hit_die: 6,
     is_base_class: true,
     parent_class_id: null,
@@ -286,8 +282,7 @@ export function createMockRace(overrides: Partial<Race> = {}): Race {
   return {
     id: 1,
     name: 'Elf',
-    slug: 'elf',
-    full_slug: 'phb:elf',
+    slug: 'phb:elf',
     size: {
       id: 3,
       name: 'Medium',
@@ -297,8 +292,8 @@ export function createMockRace(overrides: Partial<Race> = {}): Race {
     parent_race_id: null,
     parent_race: null,
     subraces: [
-      { id: 2, slug: 'high-elf', name: 'High Elf' },
-      { id: 3, slug: 'wood-elf', name: 'Wood Elf' }
+      { id: 2, slug: 'phb:high-elf', name: 'High Elf' },
+      { id: 3, slug: 'phb:wood-elf', name: 'Wood Elf' }
     ],
     modifiers: [
       {
@@ -335,8 +330,7 @@ export function createMockBackground(overrides: Partial<Background> = {}): Backg
   return {
     id: 1,
     name: 'Acolyte',
-    slug: 'acolyte',
-    full_slug: 'phb:acolyte',
+    slug: 'phb:acolyte',
     proficiencies: [
       {
         id: 1,
@@ -392,8 +386,7 @@ export function createMockFeat(overrides: Partial<Feat> = {}): Feat {
   return {
     id: 1,
     name: 'War Caster',
-    slug: 'war-caster',
-    full_slug: 'phb:war-caster',
+    slug: 'phb:war-caster',
     prerequisites: [
       {
         ability_score: { id: 4, code: 'INT', name: 'Intelligence' },
@@ -427,13 +420,12 @@ export const wizardMockRaces = {
   elf: createMockRace({
     id: 1,
     name: 'Elf',
-    slug: 'elf',
-    full_slug: 'phb:elf',
+    slug: 'phb:elf',
     speed: 30,
     subrace_required: true,
     subraces: [
-      { id: 2, slug: 'high-elf', name: 'High Elf', full_slug: 'phb:high-elf' },
-      { id: 3, slug: 'wood-elf', name: 'Wood Elf', full_slug: 'phb:wood-elf' }
+      { id: 2, slug: 'phb:high-elf', name: 'High Elf' },
+      { id: 3, slug: 'phb:wood-elf', name: 'Wood Elf' }
     ],
     modifiers: [
       {
@@ -446,12 +438,11 @@ export const wizardMockRaces = {
   human: createMockRace({
     id: 4,
     name: 'Human',
-    slug: 'human',
-    full_slug: 'phb:human',
+    slug: 'phb:human',
     speed: 30,
     subrace_required: false,
     subraces: [
-      { id: 5, slug: 'variant-human', name: 'Variant Human', full_slug: 'phb:variant-human' }
+      { id: 5, slug: 'phb:variant-human', name: 'Variant Human' }
     ],
     modifiers: [
       { modifier_category: 'ability_score', ability_score: { id: 1, code: 'STR', name: 'Strength' }, value: 1 },
@@ -465,13 +456,12 @@ export const wizardMockRaces = {
   dwarf: createMockRace({
     id: 6,
     name: 'Dwarf',
-    slug: 'dwarf',
-    full_slug: 'phb:dwarf',
+    slug: 'phb:dwarf',
     speed: 25,
     subrace_required: true,
     subraces: [
-      { id: 7, slug: 'hill-dwarf', name: 'Hill Dwarf', full_slug: 'phb:hill-dwarf' },
-      { id: 8, slug: 'mountain-dwarf', name: 'Mountain Dwarf', full_slug: 'phb:mountain-dwarf' }
+      { id: 7, slug: 'phb:hill-dwarf', name: 'Hill Dwarf' },
+      { id: 8, slug: 'phb:mountain-dwarf', name: 'Mountain Dwarf' }
     ],
     modifiers: [
       {
@@ -484,8 +474,7 @@ export const wizardMockRaces = {
   halfOrc: createMockRace({
     id: 9,
     name: 'Half-Orc',
-    slug: 'half-orc',
-    full_slug: 'phb:half-orc',
+    slug: 'phb:half-orc',
     speed: 30,
     subrace_required: false,
     subraces: [],
@@ -497,8 +486,7 @@ export const wizardMockRaces = {
   halfElf: createMockRace({
     id: 12,
     name: 'Half-Elf',
-    slug: 'half-elf',
-    full_slug: 'phb:half-elf',
+    slug: 'phb:half-elf',
     speed: 30,
     subrace_required: false,
     subraces: [],
@@ -537,43 +525,40 @@ export const wizardMockClasses = {
   fighter: createMockClass({
     id: 10,
     name: 'Fighter',
-    slug: 'fighter',
-    full_slug: 'phb:fighter',
+    slug: 'phb:fighter',
     hit_die: 10,
     spellcasting_ability: null,
     primary_ability: { id: 1, code: 'STR', name: 'Strength' },
     subclass_level: 3,
     subclasses: [
-      { id: 11, name: 'Champion', full_slug: 'phb:champion' },
-      { id: 12, name: 'Battle Master', full_slug: 'phb:battle-master' }
+      { id: 11, name: 'Champion', slug: 'phb:champion' },
+      { id: 12, name: 'Battle Master', slug: 'phb:battle-master' }
     ]
   }),
   wizard: createMockClass({
     id: 1,
     name: 'Wizard',
-    slug: 'wizard',
-    full_slug: 'phb:wizard',
+    slug: 'phb:wizard',
     hit_die: 6,
     spellcasting_ability: { id: 4, code: 'INT', name: 'Intelligence' },
     primary_ability: { id: 4, code: 'INT', name: 'Intelligence' },
     subclass_level: 2,
     subclasses: [
-      { id: 2, name: 'School of Evocation', full_slug: 'phb:school-of-evocation' },
-      { id: 3, name: 'School of Abjuration', full_slug: 'phb:school-of-abjuration' }
+      { id: 2, name: 'School of Evocation', slug: 'phb:school-of-evocation' },
+      { id: 3, name: 'School of Abjuration', slug: 'phb:school-of-abjuration' }
     ]
   }),
   cleric: createMockClass({
     id: 13,
     name: 'Cleric',
-    slug: 'cleric',
-    full_slug: 'phb:cleric',
+    slug: 'phb:cleric',
     hit_die: 8,
     spellcasting_ability: { id: 5, code: 'WIS', name: 'Wisdom' },
     primary_ability: { id: 5, code: 'WIS', name: 'Wisdom' },
     subclass_level: 1,
     subclasses: [
-      { id: 14, name: 'Life Domain', full_slug: 'phb:life-domain' },
-      { id: 15, name: 'War Domain', full_slug: 'phb:war-domain' }
+      { id: 14, name: 'Life Domain', slug: 'phb:life-domain' },
+      { id: 15, name: 'War Domain', slug: 'phb:war-domain' }
     ]
   })
 } as const
@@ -589,8 +574,7 @@ export const wizardMockBackgrounds = {
   acolyte: createMockBackground({
     id: 1,
     name: 'Acolyte',
-    slug: 'acolyte',
-    full_slug: 'phb:acolyte',
+    slug: 'phb:acolyte',
     feature_name: 'Shelter of the Faithful',
     feature_description: 'As an acolyte, you command the respect of those who share your faith.',
     proficiencies: [
@@ -621,8 +605,7 @@ export const wizardMockBackgrounds = {
   soldier: createMockBackground({
     id: 16,
     name: 'Soldier',
-    slug: 'soldier',
-    full_slug: 'phb:soldier',
+    slug: 'phb:soldier',
     feature_name: 'Military Rank',
     feature_description: 'You have a military rank from your career as a soldier.',
     proficiencies: [

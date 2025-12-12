@@ -31,7 +31,7 @@ function formatPrerequisite(prereq: NonNullable<typeof props.feat.prerequisites>
   if (prereq.ability_score) {
     return `${prereq.ability_score.code} ${prereq.minimum_value}+`
   }
-  if (prereq.race?.full_slug) {
+  if (prereq.race?.slug) {
     return prereq.race.name
   }
   if (prereq.skill?.slug) {

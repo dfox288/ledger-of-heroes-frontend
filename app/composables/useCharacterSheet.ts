@@ -12,7 +12,8 @@ import type {
   CharacterSavingThrow,
   CharacterNote,
   SkillReference,
-  AbilityScoreCode
+  AbilityScoreCode,
+  SkillAdvantage
 } from '~/types/character'
 
 export interface HitDice {
@@ -34,6 +35,7 @@ export interface UseCharacterSheetReturn {
 
   // Computed/derived
   skills: ComputedRef<CharacterSkill[]>
+  skillAdvantages: ComputedRef<SkillAdvantage[]>
   savingThrows: ComputedRef<CharacterSavingThrow[]>
   hitDice: ComputedRef<HitDice[]>
 
@@ -170,6 +172,17 @@ export function useCharacterSheet(characterId: Ref<string | number>): UseCharact
     })
   })
 
+  // Computed: Skill advantages (unconditional only)
+  // Filters out conditional advantages (those belong in DefensesPanel)
+  const skillAdvantages = computed<SkillAdvantage[]>(() => {
+    // Stats may include skill_advantages even though it's not in the OpenAPI spec yet
+    const rawAdvantages = (stats.value as CharacterStats & { skill_advantages?: SkillAdvantage[] })?.skill_advantages
+    if (!rawAdvantages) return []
+
+    // Only return unconditional advantages (condition === null)
+    return rawAdvantages.filter(adv => adv.condition === null)
+  })
+
   // Computed: Saving throws with proficiency info
   const savingThrows = computed<CharacterSavingThrow[]>(() => {
     if (!stats.value) return []
@@ -202,11 +215,15 @@ export function useCharacterSheet(characterId: Ref<string | number>): UseCharact
     const rawHitDice = stats.value?.hit_dice
     if (!rawHitDice || typeof rawHitDice !== 'object') return []
 
-    return Object.entries(rawHitDice).map(([die, data]) => ({
-      die,
-      total: (data as { max: number }).max,
-      current: (data as { available: number }).available
-    }))
+    return Object.entries(rawHitDice).map(([die, data]) => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const hitDiceData = data as any
+      return {
+        die,
+        total: hitDiceData.max,
+        current: hitDiceData.available
+      }
+    })
   })
 
   // Refresh all data
@@ -233,6 +250,7 @@ export function useCharacterSheet(characterId: Ref<string | number>): UseCharact
     languages,
     notes,
     skills,
+    skillAdvantages,
     savingThrows,
     hitDice,
     loading,

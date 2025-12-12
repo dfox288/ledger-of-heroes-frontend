@@ -346,8 +346,8 @@ export function useWizardChoiceSelection(
         return { id: profType.slug, name: profType.name }
       }
 
-      // Handle flat options from API (full_slug preferred for unique identification)
-      const slug = (opt.full_slug as string) ?? (opt.slug as string)
+      // Handle flat options from API - slug contains source-prefixed value (#506)
+      const slug = opt.slug as string
       return {
         id: slug,
         name: (opt.name as string) ?? 'Unknown',

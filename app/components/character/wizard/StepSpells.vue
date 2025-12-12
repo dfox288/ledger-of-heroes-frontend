@@ -11,27 +11,47 @@ import { wizardErrors } from '~/utils/wizardErrors'
 
 type PendingChoice = components['schemas']['PendingChoiceResource']
 
+// Props for store-agnostic usage (enables use in both creation and level-up wizards)
+const props = withDefaults(defineProps<{
+  characterId?: number
+  nextStep?: () => void
+  spellcastingStats?: {
+    ability: string
+    spell_save_dc: number
+    spell_attack_bonus: number
+  } | null
+}>(), {
+  characterId: undefined,
+  nextStep: undefined,
+  spellcastingStats: null
+})
+
+// Fallback to store if props not provided (backward compatibility)
 const store = useCharacterWizardStore()
 const {
-  characterId,
+  characterId: storeCharacterId,
   selections,
   stats,
   isLoading,
   error: storeError
 } = storeToRefs(store)
-const { nextStep } = useCharacterWizard()
+const wizardNav = useCharacterWizard()
+
+// Use prop or store value
+const effectiveCharacterId = computed(() => props.characterId ?? storeCharacterId.value)
+const effectiveNextStep = computed(() => props.nextStep ?? wizardNav.nextStep)
 
 // API client for fetching spell options
 const { apiFetch } = useApi()
 
-// Use unified choices composable
+// Use unified choices composable with effective character ID
 const {
   choicesByType,
   pending: loadingChoices,
   error: choicesError,
   fetchChoices,
   resolveChoice
-} = useUnifiedChoices(computed(() => characterId.value))
+} = useUnifiedChoices(effectiveCharacterId)
 
 // Fetch spell choices on mount
 onMounted(async () => {
@@ -47,6 +67,8 @@ const {
   isSaving,
   getSelectedCount,
   isOptionSelected: isSpellSelectedById,
+  isOptionDisabled: isSpellDisabledById,
+  getDisabledReason: getSpellDisabledReasonById,
   allComplete: canProceed,
   handleToggle: handleSpellToggleById,
   saveAllChoices
@@ -85,6 +107,14 @@ const raceSpellChoices = computed(() =>
   choicesByType.value.spells.filter(c => c.source === 'race')
 )
 
+// Subclass feature spell choices (cantrips will also appear in cantripChoices)
+// This catches any subclass_feature spell choices that aren't cantrips
+const subclassFeatureSpellChoices = computed(() =>
+  choicesByType.value.spells.filter(c =>
+    c.source === 'subclass_feature' && c.subtype !== 'cantrip'
+  )
+)
+
 // Fetch options for all spell choices when they load
 watch(choicesByType, async (newVal) => {
   const allSpellChoices = newVal.spells
@@ -93,8 +123,30 @@ watch(choicesByType, async (newVal) => {
   }
 }, { immediate: true })
 
-// Spellcasting display from stats
+// Spellcasting display from stats (use prop if provided, otherwise use store stats)
 const spellcasting = computed(() => {
+  // Use prop if provided
+  if (props.spellcastingStats) {
+    const sc = props.spellcastingStats
+    const abilityNames: Record<string, string> = {
+      STR: 'Strength',
+      DEX: 'Dexterity',
+      CON: 'Constitution',
+      INT: 'Intelligence',
+      WIS: 'Wisdom',
+      CHA: 'Charisma'
+    }
+
+    return {
+      ability: sc.ability,
+      abilityName: abilityNames[sc.ability] ?? sc.ability,
+      saveDC: sc.spell_save_dc,
+      attackBonus: sc.spell_attack_bonus,
+      formattedAttackBonus: sc.spell_attack_bonus >= 0 ? `+${sc.spell_attack_bonus}` : `${sc.spell_attack_bonus}`
+    }
+  }
+
+  // Otherwise use store stats
   if (!stats.value?.spellcasting) return null
 
   const sc = stats.value.spellcasting
@@ -132,17 +184,26 @@ const fixedRaceSpells = computed(() =>
 
 // Spell-specific wrappers for composable functions (work with Spell objects)
 function isSpellSelected(choiceId: string, spell: Spell): boolean {
-  const slug = spell.full_slug ?? spell.slug
-  return isSpellSelectedById(choiceId, slug)
+  return isSpellSelectedById(choiceId, spell.slug)
 }
 
-function isChoiceAtLimit(choice: PendingChoice): boolean {
-  return getSelectedCount(choice.id) >= choice.quantity
+function isSpellDisabled(choiceId: string, spell: Spell): boolean {
+  // Disabled if: already selected elsewhere OR at limit (and not selected in this choice)
+  return isSpellDisabledById(choiceId, spell.slug)
+    || (!isSpellSelectedById(choiceId, spell.slug) && isChoiceAtLimit(choiceId))
+}
+
+function getSpellDisabledReason(choiceId: string, spell: Spell): string | null {
+  return getSpellDisabledReasonById(choiceId, spell.slug)
+}
+
+function isChoiceAtLimit(choiceId: string): boolean {
+  const choice = choicesByType.value.spells.find(c => c.id === choiceId)
+  return choice ? getSelectedCount(choiceId) >= choice.quantity : false
 }
 
 function handleSpellToggle(choice: PendingChoice, spell: Spell) {
-  const spellSlug = spell.full_slug ?? spell.slug
-  handleSpellToggleById(choice, spellSlug)
+  handleSpellToggleById(choice, spell.slug)
 }
 
 // Get available spells for a choice (from choice.options or local cache)
@@ -164,7 +225,7 @@ const toast = useToast()
 async function handleContinue() {
   try {
     await saveAllChoices()
-    nextStep()
+    effectiveNextStep.value()
   } catch (e) {
     wizardErrors.choiceResolveFailed(e, toast, 'spell')
   }
@@ -316,7 +377,8 @@ const {
             :key="spell.id"
             :spell="spell"
             :selected="isSpellSelected(choice.id, spell)"
-            :disabled="!isSpellSelected(choice.id, spell) && isChoiceAtLimit(choice)"
+            :disabled="isSpellDisabled(choice.id, spell)"
+            :disabled-reason="getSpellDisabledReason(choice.id, spell)"
             @toggle="handleSpellToggle(choice, spell)"
             @view-details="handleViewDetails(spell)"
           />
@@ -348,7 +410,8 @@ const {
             :key="spell.id"
             :spell="spell"
             :selected="isSpellSelected(choice.id, spell)"
-            :disabled="!isSpellSelected(choice.id, spell) && isChoiceAtLimit(choice)"
+            :disabled="isSpellDisabled(choice.id, spell)"
+            :disabled-reason="getSpellDisabledReason(choice.id, spell)"
             @toggle="handleSpellToggle(choice, spell)"
             @view-details="handleViewDetails(spell)"
           />
@@ -380,7 +443,41 @@ const {
             :key="spell.id"
             :spell="spell"
             :selected="isSpellSelected(choice.id, spell)"
-            :disabled="!isSpellSelected(choice.id, spell) && isChoiceAtLimit(choice)"
+            :disabled="isSpellDisabled(choice.id, spell)"
+            :disabled-reason="getSpellDisabledReason(choice.id, spell)"
+            @toggle="handleSpellToggle(choice, spell)"
+            @view-details="handleViewDetails(spell)"
+          />
+        </div>
+      </div>
+
+      <!-- Subclass Feature Spell Choices (non-cantrip) -->
+      <div
+        v-for="choice in subclassFeatureSpellChoices"
+        :key="choice.id"
+        class="space-y-4"
+      >
+        <div class="flex items-center justify-between border-b pb-2">
+          <h3 class="text-lg font-semibold text-gray-900 dark:text-white">
+            Spells ({{ choice.source_name }})
+          </h3>
+          <UBadge
+            :color="getSelectedCount(choice.id) >= choice.quantity ? 'success' : 'warning'"
+            variant="subtle"
+            size="md"
+          >
+            {{ getSelectedCount(choice.id) }} of {{ choice.quantity }}
+          </UBadge>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+          <CharacterSpellCard
+            v-for="spell in getAvailableSpells(choice)"
+            :key="spell.id"
+            :spell="spell"
+            :selected="isSpellSelected(choice.id, spell)"
+            :disabled="isSpellDisabled(choice.id, spell)"
+            :disabled-reason="getSpellDisabledReason(choice.id, spell)"
             @toggle="handleSpellToggle(choice, spell)"
             @view-details="handleViewDetails(spell)"
           />

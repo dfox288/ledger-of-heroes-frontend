@@ -14,7 +14,7 @@ describe('MonsterCard', () => {
     propName: 'monster',
     mockFactory: createMockMonster,
     entityName: 'Ancient Red Dragon',
-    linkPath: '/monsters/ancient-red-dragon',
+    linkPath: '/monsters/mm:ancient-red-dragon',
     optionalFields: ['size', 'alignment', 'sources']
   })
 

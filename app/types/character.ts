@@ -145,6 +145,23 @@ export interface ConditionImmunity {
 }
 
 /**
+ * Skill advantage trait (advantage on skill checks)
+ *
+ * Note: Not in OpenAPI spec yet. Type defined manually based on API response.
+ * @see https://github.com/dfox288/ledger-of-heroes/issues/433
+ */
+export interface SkillAdvantage {
+  /** Skill name (e.g., "Deception", "Performance") */
+  skill: string
+  /** Skill slug for matching (e.g., "deception", "performance") */
+  skill_slug: string
+  /** Optional condition text (e.g., "related to stonework"). Null = unconditional. */
+  condition: string | null
+  /** Source of the advantage (e.g., "Actor", "Stonecunning") */
+  source: string
+}
+
+/**
  * Character stats with strongly-typed ability score keys
  *
  * Extends the generated type with stricter typing for ability_scores
@@ -238,15 +255,15 @@ export interface CharacterSummary {
   level: number
   is_complete: boolean
   /** Resolved race data (null if dangling) */
-  race: { id: number, name: string, slug: string, full_slug: string } | null
+  race: { id: number, name: string, slug: string } | null
   /** Race slug reference (always present if race was set) */
   race_slug: string | null
   /** Indicates if race reference couldn't be resolved */
   race_is_dangling?: boolean
   /** Resolved primary class data (null if dangling) */
-  class: { id: number, name: string, slug: string, full_slug: string } | null
+  class: { id: number, name: string, slug: string } | null
   /** Resolved background data (null if dangling) */
-  background: { id: number, name: string, slug: string, full_slug: string } | null
+  background: { id: number, name: string, slug: string } | null
   /** Background slug reference (always present if background was set) */
   background_slug: string | null
   /** Indicates if background reference couldn't be resolved */
@@ -348,4 +365,41 @@ export interface WizardStep {
   isComplete: boolean
   isActive: boolean
   isDisabled: boolean
+}
+
+// =============================================================================
+// Level-Up Types
+// =============================================================================
+
+/**
+ * Result from level-up API call
+ *
+ * Returned by POST /characters/{id}/classes/{classSlug}/level-up
+ */
+export interface LevelUpResult {
+  previous_level: number
+  new_level: number
+  hp_increase: number
+  new_max_hp: number
+  features_gained: Array<{
+    id: number
+    name: string
+    description: string | null
+  }>
+  spell_slots: Record<string, number>
+  asi_pending: boolean
+  hp_choice_pending: boolean
+}
+
+/**
+ * Level-up wizard step definition
+ *
+ * Similar to WizardStep but with dynamic visibility based on level-up result
+ */
+export interface LevelUpStep {
+  name: string
+  label: string
+  icon: string
+  visible: () => boolean
+  shouldSkip?: () => boolean
 }

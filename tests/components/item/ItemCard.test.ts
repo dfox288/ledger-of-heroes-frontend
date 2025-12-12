@@ -15,7 +15,7 @@ describe('ItemCard', () => {
     propName: 'item',
     mockFactory: createMockItem,
     entityName: 'Longsword',
-    linkPath: '/items/longsword',
+    linkPath: '/items/phb:longsword',
     optionalFields: ['item_type', 'rarity', 'sources']
   })
 

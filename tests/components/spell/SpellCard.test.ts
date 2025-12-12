@@ -15,7 +15,7 @@ describe('SpellCard', () => {
     propName: 'spell',
     mockFactory: createMockSpell,
     entityName: 'Fireball',
-    linkPath: '/spells/fireball',
+    linkPath: '/spells/phb:fireball',
     optionalFields: ['school', 'sources']
   })
 

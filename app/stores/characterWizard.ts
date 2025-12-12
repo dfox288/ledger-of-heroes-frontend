@@ -36,9 +36,8 @@ export interface AbilityScores {
 export interface Subclass {
   id: number
   name: string
+  /** Source-prefixed slug (e.g., "phb:evoker") */
   slug: string
-  /** Full slug for API references (e.g., "phb:evoker") - see #318 */
-  full_slug: string
   description?: string
   source?: { code: string, name: string }
 }
@@ -71,6 +70,9 @@ export interface CharacterSummaryData {
     asi: number
     feats: number
     size: number
+    expertise?: number
+    fighting_style?: number
+    optional_feature?: number
   }
   creation_complete: boolean
   missing_required: string[]
@@ -307,6 +309,58 @@ export const useCharacterWizardStore = defineStore('characterWizard', () => {
   })
 
   /**
+   * Does this character have feature choices to make?
+   * (fighting_style, expertise, optional_feature)
+   *
+   * Note: The summary endpoint uses 'optional_features' (plural) and may not
+   * include fighting_style/expertise. We check both naming conventions and
+   * also check the featurePendingChoices ref which is populated from /pending-choices.
+   */
+  const hasFeatureChoices = computed(() => {
+    // Check summary counts (may use plural naming)
+    if (summary.value) {
+      const pc = summary.value.pending_choices
+      if ((pc.expertise ?? 0) > 0) return true
+      if ((pc.fighting_style ?? 0) > 0) return true
+      if ((pc.optional_feature ?? 0) > 0) return true
+      if ((pc.optional_features ?? 0) > 0) return true
+    }
+
+    // Also check the actual pending choices if fetched
+    if (featurePendingChoices.value.length > 0) return true
+
+    return false
+  })
+
+  /**
+   * Pending feature choices fetched from /pending-choices endpoint.
+   * This supplements the summary counts which may not include all choice types.
+   */
+  const featurePendingChoices = ref<Array<{ id: string, type: string, remaining: number }>>([])
+
+  /**
+   * Fetch feature-related pending choices to determine step visibility.
+   * Call this after class selection to populate featurePendingChoices.
+   */
+  async function fetchFeaturePendingChoices(): Promise<void> {
+    if (!characterId.value) return
+
+    try {
+      const response = await apiFetch<{ data: { choices: Array<{ id: string, type: string, remaining: number }> } }>(
+        `/characters/${characterId.value}/pending-choices`
+      )
+
+      // Filter to feature-related choice types with remaining > 0
+      featurePendingChoices.value = (response?.data?.choices ?? []).filter(c =>
+        ['fighting_style', 'expertise', 'optional_feature'].includes(c.type) && c.remaining > 0
+      )
+    } catch (e) {
+      logger.error('Failed to fetch feature pending choices:', e)
+      featurePendingChoices.value = []
+    }
+  }
+
+  /**
    * Is character creation complete?
    */
   const isComplete = computed(() => {
@@ -375,6 +429,10 @@ export const useCharacterWizardStore = defineStore('characterWizard', () => {
 
       stats.value = statsRes.data
       summary.value = summaryRes.data
+
+      // Also fetch feature pending choices for step visibility
+      // (summary endpoint may not include fighting_style/expertise counts)
+      await fetchFeaturePendingChoices()
     } catch (err) {
       logger.error('Failed to sync with backend:', err)
       // Don't throw - UI should still work with stale data
@@ -389,15 +447,15 @@ export const useCharacterWizardStore = defineStore('characterWizard', () => {
    * Select or create character with race
    * This is the first save point - creates the character draft
    *
-   * Note: Uses full_slug for API requests (see #318)
+   * Note: slug contains source-prefixed value (e.g., "phb:elf") - see #506
    */
   async function selectRace(race: Race): Promise<void> {
     isLoading.value = true
     error.value = null
 
     try {
-      // Use full_slug if available, fall back to slug for base races without full_slug (#318)
-      const raceSlug = race.full_slug ?? race.slug
+      // slug contains source-prefixed value (e.g., "phb:elf") - see #506
+      const raceSlug = race.slug
       if (!raceSlug) {
         throw new Error('Race missing slug - cannot save')
       }
@@ -441,7 +499,7 @@ export const useCharacterWizardStore = defineStore('characterWizard', () => {
   /**
    * Select subrace (or null for "None" on optional subraces)
    *
-   * Note: Uses full_slug for API requests (see #318)
+   * Note: slug contains source-prefixed value (e.g., "phb:high-elf") - see #506
    */
   async function selectSubrace(subrace: Race | null): Promise<void> {
     if (!characterId.value) return
@@ -450,9 +508,9 @@ export const useCharacterWizardStore = defineStore('characterWizard', () => {
     error.value = null
 
     try {
-      // Use subrace's slug if selected, otherwise fall back to base race's slug (#318)
-      // Prefer full_slug when available, fall back to slug for base races without full_slug
-      const raceSlug = subrace?.full_slug ?? subrace?.slug ?? selections.value.race?.full_slug ?? selections.value.race?.slug
+      // Use subrace's slug if selected, otherwise fall back to base race's slug
+      // slug contains source-prefixed value (e.g., "phb:high-elf") - see #506
+      const raceSlug = subrace?.slug ?? selections.value.race?.slug
       if (!raceSlug) throw new Error('No race selected or race missing slug')
 
       await apiFetch(`/characters/${characterId.value}`, {
@@ -475,13 +533,13 @@ export const useCharacterWizardStore = defineStore('characterWizard', () => {
    * If character already has a class, uses PUT to replace it.
    * If no class exists, uses POST to add it.
    *
-   * Note: Uses full_slug for API requests (see #318)
+   * Note: slug contains source-prefixed value (e.g., "phb:fighter") - see #506
    */
   async function selectClass(cls: CharacterClass): Promise<void> {
     if (!characterId.value) return
 
     // Skip if selecting the same class (user went back and clicked same option)
-    if (selections.value.class?.full_slug === cls.full_slug) {
+    if (selections.value.class?.slug === cls.slug) {
       return
     }
 
@@ -489,22 +547,22 @@ export const useCharacterWizardStore = defineStore('characterWizard', () => {
     error.value = null
 
     try {
-      // Class must have full_slug for slug-based references (#318)
-      const newClassSlug = cls.full_slug
+      // slug contains source-prefixed value (e.g., "phb:fighter") - see #506
+      const newClassSlug = cls.slug
       if (!newClassSlug) {
-        throw new Error('Class missing full_slug - cannot save')
+        throw new Error('Class missing slug - cannot save')
       }
 
-      if (selections.value.class?.full_slug) {
+      if (selections.value.class?.slug) {
         // Replace existing class using PUT endpoint
-        // URL uses current class full_slug, body contains new class_slug (#318)
-        const currentClassSlug = selections.value.class.full_slug
+        // URL uses current class slug, body contains new class_slug
+        const currentClassSlug = selections.value.class.slug
         await apiFetch(`/characters/${characterId.value}/classes/${currentClassSlug}`, {
           method: 'PUT',
           body: { class_slug: newClassSlug }
         })
       } else {
-        // Add new class using POST endpoint with class_slug (#318)
+        // Add new class using POST endpoint with class_slug
         // force: true skips multiclass prereq checks (this is initial class, not multiclass)
         await apiFetch(`/characters/${characterId.value}/classes`, {
           method: 'POST',
@@ -532,26 +590,21 @@ export const useCharacterWizardStore = defineStore('characterWizard', () => {
   /**
    * Select subclass
    *
-   * Note: Uses full_slug for API requests (see #318)
+   * Note: slug contains source-prefixed value (e.g., "phb:champion") - see #506
    */
   async function selectSubclass(subclass: Subclass): Promise<void> {
-    if (!characterId.value || !selections.value.class?.full_slug) return
-
-    // Validate full_slug exists (required for API - see #318)
-    if (!subclass.full_slug) {
-      throw new Error('Subclass missing full_slug - cannot save')
-    }
+    if (!characterId.value || !selections.value.class?.slug) return
 
     isLoading.value = true
     error.value = null
 
     try {
-      // URL uses class full_slug, body uses subclass_slug (#318)
+      // URL uses class slug, body uses subclass_slug - see #506
       await apiFetch(
-        `/characters/${characterId.value}/classes/${selections.value.class.full_slug}/subclass`,
+        `/characters/${characterId.value}/classes/${selections.value.class.slug}/subclass`,
         {
           method: 'PUT',
-          body: { subclass_slug: subclass.full_slug }
+          body: { subclass_slug: subclass.slug }
         }
       )
 
@@ -568,7 +621,7 @@ export const useCharacterWizardStore = defineStore('characterWizard', () => {
   /**
    * Select background
    *
-   * Note: Uses full_slug for API requests (see #318)
+   * Note: slug contains source-prefixed value (e.g., "phb:acolyte") - see #506
    */
   async function selectBackground(background: Background): Promise<void> {
     if (!characterId.value) return
@@ -577,10 +630,10 @@ export const useCharacterWizardStore = defineStore('characterWizard', () => {
     error.value = null
 
     try {
-      // Background must have full_slug for slug-based references (#318)
-      const backgroundSlug = background.full_slug
+      // slug contains source-prefixed value (e.g., "phb:acolyte") - see #506
+      const backgroundSlug = background.slug
       if (!backgroundSlug) {
-        throw new Error('Background missing full_slug - cannot save')
+        throw new Error('Background missing slug - cannot save')
       }
 
       await apiFetch(`/characters/${characterId.value}`, {
@@ -711,10 +764,10 @@ export const useCharacterWizardStore = defineStore('characterWizard', () => {
           public_id: string
           name: string
           alignment?: CharacterAlignment
-          race?: { slug: string, full_slug?: string }
-          background?: { slug: string, full_slug?: string }
-          class?: { slug: string, full_slug?: string }
-          classes?: Array<{ subclass?: { id: number, name: string, slug: string, full_slug?: string } }>
+          race?: { slug: string }
+          background?: { slug: string }
+          class?: { slug: string }
+          classes?: Array<{ subclass?: { id: number, name: string, slug: string } }>
           ability_score_method?: AbilityMethod
           ability_scores?: {
             STR: number | null
@@ -798,8 +851,7 @@ export const useCharacterWizardStore = defineStore('characterWizard', () => {
         selections.value.subclass = {
           id: apiSubclass.id,
           name: apiSubclass.name,
-          slug: apiSubclass.slug,
-          full_slug: apiSubclass.full_slug ?? apiSubclass.slug
+          slug: apiSubclass.slug
         }
       }
 
@@ -856,6 +908,8 @@ export const useCharacterWizardStore = defineStore('characterWizard', () => {
     hasLanguageChoices,
     hasFeatChoices,
     hasSizeChoices,
+    hasFeatureChoices,
+    featurePendingChoices,
     isComplete,
 
     // Computed: Filtering
@@ -868,6 +922,7 @@ export const useCharacterWizardStore = defineStore('characterWizard', () => {
 
     // Actions: Backend sync
     syncWithBackend,
+    fetchFeaturePendingChoices,
 
     // Actions: Selections
     selectRace,

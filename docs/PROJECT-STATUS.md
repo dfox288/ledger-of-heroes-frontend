@@ -1,6 +1,6 @@
 # Project Status
 
-**D&D 5e Compendium Frontend** | **Last Updated:** 2025-12-07
+**D&D 5e Compendium Frontend** | **Last Updated:** 2025-12-10
 
 ---
 
@@ -8,13 +8,13 @@
 
 | Metric | Count |
 |--------|-------|
-| Test Files | 193 |
-| Test Cases | ~2,848 |
-| Components | 157 |
-| Pages | 50 |
-| Composables | 18 |
-| Pinia Stores | 9 |
-| Test Helpers | 10 |
+| Test Files | 201 |
+| Test Cases | ~2,900 |
+| Components | 190 |
+| Pages | 40 |
+| Composables | 33 |
+| Pinia Stores | 13 |
+| Test Helpers | 11 |
 
 ---
 
@@ -145,6 +145,12 @@
 
 ## Recent Milestones
 
+- **2025-12-10:** Codebase cleanup (#439, #440) - removed 3 deprecated components, consolidated JsonDebugPanel
+- **2025-12-09:** Wizard step validation (#437) - validates pending choices before allowing navigation
+- **2025-12-09:** Character validation warnings (#435) - shows human-readable validation messages
+- **2025-12-09:** Race condition fix (#435) - parallel fetchChoices calls now properly debounced
+- **2025-12-09:** DefensesPanel component (#432) - displays AC, resistances, immunities, vulnerabilities
+- **2025-12-08:** ESLint auto-formatting fixes - consistent code style across codebase
 - **2025-12-07:** Character public ID migration (#287) - D&D-themed URLs like `arcane-phoenix-M7k2`
 - **2025-12-07:** Issue cleanup - closed 11 completed issues (#264-271, #172, #174, #287)
 - **2025-12-06:** Unified Choice System Migration (#264) - all wizard steps use unified API
@@ -207,21 +213,14 @@
 ```
 docs/
 ├── PROJECT-STATUS.md        # This file (metrics)
-├── TODO.md                  # Active tasks
-├── LATEST-HANDOVER.md       # Most recent session
-├── CURRENT_STATUS.md        # Detailed feature status
+├── LATEST-HANDOVER.md       # Symlink to wrapper repo handover
+└── README.md                # Points to wrapper for all other docs
+
+# All other docs live in ../wrapper/docs/frontend/
+../wrapper/docs/frontend/
+├── handovers/               # Session handovers
+├── plans/                   # Implementation plans
 ├── proposals/               # API enhancement proposals
-│   ├── CLASSES-COMPREHENSIVE-AUDIT-2025-11-29.md  # ⚠️ Critical issues
-│   ├── SPELLS-API-ENHANCEMENTS.md
-│   ├── CLASSES-API-ENHANCEMENTS.md
-│   ├── CLASSES-DETAIL-PAGE-FRONTEND-IMPROVEMENTS.md
-│   ├── CLASSES-DETAIL-PAGE-BACKEND-FIXES.md       # Superseded by audit
-│   ├── FEATURES-DISPLAY-MOCKUPS.md
-│   ├── ITEMS-API-ENHANCEMENTS.md
-│   ├── RACES-API-ENHANCEMENTS.md
-│   ├── BACKGROUNDS-API-ENHANCEMENTS.md
-│   ├── FEATS-API-ENHANCEMENTS.md
-│   └── MONSTERS-API-ENHANCEMENTS.md
-├── HANDOVER-*.md            # Session handovers
-└── BLOCKED-*.md             # Blocked work tracking
+├── reference/               # Stable reference docs
+└── archive/                 # Old handovers
 ```

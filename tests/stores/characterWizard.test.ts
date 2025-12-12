@@ -27,19 +27,18 @@ vi.mock('~/composables/useCharacterSlug', () => ({
 // eslint-disable-next-line import/first
 import { useCharacterWizardStore } from '~/stores/characterWizard'
 
-// Mock race data - includes full_slug for slug-based references (#318)
+// Mock race data - slug contains source-prefixed value (#506)
 const mockElf: Race = {
   id: 1,
   name: 'Elf',
-  slug: 'elf',
-  full_slug: 'phb:elf',
+  slug: 'phb:elf',
   description: 'Elves are a magical people',
   speed: 30,
   size: { id: 1, name: 'Medium', slug: 'medium' },
   subrace_required: true,
   subraces: [
-    { id: 2, name: 'High Elf', slug: 'high-elf', full_slug: 'phb:high-elf' },
-    { id: 3, name: 'Wood Elf', slug: 'wood-elf', full_slug: 'phb:wood-elf' }
+    { id: 2, name: 'High Elf', slug: 'phb:high-elf' },
+    { id: 3, name: 'Wood Elf', slug: 'phb:wood-elf' }
   ],
   modifiers: [],
   traits: [],
@@ -50,14 +49,13 @@ const mockElf: Race = {
 const mockHuman: Race = {
   id: 4,
   name: 'Human',
-  slug: 'human',
-  full_slug: 'phb:human',
+  slug: 'phb:human',
   description: 'Humans are versatile',
   speed: 30,
   size: { id: 1, name: 'Medium', slug: 'medium' },
   subrace_required: false,
   subraces: [
-    { id: 5, name: 'Variant Human', slug: 'variant-human', full_slug: 'phb:variant-human' }
+    { id: 5, name: 'Variant Human', slug: 'phb:variant-human' }
   ],
   modifiers: [],
   traits: [],
@@ -68,8 +66,7 @@ const mockHuman: Race = {
 const mockHalfOrc: Race = {
   id: 6,
   name: 'Half-Orc',
-  slug: 'half-orc',
-  full_slug: 'phb:half-orc',
+  slug: 'phb:half-orc',
   description: 'Half-Orcs are strong',
   speed: 30,
   size: { id: 1, name: 'Medium', slug: 'medium' },
@@ -81,12 +78,11 @@ const mockHalfOrc: Race = {
   sources: [{ code: 'PHB', name: 'Player\'s Handbook' }]
 } as Race
 
-// Mock class data - includes full_slug for slug-based references (#318)
+// Mock class data - slug contains source-prefixed value (#506)
 const mockCleric: CharacterClass = {
   id: 1,
   name: 'Cleric',
-  slug: 'cleric',
-  full_slug: 'phb:cleric',
+  slug: 'phb:cleric',
   hit_die: 8,
   subclass_level: 1,
   spellcasting_ability: { id: 5, code: 'WIS', name: 'Wisdom' },
@@ -101,8 +97,7 @@ const mockCleric: CharacterClass = {
 const mockFighter: CharacterClass = {
   id: 2,
   name: 'Fighter',
-  slug: 'fighter',
-  full_slug: 'phb:fighter',
+  slug: 'phb:fighter',
   hit_die: 10,
   subclass_level: 3,
   spellcasting_ability: null,
@@ -115,8 +110,7 @@ const mockFighter: CharacterClass = {
 const mockWizard: CharacterClass = {
   id: 3,
   name: 'Wizard',
-  slug: 'wizard',
-  full_slug: 'phb:wizard',
+  slug: 'phb:wizard',
   hit_die: 6,
   subclass_level: 2,
   spellcasting_ability: { id: 4, code: 'INT', name: 'Intelligence' },
@@ -319,7 +313,7 @@ describe('characterWizard store', () => {
 
     it('returns subrace when selected', () => {
       const store = useCharacterWizardStore()
-      const highElf = { ...mockElf, id: 2, name: 'High Elf', slug: 'high-elf', full_slug: 'phb:high-elf' }
+      const highElf = { ...mockElf, id: 2, name: 'High Elf', slug: 'phb:high-elf' }
       store.selections.race = mockElf
       store.selections.subrace = highElf
       expect(store.effectiveRace?.id).toBe(highElf.id)
@@ -370,7 +364,7 @@ describe('characterWizard store', () => {
       expect(store.selections.race?.id).toBe(mockHuman.id)
       expect(mockApiFetch).toHaveBeenCalledWith(
         '/characters/456',
-        expect.objectContaining({ method: 'PATCH', body: { race_slug: mockHuman.full_slug } })
+        expect.objectContaining({ method: 'PATCH', body: { race_slug: mockHuman.slug } })
       )
     })
 
@@ -453,7 +447,7 @@ describe('characterWizard store', () => {
       const store = useCharacterWizardStore()
       store.characterId = 1
       store.selections.race = mockElf
-      const highElf = { ...mockElf, id: 2, name: 'High Elf', slug: 'high-elf', full_slug: 'phb:high-elf' } as Race
+      const highElf = { ...mockElf, id: 2, name: 'High Elf', slug: 'phb:high-elf' } as Race
 
       mockApiFetch
         .mockResolvedValueOnce({}) // PATCH
@@ -484,7 +478,7 @@ describe('characterWizard store', () => {
       expect(store.selections.subrace).toBeNull()
       expect(mockApiFetch).toHaveBeenCalledWith(
         '/characters/1',
-        expect.objectContaining({ body: { race_slug: mockHuman.full_slug } })
+        expect.objectContaining({ body: { race_slug: mockHuman.slug } })
       )
     })
   })
@@ -517,7 +511,7 @@ describe('characterWizard store', () => {
       expect(store.selections.class?.id).toBe(mockCleric.id)
       expect(mockApiFetch).toHaveBeenCalledWith(
         '/characters/1/classes',
-        expect.objectContaining({ method: 'POST', body: { class_slug: mockCleric.full_slug, force: true } })
+        expect.objectContaining({ method: 'POST', body: { class_slug: mockCleric.slug, force: true } })
       )
     })
 
@@ -535,10 +529,10 @@ describe('characterWizard store', () => {
       await store.selectClass(mockCleric)
 
       expect(store.selections.class?.id).toBe(mockCleric.id)
-      // URL now uses full_slug instead of ID (see #318)
+      // URL uses slug (prefixed) instead of ID (see #506)
       expect(mockApiFetch).toHaveBeenCalledWith(
-        `/characters/1/classes/${mockFighter.full_slug}`,
-        expect.objectContaining({ method: 'PUT', body: { class_slug: mockCleric.full_slug } })
+        `/characters/1/classes/${mockFighter.slug}`,
+        expect.objectContaining({ method: 'PUT', body: { class_slug: mockCleric.slug } })
       )
     })
 
@@ -556,7 +550,7 @@ describe('characterWizard store', () => {
       const store = useCharacterWizardStore()
       store.characterId = 1
       store.selections.class = mockFighter
-      store.selections.subclass = { id: 99, name: 'Champion', slug: 'champion', full_slug: 'phb:champion' }
+      store.selections.subclass = { id: 99, name: 'Champion', slug: 'phb:champion' }
 
       mockApiFetch
         .mockResolvedValueOnce({})
@@ -574,8 +568,7 @@ describe('characterWizard store', () => {
     const mockBackground: Background = {
       id: 1,
       name: 'Soldier',
-      slug: 'soldier',
-      full_slug: 'phb:soldier',
+      slug: 'phb:soldier',
       feature_name: 'Military Rank'
     } as Background
 
@@ -606,7 +599,7 @@ describe('characterWizard store', () => {
       expect(store.selections.background?.id).toBe(mockBackground.id)
       expect(mockApiFetch).toHaveBeenCalledWith(
         '/characters/1',
-        expect.objectContaining({ method: 'PATCH', body: { background_slug: mockBackground.full_slug } })
+        expect.objectContaining({ method: 'PATCH', body: { background_slug: mockBackground.slug } })
       )
     })
   })
@@ -624,22 +617,25 @@ describe('characterWizard store', () => {
       expect(mockApiFetch).not.toHaveBeenCalled()
     })
 
-    it('fetches stats and summary in parallel', async () => {
+    it('fetches stats, summary, and pending-choices in parallel', async () => {
       const store = useCharacterWizardStore()
       store.characterId = 42
 
       const mockStats = { hp: 12, ac: 15 }
       const mockSummary = { creation_complete: false, pending_choices: {} }
+      const mockPendingChoices = { choices: [] }
 
       mockApiFetch
         .mockResolvedValueOnce({ data: mockStats })
         .mockResolvedValueOnce({ data: mockSummary })
+        .mockResolvedValueOnce({ data: mockPendingChoices })
 
       await store.syncWithBackend()
 
-      expect(mockApiFetch).toHaveBeenCalledTimes(2)
+      expect(mockApiFetch).toHaveBeenCalledTimes(3)
       expect(mockApiFetch).toHaveBeenCalledWith('/characters/42/stats')
       expect(mockApiFetch).toHaveBeenCalledWith('/characters/42/summary')
+      expect(mockApiFetch).toHaveBeenCalledWith('/characters/42/pending-choices')
       expect(store.stats).toEqual(mockStats)
       expect(store.summary).toEqual(mockSummary)
     })
@@ -771,14 +767,15 @@ describe('characterWizard store', () => {
             id: 42,
             public_id: 'noble-mage-xyz',
             name: 'Gandalf',
-            race: { slug: 'elf', full_slug: 'phb:elf' }
+            race: { slug: 'phb:elf' }
           }
         })
-        // Second: full race details fetched from /races/elf
+        // Second: full race details fetched from /races/phb:elf
         .mockResolvedValueOnce({ data: mockElf })
-        // Third/Fourth: stats and summary
+        // Third/Fourth/Fifth: stats, summary, pending-choices
         .mockResolvedValueOnce({ data: {} }) // stats
         .mockResolvedValueOnce({ data: {} }) // summary
+        .mockResolvedValueOnce({ data: {} }) // pending-choices
 
       await store.loadCharacter('noble-mage-xyz')
 
@@ -787,7 +784,7 @@ describe('characterWizard store', () => {
       expect(store.selections.name).toBe('Gandalf')
       // Full race data is now fetched from /races/{slug}
       expect(store.selections.race?.id).toBe(mockElf.id)
-      expect(mockApiFetch).toHaveBeenCalledWith('/races/elf')
+      expect(mockApiFetch).toHaveBeenCalledWith('/races/phb:elf')
     })
 
     it('sets error on failure', async () => {
@@ -1029,6 +1026,123 @@ describe('characterWizard store', () => {
       }
 
       expect(store.hasFeatChoices).toBe(false)
+    })
+  })
+
+  describe('hasFeatureChoices computed', () => {
+    it('returns false when no summary', () => {
+      const store = useCharacterWizardStore()
+      expect(store.hasFeatureChoices).toBe(false)
+    })
+
+    it('returns false when no feature choices exist', () => {
+      const store = useCharacterWizardStore()
+      store.summary = {
+        character: { id: 1, name: 'Test', total_level: 1 },
+        pending_choices: {
+          proficiencies: 0,
+          languages: 0,
+          spells: 0,
+          optional_features: 0,
+          asi: 0,
+          feats: 0,
+          size: 0,
+          expertise: 0,
+          fighting_style: 0,
+          optional_feature: 0
+        },
+        creation_complete: false,
+        missing_required: []
+      }
+      expect(store.hasFeatureChoices).toBe(false)
+    })
+
+    it('returns true when expertise choices exist', () => {
+      const store = useCharacterWizardStore()
+      store.summary = {
+        character: { id: 1, name: 'Test', total_level: 1 },
+        pending_choices: {
+          proficiencies: 0,
+          languages: 0,
+          spells: 0,
+          optional_features: 0,
+          asi: 0,
+          feats: 0,
+          size: 0,
+          expertise: 2,
+          fighting_style: 0,
+          optional_feature: 0
+        },
+        creation_complete: false,
+        missing_required: []
+      }
+      expect(store.hasFeatureChoices).toBe(true)
+    })
+
+    it('returns true when fighting_style choices exist', () => {
+      const store = useCharacterWizardStore()
+      store.summary = {
+        character: { id: 1, name: 'Test', total_level: 1 },
+        pending_choices: {
+          proficiencies: 0,
+          languages: 0,
+          spells: 0,
+          optional_features: 0,
+          asi: 0,
+          feats: 0,
+          size: 0,
+          expertise: 0,
+          fighting_style: 1,
+          optional_feature: 0
+        },
+        creation_complete: false,
+        missing_required: []
+      }
+      expect(store.hasFeatureChoices).toBe(true)
+    })
+
+    it('returns true when optional_feature choices exist', () => {
+      const store = useCharacterWizardStore()
+      store.summary = {
+        character: { id: 1, name: 'Test', total_level: 1 },
+        pending_choices: {
+          proficiencies: 0,
+          languages: 0,
+          spells: 0,
+          optional_features: 0,
+          asi: 0,
+          feats: 0,
+          size: 0,
+          expertise: 0,
+          fighting_style: 0,
+          optional_feature: 1
+        },
+        creation_complete: false,
+        missing_required: []
+      }
+      expect(store.hasFeatureChoices).toBe(true)
+    })
+
+    it('returns true when multiple feature choice types exist', () => {
+      const store = useCharacterWizardStore()
+      store.summary = {
+        character: { id: 1, name: 'Test', total_level: 1 },
+        pending_choices: {
+          proficiencies: 0,
+          languages: 0,
+          spells: 0,
+          optional_features: 0,
+          asi: 0,
+          feats: 0,
+          size: 0,
+          expertise: 2,
+          fighting_style: 1,
+          optional_feature: 0
+        },
+        creation_complete: false,
+        missing_required: []
+      }
+      expect(store.hasFeatureChoices).toBe(true)
     })
   })
 })
