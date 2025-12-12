@@ -163,28 +163,32 @@ const visibleCurrencies = computed(() => {
       ]"
       @click="handleHpCellClick"
     >
-      <div :class="[
-        'text-xs font-semibold uppercase tracking-wider mb-1',
-        isDead
-          ? 'text-gray-400 dark:text-gray-500'
-          : isStabilized
-            ? 'text-info-700 dark:text-info-300'
-            : isAtZeroHp
-              ? 'text-error-700 dark:text-error-300'
-              : 'text-gray-500 dark:text-gray-400'
-      ]">
+      <div
+        :class="[
+          'text-xs font-semibold uppercase tracking-wider mb-1',
+          isDead
+            ? 'text-gray-400 dark:text-gray-500'
+            : isStabilized
+              ? 'text-info-700 dark:text-info-300'
+              : isAtZeroHp
+                ? 'text-error-700 dark:text-error-300'
+                : 'text-gray-500 dark:text-gray-400'
+        ]"
+      >
         {{ hpStatusLabel }}
       </div>
-      <div :class="[
-        'text-2xl font-bold',
-        isDead
-          ? 'text-gray-500 dark:text-gray-600'
-          : isStabilized
-            ? 'text-info-700 dark:text-info-300'
-            : isAtZeroHp
-              ? 'text-error-700 dark:text-error-300'
-              : 'text-gray-900 dark:text-white'
-      ]">
+      <div
+        :class="[
+          'text-2xl font-bold',
+          isDead
+            ? 'text-gray-500 dark:text-gray-600'
+            : isStabilized
+              ? 'text-info-700 dark:text-info-300'
+              : isAtZeroHp
+                ? 'text-error-700 dark:text-error-300'
+                : 'text-gray-900 dark:text-white'
+        ]"
+      >
         {{ stats.hit_points?.current ?? '—' }}
         <span :class="isDead ? 'text-gray-600' : isStabilized ? 'text-info-400' : isAtZeroHp ? 'text-error-400' : 'text-gray-400'">/</span>
         {{ stats.hit_points?.max ?? '—' }}

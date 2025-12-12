@@ -135,4 +135,139 @@ describe('CharacterSheetHitDice', () => {
     expect(wrapper.text()).toContain('d8')
     expect(wrapper.text()).toContain('15/20')
   })
+
+  // ============================================================================
+  // Play Mode (editable) Tests
+  // ============================================================================
+
+  describe('play mode (editable)', () => {
+    it('does not show rest buttons when editable is false', async () => {
+      const wrapper = await mountSuspended(HitDice, {
+        props: {
+          hitDice: [{ die: 'd8', total: 3, current: 2 }],
+          editable: false
+        }
+      })
+      expect(wrapper.find('[data-testid="short-rest-btn"]').exists()).toBe(false)
+      expect(wrapper.find('[data-testid="long-rest-btn"]').exists()).toBe(false)
+    })
+
+    it('shows rest buttons when editable is true', async () => {
+      const wrapper = await mountSuspended(HitDice, {
+        props: {
+          hitDice: [{ die: 'd8', total: 3, current: 2 }],
+          editable: true
+        }
+      })
+      expect(wrapper.find('[data-testid="short-rest-btn"]').exists()).toBe(true)
+      expect(wrapper.find('[data-testid="long-rest-btn"]').exists()).toBe(true)
+    })
+
+    it('emits spend event when clicking a filled die', async () => {
+      const wrapper = await mountSuspended(HitDice, {
+        props: {
+          hitDice: [{ die: 'd8', total: 3, current: 2 }],
+          editable: true
+        }
+      })
+
+      const filledDie = wrapper.find('[data-testid="dice-d8-filled"]')
+      await filledDie.trigger('click')
+
+      const emitted = wrapper.emitted('spend')
+      expect(emitted).toBeTruthy()
+      expect(emitted![0]).toEqual([{ dieType: 'd8' }])
+    })
+
+    it('does not emit spend event when clicking an empty die', async () => {
+      const wrapper = await mountSuspended(HitDice, {
+        props: {
+          hitDice: [{ die: 'd8', total: 3, current: 1 }],
+          editable: true
+        }
+      })
+
+      const emptyDie = wrapper.find('[data-testid="dice-d8-empty"]')
+      await emptyDie.trigger('click')
+
+      expect(wrapper.emitted('spend')).toBeFalsy()
+    })
+
+    it('does not emit spend event when editable is false', async () => {
+      const wrapper = await mountSuspended(HitDice, {
+        props: {
+          hitDice: [{ die: 'd8', total: 3, current: 2 }],
+          editable: false
+        }
+      })
+
+      const filledDie = wrapper.find('[data-testid="dice-d8-filled"]')
+      await filledDie.trigger('click')
+
+      expect(wrapper.emitted('spend')).toBeFalsy()
+    })
+
+    it('emits short-rest event when clicking short rest button', async () => {
+      const wrapper = await mountSuspended(HitDice, {
+        props: {
+          hitDice: [{ die: 'd8', total: 3, current: 2 }],
+          editable: true
+        }
+      })
+
+      await wrapper.find('[data-testid="short-rest-btn"]').trigger('click')
+
+      expect(wrapper.emitted('short-rest')).toBeTruthy()
+    })
+
+    it('emits long-rest event when clicking long rest button', async () => {
+      const wrapper = await mountSuspended(HitDice, {
+        props: {
+          hitDice: [{ die: 'd8', total: 3, current: 2 }],
+          editable: true
+        }
+      })
+
+      await wrapper.find('[data-testid="long-rest-btn"]').trigger('click')
+
+      expect(wrapper.emitted('long-rest')).toBeTruthy()
+    })
+
+    it('shows filled dice as clickable when editable', async () => {
+      const wrapper = await mountSuspended(HitDice, {
+        props: {
+          hitDice: [{ die: 'd8', total: 3, current: 2 }],
+          editable: true
+        }
+      })
+
+      const filledDie = wrapper.find('[data-testid="dice-d8-filled"]')
+      expect(filledDie.classes()).toContain('cursor-pointer')
+    })
+
+    it('does not show filled dice as clickable when not editable', async () => {
+      const wrapper = await mountSuspended(HitDice, {
+        props: {
+          hitDice: [{ die: 'd8', total: 3, current: 2 }],
+          editable: false
+        }
+      })
+
+      const filledDie = wrapper.find('[data-testid="dice-d8-filled"]')
+      expect(filledDie.classes()).not.toContain('cursor-pointer')
+    })
+
+    it('disables spend when no dice available', async () => {
+      const wrapper = await mountSuspended(HitDice, {
+        props: {
+          hitDice: [{ die: 'd8', total: 3, current: 0 }],
+          editable: true
+        }
+      })
+
+      // All dice are empty, none should be clickable
+      const filledDice = wrapper.findAll('[data-testid="dice-d8-filled"]')
+      expect(filledDice.length).toBe(0)
+    })
+  })
 })
