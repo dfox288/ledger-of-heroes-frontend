@@ -20,6 +20,31 @@ Nuxt 4.x frontend for D&D 5e Compendium. Consumes REST API from `../backend` (La
 
 ---
 
+## Backend Environment
+
+Switch between backend environments using `NUXT_BACKEND_ENV` in `.env`:
+
+| Value | Port | Use Case |
+|-------|------|----------|
+| `dev` (default) | 8080 | Active backend development, bleeding-edge |
+| `stable` | 8081 | Frontend work against stable, known-good API |
+
+**To switch:**
+1. Edit `.env`: `NUXT_BACKEND_ENV=stable`
+2. Restart dev server: `docker compose restart nuxt`
+
+**When to use stable:**
+- Frontend feature work that doesn't need latest backend changes
+- Testing against consistent API behavior
+- Parallel work while backend has breaking changes in progress
+
+**When to use dev:**
+- Testing new backend features
+- Full-stack development
+- Verifying frontend/backend integration
+
+---
+
 ## Documentation Locations
 
 **All documentation (plans, handovers, proposals, reference) lives in the wrapper repo:**
@@ -701,6 +726,69 @@ tests/
 
 ---
 
+## Playwright AI Agents (E2E Testing)
+
+Three AI-powered agents automate E2E test creation using the Playwright MCP server.
+
+### Agent Pipeline
+
+| Agent | Purpose | Output |
+|-------|---------|--------|
+| **🎭 Planner** | Explores app, identifies user flows | Markdown test plan in `specs/` |
+| **🎭 Generator** | Converts plans to executable tests | Test files in `tests/e2e/` |
+| **🎭 Healer** | Runs tests, auto-fixes failures | Updated test files |
+
+### Configuration Files
+
+```
+.claude/agents/
+├── playwright-test-planner.md    # Test planning agent
+├── playwright-test-generator.md  # Test generation agent
+└── playwright-test-healer.md     # Test healing agent
+
+.mcp.json                         # Playwright MCP server config
+```
+
+### Usage
+
+```bash
+# Plan tests for a feature
+"Use the playwright-test-planner agent to create a test plan for the character wizard"
+
+# Generate tests from a plan
+"Use the playwright-test-generator agent to generate tests from specs/character-wizard.md"
+
+# Fix failing tests
+"Use the playwright-test-healer agent to fix the failing E2E tests"
+```
+
+### Workflow
+
+1. **Plan** → Agent explores the app via browser, produces `specs/feature-name.md`
+2. **Generate** → Agent reads plan, executes steps live, writes test file
+3. **Heal** → Agent runs tests, debugs failures, patches locators/assertions
+
+### MCP Tools Available
+
+When agents run, they have access to browser automation tools:
+- `browser_navigate`, `browser_click`, `browser_type`, `browser_snapshot`
+- `generator_setup_page`, `generator_write_test`, `generator_read_log`
+- `planner_setup_page`, `planner_save_plan`
+- `test_run`, `test_debug`, `test_list`
+
+### Running E2E Tests Manually
+
+```bash
+npm run test:e2e           # Headless (CI)
+npm run test:e2e:ui        # Interactive UI mode
+npm run test:e2e:headed    # Visible browser
+npm run test:e2e:report    # View HTML report
+```
+
+**Docs:** https://playwright.dev/docs/test-agents
+
+---
+
 ## Success Checklist
 
 Before creating a PR:
@@ -726,6 +814,7 @@ Before creating a PR:
 - **NuxtUI 4:** https://ui.nuxt.com/docs
 - **Vitest:** https://vitest.dev/
 - **Playwright:** https://playwright.dev/
+- **Playwright AI Agents:** https://playwright.dev/docs/test-agents
 - **Backend API Docs:** http://localhost:8080/docs/api
 
 ---
