@@ -29,7 +29,8 @@ const inputValue = ref('')
 
 /** Parse input to numeric delta */
 const parsedDelta = computed(() => {
-  const trimmed = inputValue.value.trim()
+  // Convert to string defensively (in case input type changes)
+  const trimmed = String(inputValue.value ?? '').trim()
   if (!trimmed) return null
 
   // Handle explicit + sign

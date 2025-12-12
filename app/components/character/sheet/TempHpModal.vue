@@ -26,7 +26,8 @@ const inputValue = ref('')
 
 /** Parse input to numeric value (temp HP must be non-negative) */
 const parsedValue = computed(() => {
-  const trimmed = inputValue.value.trim()
+  // UInput with type="number" returns number, so convert to string first
+  const trimmed = String(inputValue.value ?? '').trim()
   if (!trimmed) return null
 
   const value = parseInt(trimmed, 10)
