@@ -142,6 +142,5 @@ const isDead = computed(() => props.failures >= DEATH_SAVE_MAX)
         />
       </div>
     </div>
-
   </div>
 </template>

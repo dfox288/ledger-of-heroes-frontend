@@ -19,6 +19,9 @@ const props = defineProps<{
   tempHp: number
 }>()
 
+/** Maximum allowed HP delta (sanity cap to prevent typos) */
+const MAX_HP_DELTA = 999
+
 const emit = defineEmits<{
   'update:open': [value: boolean]
   'apply': [delta: number]
@@ -60,8 +63,18 @@ const parsedDelta = computed(() => {
   return targetHp - props.currentHp
 })
 
-/** Whether apply button should be enabled */
-const canApply = computed(() => parsedDelta.value !== null)
+/**
+ * Whether apply button should be enabled
+ *
+ * Blocks when:
+ * - Input is empty or invalid
+ * - Absolute delta exceeds MAX_HP_DELTA (typo protection)
+ */
+const canApply = computed(() => {
+  if (parsedDelta.value === null) return false
+  if (Math.abs(parsedDelta.value) > MAX_HP_DELTA) return false // Typo protection
+  return true
+})
 
 /** Handle apply button click */
 function handleApply() {

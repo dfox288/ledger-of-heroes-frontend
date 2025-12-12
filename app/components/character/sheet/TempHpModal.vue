@@ -15,6 +15,9 @@ const props = defineProps<{
   currentTempHp: number
 }>()
 
+/** Maximum allowed temp HP value (sanity cap to prevent typos) */
+const MAX_TEMP_HP = 999
+
 const emit = defineEmits<{
   'update:open': [value: boolean]
   'apply': [value: number]
@@ -44,8 +47,22 @@ const wouldHaveEffect = computed(() => {
   return parsedValue.value > props.currentTempHp
 })
 
-/** Whether apply button should be enabled */
-const canApply = computed(() => parsedValue.value !== null)
+/**
+ * Whether apply button should be enabled
+ *
+ * Blocks when:
+ * - Input is empty or invalid
+ * - Value equals current temp HP (true no-op)
+ * - Value exceeds MAX_TEMP_HP (typo protection)
+ *
+ * Allows applying lower values (with warning) so users can confirm they understand D&D rules
+ */
+const canApply = computed(() => {
+  if (parsedValue.value === null) return false
+  if (parsedValue.value === props.currentTempHp) return false // No-op
+  if (parsedValue.value > MAX_TEMP_HP) return false // Typo protection
+  return true
+})
 
 /** Handle apply button click */
 function handleApply() {
@@ -136,6 +153,7 @@ watch(() => props.open, (isOpen) => {
             color="error"
             variant="ghost"
             @click="handleClear"
+            @keydown.enter.stop="handleClear"
           >
             Clear Temp HP
           </UButton>

@@ -24,8 +24,8 @@ export default defineEventHandler(async (event) => {
   if (searchQuery) {
     const q = searchQuery.toLowerCase()
     items = items.filter(item =>
-      item.name.toLowerCase().includes(q) ||
-      item.description.toLowerCase().includes(q)
+      item.name.toLowerCase().includes(q)
+      || item.description.toLowerCase().includes(q)
     )
   }
 

@@ -4,6 +4,20 @@ import { mount } from '@vue/test-utils'
 import TempHpModal from '~/components/character/sheet/TempHpModal.vue'
 
 /**
+ * Type for accessing TempHpModal internal state in tests
+ */
+interface TempHpModalVM {
+  inputValue: string
+  parsedValue: number | null
+  wouldHaveEffect: boolean
+  canApply: boolean
+  MAX_TEMP_HP: number
+  handleApply: () => void
+  handleClear: () => void
+  handleCancel: () => void
+}
+
+/**
  * Note: UModal uses teleportation which makes DOM testing complex.
  * These tests focus on component interface (props/events) rather than rendered output.
  * Actual modal interaction is tested via e2e tests.
@@ -84,7 +98,7 @@ describe('TempHpModal', () => {
       const wrapper = mount(TempHpModal, {
         props: defaultProps
       })
-      const vm = wrapper.vm as any
+      const vm = wrapper.vm as unknown as TempHpModalVM
       vm.inputValue = '12'
 
       expect(vm.parsedValue).toBe(12)
@@ -94,7 +108,7 @@ describe('TempHpModal', () => {
       const wrapper = mount(TempHpModal, {
         props: defaultProps
       })
-      const vm = wrapper.vm as any
+      const vm = wrapper.vm as unknown as TempHpModalVM
       vm.inputValue = '0'
 
       expect(vm.parsedValue).toBe(0)
@@ -104,7 +118,7 @@ describe('TempHpModal', () => {
       const wrapper = mount(TempHpModal, {
         props: defaultProps
       })
-      const vm = wrapper.vm as any
+      const vm = wrapper.vm as unknown as TempHpModalVM
       vm.inputValue = ''
 
       expect(vm.parsedValue).toBe(null)
@@ -114,7 +128,7 @@ describe('TempHpModal', () => {
       const wrapper = mount(TempHpModal, {
         props: defaultProps
       })
-      const vm = wrapper.vm as any
+      const vm = wrapper.vm as unknown as TempHpModalVM
       vm.inputValue = 'abc'
 
       expect(vm.parsedValue).toBe(null)
@@ -124,7 +138,7 @@ describe('TempHpModal', () => {
       const wrapper = mount(TempHpModal, {
         props: defaultProps
       })
-      const vm = wrapper.vm as any
+      const vm = wrapper.vm as unknown as TempHpModalVM
       vm.inputValue = '-5'
 
       expect(vm.parsedValue).toBe(null)
@@ -140,7 +154,7 @@ describe('TempHpModal', () => {
       const wrapper = mount(TempHpModal, {
         props: { ...defaultProps, currentTempHp: 5 }
       })
-      const vm = wrapper.vm as any
+      const vm = wrapper.vm as unknown as TempHpModalVM
       vm.inputValue = '10'
 
       expect(vm.wouldHaveEffect).toBe(true)
@@ -150,7 +164,7 @@ describe('TempHpModal', () => {
       const wrapper = mount(TempHpModal, {
         props: { ...defaultProps, currentTempHp: 10 }
       })
-      const vm = wrapper.vm as any
+      const vm = wrapper.vm as unknown as TempHpModalVM
       vm.inputValue = '5'
 
       expect(vm.wouldHaveEffect).toBe(false)
@@ -160,7 +174,7 @@ describe('TempHpModal', () => {
       const wrapper = mount(TempHpModal, {
         props: { ...defaultProps, currentTempHp: 8 }
       })
-      const vm = wrapper.vm as any
+      const vm = wrapper.vm as unknown as TempHpModalVM
       vm.inputValue = '8'
 
       expect(vm.wouldHaveEffect).toBe(false)
@@ -170,7 +184,7 @@ describe('TempHpModal', () => {
       const wrapper = mount(TempHpModal, {
         props: { ...defaultProps, currentTempHp: 0 }
       })
-      const vm = wrapper.vm as any
+      const vm = wrapper.vm as unknown as TempHpModalVM
       vm.inputValue = '10'
 
       expect(vm.wouldHaveEffect).toBe(true)
@@ -180,7 +194,7 @@ describe('TempHpModal', () => {
       const wrapper = mount(TempHpModal, {
         props: { ...defaultProps, currentTempHp: 5 }
       })
-      const vm = wrapper.vm as any
+      const vm = wrapper.vm as unknown as TempHpModalVM
       vm.inputValue = ''
 
       expect(vm.wouldHaveEffect).toBe(false)
@@ -196,7 +210,7 @@ describe('TempHpModal', () => {
       const wrapper = mount(TempHpModal, {
         props: defaultProps
       })
-      const vm = wrapper.vm as any
+      const vm = wrapper.vm as unknown as TempHpModalVM
       vm.inputValue = ''
 
       expect(vm.canApply).toBe(false)
@@ -206,7 +220,7 @@ describe('TempHpModal', () => {
       const wrapper = mount(TempHpModal, {
         props: defaultProps
       })
-      const vm = wrapper.vm as any
+      const vm = wrapper.vm as unknown as TempHpModalVM
       vm.inputValue = 'abc'
 
       expect(vm.canApply).toBe(false)
@@ -216,7 +230,7 @@ describe('TempHpModal', () => {
       const wrapper = mount(TempHpModal, {
         props: defaultProps
       })
-      const vm = wrapper.vm as any
+      const vm = wrapper.vm as unknown as TempHpModalVM
       vm.inputValue = '10'
 
       expect(vm.canApply).toBe(true)
@@ -224,13 +238,46 @@ describe('TempHpModal', () => {
 
     it('returns true when input would have no effect (user can still confirm)', () => {
       // Note: We allow applying even if it has no effect - show warning instead
+      // This lets users confirm they understand the D&D rules
       const wrapper = mount(TempHpModal, {
         props: { ...defaultProps, currentTempHp: 10 }
       })
-      const vm = wrapper.vm as any
+      const vm = wrapper.vm as unknown as TempHpModalVM
       vm.inputValue = '5'
 
       expect(vm.canApply).toBe(true)
+    })
+
+    it('returns false when input equals current temp HP (true no-op)', () => {
+      // Setting to same value is pointless - block the button
+      const wrapper = mount(TempHpModal, {
+        props: { ...defaultProps, currentTempHp: 8 }
+      })
+      const vm = wrapper.vm as unknown as TempHpModalVM
+      vm.inputValue = '8'
+
+      expect(vm.canApply).toBe(false)
+    })
+
+    it('returns false when setting 0 while current is already 0', () => {
+      // Edge case: 0 -> 0 is a no-op
+      const wrapper = mount(TempHpModal, {
+        props: { ...defaultProps, currentTempHp: 0 }
+      })
+      const vm = wrapper.vm as unknown as TempHpModalVM
+      vm.inputValue = '0'
+
+      expect(vm.canApply).toBe(false)
+    })
+
+    it('returns false when input exceeds max allowed value', () => {
+      const wrapper = mount(TempHpModal, {
+        props: defaultProps
+      })
+      const vm = wrapper.vm as unknown as TempHpModalVM
+      vm.inputValue = '1000'
+
+      expect(vm.canApply).toBe(false)
     })
   })
 
@@ -243,7 +290,7 @@ describe('TempHpModal', () => {
       const wrapper = mount(TempHpModal, {
         props: defaultProps
       })
-      const vm = wrapper.vm as any
+      const vm = wrapper.vm as unknown as TempHpModalVM
       vm.inputValue = '12'
       vm.handleApply()
 
@@ -255,7 +302,7 @@ describe('TempHpModal', () => {
       const wrapper = mount(TempHpModal, {
         props: defaultProps
       })
-      const vm = wrapper.vm as any
+      const vm = wrapper.vm as unknown as TempHpModalVM
       vm.inputValue = '12'
       vm.handleApply()
 
@@ -267,7 +314,7 @@ describe('TempHpModal', () => {
       const wrapper = mount(TempHpModal, {
         props: defaultProps
       })
-      const vm = wrapper.vm as any
+      const vm = wrapper.vm as unknown as TempHpModalVM
       vm.inputValue = ''
       vm.handleApply()
 
@@ -278,7 +325,7 @@ describe('TempHpModal', () => {
       const wrapper = mount(TempHpModal, {
         props: { ...defaultProps, currentTempHp: 8 }
       })
-      const vm = wrapper.vm as any
+      const vm = wrapper.vm as unknown as TempHpModalVM
       vm.handleClear()
 
       expect(wrapper.emitted('clear')).toBeTruthy()
@@ -288,7 +335,7 @@ describe('TempHpModal', () => {
       const wrapper = mount(TempHpModal, {
         props: { ...defaultProps, currentTempHp: 8 }
       })
-      const vm = wrapper.vm as any
+      const vm = wrapper.vm as unknown as TempHpModalVM
       vm.handleClear()
 
       expect(wrapper.emitted('update:open')).toBeTruthy()
@@ -299,7 +346,7 @@ describe('TempHpModal', () => {
       const wrapper = mount(TempHpModal, {
         props: defaultProps
       })
-      const vm = wrapper.vm as any
+      const vm = wrapper.vm as unknown as TempHpModalVM
       vm.handleCancel()
 
       expect(wrapper.emitted('update:open')).toBeTruthy()
@@ -310,7 +357,7 @@ describe('TempHpModal', () => {
       const wrapper = mount(TempHpModal, {
         props: defaultProps
       })
-      const vm = wrapper.vm as any
+      const vm = wrapper.vm as unknown as TempHpModalVM
       vm.inputValue = '10'
       vm.handleCancel()
 
@@ -324,14 +371,27 @@ describe('TempHpModal', () => {
   // =========================================================================
 
   describe('edge cases', () => {
-    it('handles large temp HP values', () => {
+    it('handles max allowed temp HP value (999)', () => {
       const wrapper = mount(TempHpModal, {
         props: defaultProps
       })
-      const vm = wrapper.vm as any
+      const vm = wrapper.vm as unknown as TempHpModalVM
       vm.inputValue = '999'
 
       expect(vm.parsedValue).toBe(999)
+      expect(vm.canApply).toBe(true)
+    })
+
+    it('rejects temp HP value above max (1000+)', () => {
+      const wrapper = mount(TempHpModal, {
+        props: defaultProps
+      })
+      const vm = wrapper.vm as unknown as TempHpModalVM
+      vm.inputValue = '1000'
+
+      // parsedValue is still valid, but canApply blocks it
+      expect(vm.parsedValue).toBe(1000)
+      expect(vm.canApply).toBe(false)
     })
 
     it('handles existing high temp HP', () => {
@@ -339,6 +399,22 @@ describe('TempHpModal', () => {
         props: { open: true, currentTempHp: 50 }
       })
       expect(wrapper.props('currentTempHp')).toBe(50)
+    })
+  })
+
+  // =========================================================================
+  // Max Value Constant
+  // =========================================================================
+
+  describe('MAX_TEMP_HP constant', () => {
+    it('exports MAX_TEMP_HP as 999', () => {
+      // The component should expose MAX_TEMP_HP for reference
+      const wrapper = mount(TempHpModal, {
+        props: defaultProps
+      })
+      const vm = wrapper.vm as unknown as TempHpModalVM
+
+      expect(vm.MAX_TEMP_HP).toBe(999)
     })
   })
 })

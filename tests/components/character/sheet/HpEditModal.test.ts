@@ -4,6 +4,18 @@ import { mount } from '@vue/test-utils'
 import HpEditModal from '~/components/character/sheet/HpEditModal.vue'
 
 /**
+ * Type for accessing HpEditModal internal state in tests
+ */
+interface HpEditModalVM {
+  inputValue: string
+  parsedDelta: number | null
+  canApply: boolean
+  MAX_HP_DELTA: number
+  handleApply: () => void
+  handleCancel: () => void
+}
+
+/**
  * Note: UModal uses teleportation which makes DOM testing complex.
  * These tests focus on component interface (props/events) rather than rendered output.
  * Actual modal interaction is tested via e2e tests.
@@ -104,7 +116,7 @@ describe('HpEditModal', () => {
       const wrapper = mount(HpEditModal, {
         props: defaultProps
       })
-      const vm = wrapper.vm as any
+      const vm = wrapper.vm as unknown as HpEditModalVM
       vm.inputValue = '-12'
 
       expect(vm.parsedDelta).toBe(-12)
@@ -114,7 +126,7 @@ describe('HpEditModal', () => {
       const wrapper = mount(HpEditModal, {
         props: defaultProps
       })
-      const vm = wrapper.vm as any
+      const vm = wrapper.vm as unknown as HpEditModalVM
       vm.inputValue = '+8'
 
       expect(vm.parsedDelta).toBe(8)
@@ -124,7 +136,7 @@ describe('HpEditModal', () => {
       const wrapper = mount(HpEditModal, {
         props: defaultProps // currentHp: 43
       })
-      const vm = wrapper.vm as any
+      const vm = wrapper.vm as unknown as HpEditModalVM
       vm.inputValue = '30'
 
       // Setting to 30 when current is 43 = delta of -13
@@ -135,7 +147,7 @@ describe('HpEditModal', () => {
       const wrapper = mount(HpEditModal, {
         props: defaultProps // currentHp: 43
       })
-      const vm = wrapper.vm as any
+      const vm = wrapper.vm as unknown as HpEditModalVM
       vm.inputValue = '50'
 
       // Setting to 50 when current is 43 = delta of +7
@@ -146,7 +158,7 @@ describe('HpEditModal', () => {
       const wrapper = mount(HpEditModal, {
         props: defaultProps // currentHp: 43
       })
-      const vm = wrapper.vm as any
+      const vm = wrapper.vm as unknown as HpEditModalVM
       vm.inputValue = '43'
 
       // Setting to 43 when current is 43 = delta of 0
@@ -157,7 +169,7 @@ describe('HpEditModal', () => {
       const wrapper = mount(HpEditModal, {
         props: defaultProps // currentHp: 43
       })
-      const vm = wrapper.vm as any
+      const vm = wrapper.vm as unknown as HpEditModalVM
       vm.inputValue = '0'
 
       // Setting to 0 when current is 43 = delta of -43
@@ -168,7 +180,7 @@ describe('HpEditModal', () => {
       const wrapper = mount(HpEditModal, {
         props: defaultProps
       })
-      const vm = wrapper.vm as any
+      const vm = wrapper.vm as unknown as HpEditModalVM
       vm.inputValue = '+0'
 
       expect(vm.parsedDelta).toBe(0)
@@ -178,7 +190,7 @@ describe('HpEditModal', () => {
       const wrapper = mount(HpEditModal, {
         props: defaultProps
       })
-      const vm = wrapper.vm as any
+      const vm = wrapper.vm as unknown as HpEditModalVM
       vm.inputValue = '-0'
 
       expect(vm.parsedDelta).toBe(0)
@@ -188,7 +200,7 @@ describe('HpEditModal', () => {
       const wrapper = mount(HpEditModal, {
         props: defaultProps
       })
-      const vm = wrapper.vm as any
+      const vm = wrapper.vm as unknown as HpEditModalVM
       vm.inputValue = ''
 
       expect(vm.parsedDelta).toBe(null)
@@ -198,7 +210,7 @@ describe('HpEditModal', () => {
       const wrapper = mount(HpEditModal, {
         props: defaultProps
       })
-      const vm = wrapper.vm as any
+      const vm = wrapper.vm as unknown as HpEditModalVM
       vm.inputValue = 'abc'
 
       expect(vm.parsedDelta).toBe(null)
@@ -208,7 +220,7 @@ describe('HpEditModal', () => {
       const wrapper = mount(HpEditModal, {
         props: defaultProps
       })
-      const vm = wrapper.vm as any
+      const vm = wrapper.vm as unknown as HpEditModalVM
       vm.inputValue = '   '
 
       expect(vm.parsedDelta).toBe(null)
@@ -224,7 +236,7 @@ describe('HpEditModal', () => {
       const wrapper = mount(HpEditModal, {
         props: defaultProps
       })
-      const vm = wrapper.vm as any
+      const vm = wrapper.vm as unknown as HpEditModalVM
       vm.inputValue = ''
 
       expect(vm.canApply).toBe(false)
@@ -234,7 +246,7 @@ describe('HpEditModal', () => {
       const wrapper = mount(HpEditModal, {
         props: defaultProps
       })
-      const vm = wrapper.vm as any
+      const vm = wrapper.vm as unknown as HpEditModalVM
       vm.inputValue = 'abc'
 
       expect(vm.canApply).toBe(false)
@@ -244,7 +256,7 @@ describe('HpEditModal', () => {
       const wrapper = mount(HpEditModal, {
         props: defaultProps
       })
-      const vm = wrapper.vm as any
+      const vm = wrapper.vm as unknown as HpEditModalVM
       vm.inputValue = '-12'
 
       expect(vm.canApply).toBe(true)
@@ -254,7 +266,7 @@ describe('HpEditModal', () => {
       const wrapper = mount(HpEditModal, {
         props: defaultProps
       })
-      const vm = wrapper.vm as any
+      const vm = wrapper.vm as unknown as HpEditModalVM
       vm.inputValue = '+8'
 
       expect(vm.canApply).toBe(true)
@@ -264,7 +276,7 @@ describe('HpEditModal', () => {
       const wrapper = mount(HpEditModal, {
         props: defaultProps
       })
-      const vm = wrapper.vm as any
+      const vm = wrapper.vm as unknown as HpEditModalVM
       vm.inputValue = '0'
 
       expect(vm.canApply).toBe(true)
@@ -280,7 +292,7 @@ describe('HpEditModal', () => {
       const wrapper = mount(HpEditModal, {
         props: defaultProps
       })
-      const vm = wrapper.vm as any
+      const vm = wrapper.vm as unknown as HpEditModalVM
       vm.inputValue = '-12'
       vm.handleApply()
 
@@ -292,7 +304,7 @@ describe('HpEditModal', () => {
       const wrapper = mount(HpEditModal, {
         props: defaultProps
       })
-      const vm = wrapper.vm as any
+      const vm = wrapper.vm as unknown as HpEditModalVM
       vm.inputValue = '-12'
       vm.handleApply()
 
@@ -304,7 +316,7 @@ describe('HpEditModal', () => {
       const wrapper = mount(HpEditModal, {
         props: defaultProps
       })
-      const vm = wrapper.vm as any
+      const vm = wrapper.vm as unknown as HpEditModalVM
       vm.inputValue = ''
       vm.handleApply()
 
@@ -315,7 +327,7 @@ describe('HpEditModal', () => {
       const wrapper = mount(HpEditModal, {
         props: defaultProps
       })
-      const vm = wrapper.vm as any
+      const vm = wrapper.vm as unknown as HpEditModalVM
       vm.handleCancel()
 
       expect(wrapper.emitted('update:open')).toBeTruthy()
@@ -326,7 +338,7 @@ describe('HpEditModal', () => {
       const wrapper = mount(HpEditModal, {
         props: defaultProps
       })
-      const vm = wrapper.vm as any
+      const vm = wrapper.vm as unknown as HpEditModalVM
       vm.inputValue = '-12'
       vm.handleCancel()
 
@@ -339,24 +351,62 @@ describe('HpEditModal', () => {
   // =========================================================================
 
   describe('edge cases', () => {
-    it('handles large damage values', () => {
+    it('handles max allowed damage value (-999)', () => {
       const wrapper = mount(HpEditModal, {
         props: defaultProps
       })
-      const vm = wrapper.vm as any
+      const vm = wrapper.vm as unknown as HpEditModalVM
       vm.inputValue = '-999'
 
       expect(vm.parsedDelta).toBe(-999)
+      expect(vm.canApply).toBe(true)
     })
 
-    it('handles large healing values', () => {
+    it('handles max allowed healing value (+999)', () => {
       const wrapper = mount(HpEditModal, {
         props: defaultProps
       })
-      const vm = wrapper.vm as any
-      vm.inputValue = '+500'
+      const vm = wrapper.vm as unknown as HpEditModalVM
+      vm.inputValue = '+999'
 
-      expect(vm.parsedDelta).toBe(500)
+      expect(vm.parsedDelta).toBe(999)
+      expect(vm.canApply).toBe(true)
+    })
+
+    it('rejects damage value above max (-1000)', () => {
+      const wrapper = mount(HpEditModal, {
+        props: defaultProps
+      })
+      const vm = wrapper.vm as unknown as HpEditModalVM
+      vm.inputValue = '-1000'
+
+      // parsedDelta is still valid, but canApply blocks it
+      expect(vm.parsedDelta).toBe(-1000)
+      expect(vm.canApply).toBe(false)
+    })
+
+    it('rejects healing value above max (+1000)', () => {
+      const wrapper = mount(HpEditModal, {
+        props: defaultProps
+      })
+      const vm = wrapper.vm as unknown as HpEditModalVM
+      vm.inputValue = '+1000'
+
+      // parsedDelta is still valid, but canApply blocks it
+      expect(vm.parsedDelta).toBe(1000)
+      expect(vm.canApply).toBe(false)
+    })
+
+    it('rejects "set to" value that produces delta above max', () => {
+      // currentHp is 43, setting to 1500 would be delta of +1457
+      const wrapper = mount(HpEditModal, {
+        props: defaultProps
+      })
+      const vm = wrapper.vm as unknown as HpEditModalVM
+      vm.inputValue = '1500'
+
+      expect(vm.parsedDelta).toBe(1457)
+      expect(vm.canApply).toBe(false)
     })
 
     it('handles character at full HP', () => {
@@ -372,6 +422,22 @@ describe('HpEditModal', () => {
         props: { open: true, currentHp: 0, maxHp: 52, tempHp: 0 }
       })
       expect(wrapper.props('currentHp')).toBe(0)
+    })
+  })
+
+  // =========================================================================
+  // Max Value Constant
+  // =========================================================================
+
+  describe('MAX_HP_DELTA constant', () => {
+    it('exports MAX_HP_DELTA as 999', () => {
+      // The component should expose MAX_HP_DELTA for reference
+      const wrapper = mount(HpEditModal, {
+        props: defaultProps
+      })
+      const vm = wrapper.vm as unknown as HpEditModalVM
+
+      expect(vm.MAX_HP_DELTA).toBe(999)
     })
   })
 })
