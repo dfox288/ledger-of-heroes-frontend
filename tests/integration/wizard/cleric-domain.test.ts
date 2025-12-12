@@ -16,10 +16,10 @@
  * - #493: Subclass choice ignores body (API payload)
  */
 
-import { describe, it, expect, beforeAll, afterAll, afterEach, beforeEach } from 'vitest'
+import { describe, it, expect } from 'vitest'
 import { mountSuspended } from '@nuxt/test-utils/runtime'
-import { setActivePinia, createPinia } from 'pinia'
-import { server, http, HttpResponse } from '../../msw/server'
+import { http, HttpResponse } from '../../msw/server'
+import { useIntegrationTestSetup, server } from '../../helpers/integrationSetup'
 import { draftClericL1 } from '../../msw/fixtures/characters/draft-cleric-l1'
 
 // Import step components
@@ -33,30 +33,10 @@ import StepEquipment from '~/components/character/wizard/StepEquipment.vue'
 import { useCharacterWizardStore } from '~/stores/characterWizard'
 
 // ════════════════════════════════════════════════════════════════
-// MSW SERVER SETUP
+// TEST SETUP (replaces ~15 lines of MSW/Pinia boilerplate)
 // ════════════════════════════════════════════════════════════════
 
-beforeAll(() => {
-  server.listen({ onUnhandledRequest: 'warn' })
-})
-
-afterEach(() => {
-  server.resetHandlers()
-})
-
-afterAll(() => {
-  server.close()
-})
-
-// ════════════════════════════════════════════════════════════════
-// PINIA SETUP
-// ════════════════════════════════════════════════════════════════
-
-beforeEach(() => {
-  setActivePinia(createPinia())
-  const store = useCharacterWizardStore()
-  store.reset()
-})
+useIntegrationTestSetup()
 
 // ════════════════════════════════════════════════════════════════
 // API INTEGRATION TESTS
@@ -294,7 +274,7 @@ describe('Cleric Domain - Store State', () => {
         primary_ability: { id: 5, code: 'WIS', name: 'Wisdom' },
         spellcasting_ability: { id: 5, code: 'WIS', name: 'Wisdom' },
         subclass_level: 1, // Cleric picks at level 1!
-        sources: [{ code: 'PHB', name: "Player's Handbook" }]
+        sources: [{ code: 'PHB', name: 'Player\'s Handbook' }]
       }
 
       expect(store.needsSubclassStep).toBe(true)
@@ -311,7 +291,7 @@ describe('Cleric Domain - Store State', () => {
         primary_ability: { id: 5, code: 'WIS', name: 'Wisdom' },
         spellcasting_ability: { id: 5, code: 'WIS', name: 'Wisdom' },
         subclass_level: 1,
-        sources: [{ code: 'PHB', name: "Player's Handbook" }],
+        sources: [{ code: 'PHB', name: 'Player\'s Handbook' }],
         // Required for isSpellcaster to return true
         level_progression: [
           { level: 1, cantrips_known: 3, spells_known: null }
@@ -332,7 +312,7 @@ describe('Cleric Domain - Store State', () => {
         primary_ability: { id: 5, code: 'WIS', name: 'Wisdom' },
         spellcasting_ability: { id: 5, code: 'WIS', name: 'Wisdom' },
         subclass_level: 1,
-        sources: [{ code: 'PHB', name: "Player's Handbook" }]
+        sources: [{ code: 'PHB', name: 'Player\'s Handbook' }]
         // No level_progression = isSpellcaster returns false
       }
 
@@ -349,7 +329,7 @@ describe('Cleric Domain - Store State', () => {
         id: 1,
         name: 'Life Domain',
         slug: 'phb:life-domain',
-        sources: [{ code: 'PHB', name: "Player's Handbook" }]
+        sources: [{ code: 'PHB', name: 'Player\'s Handbook' }]
       }
 
       expect(store.selections.subclass?.name).toBe('Life Domain')
@@ -363,7 +343,7 @@ describe('Cleric Domain - Store State', () => {
         id: 1,
         name: 'Life Domain',
         slug: 'phb:life-domain',
-        sources: [{ code: 'PHB', name: "Player's Handbook" }]
+        sources: [{ code: 'PHB', name: 'Player\'s Handbook' }]
       }
 
       // Then set class
@@ -375,7 +355,7 @@ describe('Cleric Domain - Store State', () => {
         primary_ability: { id: 5, code: 'WIS', name: 'Wisdom' },
         spellcasting_ability: { id: 5, code: 'WIS', name: 'Wisdom' },
         subclass_level: 1,
-        sources: [{ code: 'PHB', name: "Player's Handbook" }]
+        sources: [{ code: 'PHB', name: 'Player\'s Handbook' }]
       }
 
       expect(store.selections.class?.name).toBe('Cleric')
@@ -394,7 +374,7 @@ describe('Cleric Domain - Store State', () => {
         slug: 'phb:human',
         speed: 30,
         size: { id: 1, name: 'Medium', code: 'M' },
-        sources: [{ code: 'PHB', name: "Player's Handbook" }]
+        sources: [{ code: 'PHB', name: 'Player\'s Handbook' }]
       }
 
       // Set class (Cleric) - with level_progression for isSpellcaster
@@ -406,7 +386,7 @@ describe('Cleric Domain - Store State', () => {
         primary_ability: { id: 5, code: 'WIS', name: 'Wisdom' },
         spellcasting_ability: { id: 5, code: 'WIS', name: 'Wisdom' },
         subclass_level: 1,
-        sources: [{ code: 'PHB', name: "Player's Handbook" }],
+        sources: [{ code: 'PHB', name: 'Player\'s Handbook' }],
         level_progression: [
           { level: 1, cantrips_known: 3, spells_known: null }
         ]
@@ -417,7 +397,7 @@ describe('Cleric Domain - Store State', () => {
         id: 1,
         name: 'Life Domain',
         slug: 'phb:life-domain',
-        sources: [{ code: 'PHB', name: "Player's Handbook" }]
+        sources: [{ code: 'PHB', name: 'Player\'s Handbook' }]
       }
 
       // Set background (Acolyte)
@@ -426,7 +406,7 @@ describe('Cleric Domain - Store State', () => {
         name: 'Acolyte',
         slug: 'phb:acolyte',
         feature_name: 'Shelter of the Faithful',
-        sources: [{ code: 'PHB', name: "Player's Handbook" }]
+        sources: [{ code: 'PHB', name: 'Player\'s Handbook' }]
       }
 
       // Set name

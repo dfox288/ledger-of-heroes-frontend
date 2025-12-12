@@ -17,11 +17,11 @@
  * - #479: Choice shows remaining=0 but selected=[]
  */
 
-import { describe, it, expect, beforeAll, afterAll, afterEach, beforeEach } from 'vitest'
+import { describe, it, expect } from 'vitest'
 import { mountSuspended } from '@nuxt/test-utils/runtime'
-import { setActivePinia, createPinia } from 'pinia'
-import { server, http, HttpResponse } from '../../msw/server'
+import { http, HttpResponse } from '../../msw/server'
 import { humanFighterL1 } from '../../msw/fixtures/characters/human-fighter-l1'
+import { useIntegrationTestSetup, addTestHandlers, server } from '../../helpers/integrationSetup'
 
 // Import step components for structure testing
 import StepRace from '~/components/character/wizard/StepRace.vue'
@@ -33,30 +33,10 @@ import StepDetails from '~/components/character/wizard/StepDetails.vue'
 import { useCharacterWizardStore } from '~/stores/characterWizard'
 
 // ════════════════════════════════════════════════════════════════
-// MSW SERVER SETUP
+// TEST SETUP (replaces ~15 lines of boilerplate)
 // ════════════════════════════════════════════════════════════════
 
-beforeAll(() => {
-  server.listen({ onUnhandledRequest: 'warn' })
-})
-
-afterEach(() => {
-  server.resetHandlers()
-})
-
-afterAll(() => {
-  server.close()
-})
-
-// ════════════════════════════════════════════════════════════════
-// PINIA SETUP
-// ════════════════════════════════════════════════════════════════
-
-beforeEach(() => {
-  setActivePinia(createPinia())
-  const store = useCharacterWizardStore()
-  store.reset()
-})
+useIntegrationTestSetup()
 
 // ════════════════════════════════════════════════════════════════
 // API INTEGRATION TESTS (using raw fetch with MSW)
@@ -262,7 +242,7 @@ describe('Human Fighter - Store State', () => {
         ability_bonuses: [
           { ability_score: { id: 1, code: 'STR', name: 'Strength' }, bonus: 1 }
         ],
-        sources: [{ code: 'PHB', name: "Player's Handbook" }]
+        sources: [{ code: 'PHB', name: 'Player\'s Handbook' }]
       }
 
       store.selections.race = humanRace
@@ -280,7 +260,7 @@ describe('Human Fighter - Store State', () => {
         slug: 'phb:human',
         speed: 30,
         size: { id: 1, name: 'Medium', code: 'M' },
-        sources: [{ code: 'PHB', name: "Player's Handbook" }]
+        sources: [{ code: 'PHB', name: 'Player\'s Handbook' }]
         // Note: no has_subraces or subraces property
       }
 
@@ -300,7 +280,7 @@ describe('Human Fighter - Store State', () => {
         primary_ability: { id: 1, code: 'STR', name: 'Strength' },
         spellcasting_ability: null,
         subclass_level: 3,
-        sources: [{ code: 'PHB', name: "Player's Handbook" }]
+        sources: [{ code: 'PHB', name: 'Player\'s Handbook' }]
       }
 
       store.selections.class = fighterClass
@@ -320,7 +300,7 @@ describe('Human Fighter - Store State', () => {
         primary_ability: { id: 1, code: 'STR', name: 'Strength' },
         spellcasting_ability: null,
         subclass_level: 3, // Fighter picks at level 3
-        sources: [{ code: 'PHB', name: "Player's Handbook" }]
+        sources: [{ code: 'PHB', name: 'Player\'s Handbook' }]
       }
 
       expect(store.needsSubclassStep).toBe(false)
@@ -337,7 +317,7 @@ describe('Human Fighter - Store State', () => {
         primary_ability: { id: 1, code: 'STR', name: 'Strength' },
         spellcasting_ability: null, // No spellcasting
         subclass_level: 3,
-        sources: [{ code: 'PHB', name: "Player's Handbook" }]
+        sources: [{ code: 'PHB', name: 'Player\'s Handbook' }]
       }
 
       expect(store.isSpellcaster).toBe(false)
@@ -353,7 +333,7 @@ describe('Human Fighter - Store State', () => {
         name: 'Soldier',
         slug: 'phb:soldier',
         feature_name: 'Military Rank',
-        sources: [{ code: 'PHB', name: "Player's Handbook" }]
+        sources: [{ code: 'PHB', name: 'Player\'s Handbook' }]
       }
 
       expect(store.selections.background?.name).toBe('Soldier')
@@ -372,7 +352,7 @@ describe('Human Fighter - Store State', () => {
         slug: 'phb:human',
         speed: 30,
         size: { id: 1, name: 'Medium', code: 'M' },
-        sources: [{ code: 'PHB', name: "Player's Handbook" }]
+        sources: [{ code: 'PHB', name: 'Player\'s Handbook' }]
       }
 
       // Set class
@@ -384,7 +364,7 @@ describe('Human Fighter - Store State', () => {
         primary_ability: { id: 1, code: 'STR', name: 'Strength' },
         spellcasting_ability: null,
         subclass_level: 3,
-        sources: [{ code: 'PHB', name: "Player's Handbook" }]
+        sources: [{ code: 'PHB', name: 'Player\'s Handbook' }]
       }
 
       // Set background
@@ -393,7 +373,7 @@ describe('Human Fighter - Store State', () => {
         name: 'Soldier',
         slug: 'phb:soldier',
         feature_name: 'Military Rank',
-        sources: [{ code: 'PHB', name: "Player's Handbook" }]
+        sources: [{ code: 'PHB', name: 'Player\'s Handbook' }]
       }
 
       // Set name

@@ -15,10 +15,10 @@
  * the feat step appear only for races that grant bonus feats.
  */
 
-import { describe, it, expect, beforeAll, afterAll, afterEach, beforeEach } from 'vitest'
+import { describe, it, expect } from 'vitest'
 import { mountSuspended } from '@nuxt/test-utils/runtime'
-import { setActivePinia, createPinia } from 'pinia'
-import { server, http, HttpResponse } from '../../msw/server'
+import { http, HttpResponse } from '../../msw/server'
+import { useIntegrationTestSetup, server } from '../../helpers/integrationSetup'
 import { variantHumanFighterL1, variantHumanRaceWithModifiers } from '../../msw/fixtures/characters/variant-human-fighter-l1'
 import { humanFighterL1 } from '../../msw/fixtures/characters/human-fighter-l1'
 
@@ -29,30 +29,10 @@ import StepFeats from '~/components/character/wizard/StepFeats.vue'
 import { useCharacterWizardStore } from '~/stores/characterWizard'
 
 // ════════════════════════════════════════════════════════════════
-// MSW SERVER SETUP
+// TEST SETUP (replaces ~15 lines of MSW/Pinia boilerplate)
 // ════════════════════════════════════════════════════════════════
 
-beforeAll(() => {
-  server.listen({ onUnhandledRequest: 'warn' })
-})
-
-afterEach(() => {
-  server.resetHandlers()
-})
-
-afterAll(() => {
-  server.close()
-})
-
-// ════════════════════════════════════════════════════════════════
-// PINIA SETUP
-// ════════════════════════════════════════════════════════════════
-
-beforeEach(() => {
-  setActivePinia(createPinia())
-  const store = useCharacterWizardStore()
-  store.reset()
-})
+useIntegrationTestSetup()
 
 // ════════════════════════════════════════════════════════════════
 // API INTEGRATION TESTS
@@ -94,7 +74,7 @@ describe('Variant Human - API Integration', () => {
       expect(response.ok).toBe(true)
 
       const featChoice = data.data.choices.find(
-        (c: { type: string; subtype?: string }) => c.type === 'feature' && c.subtype === 'feat'
+        (c: { type: string, subtype?: string }) => c.type === 'feature' && c.subtype === 'feat'
       )
       expect(featChoice).toBeDefined()
       expect(featChoice.source_name).toBe('Variant Human')
@@ -191,7 +171,7 @@ describe('Variant Human - Store State', () => {
           // Standard Human has +1 to all abilities, no feat
           { modifier_category: 'ability_score', modifier_type: 'bonus', value: 1 }
         ],
-        sources: [{ code: 'PHB', name: "Player's Handbook" }]
+        sources: [{ code: 'PHB', name: 'Player\'s Handbook' }]
       }
 
       expect(store.hasFeatChoices).toBe(false)
@@ -211,25 +191,25 @@ describe('Variant Human - Store State', () => {
     it('Variant Human has different ability bonuses than standard Human', () => {
       // Standard Human: +1 to all six ability scores (sum = 6)
       const standardHuman = humanFighterL1.character
-      const standardBonuses =
-        (standardHuman.ability_scores.STR - standardHuman.base_ability_scores.STR) +
-        (standardHuman.ability_scores.DEX - standardHuman.base_ability_scores.DEX) +
-        (standardHuman.ability_scores.CON - standardHuman.base_ability_scores.CON) +
-        (standardHuman.ability_scores.INT - standardHuman.base_ability_scores.INT) +
-        (standardHuman.ability_scores.WIS - standardHuman.base_ability_scores.WIS) +
-        (standardHuman.ability_scores.CHA - standardHuman.base_ability_scores.CHA)
+      const standardBonuses
+        = (standardHuman.ability_scores.STR - standardHuman.base_ability_scores.STR)
+          + (standardHuman.ability_scores.DEX - standardHuman.base_ability_scores.DEX)
+          + (standardHuman.ability_scores.CON - standardHuman.base_ability_scores.CON)
+          + (standardHuman.ability_scores.INT - standardHuman.base_ability_scores.INT)
+          + (standardHuman.ability_scores.WIS - standardHuman.base_ability_scores.WIS)
+          + (standardHuman.ability_scores.CHA - standardHuman.base_ability_scores.CHA)
 
       expect(standardBonuses).toBe(6) // +1 to all six
 
       // Variant Human: +1 to two ability scores (sum = 2)
       const variantHuman = variantHumanFighterL1.character
-      const variantBonuses =
-        (variantHuman.ability_scores.STR - variantHuman.base_ability_scores.STR) +
-        (variantHuman.ability_scores.DEX - variantHuman.base_ability_scores.DEX) +
-        (variantHuman.ability_scores.CON - variantHuman.base_ability_scores.CON) +
-        (variantHuman.ability_scores.INT - variantHuman.base_ability_scores.INT) +
-        (variantHuman.ability_scores.WIS - variantHuman.base_ability_scores.WIS) +
-        (variantHuman.ability_scores.CHA - variantHuman.base_ability_scores.CHA)
+      const variantBonuses
+        = (variantHuman.ability_scores.STR - variantHuman.base_ability_scores.STR)
+          + (variantHuman.ability_scores.DEX - variantHuman.base_ability_scores.DEX)
+          + (variantHuman.ability_scores.CON - variantHuman.base_ability_scores.CON)
+          + (variantHuman.ability_scores.INT - variantHuman.base_ability_scores.INT)
+          + (variantHuman.ability_scores.WIS - variantHuman.base_ability_scores.WIS)
+          + (variantHuman.ability_scores.CHA - variantHuman.base_ability_scores.CHA)
 
       expect(variantBonuses).toBe(2) // +1 to two chosen abilities
     })
@@ -403,7 +383,7 @@ describe('Variant Human - Conditional Step Visibility', () => {
         slug: 'phb:human',
         speed: 30,
         size: { id: 1, name: 'Medium', code: 'M' },
-        sources: [{ code: 'PHB', name: "Player's Handbook" }]
+        sources: [{ code: 'PHB', name: 'Player\'s Handbook' }]
         // No modifiers = no feat
       }
 
@@ -432,7 +412,7 @@ describe('Variant Human - Conditional Step Visibility', () => {
         modifiers: [
           { modifier_category: 'bonus_feat', modifier_type: 'grant', value: 1 }
         ],
-        sources: [{ code: 'TCE', name: "Tasha's Cauldron of Everything" }]
+        sources: [{ code: 'TCE', name: 'Tasha\'s Cauldron of Everything' }]
       }
 
       expect(store.raceGrantsBonusFeat).toBe(true)

@@ -12,37 +12,19 @@
  * This is a critical milestone for character customization.
  */
 
-import { describe, it, expect, beforeAll, afterAll, afterEach, beforeEach } from 'vitest'
-import { setActivePinia, createPinia } from 'pinia'
-import { server, http, HttpResponse } from '../../msw/server'
+import { describe, it, expect } from 'vitest'
+import { http, HttpResponse } from '../../msw/server'
+import { useIntegrationTestSetup, server } from '../../helpers/integrationSetup'
 import { halflingRogueL4 } from '../../msw/fixtures/characters'
 
 // Import store
 import { useCharacterLevelUpStore } from '~/stores/characterLevelUp'
 
 // ════════════════════════════════════════════════════════════════
-// MSW SERVER SETUP
+// TEST SETUP (replaces ~15 lines of MSW/Pinia boilerplate)
 // ════════════════════════════════════════════════════════════════
 
-beforeAll(() => {
-  server.listen({ onUnhandledRequest: 'warn' })
-})
-
-afterEach(() => {
-  server.resetHandlers()
-})
-
-afterAll(() => {
-  server.close()
-})
-
-// ════════════════════════════════════════════════════════════════
-// PINIA SETUP
-// ════════════════════════════════════════════════════════════════
-
-beforeEach(() => {
-  setActivePinia(createPinia())
-})
+useIntegrationTestSetup({ resetWizardStore: false })
 
 // ════════════════════════════════════════════════════════════════
 // API INTEGRATION TESTS
@@ -154,7 +136,7 @@ describe('Rogue L4 - Level-Up API Integration', () => {
 
       server.use(
         http.post('/api/characters/:id/choices/:choiceId', async ({ request }) => {
-          const body = await request.json() as { type?: string; ability_scores?: Record<string, number> }
+          const body = await request.json() as { type?: string, ability_scores?: Record<string, number> }
           return HttpResponse.json({
             data: {
               resolved: true,
@@ -185,7 +167,7 @@ describe('Rogue L4 - Level-Up API Integration', () => {
 
       server.use(
         http.post('/api/characters/:id/choices/:choiceId', async ({ request }) => {
-          const body = await request.json() as { type?: string; selected?: string }
+          const body = await request.json() as { type?: string, selected?: string }
           return HttpResponse.json({
             data: {
               resolved: true,

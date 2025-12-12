@@ -37,12 +37,19 @@ export default defineNuxtConfig({
 
   runtimeConfig: {
     // Server-side only (NEVER exposed to client)
-    // This is used by Nitro API routes to proxy to Laravel backend
-    apiBaseServer: process.env.NUXT_API_BASE_SERVER || 'http://localhost:8080/api/v1',
+    // Determine backend URL from environment profile
+    apiBaseServer: (() => {
+      const env = process.env.NUXT_BACKEND_ENV || 'dev'
+      const urls: Record<string, string> = {
+        dev: 'http://host.docker.internal:8080/api/v1',
+        stable: 'http://host.docker.internal:8081/api/v1'
+      }
+      return urls[env] || urls.dev
+    })(),
 
     // Public keys (exposed to client)
     public: {
-      // apiBase no longer needed - frontend uses /api/* (Nitro routes)
+      backendEnv: process.env.NUXT_BACKEND_ENV || 'dev',
       apiDocsUrl: process.env.NUXT_PUBLIC_API_DOCS_URL || 'http://localhost:8080/docs/api',
       imageProvider: process.env.NUXT_PUBLIC_IMAGE_PROVIDER || 'stability-ai'
     }

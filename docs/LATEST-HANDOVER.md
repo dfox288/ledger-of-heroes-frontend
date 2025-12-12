@@ -1,1 +1,0 @@
-../../wrapper/docs/frontend/handovers/SESSION-HANDOVER-2025-12-10-wizard-validation.md

@@ -10,37 +10,19 @@
  * - INT-based spellcasting stats
  */
 
-import { describe, it, expect, beforeAll, afterAll, afterEach, beforeEach } from 'vitest'
-import { setActivePinia, createPinia } from 'pinia'
-import { server, http, HttpResponse } from '../../msw/server'
+import { describe, it, expect } from 'vitest'
+import { http, HttpResponse } from '../../msw/server'
+import { useIntegrationTestSetup, server } from '../../helpers/integrationSetup'
 import { highElfWizardL2 } from '../../msw/fixtures/characters'
 
 // Import store
 import { useCharacterLevelUpStore } from '~/stores/characterLevelUp'
 
 // ════════════════════════════════════════════════════════════════
-// MSW SERVER SETUP
+// TEST SETUP (replaces ~15 lines of MSW/Pinia boilerplate)
 // ════════════════════════════════════════════════════════════════
 
-beforeAll(() => {
-  server.listen({ onUnhandledRequest: 'warn' })
-})
-
-afterEach(() => {
-  server.resetHandlers()
-})
-
-afterAll(() => {
-  server.close()
-})
-
-// ════════════════════════════════════════════════════════════════
-// PINIA SETUP
-// ════════════════════════════════════════════════════════════════
-
-beforeEach(() => {
-  setActivePinia(createPinia())
-})
+useIntegrationTestSetup({ resetWizardStore: false })
 
 // ════════════════════════════════════════════════════════════════
 // API INTEGRATION TESTS

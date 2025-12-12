@@ -114,7 +114,7 @@ export const characterHandlers = [
 
   // POST /api/characters/:id/level-up - Apply level up
   http.post(`${API_BASE}/characters/:id/level-up`, async ({ request }) => {
-    const body = await request.json() as { hp_method?: string; hp_value?: number }
+    const body = await request.json() as { hp_method?: string, hp_value?: number }
     return HttpResponse.json({
       data: {
         success: true,

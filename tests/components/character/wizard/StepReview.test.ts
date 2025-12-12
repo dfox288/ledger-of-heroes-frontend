@@ -1,11 +1,21 @@
+/**
+ * StepReview Component Tests
+ *
+ * Tests the character review step that displays the full character sheet preview.
+ * Uses extracted stubs and mock helpers for cleaner setup.
+ */
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { mountSuspended } from '@nuxt/test-utils/runtime'
 import { setActivePinia, createPinia } from 'pinia'
-import { ref, computed } from 'vue'
+import { ref } from 'vue'
 import StepReview from '~/components/character/wizard/StepReview.vue'
 import { useCharacterWizardStore } from '~/stores/characterWizard'
+import { characterSheetStubs } from '../../../helpers/characterSheetStubs'
 
-// Mock data for useCharacterSheet
+// =============================================================================
+// MOCK DATA (module-level for vi.mock hoisting)
+// =============================================================================
+
 const mockCharacter = ref({
   id: 123,
   public_id: 'shadow-rogue-x7k3',
@@ -42,9 +52,9 @@ const mockStats = ref({
   },
   saving_throws: {
     STR: 1,
-    DEX: 6, // proficient
+    DEX: 6,
     CON: 1,
-    INT: 2, // proficient
+    INT: 2,
     WIS: 2,
     CHA: 3
   },
@@ -93,7 +103,10 @@ const mockHitDice = ref([
   { die: 'd8', total: 1, current: 1 }
 ])
 
-// Mock useCharacterSheet composable
+// =============================================================================
+// MOCK COMPOSABLE
+// =============================================================================
+
 vi.mock('~/composables/useCharacterSheet', () => ({
   useCharacterSheet: vi.fn(() => ({
     character: mockCharacter,
@@ -112,82 +125,6 @@ vi.mock('~/composables/useCharacterSheet', () => ({
     refresh: vi.fn()
   }))
 }))
-
-// Stub sheet components - render meaningful content for tests
-const stubs = {
-  CharacterSheetHeader: {
-    template: `<div data-testid="sheet-header">
-      <h1>{{ character.name }}</h1>
-      <p>{{ character.race?.name }} · {{ character.classes?.[0]?.class?.name }} · {{ character.background?.name }}</p>
-    </div>`,
-    props: ['character']
-  },
-  CharacterSheetAbilityScoreBlock: {
-    template: `<div data-testid="ability-scores">
-      <div v-for="(data, code) in stats.ability_scores" :key="code">
-        {{ code }}: {{ data.score }} ({{ data.modifier >= 0 ? '+' : '' }}{{ data.modifier }})
-      </div>
-    </div>`,
-    props: ['stats']
-  },
-  CharacterSheetCombatStatsGrid: {
-    template: `<div data-testid="combat-stats">
-      <span>HP: {{ stats.hit_points?.max }}</span>
-      <span>AC: {{ stats.armor_class }}</span>
-      <span>Speed: {{ character.speed }}</span>
-    </div>`,
-    props: ['character', 'stats']
-  },
-  CharacterSheetSavingThrowsList: {
-    template: `<div data-testid="saving-throws">
-      <div v-for="save in savingThrows" :key="save.ability">
-        {{ save.ability }}: {{ save.modifier >= 0 ? '+' : '' }}{{ save.modifier }}
-        <span v-if="save.proficient">●</span>
-      </div>
-    </div>`,
-    props: ['savingThrows']
-  },
-  CharacterSheetSkillsList: {
-    template: `<div data-testid="skills-list">
-      <div v-for="skill in skills" :key="skill.slug">
-        {{ skill.name }}: {{ skill.modifier >= 0 ? '+' : '' }}{{ skill.modifier }}
-      </div>
-    </div>`,
-    props: ['skills']
-  },
-  CharacterSheetProficienciesPanel: {
-    template: '<div data-testid="proficiencies"><span>Proficiencies</span></div>',
-    props: ['proficiencies']
-  },
-  CharacterSheetLanguagesPanel: {
-    template: '<div data-testid="languages"><span>Languages</span></div>',
-    props: ['languages']
-  },
-  CharacterSheetEquipmentPanel: {
-    template: '<div data-testid="equipment"><span>Equipment</span></div>',
-    props: ['equipment', 'carryingCapacity', 'pushDragLift']
-  },
-  CharacterSheetSpellsPanel: {
-    template: '<div data-testid="spells"><span>Spells</span></div>',
-    props: ['spells', 'stats']
-  },
-  CharacterSheetFeaturesPanel: {
-    template: '<div data-testid="features"><span>Features</span></div>',
-    props: ['features']
-  },
-  CharacterSheetPassiveScores: {
-    template: '<div data-testid="passive-scores"><span>Passive</span></div>',
-    props: ['perception', 'investigation', 'insight']
-  },
-  CharacterSheetHitDice: {
-    template: '<div data-testid="hit-dice"><span>Hit Dice</span></div>',
-    props: ['hitDice']
-  },
-  CharacterSheetDeathSaves: {
-    template: '<div data-testid="death-saves"><span>Death Saves</span></div>',
-    props: ['successes', 'failures']
-  }
-}
 
 describe('StepReview', () => {
   let pinia: ReturnType<typeof createPinia>
@@ -234,7 +171,7 @@ describe('StepReview', () => {
   describe('structure', () => {
     it('renders character name from useCharacterSheet', async () => {
       const wrapper = await mountSuspended(StepReview, {
-        global: { stubs, plugins: [pinia] }
+        global: { stubs: characterSheetStubs, plugins: [pinia] }
       })
 
       expect(wrapper.text()).toContain('Elara Moonwhisper')
@@ -242,7 +179,7 @@ describe('StepReview', () => {
 
     it('renders race/class/background summary', async () => {
       const wrapper = await mountSuspended(StepReview, {
-        global: { stubs, plugins: [pinia] }
+        global: { stubs: characterSheetStubs, plugins: [pinia] }
       })
 
       expect(wrapper.text()).toContain('Elf')
@@ -252,7 +189,7 @@ describe('StepReview', () => {
 
     it('renders sheet header component', async () => {
       const wrapper = await mountSuspended(StepReview, {
-        global: { stubs, plugins: [pinia] }
+        global: { stubs: characterSheetStubs, plugins: [pinia] }
       })
 
       expect(wrapper.find('[data-testid="sheet-header"]').exists()).toBe(true)
@@ -260,7 +197,7 @@ describe('StepReview', () => {
 
     it('renders combat stats grid', async () => {
       const wrapper = await mountSuspended(StepReview, {
-        global: { stubs, plugins: [pinia] }
+        global: { stubs: characterSheetStubs, plugins: [pinia] }
       })
 
       expect(wrapper.find('[data-testid="combat-stats"]').exists()).toBe(true)
@@ -268,7 +205,7 @@ describe('StepReview', () => {
 
     it('renders saving throws list', async () => {
       const wrapper = await mountSuspended(StepReview, {
-        global: { stubs, plugins: [pinia] }
+        global: { stubs: characterSheetStubs, plugins: [pinia] }
       })
 
       expect(wrapper.find('[data-testid="saving-throws"]').exists()).toBe(true)
@@ -276,7 +213,7 @@ describe('StepReview', () => {
 
     it('renders ability scores section', async () => {
       const wrapper = await mountSuspended(StepReview, {
-        global: { stubs, plugins: [pinia] }
+        global: { stubs: characterSheetStubs, plugins: [pinia] }
       })
 
       expect(wrapper.find('[data-testid="ability-scores"]').exists()).toBe(true)
@@ -284,7 +221,7 @@ describe('StepReview', () => {
 
     it('renders skills list', async () => {
       const wrapper = await mountSuspended(StepReview, {
-        global: { stubs, plugins: [pinia] }
+        global: { stubs: characterSheetStubs, plugins: [pinia] }
       })
 
       expect(wrapper.find('[data-testid="skills-list"]').exists()).toBe(true)
@@ -294,7 +231,7 @@ describe('StepReview', () => {
   describe('combat stats integration', () => {
     it('displays hit points from stats', async () => {
       const wrapper = await mountSuspended(StepReview, {
-        global: { stubs, plugins: [pinia] }
+        global: { stubs: characterSheetStubs, plugins: [pinia] }
       })
 
       expect(wrapper.text()).toContain('HP: 12')
@@ -302,7 +239,7 @@ describe('StepReview', () => {
 
     it('displays armor class from stats', async () => {
       const wrapper = await mountSuspended(StepReview, {
-        global: { stubs, plugins: [pinia] }
+        global: { stubs: characterSheetStubs, plugins: [pinia] }
       })
 
       expect(wrapper.text()).toContain('AC: 14')
@@ -310,7 +247,7 @@ describe('StepReview', () => {
 
     it('displays speed from character', async () => {
       const wrapper = await mountSuspended(StepReview, {
-        global: { stubs, plugins: [pinia] }
+        global: { stubs: characterSheetStubs, plugins: [pinia] }
       })
 
       expect(wrapper.text()).toContain('Speed: 30')
@@ -320,7 +257,7 @@ describe('StepReview', () => {
   describe('ability scores display', () => {
     it('displays all six ability scores', async () => {
       const wrapper = await mountSuspended(StepReview, {
-        global: { stubs, plugins: [pinia] }
+        global: { stubs: characterSheetStubs, plugins: [pinia] }
       })
 
       const text = wrapper.text()
@@ -334,7 +271,7 @@ describe('StepReview', () => {
 
     it('displays ability score values', async () => {
       const wrapper = await mountSuspended(StepReview, {
-        global: { stubs, plugins: [pinia] }
+        global: { stubs: characterSheetStubs, plugins: [pinia] }
       })
 
       // Check for some score values
@@ -346,7 +283,7 @@ describe('StepReview', () => {
   describe('saving throws display', () => {
     it('displays saving throw modifiers', async () => {
       const wrapper = await mountSuspended(StepReview, {
-        global: { stubs, plugins: [pinia] }
+        global: { stubs: characterSheetStubs, plugins: [pinia] }
       })
 
       // DEX save should be +6 (proficient)
@@ -359,7 +296,7 @@ describe('StepReview', () => {
       mockStats.value.spellcasting = null
 
       const wrapper = await mountSuspended(StepReview, {
-        global: { stubs, plugins: [pinia] }
+        global: { stubs: characterSheetStubs, plugins: [pinia] }
       })
 
       expect(wrapper.find('[data-testid="spells"]').exists()).toBe(false)
@@ -374,7 +311,7 @@ describe('StepReview', () => {
       }
 
       const wrapper = await mountSuspended(StepReview, {
-        global: { stubs, plugins: [pinia] }
+        global: { stubs: characterSheetStubs, plugins: [pinia] }
       })
 
       expect(wrapper.find('[data-testid="spells"]').exists()).toBe(true)
@@ -384,7 +321,7 @@ describe('StepReview', () => {
   describe('proficiencies section', () => {
     it('renders proficiencies panel', async () => {
       const wrapper = await mountSuspended(StepReview, {
-        global: { stubs, plugins: [pinia] }
+        global: { stubs: characterSheetStubs, plugins: [pinia] }
       })
 
       expect(wrapper.find('[data-testid="proficiencies"]').exists()).toBe(true)
@@ -394,7 +331,7 @@ describe('StepReview', () => {
   describe('languages section', () => {
     it('renders languages panel', async () => {
       const wrapper = await mountSuspended(StepReview, {
-        global: { stubs, plugins: [pinia] }
+        global: { stubs: characterSheetStubs, plugins: [pinia] }
       })
 
       expect(wrapper.find('[data-testid="languages"]').exists()).toBe(true)
@@ -404,7 +341,7 @@ describe('StepReview', () => {
   describe('equipment section', () => {
     it('renders equipment panel', async () => {
       const wrapper = await mountSuspended(StepReview, {
-        global: { stubs, plugins: [pinia] }
+        global: { stubs: characterSheetStubs, plugins: [pinia] }
       })
 
       expect(wrapper.find('[data-testid="equipment"]').exists()).toBe(true)
@@ -414,7 +351,7 @@ describe('StepReview', () => {
   describe('features section', () => {
     it('renders features panel', async () => {
       const wrapper = await mountSuspended(StepReview, {
-        global: { stubs, plugins: [pinia] }
+        global: { stubs: characterSheetStubs, plugins: [pinia] }
       })
 
       expect(wrapper.find('[data-testid="features"]').exists()).toBe(true)
@@ -424,7 +361,7 @@ describe('StepReview', () => {
   describe('finish button', () => {
     it('shows Create Character button', async () => {
       const wrapper = await mountSuspended(StepReview, {
-        global: { stubs, plugins: [pinia] }
+        global: { stubs: characterSheetStubs, plugins: [pinia] }
       })
 
       expect(wrapper.find('[data-testid="finish-btn"]').exists()).toBe(true)

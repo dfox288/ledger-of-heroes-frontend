@@ -14,9 +14,33 @@ Nuxt 4.x frontend for D&D 5e Compendium. Consumes REST API from `../backend` (La
 
 **Essential Docs:**
 - `docs/PROJECT-STATUS.md` - Metrics and current status
-- `docs/LATEST-HANDOVER.md` - Latest session handover (symlink to wrapper)
 
 **Tasks & Issues:** [GitHub Issues](https://github.com/dfox288/ledger-of-heroes/issues) (shared with backend)
+
+---
+
+## Backend Environment
+
+Switch between backend environments using `NUXT_BACKEND_ENV` in `.env`:
+
+| Value | Port | Use Case |
+|-------|------|----------|
+| `dev` (default) | 8080 | Active backend development, bleeding-edge |
+| `stable` | 8081 | Frontend work against stable, known-good API |
+
+**To switch:**
+1. Edit `.env`: `NUXT_BACKEND_ENV=stable`
+2. Restart dev server: `docker compose restart nuxt`
+
+**When to use stable:**
+- Frontend feature work that doesn't need latest backend changes
+- Testing against consistent API behavior
+- Parallel work while backend has breaking changes in progress
+
+**When to use dev:**
+- Testing new backend features
+- Full-stack development
+- Verifying frontend/backend integration
 
 ---
 
@@ -40,18 +64,7 @@ Nuxt 4.x frontend for D&D 5e Compendium. Consumes REST API from `../backend` (La
 | **Proposals** | `../wrapper/docs/frontend/proposals/` |
 | **Reference** | `../wrapper/docs/frontend/reference/` |
 
-**Stays local:** `docs/PROJECT-STATUS.md`, `docs/LATEST-HANDOVER.md` (symlink), `docs/README.md`
-
-### Session Handover Workflow
-
-1. Write handover to wrapper: `../wrapper/docs/frontend/handovers/SESSION-HANDOVER-YYYY-MM-DD-topic.md`
-2. Update symlink:
-   ```bash
-   ln -sf ../../wrapper/docs/frontend/handovers/SESSION-HANDOVER-YYYY-MM-DD-topic.md docs/LATEST-HANDOVER.md
-   ```
-3. Commit to BOTH repos:
-   - Wrapper repo: the new handover file
-   - This repo: the updated symlink (if changed)
+**Stays local:** `docs/PROJECT-STATUS.md`, `docs/README.md`
 
 ---
 
@@ -59,20 +72,29 @@ Nuxt 4.x frontend for D&D 5e Compendium. Consumes REST API from `../backend` (La
 
 Use GitHub Issues in `dfox288/ledger-of-heroes` for bugs, API issues, and cross-cutting concerns.
 
-### Check Your Inbox (do this at session start)
+### Session Start Checklist
+
+**Do these in order at the start of every session:**
 
 ```bash
-gh issue list --repo dfox288/ledger-of-heroes --label "frontend" --state open
+# 1. Check for handoffs from backend
+echo "=== Checking Handoffs ===" && grep -A 100 "## For: frontend" ../wrapper/.claude/handoffs.md 2>/dev/null | head -50 || echo "No frontend handoffs pending"
+
+# 2. Check GitHub issues assigned to frontend
+echo "=== GitHub Issues ===" && gh issue list --repo dfox288/ledger-of-heroes --label "frontend" --state open
 ```
+
+If there's a handoff for you:
+1. Read the full context in `../wrapper/.claude/handoffs.md`
+2. The handoff contains API contracts, response shapes, and test commands you need
+3. After absorbing the context, delete that handoff section from the file
+4. Start work on the related issue
 
 ### Create an Issue
 
 ```bash
-# When you discover an API problem or cross-cutting bug
-gh issue create --repo dfox288/ledger-of-heroes \
-  --title "Brief description" \
-  --label "backend,bug,from:frontend" \
-  --body "Details here"
+# When you discover an API problem or need backend changes
+gh issue create --repo dfox288/ledger-of-heroes --title "Brief description" --label "backend,bug,from:frontend" --body "Details here"
 ```
 
 ### Labels to Use
@@ -80,6 +102,56 @@ gh issue create --repo dfox288/ledger-of-heroes \
 - **Assignee:** `frontend`, `backend`, `both`
 - **Type:** `bug`, `feature`, `api-contract`, `data-issue`, `performance`
 - **Source:** `from:frontend`, `from:backend`, `from:manual-testing`
+
+### Write Handoffs (when creating backend work)
+
+**After creating an issue that requires backend work, ALWAYS write a handoff.**
+
+The handoff provides context that GitHub issues can't capture: reproduction steps, observed vs expected behavior, and specific use cases.
+
+Append to `../wrapper/.claude/handoffs.md`:
+
+```markdown
+## For: backend
+**From:** frontend | **Issue:** #NUMBER | **Created:** YYYY-MM-DD HH:MM
+
+[Brief description of what's needed or broken]
+
+**Context:**
+- [What UI feature requires this]
+- [User flow that triggers this]
+
+**Observed behavior:**
+- [What currently happens]
+- [Error messages if any]
+
+**Expected behavior:**
+- [What should happen]
+- [Expected response shape if requesting new endpoint]
+
+**Reproduction:**
+```bash
+curl "http://localhost:8080/api/v1/endpoint?filter=..."
+# Returns: { unexpected data }
+# Expected: { correct data }
+```
+
+**Frontend is blocked on:**
+- [Specific component/page waiting for this]
+- [Workaround in place, if any]
+
+**Related:**
+- See component: `app/components/example/Card.vue`
+- See page: `app/pages/example/index.vue`
+
+---
+```
+
+**Key details to include:**
+- The user flow that exposes the bug
+- Exact API call that fails or returns wrong data
+- What the frontend expects to receive
+- Which components are blocked waiting for the fix
 
 ### Close When Fixed
 
@@ -590,7 +662,6 @@ tests/
 
 docs/
 ├── PROJECT-STATUS.md   # Metrics (single source of truth)
-├── LATEST-HANDOVER.md  # Symlink → wrapper repo handover
 └── README.md           # Points to wrapper for all other docs
 
 # All other docs in: ../wrapper/docs/frontend/
@@ -701,6 +772,135 @@ tests/
 
 ---
 
+## Wizard Test Helpers
+
+Consolidated helpers for testing character wizard components. Located in `tests/helpers/`.
+
+### Available Helpers
+
+| Helper | Purpose | Usage |
+|--------|---------|-------|
+| `wizardTestSetup.ts` | Store setup, mock factories | Component tests |
+| `characterSheetStubs.ts` | CharacterSheet* component stubs | StepReview, level-up tests |
+| `integrationSetup.ts` | MSW + Pinia lifecycle | Integration tests |
+
+### Store Setup
+
+```typescript
+import { setupWizardStore } from '@/tests/helpers/wizardTestSetup'
+
+// Creates fresh Pinia + configured store
+const store = setupWizardStore({
+  race: { id: 1, name: 'Human', slug: 'phb:human' },
+  class: { id: 1, name: 'Fighter', slug: 'phb:fighter' }
+})
+```
+
+### Character Sheet Stubs
+
+```typescript
+import { characterSheetStubs } from '@/tests/helpers/characterSheetStubs'
+
+const wrapper = await mountSuspended(StepReview, {
+  global: { stubs: characterSheetStubs, plugins: [pinia] }
+})
+```
+
+### Integration Test Setup
+
+```typescript
+import { useIntegrationTestSetup } from '@/tests/helpers/integrationSetup'
+
+describe('My Integration Test', () => {
+  useIntegrationTestSetup() // Replaces ~15 lines of MSW/Pinia boilerplate
+
+  it('tests something', async () => {
+    // MSW server running, fresh Pinia each test
+  })
+})
+```
+
+### Mock Composable Pattern (Nuxt)
+
+For Nuxt components, use `mockNuxtImport` at module level:
+
+```typescript
+import { mockNuxtImport } from '@nuxt/test-utils/runtime'
+import { createToastMock } from '@/tests/helpers/wizardTestSetup'
+
+// Module-level mock (required for Nuxt)
+mockNuxtImport('useToast', () => () => createToastMock())
+
+describe('MyComponent', () => {
+  // Tests use the mocked composable
+})
+```
+
+---
+
+## Playwright AI Agents (E2E Testing)
+
+Three AI-powered agents automate E2E test creation using the Playwright MCP server.
+
+### Agent Pipeline
+
+| Agent | Purpose | Output |
+|-------|---------|--------|
+| **🎭 Planner** | Explores app, identifies user flows | Markdown test plan in `specs/` |
+| **🎭 Generator** | Converts plans to executable tests | Test files in `tests/e2e/` |
+| **🎭 Healer** | Runs tests, auto-fixes failures | Updated test files |
+
+### Configuration Files
+
+```
+.claude/agents/
+├── playwright-test-planner.md    # Test planning agent
+├── playwright-test-generator.md  # Test generation agent
+└── playwright-test-healer.md     # Test healing agent
+
+.mcp.json                         # Playwright MCP server config
+```
+
+### Usage
+
+```bash
+# Plan tests for a feature
+"Use the playwright-test-planner agent to create a test plan for the character wizard"
+
+# Generate tests from a plan
+"Use the playwright-test-generator agent to generate tests from specs/character-wizard.md"
+
+# Fix failing tests
+"Use the playwright-test-healer agent to fix the failing E2E tests"
+```
+
+### Workflow
+
+1. **Plan** → Agent explores the app via browser, produces `specs/feature-name.md`
+2. **Generate** → Agent reads plan, executes steps live, writes test file
+3. **Heal** → Agent runs tests, debugs failures, patches locators/assertions
+
+### MCP Tools Available
+
+When agents run, they have access to browser automation tools:
+- `browser_navigate`, `browser_click`, `browser_type`, `browser_snapshot`
+- `generator_setup_page`, `generator_write_test`, `generator_read_log`
+- `planner_setup_page`, `planner_save_plan`
+- `test_run`, `test_debug`, `test_list`
+
+### Running E2E Tests Manually
+
+```bash
+npm run test:e2e           # Headless (CI)
+npm run test:e2e:ui        # Interactive UI mode
+npm run test:e2e:headed    # Visible browser
+npm run test:e2e:report    # View HTML report
+```
+
+**Docs:** https://playwright.dev/docs/test-agents
+
+---
+
 ## Success Checklist
 
 Before creating a PR:
@@ -726,6 +926,7 @@ Before creating a PR:
 - **NuxtUI 4:** https://ui.nuxt.com/docs
 - **Vitest:** https://vitest.dev/
 - **Playwright:** https://playwright.dev/
+- **Playwright AI Agents:** https://playwright.dev/docs/test-agents
 - **Backend API Docs:** http://localhost:8080/docs/api
 
 ---
