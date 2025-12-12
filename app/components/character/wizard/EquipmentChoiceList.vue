@@ -5,16 +5,22 @@ import type { components } from '~/types/api/generated'
 type PendingChoice = components['schemas']['PendingChoiceResource']
 
 interface PackContent {
-  quantity: number | string
+  quantity: number
   name: string
-  slug?: string
+  slug: string
 }
 
+/**
+ * Equipment item structure from pending choice options.
+ * Note: This is different from EntityItemResource (used for fixed equipment).
+ * Pending choice items use slug as the identifier, not id.
+ */
 interface EquipmentItem {
-  id: number
+  slug: string
   name: string
-  slug?: string
   quantity: number
+  is_fixed: boolean
+  is_pack?: boolean
   contents?: PackContent[]
 }
 
@@ -149,9 +155,10 @@ function getRequiredSelectionCount(option: EquipmentOption): number {
 
 /**
  * Check if an item is a pack with contents
+ * Uses backend's is_pack flag when available, falls back to checking contents array
  */
 function hasPackContents(item: EquipmentItem): boolean {
-  return Boolean(item.contents && item.contents.length > 0)
+  return item.is_pack === true || Boolean(item.contents && item.contents.length > 0)
 }
 
 /**
@@ -368,7 +375,7 @@ function isSelected(choiceId: string, optionLetter: string): boolean {
               </span>
               <USelectMenu
                 :model-value="getSelectedItem(choice.id, option.option, selectionIndex)"
-                :items="(option.items ?? []).map(item => ({ label: item.name, value: item.slug || String(item.id) }))"
+                :items="(option.items ?? []).map(item => ({ label: item.name, value: item.slug }))"
                 :placeholder="`Select item ${selectionIndex + 1}...`"
                 value-key="value"
                 class="flex-1"
