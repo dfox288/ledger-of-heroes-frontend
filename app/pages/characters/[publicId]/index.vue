@@ -137,42 +137,64 @@ watch(() => stats.value, (newStats) => {
   }
 }, { immediate: true })
 
+/** Response shape from PATCH /api/characters/:id/hp */
+interface HpUpdateResponse {
+  data: {
+    current_hit_points: number
+    max_hit_points: number
+    temp_hit_points: number
+    death_save_successes: number
+    death_save_failures: number
+  }
+}
+
+/**
+ * Sync local state from HP endpoint response
+ * Updates HP and death saves from backend's authoritative response
+ */
+function syncFromHpResponse(response: HpUpdateResponse) {
+  localHitPoints.current = response.data.current_hit_points
+  localHitPoints.max = response.data.max_hit_points
+  localHitPoints.temporary = response.data.temp_hit_points
+  localDeathSaves.successes = response.data.death_save_successes
+  localDeathSaves.failures = response.data.death_save_failures
+}
+
 /**
  * Handle HP changes from HpEditModal
- * Applies D&D rules: temp HP absorbs damage first, healing caps at max
+ * Sends delta to backend which handles all D&D rules:
+ * - Temp HP absorbs damage first
+ * - Healing caps at max HP
+ * - Death saves reset when healing from 0
  */
 async function handleHpChange(delta: number) {
   if (isUpdatingHp.value || !character.value) return
+  if (delta === 0) return // No-op
 
   isUpdatingHp.value = true
 
-  // Calculate new values using D&D rules
-  const { applyHpDelta } = await import('~/composables/useHpCalculations')
-  const { newCurrentHp, newTempHp } = applyHpDelta({
-    delta,
-    currentHp: localHitPoints.current,
-    maxHp: localHitPoints.max,
-    tempHp: localHitPoints.temporary
-  })
-
-  // Optimistic update
+  // Store old values for rollback
   const oldCurrent = localHitPoints.current
   const oldTemp = localHitPoints.temporary
-  localHitPoints.current = newCurrentHp
-  localHitPoints.temporary = newTempHp
+  const oldDeathSuccesses = localDeathSaves.successes
+  const oldDeathFailures = localDeathSaves.failures
 
   try {
-    await apiFetch(`/characters/${character.value.id}`, {
+    // Send delta as signed string (e.g., "-12" or "+8")
+    const hpDelta = delta > 0 ? `+${delta}` : `${delta}`
+    const response = await apiFetch<HpUpdateResponse>(`/characters/${character.value.id}/hp`, {
       method: 'PATCH',
-      body: {
-        current_hit_points: newCurrentHp,
-        temp_hit_points: newTempHp
-      }
+      body: { hp: hpDelta }
     })
+
+    // Update local state from authoritative backend response
+    syncFromHpResponse(response)
   } catch (err) {
     // Rollback on error
     localHitPoints.current = oldCurrent
     localHitPoints.temporary = oldTemp
+    localDeathSaves.successes = oldDeathSuccesses
+    localDeathSaves.failures = oldDeathFailures
     logger.error('Failed to update HP:', err)
     toast.add({
       title: 'Failed to save',
@@ -186,28 +208,22 @@ async function handleHpChange(delta: number) {
 
 /**
  * Handle temp HP set from TempHpModal
- * D&D rule: Temp HP doesn't stack - keep higher value
+ * Backend enforces D&D rule: Temp HP uses higher-wins (doesn't stack)
  */
 async function handleTempHpSet(value: number) {
   if (isUpdatingHp.value || !character.value) return
 
   isUpdatingHp.value = true
-
-  // D&D rule: keep higher value
-  const { applyTempHp } = await import('~/composables/useHpCalculations')
-  const newTempHp = applyTempHp({
-    newTempHp: value,
-    currentTempHp: localHitPoints.temporary
-  })
-
   const oldTemp = localHitPoints.temporary
-  localHitPoints.temporary = newTempHp
 
   try {
-    await apiFetch(`/characters/${character.value.id}`, {
+    const response = await apiFetch<HpUpdateResponse>(`/characters/${character.value.id}/hp`, {
       method: 'PATCH',
-      body: { temp_hit_points: newTempHp }
+      body: { temp_hp: value }
     })
+
+    // Update local state from authoritative backend response
+    syncFromHpResponse(response)
   } catch (err) {
     localHitPoints.temporary = oldTemp
     logger.error('Failed to set temp HP:', err)
@@ -223,19 +239,22 @@ async function handleTempHpSet(value: number) {
 
 /**
  * Handle temp HP clear from TempHpModal
+ * Sends temp_hp: 0 to clear (overrides higher-wins rule)
  */
 async function handleTempHpClear() {
   if (isUpdatingHp.value || !character.value) return
 
   isUpdatingHp.value = true
   const oldTemp = localHitPoints.temporary
-  localHitPoints.temporary = 0
 
   try {
-    await apiFetch(`/characters/${character.value.id}`, {
+    const response = await apiFetch<HpUpdateResponse>(`/characters/${character.value.id}/hp`, {
       method: 'PATCH',
-      body: { temp_hit_points: 0 }
+      body: { temp_hp: 0 }
     })
+
+    // Update local state from authoritative backend response
+    syncFromHpResponse(response)
   } catch (err) {
     localHitPoints.temporary = oldTemp
     logger.error('Failed to clear temp HP:', err)
@@ -382,6 +401,8 @@ const tabItems = computed(() => {
             :stats="displayStats"
             :currency="character.currency"
             :editable="isPlayMode"
+            :death-save-failures="localDeathSaves.failures"
+            :death-save-successes="localDeathSaves.successes"
             @hp-change="handleHpChange"
             @temp-hp-set="handleTempHpSet"
             @temp-hp-clear="handleTempHpClear"

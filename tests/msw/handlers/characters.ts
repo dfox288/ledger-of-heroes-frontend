@@ -122,5 +122,55 @@ export const characterHandlers = [
         hp_gained: body.hp_value || 6
       }
     })
+  }),
+
+  // PATCH /api/characters/:id/hp - Modify HP (damage, healing, temp HP)
+  http.patch(`${API_BASE}/characters/:id/hp`, async ({ request }) => {
+    const body = await request.json() as { hp?: string, temp_hp?: number }
+
+    // Default values based on fixture
+    let currentHp = humanFighterL1.character.hit_points?.current ?? 12
+    let tempHp = humanFighterL1.character.hit_points?.temporary ?? 0
+    const maxHp = humanFighterL1.character.hit_points?.max ?? 12
+    let deathSaveSuccesses = 0
+    let deathSaveFailures = 0
+
+    // Handle HP modification (damage/healing)
+    if (body.hp) {
+      const delta = parseInt(body.hp, 10)
+      const wasAtZero = currentHp === 0
+
+      if (delta < 0) {
+        // Damage: temp HP absorbs first
+        const damage = Math.abs(delta)
+        const tempAbsorbed = Math.min(tempHp, damage)
+        tempHp -= tempAbsorbed
+        const remaining = damage - tempAbsorbed
+        currentHp = Math.max(0, currentHp - remaining)
+      } else if (delta > 0) {
+        // Healing: cap at max, reset death saves if healing from 0
+        currentHp = Math.min(maxHp, currentHp + delta)
+        if (wasAtZero && currentHp > 0) {
+          deathSaveSuccesses = 0
+          deathSaveFailures = 0
+        }
+      }
+    }
+
+    // Handle temp HP modification
+    if (body.temp_hp !== undefined) {
+      // D&D rule: keep higher (unless clearing with 0)
+      tempHp = body.temp_hp === 0 ? 0 : Math.max(tempHp, body.temp_hp)
+    }
+
+    return HttpResponse.json({
+      data: {
+        current_hit_points: currentHp,
+        max_hit_points: maxHp,
+        temp_hit_points: tempHp,
+        death_save_successes: deathSaveSuccesses,
+        death_save_failures: deathSaveFailures
+      }
+    })
   })
 ]
