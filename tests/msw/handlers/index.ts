@@ -7,9 +7,11 @@
 
 import { characterHandlers } from './characters'
 import { referenceHandlers } from './reference'
+import { classHandlers } from './classes'
 
 // Combine all handlers for the MSW server
 export const handlers = [
   ...characterHandlers,
-  ...referenceHandlers
+  ...referenceHandlers,
+  ...classHandlers
 ]
