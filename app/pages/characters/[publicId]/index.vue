@@ -7,6 +7,8 @@
  * Uses useCharacterSheet composable for parallel data fetching.
  *
  * URL: /characters/:publicId (e.g., /characters/shadow-warden-q3x9)
+ *
+ * Play Mode: Toggle to enable interactive features (death saves, HP, etc.)
  */
 
 const route = useRoute()
@@ -26,8 +28,120 @@ const {
   savingThrows,
   hitDice,
   loading,
-  error
+  error,
+  refresh
 } = useCharacterSheet(publicId)
+
+// ============================================================================
+// Play Mode
+// ============================================================================
+
+const { apiFetch } = useApi()
+const toast = useToast()
+
+/**
+ * Play mode toggle - enables interactive features
+ * Persisted to localStorage for convenience
+ */
+const isPlayMode = ref(false)
+
+// Load play mode preference from localStorage on mount
+onMounted(() => {
+  const saved = localStorage.getItem('character-play-mode')
+  if (saved === 'true') {
+    isPlayMode.value = true
+  }
+})
+
+// Save play mode preference when changed
+watch(isPlayMode, (newValue) => {
+  localStorage.setItem('character-play-mode', String(newValue))
+})
+
+/**
+ * Local reactive state for death saves
+ * Needed because character from useAsyncData is a computed ref that doesn't propagate mutations
+ */
+const localDeathSaves = reactive({
+  successes: 0,
+  failures: 0
+})
+
+// Sync local state when character data loads
+watch(() => character.value, (char) => {
+  if (char) {
+    localDeathSaves.successes = char.death_save_successes
+    localDeathSaves.failures = char.death_save_failures
+  }
+}, { immediate: true })
+
+/**
+ * Handle death save updates
+ * Uses optimistic UI - update locally first, then sync to API
+ */
+async function handleDeathSaveUpdate(field: 'successes' | 'failures', value: number) {
+  if (!character.value) return
+
+  // Optimistic update (local reactive state)
+  const oldValue = localDeathSaves[field]
+  localDeathSaves[field] = value
+
+  try {
+    await apiFetch(`/characters/${character.value.id}`, {
+      method: 'PATCH',
+      body: {
+        [`death_save_${field}`]: value
+      }
+    })
+  } catch (err) {
+    // Rollback on error
+    localDeathSaves[field] = oldValue
+    logger.error('Failed to update death saves:', err)
+    toast.add({
+      title: 'Failed to save',
+      description: 'Could not update death saves',
+      color: 'error'
+    })
+  }
+}
+
+/**
+ * Reset death saves to 0/0
+ */
+async function handleDeathSaveReset() {
+  if (!character.value) return
+
+  // Optimistic update
+  const oldSuccesses = localDeathSaves.successes
+  const oldFailures = localDeathSaves.failures
+
+  localDeathSaves.successes = 0
+  localDeathSaves.failures = 0
+
+  try {
+    await apiFetch(`/characters/${character.value.id}`, {
+      method: 'PATCH',
+      body: {
+        death_save_successes: 0,
+        death_save_failures: 0
+      }
+    })
+    toast.add({
+      title: 'Death saves reset',
+      color: 'success'
+    })
+  } catch (err) {
+    // Rollback on error
+    localDeathSaves.successes = oldSuccesses
+    localDeathSaves.failures = oldFailures
+    logger.error('Failed to reset death saves:', err)
+    toast.add({
+      title: 'Failed to reset',
+      description: 'Could not reset death saves',
+      color: 'error'
+    })
+  }
+}
 
 // Validation - check for dangling references when sourcebooks are removed
 const characterId = computed(() => character.value?.id ?? null)
@@ -64,15 +178,25 @@ const tabItems = computed(() => {
 
 <template>
   <div class="container mx-auto px-4 py-8 max-w-5xl">
-    <!-- Back Link -->
-    <UButton
-      to="/characters"
-      variant="ghost"
-      icon="i-heroicons-arrow-left"
-      class="mb-6"
-    >
-      Back to Characters
-    </UButton>
+    <!-- Top Bar: Back Link + Play Mode Toggle -->
+    <div class="flex items-center justify-between mb-6">
+      <UButton
+        to="/characters"
+        variant="ghost"
+        icon="i-heroicons-arrow-left"
+      >
+        Back to Characters
+      </UButton>
+
+      <!-- Play Mode Toggle -->
+      <div class="flex items-center gap-2">
+        <span class="text-sm text-gray-500 dark:text-gray-400">Play Mode</span>
+        <USwitch
+          v-model="isPlayMode"
+          data-testid="play-mode-toggle"
+        />
+      </div>
+    </div>
 
     <!-- Loading State -->
     <div
@@ -152,8 +276,12 @@ const tabItems = computed(() => {
             <div class="space-y-4">
               <CharacterSheetSavingThrowsList :saving-throws="savingThrows" />
               <CharacterSheetDeathSaves
-                :successes="character.death_save_successes"
-                :failures="character.death_save_failures"
+                :successes="localDeathSaves.successes"
+                :failures="localDeathSaves.failures"
+                :editable="isPlayMode"
+                @update:successes="handleDeathSaveUpdate('successes', $event)"
+                @update:failures="handleDeathSaveUpdate('failures', $event)"
+                @reset="handleDeathSaveReset"
               />
             </div>
             <CharacterSheetSkillsList
