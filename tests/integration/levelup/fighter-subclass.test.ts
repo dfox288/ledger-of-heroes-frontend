@@ -228,13 +228,22 @@ describe('Fighter L3 - Store State', () => {
       expect(store.isLevelUpInProgress).toBe(true)
     })
 
-    it('isComplete is true when no HP or ASI pending', () => {
+    it('isComplete is true when no HP/ASI pending AND pendingChoices empty', () => {
       const store = useCharacterLevelUpStore()
 
       store.levelUpResult = humanFighterL3.levelUpResult
       store.pendingChoices = [] // Subclass already resolved
 
       expect(store.isComplete).toBe(true)
+    })
+
+    it('isComplete is false when pendingChoices has items', () => {
+      const store = useCharacterLevelUpStore()
+
+      store.levelUpResult = humanFighterL3.levelUpResult // hp_choice_pending: false, asi_pending: false
+      store.pendingChoices = humanFighterL3.pendingChoices.choices // Has subclass pending
+
+      expect(store.isComplete).toBe(false)
     })
 
     it('isComplete is false when hp_choice_pending', () => {

@@ -87,7 +87,11 @@ export const useCharacterLevelUpStore = defineStore('characterLevelUp', () => {
   /** Is level-up complete (all choices resolved)? */
   const isComplete = computed(() => {
     if (!levelUpResult.value) return false
-    return !levelUpResult.value.hp_choice_pending && !levelUpResult.value.asi_pending
+    return (
+      !levelUpResult.value.hp_choice_pending
+      && !levelUpResult.value.asi_pending
+      && pendingChoices.value.length === 0
+    )
   })
 
   /** Does character have pending subclass choice? */

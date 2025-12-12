@@ -134,9 +134,12 @@ async function resumeLevelUp() {
     await store.fetchPendingChoices()
 
     // Determine first step based on pending choices
+    // Note: ASI uses type='ability_score' with subtype='asi_or_feat' per API contract
     const hasSubclass = store.pendingChoices.some(c => c.type === 'subclass')
     const hasHp = store.pendingChoices.some(c => c.type === 'hit_points')
-    const hasAsi = store.pendingChoices.some(c => c.type === 'asi_or_feat')
+    const hasAsi = store.pendingChoices.some(
+      c => c.type === 'ability_score' && c.subtype === 'asi_or_feat'
+    )
     const hasFeature = store.pendingChoices.some(c =>
       ['fighting_style', 'expertise', 'optional_feature'].includes(c.type)
     )

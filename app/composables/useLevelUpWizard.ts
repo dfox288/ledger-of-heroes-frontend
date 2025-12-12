@@ -5,14 +5,15 @@
  * Manages wizard step navigation using URL-based routing.
  * URL is source of truth for current step (matches character creation wizard pattern).
  */
+import { toValue, type MaybeRef } from 'vue'
 import { useCharacterLevelUpStore } from '~/stores/characterLevelUp'
 import type { LevelUpStep } from '~/types/character'
 
 export interface UseLevelUpWizardOptions {
-  /** Character public ID for URL building */
-  publicId: string
-  /** Current step name from URL (route.params.step) */
-  currentStep: string
+  /** Character public ID for URL building (supports refs for reactivity) */
+  publicId: MaybeRef<string>
+  /** Current step name from URL (supports refs for reactivity) */
+  currentStep: MaybeRef<string>
 }
 
 /**
@@ -115,8 +116,14 @@ export function useLevelUpWizard(options?: UseLevelUpWizardOptions) {
 
   /**
    * Current step name - from URL (options.currentStep) or store fallback
+   * Uses toValue to support both refs and plain strings for reactivity
    */
-  const currentStepName = computed(() => options?.currentStep ?? store.currentStepName)
+  const currentStepName = computed(() => {
+    if (options?.currentStep) {
+      return toValue(options.currentStep)
+    }
+    return store.currentStepName
+  })
 
   /**
    * Current step index within active steps
@@ -165,14 +172,14 @@ export function useLevelUpWizard(options?: UseLevelUpWizardOptions) {
     if (!options?.publicId) {
       throw new Error('options required')
     }
-    return `/characters/${options.publicId}/level-up/${stepName}`
+    return `/characters/${toValue(options.publicId)}/level-up/${stepName}`
   }
 
   function getPreviewUrl(): string {
     if (!options?.publicId) {
       throw new Error('options required')
     }
-    return `/characters/${options.publicId}/level-up`
+    return `/characters/${toValue(options.publicId)}/level-up`
   }
 
   // ══════════════════════════════════════════════════════════════
@@ -183,7 +190,7 @@ export function useLevelUpWizard(options?: UseLevelUpWizardOptions) {
    * Navigate to a step - uses URL navigation if options provided, store navigation otherwise
    */
   async function navigateToStep(stepName: string): Promise<void> {
-    if (options?.publicId) {
+    if (options?.publicId && toValue(options.publicId)) {
       await navigateTo(getStepUrl(stepName))
     } else {
       store.goToStep(stepName)

@@ -10,15 +10,19 @@
  * - ASI/Feat if applicable
  *
  * Uses CSS-based confetti animation that auto-plays for ~3 seconds
+ *
+ * Self-contained: derives all data from the store
  */
 
-import type { LevelUpResult } from '~/types/character'
 import { useCharacterLevelUpStore } from '~/stores/characterLevelUp'
 
 defineProps<{
-  levelUpResult: LevelUpResult
-  className: string
-  hpGained: number
+  // Props from [step].vue - not used but kept for interface consistency
+  characterId?: number
+  publicId?: string
+  nextStep?: () => void
+  refreshAfterSave?: () => Promise<void>
+  // Optional display props for ASI/Feat results
   asiChoice?: string
   featName?: string
 }>()
@@ -28,6 +32,19 @@ const emit = defineEmits<{
 }>()
 
 const store = useCharacterLevelUpStore()
+
+// Derive data from store
+const levelUpResult = computed(() => store.levelUpResult)
+
+const className = computed(() => {
+  if (!store.selectedClassSlug) return 'Unknown'
+  const classEntry = store.characterClasses.find(
+    c => c.class?.slug === store.selectedClassSlug
+  )
+  return classEntry?.class?.name ?? 'Unknown'
+})
+
+const hpGained = computed(() => levelUpResult.value?.hp_increase ?? 0)
 
 // Trigger celebration animation on mount
 const showConfetti = ref(false)
@@ -86,7 +103,7 @@ function handleComplete() {
         Level Up Complete!
       </h2>
       <p class="mt-4 text-xl text-primary-600 dark:text-primary-400 font-semibold">
-        {{ className }} {{ levelUpResult.previous_level }} → {{ className }} {{ levelUpResult.new_level }}
+        {{ className }} {{ levelUpResult?.previous_level }} → {{ className }} {{ levelUpResult?.new_level }}
       </p>
     </div>
 
@@ -107,7 +124,7 @@ function handleComplete() {
           </div>
           <div class="text-right">
             <span class="text-lg font-bold text-success-600 dark:text-success-400">+{{ hpGained }}</span>
-            <span class="text-gray-500 dark:text-gray-400 ml-2">(now {{ levelUpResult.new_max_hp }} max)</span>
+            <span class="text-gray-500 dark:text-gray-400 ml-2">(now {{ levelUpResult?.new_max_hp }} max)</span>
           </div>
         </div>
       </div>
@@ -135,7 +152,7 @@ function handleComplete() {
 
       <!-- Features Gained Card -->
       <div
-        v-if="levelUpResult.features_gained?.length > 0"
+        v-if="levelUpResult?.features_gained?.length && levelUpResult.features_gained.length > 0"
         class="bg-white dark:bg-gray-800 rounded-xl p-4 shadow-sm border border-gray-200 dark:border-gray-700"
       >
         <div class="flex items-center gap-3 mb-3">
@@ -147,7 +164,7 @@ function handleComplete() {
         </div>
         <ul class="space-y-2">
           <li
-            v-for="feature in levelUpResult.features_gained"
+            v-for="feature in levelUpResult?.features_gained ?? []"
             :key="feature.id"
             class="pl-4 border-l-2 border-primary-300 dark:border-primary-700"
           >

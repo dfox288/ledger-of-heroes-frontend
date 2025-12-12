@@ -44,6 +44,7 @@ const store = useCharacterLevelUpStore()
 // WIZARD NAVIGATION
 // ════════════════════════════════════════════════════════════════
 
+// Pass refs (not .value) to maintain reactivity when route changes
 const {
   activeSteps,
   currentStep,
@@ -53,8 +54,8 @@ const {
   previousStep,
   progressPercent
 } = useLevelUpWizard({
-  publicId: publicId.value,
-  currentStep: stepName.value
+  publicId,
+  currentStep: stepName
 })
 
 // ════════════════════════════════════════════════════════════════

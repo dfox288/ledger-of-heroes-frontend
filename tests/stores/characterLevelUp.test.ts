@@ -227,15 +227,33 @@ describe('characterLevelUp store', () => {
       expect(store.isComplete).toBe(false)
     })
 
-    it('returns false when choices are pending', () => {
+    it('returns false when hp_choice_pending is true', () => {
       const store = useCharacterLevelUpStore()
       store.levelUpResult = { ...mockLevelUpResult, hp_choice_pending: true, asi_pending: false }
+      store.pendingChoices = []
       expect(store.isComplete).toBe(false)
     })
 
-    it('returns true when all choices resolved', () => {
+    it('returns false when asi_pending is true', () => {
+      const store = useCharacterLevelUpStore()
+      store.levelUpResult = { ...mockLevelUpResult, hp_choice_pending: false, asi_pending: true }
+      store.pendingChoices = []
+      expect(store.isComplete).toBe(false)
+    })
+
+    it('returns false when pendingChoices is not empty', () => {
       const store = useCharacterLevelUpStore()
       store.levelUpResult = { ...mockLevelUpResult, hp_choice_pending: false, asi_pending: false }
+      store.pendingChoices = [
+        { id: 'subclass|class|phb:wizard|2|arcane_tradition', type: 'subclass', quantity: 1, source: 'class', source_name: 'Wizard' }
+      ]
+      expect(store.isComplete).toBe(false)
+    })
+
+    it('returns true when all choices resolved and pendingChoices is empty', () => {
+      const store = useCharacterLevelUpStore()
+      store.levelUpResult = { ...mockLevelUpResult, hp_choice_pending: false, asi_pending: false }
+      store.pendingChoices = []
       expect(store.isComplete).toBe(true)
     })
   })

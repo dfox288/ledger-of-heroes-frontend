@@ -421,7 +421,25 @@ describe('useLevelUpWizard', () => {
   })
 
   describe('URL-based navigation', () => {
-    it('accepts options parameter with publicId and currentStep', () => {
+    it('accepts options parameter with publicId and currentStep as refs', () => {
+      mockLevelUpResult.value = { hp_choice_pending: true }
+
+      const publicIdRef = ref('test-hero-Ab12')
+      const currentStepRef = ref('hit-points')
+
+      const wizard = useLevelUpWizard({
+        publicId: publicIdRef,
+        currentStep: currentStepRef
+      })
+
+      expect(wizard).toBeDefined()
+      expect(wizard.getStepUrl).toBeDefined()
+      expect(wizard.getPreviewUrl).toBeDefined()
+      expect(wizard.nextStepInfo).toBeDefined()
+      expect(wizard.previousStepInfo).toBeDefined()
+    })
+
+    it('accepts options parameter with publicId and currentStep as plain strings', () => {
       mockLevelUpResult.value = { hp_choice_pending: true }
 
       const wizard = useLevelUpWizard({
@@ -430,10 +448,33 @@ describe('useLevelUpWizard', () => {
       })
 
       expect(wizard).toBeDefined()
-      expect(wizard.getStepUrl).toBeDefined()
-      expect(wizard.getPreviewUrl).toBeDefined()
-      expect(wizard.nextStepInfo).toBeDefined()
-      expect(wizard.previousStepInfo).toBeDefined()
+      expect(wizard.currentStepName.value).toBe('hit-points')
+    })
+
+    it('reacts to ref changes for currentStep', () => {
+      mockLevelUpResult.value = { hp_choice_pending: true }
+      mockHasSpellChoices.value = true
+
+      const publicIdRef = ref('test-hero-Ab12')
+      const currentStepRef = ref('hit-points')
+
+      const { currentStepName, currentStepIndex, activeSteps } = useLevelUpWizard({
+        publicId: publicIdRef,
+        currentStep: currentStepRef
+      })
+
+      // Initial state
+      expect(currentStepName.value).toBe('hit-points')
+      const initialIndex = currentStepIndex.value
+
+      // Change the step ref
+      currentStepRef.value = 'spells'
+
+      // Verify reactivity - currentStepName should update
+      expect(currentStepName.value).toBe('spells')
+      // Index should also update since we're on a different step
+      const spellsIndex = activeSteps.value.findIndex(s => s.name === 'spells')
+      expect(currentStepIndex.value).toBe(spellsIndex)
     })
 
     it('getStepUrl returns correct URL format', () => {

@@ -1,19 +1,42 @@
 <script setup lang="ts">
+import { useCharacterLevelUpStore } from '~/stores/characterLevelUp'
+
 const props = defineProps<{
   characterId: number
+  publicId: string
   nextStep: () => void
-  hitDie: number
-  conModifier: number
+  refreshAfterSave?: () => Promise<void>
 }>()
 
 const emit = defineEmits<{
   'choice-made': [hpGained: number]
 }>()
 
+const store = useCharacterLevelUpStore()
+
 // Use unified choices for HP choice resolution
 const { resolveChoice, fetchChoices, choicesByType } = useUnifiedChoices(
   computed(() => props.characterId)
 )
+
+// Derive hitDie from the class being leveled up
+const hitDie = computed(() => {
+  if (!store.selectedClassSlug) return 10 // Default fallback
+  const classEntry = store.characterClasses.find(
+    c => c.class?.slug === store.selectedClassSlug
+  )
+  return classEntry?.class?.hit_die ?? 10
+})
+
+// Fetch character stats to get CON modifier
+const { abilityScores } = useCharacterStats(
+  computed(() => props.characterId)
+)
+
+const conModifier = computed(() => {
+  const conScore = abilityScores.value?.find(a => a.code === 'CON')
+  return conScore?.modifier ?? 0
+})
 
 // Local state
 const selectedMethod = ref<'roll' | 'average' | null>(null)
@@ -26,15 +49,15 @@ const error = ref<string | null>(null)
 const rollTrigger = ref(0)
 
 // Calculate average (rounded up per 5e rules)
-const averageValue = computed(() => Math.ceil((props.hitDie + 1) / 2))
+const averageValue = computed(() => Math.ceil((hitDie.value + 1) / 2))
 
 // Calculate total HP gained
 const totalHpGained = computed(() => {
   if (selectedMethod.value === 'average') {
-    return averageValue.value + props.conModifier
+    return averageValue.value + conModifier.value
   }
   if (selectedMethod.value === 'roll' && rollResult.value !== null) {
-    return rollResult.value + props.conModifier
+    return rollResult.value + conModifier.value
   }
   return null
 })
@@ -46,13 +69,13 @@ function handleRollClick() {
 
 function handleRollComplete(result: number) {
   rollResult.value = result
-  hpGained.value = result + props.conModifier
+  hpGained.value = result + conModifier.value
 }
 
 function handleAverageClick() {
   selectedMethod.value = 'average'
   rollResult.value = averageValue.value
-  hpGained.value = averageValue.value + props.conModifier
+  hpGained.value = averageValue.value + conModifier.value
 }
 
 async function handleConfirm() {
