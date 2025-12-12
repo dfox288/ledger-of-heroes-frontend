@@ -2,6 +2,16 @@
 
 Use GitHub Issues in `dfox288/ledger-of-heroes` for bugs, API issues, and cross-cutting concerns.
 
+## Important: Where Things Live
+
+| Resource | Location | Command |
+|----------|----------|---------|
+| **Issues** | Shared repo `dfox288/ledger-of-heroes` | `gh issue list --repo dfox288/ledger-of-heroes` |
+| **PRs** | This repo (frontend) | `gh pr list` (no --repo flag needed) |
+| **Handoffs** | `../wrapper/.claude/handoffs.md` | Direct file read |
+
+**CRITICAL:** Always check PRs in the current repo, not the shared issues repo.
+
 ## Session Start Checklist
 
 **Do these in order at the start of every session:**

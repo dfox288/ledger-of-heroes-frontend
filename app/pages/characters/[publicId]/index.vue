@@ -520,6 +520,7 @@ const tabItems = computed(() => {
             v-if="hitDice.length"
             :hit-dice="hitDice"
             :editable="isPlayMode"
+            :disabled="isResting"
             @spend="handleHitDiceSpend"
             @short-rest="handleShortRest"
             @long-rest="showLongRestModal = true"

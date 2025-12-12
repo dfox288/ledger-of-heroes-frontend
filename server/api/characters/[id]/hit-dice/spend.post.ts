@@ -13,6 +13,20 @@ export default defineEventHandler(async (event) => {
   const id = getRouterParam(event, 'id')
   const body = await readBody(event)
 
+  // Validate required fields before proxying to backend
+  if (!body?.die_type || typeof body.die_type !== 'string') {
+    throw createError({
+      statusCode: 400,
+      statusMessage: 'Missing or invalid required field: die_type'
+    })
+  }
+  if (body.quantity === undefined || typeof body.quantity !== 'number' || body.quantity < 1) {
+    throw createError({
+      statusCode: 400,
+      statusMessage: 'Missing or invalid required field: quantity (must be a positive number)'
+    })
+  }
+
   try {
     const data = await $fetch(`${config.apiBaseServer}/characters/${id}/hit-dice/spend`, {
       method: 'POST',
