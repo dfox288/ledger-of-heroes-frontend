@@ -280,8 +280,9 @@ export function useCharacterWizard(options: UseCharacterWizardOptions = {}) {
         return store.selections.background !== null
 
       case 'feats':
-        // TODO: Check all required feat choices made
-        return true
+        // Allow if summary not loaded yet; block if pending feats remain
+        if (!store.summary) return true
+        return store.summary.pending_choices.feats === 0
 
       case 'abilities':
         // All scores should be set (not default 10s for standard array)
@@ -289,20 +290,25 @@ export function useCharacterWizard(options: UseCharacterWizardOptions = {}) {
         return true
 
       case 'proficiencies':
-        // TODO: Check all required choices made
-        return true
+        // Allow if summary not loaded yet; block if pending proficiency choices remain
+        if (!store.summary) return true
+        return store.summary.pending_choices.proficiencies === 0
 
       case 'languages':
-        // TODO: Check all required choices made
-        return true
+        // Allow if summary not loaded yet; block if pending language choices remain
+        if (!store.summary) return true
+        return store.summary.pending_choices.languages === 0
 
       case 'equipment':
-        // TODO: Check all required choices made
+        // Equipment validation is handled at component level (StepEquipment.vue)
+        // The component's allEquipmentChoicesMade computed guards its Continue button
+        // No pending_choices count exists for equipment in the summary
         return true
 
       case 'spells':
-        // TODO: Check correct number of spells selected
-        return true
+        // Allow if summary not loaded yet; block if pending spell selections remain
+        if (!store.summary) return true
+        return store.summary.pending_choices.spells === 0
 
       case 'details':
         // Name is required

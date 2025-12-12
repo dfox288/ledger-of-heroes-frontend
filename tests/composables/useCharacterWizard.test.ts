@@ -291,6 +291,210 @@ describe('useCharacterWizard', () => {
       const { canProceed } = useCharacterWizard({ route })
       expect(canProceed.value).toBe(true)
     })
+
+    // ════════════════════════════════════════════════════════════════
+    // Choice-based step validation (Issue #437)
+    // ════════════════════════════════════════════════════════════════
+
+    describe('feats step validation', () => {
+      it('allows proceeding when no summary loaded yet', () => {
+        const route = createMockRoute('/characters/new/feats')
+        const { canProceed } = useCharacterWizard({ route })
+        expect(canProceed.value).toBe(true)
+      })
+
+      it('blocks proceeding when pending feats > 0', () => {
+        const store = useCharacterWizardStore()
+        store.summary = {
+          character: { id: 1, name: 'Test', total_level: 1 },
+          pending_choices: {
+            proficiencies: 0, languages: 0, spells: 0,
+            optional_features: 0, asi: 0, feats: 1, size: 0
+          },
+          creation_complete: false,
+          missing_required: []
+        }
+        const route = createMockRoute('/characters/new/feats')
+
+        const { canProceed } = useCharacterWizard({ route })
+        expect(canProceed.value).toBe(false)
+      })
+
+      it('allows proceeding when pending feats = 0', () => {
+        const store = useCharacterWizardStore()
+        store.summary = {
+          character: { id: 1, name: 'Test', total_level: 1 },
+          pending_choices: {
+            proficiencies: 0, languages: 0, spells: 0,
+            optional_features: 0, asi: 0, feats: 0, size: 0
+          },
+          creation_complete: false,
+          missing_required: []
+        }
+        const route = createMockRoute('/characters/new/feats')
+
+        const { canProceed } = useCharacterWizard({ route })
+        expect(canProceed.value).toBe(true)
+      })
+    })
+
+    describe('proficiencies step validation', () => {
+      it('allows proceeding when no summary loaded yet', () => {
+        const route = createMockRoute('/characters/new/proficiencies')
+        const { canProceed } = useCharacterWizard({ route })
+        expect(canProceed.value).toBe(true)
+      })
+
+      it('blocks proceeding when pending proficiencies > 0', () => {
+        const store = useCharacterWizardStore()
+        store.summary = {
+          character: { id: 1, name: 'Test', total_level: 1 },
+          pending_choices: {
+            proficiencies: 2, languages: 0, spells: 0,
+            optional_features: 0, asi: 0, feats: 0, size: 0
+          },
+          creation_complete: false,
+          missing_required: []
+        }
+        const route = createMockRoute('/characters/new/proficiencies')
+
+        const { canProceed } = useCharacterWizard({ route })
+        expect(canProceed.value).toBe(false)
+      })
+
+      it('allows proceeding when pending proficiencies = 0', () => {
+        const store = useCharacterWizardStore()
+        store.summary = {
+          character: { id: 1, name: 'Test', total_level: 1 },
+          pending_choices: {
+            proficiencies: 0, languages: 0, spells: 0,
+            optional_features: 0, asi: 0, feats: 0, size: 0
+          },
+          creation_complete: false,
+          missing_required: []
+        }
+        const route = createMockRoute('/characters/new/proficiencies')
+
+        const { canProceed } = useCharacterWizard({ route })
+        expect(canProceed.value).toBe(true)
+      })
+    })
+
+    describe('languages step validation', () => {
+      it('allows proceeding when no summary loaded yet', () => {
+        const route = createMockRoute('/characters/new/languages')
+        const { canProceed } = useCharacterWizard({ route })
+        expect(canProceed.value).toBe(true)
+      })
+
+      it('blocks proceeding when pending languages > 0', () => {
+        const store = useCharacterWizardStore()
+        store.summary = {
+          character: { id: 1, name: 'Test', total_level: 1 },
+          pending_choices: {
+            proficiencies: 0, languages: 1, spells: 0,
+            optional_features: 0, asi: 0, feats: 0, size: 0
+          },
+          creation_complete: false,
+          missing_required: []
+        }
+        const route = createMockRoute('/characters/new/languages')
+
+        const { canProceed } = useCharacterWizard({ route })
+        expect(canProceed.value).toBe(false)
+      })
+
+      it('allows proceeding when pending languages = 0', () => {
+        const store = useCharacterWizardStore()
+        store.summary = {
+          character: { id: 1, name: 'Test', total_level: 1 },
+          pending_choices: {
+            proficiencies: 0, languages: 0, spells: 0,
+            optional_features: 0, asi: 0, feats: 0, size: 0
+          },
+          creation_complete: false,
+          missing_required: []
+        }
+        const route = createMockRoute('/characters/new/languages')
+
+        const { canProceed } = useCharacterWizard({ route })
+        expect(canProceed.value).toBe(true)
+      })
+    })
+
+    describe('equipment step validation', () => {
+      it('always allows proceeding (component-level validation)', () => {
+        // Equipment validation is handled by StepEquipment.vue's allEquipmentChoicesMade computed
+        // The canProceed check just returns true since there's no summary count for equipment
+        const route = createMockRoute('/characters/new/equipment')
+        const { canProceed } = useCharacterWizard({ route })
+        expect(canProceed.value).toBe(true)
+      })
+
+      it('allows proceeding even with summary loaded', () => {
+        const store = useCharacterWizardStore()
+        store.summary = {
+          character: { id: 1, name: 'Test', total_level: 1 },
+          pending_choices: {
+            proficiencies: 0, languages: 0, spells: 0,
+            optional_features: 0, asi: 0, feats: 0, size: 0
+          },
+          creation_complete: false,
+          missing_required: []
+        }
+        const route = createMockRoute('/characters/new/equipment')
+
+        const { canProceed } = useCharacterWizard({ route })
+        expect(canProceed.value).toBe(true)
+      })
+    })
+
+    describe('spells step validation', () => {
+      it('allows proceeding when no summary loaded yet', () => {
+        const store = useCharacterWizardStore()
+        store.selections.class = mockCleric // spellcaster for step visibility
+        const route = createMockRoute('/characters/new/spells')
+
+        const { canProceed } = useCharacterWizard({ route })
+        expect(canProceed.value).toBe(true)
+      })
+
+      it('blocks proceeding when pending spells > 0', () => {
+        const store = useCharacterWizardStore()
+        store.selections.class = mockCleric
+        store.summary = {
+          character: { id: 1, name: 'Test', total_level: 1 },
+          pending_choices: {
+            proficiencies: 0, languages: 0, spells: 3,
+            optional_features: 0, asi: 0, feats: 0, size: 0
+          },
+          creation_complete: false,
+          missing_required: []
+        }
+        const route = createMockRoute('/characters/new/spells')
+
+        const { canProceed } = useCharacterWizard({ route })
+        expect(canProceed.value).toBe(false)
+      })
+
+      it('allows proceeding when pending spells = 0', () => {
+        const store = useCharacterWizardStore()
+        store.selections.class = mockCleric
+        store.summary = {
+          character: { id: 1, name: 'Test', total_level: 1 },
+          pending_choices: {
+            proficiencies: 0, languages: 0, spells: 0,
+            optional_features: 0, asi: 0, feats: 0, size: 0
+          },
+          creation_complete: false,
+          missing_required: []
+        }
+        const route = createMockRoute('/characters/new/spells')
+
+        const { canProceed } = useCharacterWizard({ route })
+        expect(canProceed.value).toBe(true)
+      })
+    })
   })
 
   describe('getStepUrl', () => {
