@@ -1105,13 +1105,6 @@ const isSpellcaster = computed(() => !!stats.value?.spellcasting)
       </div>
     </div>
 
-    <!-- Tab Navigation (Overview, Inventory, Spells) -->
-    <CharacterTabNavigation
-      v-if="!loading"
-      :public-id="publicId"
-      :is-spellcaster="isSpellcaster"
-    />
-
     <!-- Loading State -->
     <div
       v-if="loading"
@@ -1151,6 +1144,12 @@ const isSpellcaster = computed(() => !!stats.value?.spellcasting)
         @export="handleExport"
         @toggle-inspiration="handleToggleInspiration"
         @edit="handleEditClick"
+      />
+
+      <!-- Tab Navigation (Overview, Inventory, Spells) -->
+      <CharacterTabNavigation
+        :public-id="publicId"
+        :is-spellcaster="isSpellcaster"
       />
 
       <!-- Validation Warning - shows when sourcebook content was removed -->
