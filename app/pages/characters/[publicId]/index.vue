@@ -57,6 +57,12 @@ const isPlayMode = ref(false)
  */
 const canEdit = computed(() => isPlayMode.value && !character.value?.is_dead)
 
+/**
+ * Death saves are only editable when unconscious (0 HP) but not dead
+ * D&D rules: You only make death saves when at exactly 0 HP
+ */
+const canEditDeathSaves = computed(() => canEdit.value && localHitPoints.current === 0)
+
 // Load play mode preference from localStorage on mount
 onMounted(() => {
   const saved = localStorage.getItem('character-play-mode')
@@ -960,7 +966,7 @@ const tabItems = computed(() => {
               <CharacterSheetDeathSaves
                 :successes="localDeathSaves.successes"
                 :failures="localDeathSaves.failures"
-                :editable="canEdit"
+                :editable="canEditDeathSaves"
                 :is-dead="character.is_dead"
                 @update:successes="handleDeathSaveUpdate('successes', $event)"
                 @update:failures="handleDeathSaveUpdate('failures', $event)"
