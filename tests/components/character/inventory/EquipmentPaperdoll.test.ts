@@ -41,7 +41,7 @@ const mockEquipment: CharacterEquipment[] = [
 ]
 
 describe('EquipmentPaperdoll', () => {
-  it('renders all 11 equipment slots', async () => {
+  it('renders all 12 equipment slots', async () => {
     const wrapper = await mountSuspended(EquipmentPaperdoll, {
       props: { equipment: [] }
     })
@@ -50,6 +50,7 @@ describe('EquipmentPaperdoll', () => {
     expect(wrapper.find('[data-testid="slot-neck"]').exists()).toBe(true)
     expect(wrapper.find('[data-testid="slot-cloak"]').exists()).toBe(true)
     expect(wrapper.find('[data-testid="slot-armor"]').exists()).toBe(true)
+    expect(wrapper.find('[data-testid="slot-clothes"]').exists()).toBe(true)
     expect(wrapper.find('[data-testid="slot-belt"]').exists()).toBe(true)
     expect(wrapper.find('[data-testid="slot-hands"]').exists()).toBe(true)
     expect(wrapper.find('[data-testid="slot-ring_1"]').exists()).toBe(true)

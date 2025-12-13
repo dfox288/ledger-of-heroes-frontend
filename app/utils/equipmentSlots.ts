@@ -1,20 +1,21 @@
-export type EquipmentSlot =
-  | 'head'
-  | 'neck'
-  | 'cloak'
-  | 'armor'
-  | 'belt'
-  | 'hands'
-  | 'ring_1'
-  | 'ring_2'
-  | 'feet'
-  | 'main_hand'
-  | 'off_hand'
+export type EquipmentSlot
+  = 'head'
+    | 'neck'
+    | 'cloak'
+    | 'armor'
+    | 'clothes'
+    | 'belt'
+    | 'hands'
+    | 'ring_1'
+    | 'ring_2'
+    | 'feet'
+    | 'main_hand'
+    | 'off_hand'
 
-export const BODY_SLOTS: EquipmentSlot[] = ['head', 'neck', 'cloak', 'belt', 'hands', 'feet']
+export const BODY_SLOTS: EquipmentSlot[] = ['head', 'neck', 'cloak', 'clothes', 'belt', 'hands', 'feet']
 
 export const ALL_SLOTS: EquipmentSlot[] = [
-  'head', 'neck', 'cloak', 'armor', 'belt', 'hands',
+  'head', 'neck', 'cloak', 'armor', 'clothes', 'belt', 'hands',
   'ring_1', 'ring_2', 'feet', 'main_hand', 'off_hand'
 ]
 
@@ -23,6 +24,7 @@ export const SLOT_LABELS: Record<EquipmentSlot, string> = {
   neck: 'Neck',
   cloak: 'Cloak',
   armor: 'Armor',
+  clothes: 'Clothes',
   belt: 'Belt',
   hands: 'Hands',
   ring_1: 'Ring',
@@ -51,13 +53,14 @@ const SLOT_MAPPING: Record<string, EquipmentSlot[]> = {
 const PICKER_TYPES = new Set(['Wondrous Item', 'Ring'])
 
 // Name patterns for guessing slots
-const NAME_PATTERNS: Array<{ pattern: RegExp; slot: EquipmentSlot }> = [
+const NAME_PATTERNS: Array<{ pattern: RegExp, slot: EquipmentSlot }> = [
   { pattern: /\b(boots?|shoes?)\b/i, slot: 'feet' },
   { pattern: /\b(cloak|cape|mantle)\b/i, slot: 'cloak' },
   { pattern: /\b(belt|girdle|sash)\b/i, slot: 'belt' },
   { pattern: /\b(helm|helmet|hat|circlet|crown|headband)\b/i, slot: 'head' },
   { pattern: /\b(amulet|necklace|periapt|medallion|pendant|brooch)\b/i, slot: 'neck' },
-  { pattern: /\b(gloves?|gauntlets?|bracers?)\b/i, slot: 'hands' }
+  { pattern: /\b(gloves?|gauntlets?|bracers?)\b/i, slot: 'hands' },
+  { pattern: /\b(robes?|clothes|glamerweave|shiftweave)\b/i, slot: 'clothes' }
 ]
 
 /**

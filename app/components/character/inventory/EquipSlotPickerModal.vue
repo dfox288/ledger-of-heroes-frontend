@@ -28,13 +28,13 @@ const emit = defineEmits<{
 
 // Selected slot (defaults to suggested or first valid)
 const selectedSlot = ref<EquipmentSlot>(
-  props.suggestedSlot ?? props.validSlots[0]
+  props.suggestedSlot ?? props.validSlots[0]!
 )
 
 // Reset selection when modal opens with new item
 watch(() => props.open, (isOpen) => {
   if (isOpen) {
-    selectedSlot.value = props.suggestedSlot ?? props.validSlots[0]
+    selectedSlot.value = props.suggestedSlot ?? props.validSlots[0]!
   }
 })
 

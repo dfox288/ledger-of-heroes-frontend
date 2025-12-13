@@ -3,7 +3,7 @@
 /**
  * Equipment Paperdoll
  *
- * Visual display of all 11 equipment slots arranged around a character silhouette.
+ * Visual display of all 12 equipment slots arranged around a character silhouette.
  * Click equipped item → scroll to it in item table.
  */
 
@@ -40,18 +40,19 @@ function handleItemClick(item: CharacterEquipment | undefined) {
 }
 
 // Slot positions for grid layout (row, col)
-const slotPositions: Record<EquipmentSlot, { row: number; col: number }> = {
+const slotPositions: Record<EquipmentSlot, { row: number, col: number }> = {
   head: { row: 1, col: 2 },
   neck: { row: 2, col: 2 },
   main_hand: { row: 3, col: 1 },
   armor: { row: 3, col: 2 },
   off_hand: { row: 3, col: 3 },
   cloak: { row: 4, col: 2 },
-  hands: { row: 5, col: 1 },
-  belt: { row: 5, col: 2 },
-  ring_1: { row: 5, col: 3 },
-  feet: { row: 6, col: 2 },
-  ring_2: { row: 6, col: 3 }
+  clothes: { row: 5, col: 2 },
+  hands: { row: 6, col: 1 },
+  belt: { row: 6, col: 2 },
+  ring_1: { row: 6, col: 3 },
+  feet: { row: 7, col: 2 },
+  ring_2: { row: 7, col: 3 }
 }
 </script>
 
@@ -63,7 +64,10 @@ const slotPositions: Record<EquipmentSlot, { row: number; col: number }> = {
 
     <!-- Paperdoll Grid -->
     <div class="grid grid-cols-3 gap-2">
-      <template v-for="slot in ALL_SLOTS" :key="slot">
+      <template
+        v-for="slot in ALL_SLOTS"
+        :key="slot"
+      >
         <div
           :data-testid="`slot-${slot}`"
           :style="{

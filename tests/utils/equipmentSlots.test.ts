@@ -110,6 +110,11 @@ describe('equipmentSlots', () => {
       expect(guessSlotFromName('Bracers of Defense')).toBe('hands')
     })
 
+    it('guesses clothes for robe items', () => {
+      expect(guessSlotFromName('Robe of Eyes')).toBe('clothes')
+      expect(guessSlotFromName('Robes of the Archmagi')).toBe('clothes')
+    })
+
     it('returns null for unknown items', () => {
       expect(guessSlotFromName('Bag of Holding')).toBeNull()
       expect(guessSlotFromName('Wand of Magic Missiles')).toBeNull()

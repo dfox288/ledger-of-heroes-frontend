@@ -84,7 +84,7 @@ describe('EquipSlotPickerModal', () => {
         props: {
           open: true,
           itemName: 'Test Item',
-          validSlots: ['head', 'neck', 'cloak', 'armor', 'belt', 'hands', 'ring_1', 'ring_2', 'feet', 'main_hand', 'off_hand'] as const,
+          validSlots: ['head', 'neck', 'cloak', 'armor', 'clothes', 'belt', 'hands', 'ring_1', 'ring_2', 'feet', 'main_hand', 'off_hand'] as const,
           suggestedSlot: 'head' as const
         }
       })
