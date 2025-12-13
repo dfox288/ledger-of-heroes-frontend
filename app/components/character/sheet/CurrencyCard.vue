@@ -5,6 +5,7 @@
  *
  * Displays character's coin purse in a compact 2x2+1 grid layout.
  * Designed for the sidebar (~200px width).
+ * Emits click event when editable to allow parent to open edit modal.
  *
  * Layout:
  *   PP: 0   GP: 15
@@ -20,9 +21,19 @@ export interface Currency {
   cp: number
 }
 
-defineProps<{
+const props = defineProps<{
   currency: Currency | null
+  editable?: boolean
 }>()
+
+const emit = defineEmits<{
+  click: []
+}>()
+
+function handleClick() {
+  if (!props.editable) return
+  emit('click')
+}
 
 /**
  * Format number with locale-appropriate thousands separators
@@ -43,7 +54,14 @@ const currencies = [
 </script>
 
 <template>
-  <div class="bg-gray-50 dark:bg-gray-800 rounded-lg p-4">
+  <div
+    data-testid="currency-card"
+    :class="[
+      'bg-gray-50 dark:bg-gray-800 rounded-lg p-4 transition-colors',
+      editable ? 'cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700' : ''
+    ]"
+    @click="handleClick"
+  >
     <!-- Title -->
     <h3 class="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-3 text-center">
       Currency

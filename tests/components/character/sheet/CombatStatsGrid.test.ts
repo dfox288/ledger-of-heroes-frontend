@@ -501,80 +501,27 @@ describe('CharacterSheetCombatStatsGrid', () => {
 
   // =========================================================================
   // AC Tooltip Tests (#547)
+  // Note: Detailed tooltip logic is tested in StatArmorClass.test.ts
+  // These tests verify the component composition works correctly
   // =========================================================================
 
   describe('AC tooltip', () => {
-    it('shows armor name when character has armor equipped', async () => {
+    it('renders StatArmorClass with tooltip', async () => {
       const wrapper = await mountSuspended(CombatStatsGrid, {
         props: { character: mockArmoredCharacter, stats: mockStats }
       })
-      const vm = wrapper.vm as any
-      expect(vm.acTooltipText).toContain('Chain Mail')
+      // StatArmorClass should be rendered with tooltip (cursor-help indicates tooltip)
+      expect(wrapper.find('[data-testid="ac-cell"]').exists()).toBe(true)
+      expect(wrapper.find('.cursor-help').exists()).toBe(true)
     })
 
-    it('shows Unarmored Defense for Barbarian without armor', async () => {
+    it('passes character data to StatArmorClass for tooltip', async () => {
       const wrapper = await mountSuspended(CombatStatsGrid, {
         props: { character: mockBarbarianCharacter, stats: { ...mockStats, armor_class: 15 } }
       })
-      const vm = wrapper.vm as any
-      expect(vm.acTooltipText).toContain('Unarmored Defense')
-      expect(vm.acTooltipText).toContain('DEX')
-      expect(vm.acTooltipText).toContain('CON')
-    })
-
-    it('shows Unarmored Defense for Monk without armor', async () => {
-      const monkCharacter = {
-        ...mockBarbarianCharacter,
-        classes: [
-          {
-            class: { id: 2, name: 'Monk', slug: 'phb:monk' },
-            level: 1,
-            is_primary: true
-          }
-        ]
-      }
-      const wrapper = await mountSuspended(CombatStatsGrid, {
-        props: { character: monkCharacter, stats: { ...mockStats, armor_class: 14 } }
-      })
-      const vm = wrapper.vm as any
-      expect(vm.acTooltipText).toContain('Unarmored Defense')
-      expect(vm.acTooltipText).toContain('DEX')
-      expect(vm.acTooltipText).toContain('WIS')
-    })
-
-    it('shows basic unarmored AC for other classes', async () => {
-      const wizardCharacter = {
-        ...mockBarbarianCharacter,
-        classes: [
-          {
-            class: { id: 3, name: 'Wizard', slug: 'phb:wizard' },
-            level: 1,
-            is_primary: true
-          }
-        ]
-      }
-      const wrapper = await mountSuspended(CombatStatsGrid, {
-        props: { character: wizardCharacter, stats: { ...mockStats, armor_class: 12 } }
-      })
-      const vm = wrapper.vm as any
-      expect(vm.acTooltipText).toContain('Unarmored')
-      expect(vm.acTooltipText).toContain('DEX')
-    })
-
-    it('shows armor with shield when both equipped', async () => {
-      const shieldedCharacter = {
-        ...mockArmoredCharacter,
-        equipped: {
-          armor: { id: '123', name: 'Chain Mail', armor_class: '16' },
-          shield: { id: '456', name: 'Shield', armor_class: '2' }
-        }
-      }
-      const wrapper = await mountSuspended(CombatStatsGrid, {
-        props: { character: shieldedCharacter, stats: { ...mockStats, armor_class: 18 } }
-      })
-      const vm = wrapper.vm as any
-      expect(vm.acTooltipText).toContain('Chain Mail')
-      expect(vm.acTooltipText).toContain('Shield')
+      // AC value should be displayed
+      expect(wrapper.text()).toContain('15')
+      expect(wrapper.text()).toContain('AC')
     })
 
     it('has AC cell with data-testid for tooltip', async () => {
@@ -583,38 +530,16 @@ describe('CharacterSheetCombatStatsGrid', () => {
       })
       expect(wrapper.find('[data-testid="ac-cell"]').exists()).toBe(true)
     })
-
-    it('shows shield with unarmored for characters with only shield equipped', async () => {
-      const shieldOnlyCharacter = {
-        ...mockBarbarianCharacter,
-        classes: [
-          {
-            class: { id: 3, name: 'Wizard', slug: 'phb:wizard' },
-            level: 1,
-            is_primary: true
-          }
-        ],
-        equipped: {
-          armor: null,
-          shield: { id: '456', name: 'Shield', armor_class: '2' }
-        }
-      }
-      const wrapper = await mountSuspended(CombatStatsGrid, {
-        props: { character: shieldOnlyCharacter, stats: { ...mockStats, armor_class: 14 } }
-      })
-      const vm = wrapper.vm as any
-      expect(vm.acTooltipText).toContain('Unarmored')
-      expect(vm.acTooltipText).toContain('DEX')
-      expect(vm.acTooltipText).toContain('Shield')
-    })
   })
 
   // =========================================================================
   // is_dead Flag Tests (#544)
+  // Note: Detailed death state logic is tested in StatHitPoints.test.ts
+  // These tests verify the component composition works correctly
   // =========================================================================
 
   describe('is_dead flag', () => {
-    it('uses backend is_dead flag when available', async () => {
+    it('shows DEAD label when is_dead flag is true', async () => {
       const deadCharacter = {
         ...mockCharacter,
         is_dead: true,
@@ -626,11 +551,10 @@ describe('CharacterSheetCombatStatsGrid', () => {
           stats: { ...mockStats, hit_points: { current: 10, max: 20, temporary: 0 } }
         }
       })
-      const vm = wrapper.vm as any
-      expect(vm.isDead).toBe(true)
+      expect(wrapper.text()).toContain('DEAD')
     })
 
-    it('shows alive when is_dead is false even with 3 death save failures', async () => {
+    it('shows DYING label when is_dead is false even with 3 death save failures', async () => {
       const notDeadCharacter = {
         ...mockCharacter,
         is_dead: false,
@@ -642,11 +566,12 @@ describe('CharacterSheetCombatStatsGrid', () => {
           stats: { ...mockStats, hit_points: { current: 0, max: 20, temporary: 0 } }
         }
       })
-      const vm = wrapper.vm as any
-      expect(vm.isDead).toBe(false)
+      // is_dead=false overrides death saves, so should show DYING not DEAD
+      expect(wrapper.text()).toContain('DYING')
+      expect(wrapper.text()).not.toContain('DEAD')
     })
 
-    it('falls back to death save calculation when is_dead is undefined', async () => {
+    it('shows DEAD label when falling back to death save calculation', async () => {
       const legacyCharacter = {
         ...mockCharacter,
         death_save_failures: 3
@@ -660,8 +585,7 @@ describe('CharacterSheetCombatStatsGrid', () => {
           deathSaveFailures: 3
         }
       })
-      const vm = wrapper.vm as any
-      expect(vm.isDead).toBe(true)
+      expect(wrapper.text()).toContain('DEAD')
     })
   })
 })

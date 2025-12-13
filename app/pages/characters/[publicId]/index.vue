@@ -10,7 +10,6 @@
  *
  * Play Mode: Toggle to enable interactive features (death saves, HP, etc.)
  */
-import type { Condition } from '~/types'
 import type { CurrencyDelta } from '~/components/character/sheet/CurrencyEditModal.vue'
 
 const route = useRoute()
@@ -39,17 +38,15 @@ const {
 } = useCharacterSheet(publicId)
 
 // ============================================================================
-// Play Mode
+// Play Mode (from PageHeader)
 // ============================================================================
 
 const { apiFetch } = useApi()
 const toast = useToast()
 
-/**
- * Play mode toggle - enables interactive features
- * Persisted to localStorage for convenience
- */
-const isPlayMode = ref(false)
+// Reference to PageHeader to access isPlayMode (PageHeader owns play mode state)
+const pageHeaderRef = ref<{ isPlayMode: boolean } | null>(null)
+const isPlayMode = computed(() => pageHeaderRef.value?.isPlayMode ?? false)
 
 /**
  * Effective edit mode - play mode is enabled AND character is alive
@@ -62,84 +59,6 @@ const canEdit = computed(() => isPlayMode.value && !character.value?.is_dead)
  * D&D rules: You only make death saves when at exactly 0 HP
  */
 const canEditDeathSaves = computed(() => canEdit.value && localHitPoints.current === 0)
-
-// Load play mode preference from localStorage on mount
-onMounted(() => {
-  const saved = localStorage.getItem('character-play-mode')
-  if (saved === 'true') {
-    isPlayMode.value = true
-  }
-})
-
-// Save play mode preference when changed (only for complete characters)
-watch(isPlayMode, (newValue) => {
-  localStorage.setItem('character-play-mode', String(newValue))
-})
-
-// Ensure play mode is disabled for draft characters
-watch(() => character.value?.is_complete, (isComplete) => {
-  if (!isComplete && isPlayMode.value) {
-    isPlayMode.value = false
-  }
-}, { immediate: true })
-
-// ============================================================================
-// Inspiration Toggle (Play Mode)
-// ============================================================================
-
-/**
- * Local reactive state for inspiration
- * Needed for immediate UI feedback when toggling
- */
-const localHasInspiration = ref(false)
-
-/** Prevents race conditions from rapid clicks */
-const isUpdatingInspiration = ref(false)
-
-// Sync local inspiration state when character data loads or changes
-// Watch the specific field, not the whole character object, to catch external refreshes
-watch(() => character.value?.has_inspiration, (hasInspiration) => {
-  // Don't sync if we're in the middle of an optimistic update (would cause flicker)
-  if (hasInspiration !== undefined && !isUpdatingInspiration.value) {
-    localHasInspiration.value = hasInspiration
-  }
-}, { immediate: true })
-
-/**
- * Handle inspiration toggle from portrait click
- * Uses optimistic UI - toggle locally first, then sync to API
- */
-async function handleToggleInspiration() {
-  if (isUpdatingInspiration.value || !character.value) return
-
-  isUpdatingInspiration.value = true
-  const oldValue = localHasInspiration.value
-  const newValue = !oldValue
-  localHasInspiration.value = newValue
-
-  try {
-    await apiFetch(`/characters/${character.value.id}`, {
-      method: 'PATCH',
-      body: { has_inspiration: newValue }
-    })
-
-    // Show feedback toast
-    toast.add({
-      title: newValue ? 'Inspiration granted!' : 'Inspiration spent',
-      color: newValue ? 'warning' : 'neutral'
-    })
-  } catch (err) {
-    // Rollback on error
-    localHasInspiration.value = oldValue
-    logger.error('Failed to toggle inspiration:', err)
-    toast.add({
-      title: 'Failed to update inspiration',
-      color: 'error'
-    })
-  } finally {
-    isUpdatingInspiration.value = false
-  }
-}
 
 /**
  * Local reactive state for death saves
@@ -366,82 +285,6 @@ const displayStats = computed(() => {
   }
 })
 
-/**
- * Handle reviving a dead character
- * Uses atomic /revive endpoint that handles all state changes:
- * - Sets is_dead=false
- * - Resets death saves
- * - Sets HP (default 1)
- * - Clears exhaustion
- *
- * @see Issue #548 - Character revival endpoint
- */
-async function handleRevive() {
-  if (isUpdatingHp.value || !character.value) return
-  if (!character.value.is_dead) {
-    toast.add({
-      title: 'Character is not dead',
-      description: 'This character does not need to be revived',
-      color: 'warning'
-    })
-    return
-  }
-
-  isUpdatingHp.value = true
-
-  try {
-    // Single atomic call handles everything:
-    // is_dead=false, death saves reset, HP set, exhaustion cleared
-    await apiFetch(`/characters/${character.value.id}/revive`, {
-      method: 'POST',
-      body: {
-        hit_points: 1,
-        clear_exhaustion: true
-      }
-    })
-
-    // Refresh all character data to sync local state
-    await refresh()
-
-    // Sync local HP state from refreshed data
-    if (stats.value?.hit_points) {
-      localHitPoints.current = stats.value.hit_points.current ?? 0
-      localHitPoints.max = stats.value.hit_points.max ?? 0
-      localHitPoints.temporary = stats.value.hit_points.temporary ?? 0
-    }
-
-    // Reset local death saves
-    localDeathSaves.successes = 0
-    localDeathSaves.failures = 0
-
-    toast.add({
-      title: 'Character revived!',
-      description: `${character.value.name} has been brought back with 1 HP`,
-      color: 'success'
-    })
-  } catch (err: unknown) {
-    const error = err as { statusCode?: number, data?: { message?: string } }
-
-    // Handle "character not dead" validation error
-    if (error.statusCode === 422) {
-      toast.add({
-        title: 'Cannot revive',
-        description: error.data?.message || 'Character is not dead',
-        color: 'warning'
-      })
-    } else {
-      logger.error('Failed to revive character:', err)
-      toast.add({
-        title: 'Failed to revive',
-        description: 'Could not revive character. Try again.',
-        color: 'error'
-      })
-    }
-  } finally {
-    isUpdatingHp.value = false
-  }
-}
-
 // ============================================================================
 // Currency Management (Play Mode)
 // ============================================================================
@@ -573,27 +416,12 @@ const displayCurrency = computed(() => {
     : character.value.currency
 })
 
-/**
- * Computed character that uses local inspiration value when in play mode
- * This ensures the Header component sees immediate updates for the glow effect
- */
-const displayCharacter = computed(() => {
-  if (!character.value) return null
-
-  return isPlayMode.value
-    ? { ...character.value, has_inspiration: localHasInspiration.value }
-    : character.value
-})
-
 // ============================================================================
 // Rest Actions (Play Mode)
 // ============================================================================
 
 /** Long rest confirmation modal state */
 const showLongRestModal = ref(false)
-
-/** Level up confirmation modal state */
-const showLevelUpModal = ref(false)
 
 /** Prevents race conditions from rapid rest actions */
 const isResting = ref(false)
@@ -723,13 +551,9 @@ async function handleLongRest() {
 
 // ============================================================================
 // Conditions Management (Play Mode)
+// Note: Add Condition is handled by PageHeader. This section handles
+// remove, update level, and deadly exhaustion confirmation.
 // ============================================================================
-
-/** Fetch available conditions for the add modal */
-const { data: availableConditions } = useReferenceData<Condition>('/conditions')
-
-/** Add condition modal state */
-const showAddConditionModal = ref(false)
 
 /** Deadly exhaustion confirmation modal state */
 const showDeadlyExhaustionModal = ref(false)
@@ -739,43 +563,6 @@ const pendingDeadlyExhaustion = ref<{ slug: string, currentLevel: number, target
 
 /** Prevents race conditions from rapid condition updates */
 const isUpdatingConditions = ref(false)
-
-/**
- * Handle add condition button click from Conditions panel
- */
-function handleAddConditionClick() {
-  showAddConditionModal.value = true
-}
-
-/**
- * Handle add condition from modal
- * POSTs new condition to backend
- */
-async function handleAddCondition(payload: { condition: string, source: string, duration: string, level?: number }) {
-  if (isUpdatingConditions.value || !character.value) return
-
-  isUpdatingConditions.value = true
-
-  try {
-    await apiFetch(`/characters/${character.value.id}/conditions`, {
-      method: 'POST',
-      body: payload
-    })
-    await refresh()
-    toast.add({
-      title: 'Condition added',
-      color: 'success'
-    })
-  } catch (err) {
-    logger.error('Failed to add condition:', err)
-    toast.add({
-      title: 'Failed to add condition',
-      color: 'error'
-    })
-  } finally {
-    isUpdatingConditions.value = false
-  }
-}
 
 /**
  * Handle remove condition from Conditions panel
@@ -866,185 +653,6 @@ async function handleDeadlyExhaustionConfirmed() {
   pendingDeadlyExhaustion.value = null
 }
 
-// ============================================================================
-// Export Character
-// ============================================================================
-
-/** Prevents double-clicks during export */
-const isExporting = ref(false)
-
-/**
- * Export character to JSON file
- * Downloads as {publicId}-{YYYY-MM-DD-HHmm}.json
- */
-async function handleExport() {
-  if (isExporting.value || !character.value) return
-
-  isExporting.value = true
-
-  try {
-    // Fetch export data from API
-    const response = await apiFetch<{ data: unknown }>(`/characters/${character.value.public_id}/export`)
-
-    // Generate filename: publicId-YYYY-MM-DD-HHmm.json
-    const now = new Date()
-    const year = now.getFullYear()
-    const month = String(now.getMonth() + 1).padStart(2, '0')
-    const day = String(now.getDate()).padStart(2, '0')
-    const hours = String(now.getHours()).padStart(2, '0')
-    const minutes = String(now.getMinutes()).padStart(2, '0')
-    const filename = `${character.value.public_id}-${year}-${month}-${day}-${hours}${minutes}.json`
-
-    // Create blob and trigger download
-    const blob = new Blob([JSON.stringify(response.data, null, 2)], { type: 'application/json' })
-    const url = URL.createObjectURL(blob)
-    const link = document.createElement('a')
-    link.href = url
-    link.download = filename
-    document.body.appendChild(link)
-    link.click()
-    document.body.removeChild(link)
-    URL.revokeObjectURL(url)
-
-    toast.add({
-      title: 'Character exported',
-      color: 'success'
-    })
-  } catch (err) {
-    logger.error('Failed to export character:', err)
-    toast.add({
-      title: 'Failed to export character',
-      color: 'error'
-    })
-  } finally {
-    isExporting.value = false
-  }
-}
-
-// ============================================================================
-// Edit Character (Name, Alignment, Portrait)
-// ============================================================================
-
-import type { EditPayload } from '~/components/character/sheet/EditModal.vue'
-
-/** Edit modal open state */
-const showEditModal = ref(false)
-
-/** Prevents race conditions during edit save */
-const isEditing = ref(false)
-
-/** Error message from edit operation */
-const editError = ref<string | null>(null)
-
-/**
- * Handle edit button click from header dropdown
- */
-function handleEditClick() {
-  editError.value = null
-  showEditModal.value = true
-}
-
-/**
- * Handle save from edit modal
- * Updates name/alignment via PATCH, uploads portrait separately if provided
- */
-async function handleEditSave(payload: EditPayload) {
-  if (isEditing.value || !character.value) return
-
-  isEditing.value = true
-  editError.value = null
-
-  try {
-    // 1. Update name and alignment if changed
-    const hasNameChange = payload.name !== character.value.name
-    const hasAlignmentChange = payload.alignment !== character.value.alignment
-
-    if (hasNameChange || hasAlignmentChange) {
-      await apiFetch(`/characters/${character.value.id}`, {
-        method: 'PATCH',
-        body: {
-          name: payload.name,
-          alignment: payload.alignment
-        }
-      })
-    }
-
-    // 2. Upload portrait if file provided
-    if (payload.portraitFile) {
-      const formData = new FormData()
-      formData.append('file', payload.portraitFile)
-
-      await apiFetch(`/characters/${character.value.id}/media/portrait`, {
-        method: 'POST',
-        body: formData
-      })
-    }
-
-    // 3. Refresh character data to show updates
-    await refresh()
-
-    // 4. Close modal and show success with specific message
-    showEditModal.value = false
-
-    // Build descriptive toast message
-    const changes: string[] = []
-    if (hasNameChange || hasAlignmentChange) changes.push('details')
-    if (payload.portraitFile) changes.push('portrait')
-    const toastTitle = changes.length > 1
-      ? 'Character details and portrait updated'
-      : payload.portraitFile
-        ? 'Portrait updated'
-        : 'Character updated'
-
-    toast.add({
-      title: toastTitle,
-      color: 'success'
-    })
-  } catch (err: unknown) {
-    const error = err as { statusCode?: number, data?: { message?: string } }
-
-    if (error.statusCode === 422) {
-      editError.value = error.data?.message || 'Validation failed'
-    } else {
-      logger.error('Failed to update character:', err)
-      editError.value = 'Failed to update character. Please try again.'
-    }
-  } finally {
-    isEditing.value = false
-  }
-}
-
-/**
- * Handle portrait removal from edit modal
- */
-async function handleRemovePortrait() {
-  if (isEditing.value || !character.value) return
-
-  isEditing.value = true
-
-  try {
-    await apiFetch(`/characters/${character.value.id}/media/portrait`, {
-      method: 'DELETE'
-    })
-
-    // Refresh character data to show portrait removal
-    await refresh()
-
-    toast.add({
-      title: 'Portrait removed',
-      color: 'success'
-    })
-  } catch (err) {
-    logger.error('Failed to remove portrait:', err)
-    toast.add({
-      title: 'Failed to remove portrait',
-      color: 'error'
-    })
-  } finally {
-    isEditing.value = false
-  }
-}
-
 // Validation - check for dangling references when sourcebooks are removed
 const characterId = computed(() => character.value?.id ?? null)
 const { validationResult, validateReferences } = useCharacterValidation(characterId)
@@ -1061,54 +669,33 @@ useSeoMeta({
   description: () => `View ${character.value?.name ?? 'character'} - D&D 5e Character Sheet`
 })
 
-// Tab items for bottom section
+// Tab items for bottom section (Equipment moved to dedicated /inventory page)
 const tabItems = computed(() => {
   const items = [
     { label: 'Features', slot: 'features', icon: 'i-heroicons-star' },
     { label: 'Proficiencies', slot: 'proficiencies', icon: 'i-heroicons-academic-cap' },
-    { label: 'Equipment', slot: 'equipment', icon: 'i-heroicons-briefcase' },
     { label: 'Languages', slot: 'languages', icon: 'i-heroicons-language' },
     { label: 'Notes', slot: 'notes', icon: 'i-heroicons-document-text' }
   ]
   // Only show Spells tab for casters
   if (stats.value?.spellcasting) {
-    items.splice(3, 0, { label: 'Spells', slot: 'spells', icon: 'i-heroicons-sparkles' })
+    items.splice(2, 0, { label: 'Spells', slot: 'spells', icon: 'i-heroicons-sparkles' })
   }
   return items
 })
+
+// Is this character a spellcaster? (for TabNavigation)
+const isSpellcaster = computed(() => !!stats.value?.spellcasting)
 </script>
 
 <template>
   <div class="container mx-auto px-4 py-8 max-w-5xl">
-    <!-- Top Bar: Back Link + Play Mode Toggle (only for complete characters) -->
-    <div class="flex items-center justify-between mb-6">
-      <UButton
-        to="/characters"
-        variant="ghost"
-        icon="i-heroicons-arrow-left"
-      >
-        Back to Characters
-      </UButton>
-
-      <!-- Play Mode Toggle (only for complete characters) -->
-      <div
-        v-if="character?.is_complete"
-        class="flex items-center gap-2"
-      >
-        <span class="text-sm text-gray-500 dark:text-gray-400">Play Mode</span>
-        <USwitch
-          v-model="isPlayMode"
-          data-testid="play-mode-toggle"
-        />
-      </div>
-    </div>
-
     <!-- Loading State -->
     <div
       v-if="loading"
       class="space-y-6"
     >
-      <USkeleton class="h-20 w-full" />
+      <USkeleton class="h-32 w-full" />
       <div class="grid lg:grid-cols-[200px_1fr] gap-6">
         <USkeleton class="h-80" />
         <div class="space-y-4">
@@ -1132,16 +719,12 @@ const tabItems = computed(() => {
       v-else-if="character && stats"
       class="space-y-6"
     >
-      <!-- Header -->
-      <CharacterSheetHeader
-        :character="displayCharacter!"
-        :is-play-mode="isPlayMode"
-        @add-condition="handleAddConditionClick"
-        @level-up="showLevelUpModal = true"
-        @revive="handleRevive"
-        @export="handleExport"
-        @toggle-inspiration="handleToggleInspiration"
-        @edit="handleEditClick"
+      <!-- Unified Page Header (back button, play mode, portrait, actions, tabs) -->
+      <CharacterPageHeader
+        ref="pageHeaderRef"
+        :character="character"
+        :is-spellcaster="isSpellcaster"
+        @updated="refresh"
       />
 
       <!-- Validation Warning - shows when sourcebook content was removed -->
@@ -1246,14 +829,6 @@ const tabItems = computed(() => {
           <CharacterSheetProficienciesPanel :proficiencies="proficiencies" />
         </template>
 
-        <template #equipment>
-          <CharacterSheetEquipmentPanel
-            :equipment="equipment"
-            :carrying-capacity="stats?.carrying_capacity"
-            :push-drag-lift="stats?.push_drag_lift"
-          />
-        </template>
-
         <template #spells>
           <CharacterSheetSpellsPanel
             v-if="stats.spellcasting"
@@ -1279,35 +854,9 @@ const tabItems = computed(() => {
     @confirm="handleLongRest"
   />
 
-  <!-- Level Up Confirmation Modal -->
-  <CharacterSheetLevelUpConfirmModal
-    v-if="character"
-    v-model:open="showLevelUpModal"
-    :character-public-id="character.public_id"
-    :current-level="character.level"
-  />
-
-  <!-- Add Condition Modal -->
-  <CharacterSheetAddConditionModal
-    v-model:open="showAddConditionModal"
-    :available-conditions="availableConditions ?? []"
-    @add="handleAddCondition"
-  />
-
   <!-- Deadly Exhaustion Confirmation Modal -->
   <CharacterSheetDeadlyExhaustionConfirmModal
     v-model:open="showDeadlyExhaustionModal"
     @confirm="handleDeadlyExhaustionConfirmed"
-  />
-
-  <!-- Edit Character Modal -->
-  <CharacterSheetEditModal
-    v-if="character"
-    v-model:open="showEditModal"
-    :character="character"
-    :loading="isEditing"
-    :error="editError"
-    @save="handleEditSave"
-    @remove-portrait="handleRemovePortrait"
   />
 </template>

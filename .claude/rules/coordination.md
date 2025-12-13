@@ -7,10 +7,11 @@ Use GitHub Issues in `dfox288/ledger-of-heroes` for bugs, API issues, and cross-
 | Resource | Location | Command |
 |----------|----------|---------|
 | **Issues** | Shared repo `dfox288/ledger-of-heroes` | `gh issue list --repo dfox288/ledger-of-heroes` |
-| **PRs** | This repo (frontend) | `gh pr list` (no --repo flag needed) |
+| **Frontend PRs** | This repo (frontend) | `gh pr list` (no --repo flag needed) |
+| **Backend PRs** | `dfox288/ledger-of-heroes-backend` | `gh pr list --repo dfox288/ledger-of-heroes-backend` |
 | **Handoffs** | `../wrapper/.claude/handoffs.md` | Direct file read |
 
-**CRITICAL:** Always check PRs in the current repo, not the shared issues repo.
+**CRITICAL:** Issues live in the shared `ledger-of-heroes` repo. PRs go to the respective project repo (frontend PRs here, backend PRs in `ledger-of-heroes-backend`).
 
 ## Session Start Checklist
 

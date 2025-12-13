@@ -19,6 +19,18 @@ Nuxt 4.x frontend for D&D 5e Compendium. Consumes REST API from `../backend` (La
 
 ---
 
+## Session Memory (claude-mem)
+
+**CRITICAL:** When searching session memory, use project name `frontend` (NOT "ledger-of-heroes"):
+
+```
+mcp__plugin_claude-mem_claude-mem-search__search with project: "frontend"
+```
+
+This retrieves context from previous sessions including decisions, changes, and discoveries.
+
+---
+
 ## Backend Environment
 
 Switch between backend environments using `NUXT_BACKEND_ENV` in `.env`:

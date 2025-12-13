@@ -18,7 +18,7 @@ export default defineEventHandler(async (event) => {
     })
     return data
   } catch (error: unknown) {
-    const err = error as { statusCode?: number; statusMessage?: string; data?: unknown }
+    const err = error as { statusCode?: number, statusMessage?: string, data?: unknown }
     throw createError({
       statusCode: err.statusCode || 500,
       statusMessage: err.statusMessage || 'Failed to import character',
