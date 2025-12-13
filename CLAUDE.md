@@ -21,13 +21,19 @@ Nuxt 4.x frontend for D&D 5e Compendium. Consumes REST API from `../backend` (La
 
 ## Session Memory (claude-mem)
 
-**CRITICAL:** When searching session memory, use project name `frontend` (NOT "ledger-of-heroes"):
+**CRITICAL:** Use the **current directory name** as the `project` parameter for claude-mem searches.
+
+| Directory | Project Name |
+|-----------|--------------|
+| `frontend` | `frontend` |
+| `frontend-agent-1` | `frontend-agent-1` |
+| `frontend-agent-2` | `frontend-agent-2` |
 
 ```
-mcp__plugin_claude-mem_claude-mem-search__search with project: "frontend"
+mcp__plugin_claude-mem_claude-mem-search__search with project: "<directory-name>"
 ```
 
-This retrieves context from previous sessions including decisions, changes, and discoveries.
+This keeps session memory isolated between the main workspace and agent worktrees.
 
 ---
 
