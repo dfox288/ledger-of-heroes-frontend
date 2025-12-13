@@ -128,6 +128,33 @@ function isEquippable(equipment: CharacterEquipment): boolean {
   )
 }
 
+// Check if item is a weapon (needs hand selector)
+function isWeapon(equipment: CharacterEquipment): boolean {
+  const itemType = getItemType(equipment)?.toLowerCase() ?? ''
+  // Weapons need hand selector, but not shields (always off-hand) or armor (always worn)
+  return (
+    itemType.includes('weapon')
+    || itemType.includes('melee')
+    || itemType.includes('ranged')
+  ) && !itemType.includes('shield')
+}
+
+// Get equip dropdown items for weapons (hand selector)
+function getEquipMenuItems(item: CharacterEquipment) {
+  return [[
+    {
+      label: 'Main Hand',
+      icon: 'i-heroicons-hand-raised',
+      onSelect: () => emit('equip', item.id, 'main_hand')
+    },
+    {
+      label: 'Off-Hand',
+      icon: 'i-heroicons-hand-raised',
+      onSelect: () => emit('equip', item.id, 'off_hand')
+    }
+  ]]
+}
+
 // Get equip/unequip button label
 function getEquipLabel(equipment: CharacterEquipment): string {
   return requiresAttunement(equipment) ? 'Attune' : 'Equip'
@@ -357,7 +384,7 @@ function handleEquip(item: CharacterEquipment) {
               class="flex items-center gap-1"
               @click.stop
             >
-              <!-- Equip/Unequip toggle (shows Attune/Unattune for attunement items) -->
+              <!-- Unequip button (for equipped items) -->
               <UButton
                 v-if="isEquippable(item) && item.equipped"
                 data-testid="action-unequip"
@@ -368,6 +395,23 @@ function handleEquip(item: CharacterEquipment) {
               >
                 {{ getUnequipLabel(item) }}
               </UButton>
+
+              <!-- Equip dropdown for weapons (hand selector) -->
+              <UDropdownMenu
+                v-else-if="isWeapon(item)"
+                :items="getEquipMenuItems(item)"
+              >
+                <UButton
+                  data-testid="action-equip"
+                  size="xs"
+                  variant="ghost"
+                  trailing-icon="i-heroicons-chevron-down"
+                >
+                  Equip
+                </UButton>
+              </UDropdownMenu>
+
+              <!-- Direct equip button for non-weapons (armor, shield, attunement) -->
               <UButton
                 v-else-if="isEquippable(item)"
                 data-testid="action-equip"

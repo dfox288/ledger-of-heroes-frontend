@@ -295,23 +295,41 @@ describe('ItemTable', () => {
       expect(wrapper.emitted('unequip')![0]).toEqual([1])
     })
 
-    it('emits equip with correct slot when equip button clicked', async () => {
-      const unequippedWeapon: CharacterEquipment = {
-        ...mockWeapon,
+    it('emits equip with correct slot when armor equip button clicked', async () => {
+      const unequippedArmor: CharacterEquipment = {
+        ...mockArmor,
         equipped: false,
-        location: 'inventory'
+        location: 'backpack'
       }
 
       const wrapper = await mountSuspended(ItemTable, {
-        props: { items: [unequippedWeapon], editable: true }
+        props: { items: [unequippedArmor], editable: true }
       })
 
       const btn = wrapper.find('[data-testid="action-equip"]')
       await btn.trigger('click')
 
       expect(wrapper.emitted('equip')).toBeTruthy()
-      // Weapon should default to main_hand
-      expect(wrapper.emitted('equip')![0]).toEqual([1, 'main_hand'])
+      // Armor should equip to 'worn'
+      expect(wrapper.emitted('equip')![0]).toEqual([2, 'worn'])
+    })
+
+    it('shows dropdown with hand options for weapon equip', async () => {
+      const unequippedWeapon: CharacterEquipment = {
+        ...mockWeapon,
+        equipped: false,
+        location: 'backpack'
+      }
+
+      const wrapper = await mountSuspended(ItemTable, {
+        props: { items: [unequippedWeapon], editable: true }
+      })
+
+      // Weapon should have dropdown trigger with chevron
+      const btn = wrapper.find('[data-testid="action-equip"]')
+      expect(btn.exists()).toBe(true)
+      // The button should have trailing chevron icon indicating dropdown
+      expect(btn.html()).toContain('chevron-down')
     })
 
     it('emits decrement-qty when minus button clicked', async () => {

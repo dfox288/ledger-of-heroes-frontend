@@ -29,9 +29,13 @@ const isAddLootOpen = ref(false)
 const isShopOpen = ref(false)
 const isCurrencyModalOpen = ref(false)
 const isItemDetailOpen = ref(false)
+const isSellModalOpen = ref(false)
+const isEditQtyModalOpen = ref(false)
 const selectedItem = ref<CharacterEquipment | null>(null)
 const isAddingItem = ref(false)
 const isPurchasing = ref(false)
+const isSelling = ref(false)
+const isUpdatingQty = ref(false)
 const isCurrencyLoading = ref(false)
 const currencyError = ref<string | null>(null)
 
@@ -98,6 +102,7 @@ const {
   unequipItem,
   addItem,
   dropItem,
+  sellItem,
   purchaseItem,
   updateQuantity
 } = useInventoryActions(publicId)
@@ -125,8 +130,11 @@ async function handleUnequip(itemId: number) {
   }
 }
 
-function handleSell(_itemId: number) {
-  toast.add({ title: 'Sell modal coming soon', color: 'info' })
+function handleSell(itemId: number) {
+  const item = equipment.value.find(e => e.id === itemId)
+  if (!item) return
+  selectedItem.value = item
+  isSellModalOpen.value = true
 }
 
 async function handleDrop(itemId: number) {
@@ -140,8 +148,11 @@ async function handleDrop(itemId: number) {
   }
 }
 
-function handleEditQty(_itemId: number) {
-  toast.add({ title: 'Edit quantity modal coming soon', color: 'info' })
+function handleEditQty(itemId: number) {
+  const item = equipment.value.find(e => e.id === itemId)
+  if (!item) return
+  selectedItem.value = item
+  isEditQtyModalOpen.value = true
 }
 
 async function handleIncrementQty(itemId: number) {
@@ -274,6 +285,71 @@ function handleCurrencyClick() {
 
 function handleClearCurrencyError() {
   currencyError.value = null
+}
+
+// Sell modal handler
+interface SellPayload {
+  equipment_id: number
+  quantity: number
+  total_price_cp: number
+}
+
+async function handleSellConfirm(payload: SellPayload) {
+  isSelling.value = true
+  try {
+    const item = equipment.value.find(e => e.id === payload.equipment_id)
+    if (!item) return
+
+    // If selling all, delete the item
+    if (payload.quantity >= item.quantity) {
+      await sellItem(payload.equipment_id, payload.total_price_cp)
+    } else {
+      // Partial sell: reduce quantity and add currency
+      await updateQuantity(payload.equipment_id, item.quantity - payload.quantity)
+      // Add currency from sale
+      await apiFetch(`/characters/${publicId.value}/currency`, {
+        method: 'PATCH',
+        body: { cp: `+${payload.total_price_cp}` }
+      })
+    }
+
+    toast.add({
+      title: 'Item sold!',
+      description: `Received ${(payload.total_price_cp / 100).toFixed(2)} gp`,
+      color: 'success'
+    })
+
+    isSellModalOpen.value = false
+    selectedItem.value = null
+    await Promise.all([refreshEquipment(), refreshCharacter()])
+  } catch (error) {
+    logger.error('Failed to sell item:', error)
+    toast.add({ title: 'Failed to sell item', color: 'error' })
+  } finally {
+    isSelling.value = false
+  }
+}
+
+// Edit quantity modal handler
+interface EditQuantityPayload {
+  equipment_id: number
+  quantity: number
+}
+
+async function handleEditQtyConfirm(payload: EditQuantityPayload) {
+  isUpdatingQty.value = true
+  try {
+    await updateQuantity(payload.equipment_id, payload.quantity)
+    toast.add({ title: 'Quantity updated!', color: 'success' })
+    isEditQtyModalOpen.value = false
+    selectedItem.value = null
+    await refreshEquipment()
+  } catch (error) {
+    logger.error('Failed to update quantity:', error)
+    toast.add({ title: 'Failed to update quantity', color: 'error' })
+  } finally {
+    isUpdatingQty.value = false
+  }
 }
 
 useSeoMeta({
@@ -430,6 +506,25 @@ useSeoMeta({
       @update:open="isCurrencyModalOpen = $event"
       @apply="handleCurrencyUpdate"
       @clear-error="handleClearCurrencyError"
+    />
+
+    <!-- Sell Modal -->
+    <CharacterInventorySellModal
+      :open="isSellModalOpen"
+      :item="selectedItem"
+      :currency="currency"
+      :loading="isSelling"
+      @update:open="isSellModalOpen = $event"
+      @sell="handleSellConfirm"
+    />
+
+    <!-- Edit Quantity Modal -->
+    <CharacterInventoryEditQuantityModal
+      :open="isEditQtyModalOpen"
+      :item="selectedItem"
+      :loading="isUpdatingQty"
+      @update:open="isEditQtyModalOpen = $event"
+      @update-quantity="handleEditQtyConfirm"
     />
   </div>
 </template>
