@@ -188,8 +188,15 @@ function getLocationText(equipment: CharacterEquipment): string | null {
   switch (equipment.location) {
     case 'main_hand': return 'Main Hand'
     case 'off_hand': return 'Off Hand'
-    case 'worn': return 'Worn'
-    case 'attuned': return 'Attuned'
+    case 'head': return 'Head'
+    case 'neck': return 'Neck'
+    case 'cloak': return 'Cloak'
+    case 'armor': return 'Armor'
+    case 'belt': return 'Belt'
+    case 'hands': return 'Hands'
+    case 'ring_1': return 'Ring'
+    case 'ring_2': return 'Ring'
+    case 'feet': return 'Feet'
     default: return null
   }
 }
@@ -253,15 +260,17 @@ function getMenuItems(item: CharacterEquipment) {
 function handleEquip(item: CharacterEquipment) {
   const itemType = getItemType(item)?.toLowerCase() ?? ''
 
-  // Determine appropriate slot
+  // Determine appropriate slot based on item type
   let slot = 'main_hand'
   if (itemType.includes('armor') && !itemType.includes('shield')) {
-    slot = 'worn'
+    slot = 'armor'
   } else if (itemType.includes('shield')) {
     slot = 'off_hand'
-  } else if ((item.item as { requires_attunement?: boolean } | null)?.requires_attunement) {
-    slot = 'attuned'
+  } else if (itemType.includes('ring')) {
+    slot = 'ring_1' // Default to ring_1, UI can offer ring_2 if occupied
   }
+  // Note: Attunement is now handled separately via is_attuned flag
+  // The parent component should set is_attuned when equipping attuneable items
 
   emit('equip', item.id, slot)
 }

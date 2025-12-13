@@ -4,7 +4,7 @@ import { mountSuspended } from '@nuxt/test-utils/runtime'
 import EquipmentStatus from '~/components/character/inventory/EquipmentStatus.vue'
 import type { CharacterEquipment } from '~/types/character'
 
-// Mock equipment with various locations
+// Mock equipment with various locations (using expanded slot system)
 const mockEquipment: CharacterEquipment[] = [
   {
     id: 1,
@@ -15,7 +15,8 @@ const mockEquipment: CharacterEquipment[] = [
     custom_description: null,
     quantity: 1,
     equipped: true,
-    location: 'main_hand'
+    location: 'main_hand',
+    is_attuned: false
   },
   {
     id: 2,
@@ -26,7 +27,8 @@ const mockEquipment: CharacterEquipment[] = [
     custom_description: null,
     quantity: 1,
     equipped: true,
-    location: 'off_hand'
+    location: 'off_hand',
+    is_attuned: false
   },
   {
     id: 3,
@@ -37,7 +39,8 @@ const mockEquipment: CharacterEquipment[] = [
     custom_description: null,
     quantity: 1,
     equipped: true,
-    location: 'worn'
+    location: 'armor', // Changed from 'worn' to 'armor'
+    is_attuned: false
   },
   {
     id: 4,
@@ -48,7 +51,8 @@ const mockEquipment: CharacterEquipment[] = [
     custom_description: null,
     quantity: 1,
     equipped: true,
-    location: 'attuned'
+    location: 'ring_1', // Specific slot instead of 'attuned'
+    is_attuned: true // Attunement is now a boolean flag
   },
   {
     id: 5,
@@ -59,7 +63,8 @@ const mockEquipment: CharacterEquipment[] = [
     custom_description: null,
     quantity: 1,
     equipped: false,
-    location: 'inventory'
+    location: 'backpack', // Changed from 'inventory' to 'backpack'
+    is_attuned: false
   }
 ]
 

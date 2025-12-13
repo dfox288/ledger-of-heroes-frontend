@@ -198,8 +198,15 @@ const locationText = computed(() => {
   switch (props.item.location) {
     case 'main_hand': return 'Main Hand'
     case 'off_hand': return 'Off Hand'
-    case 'worn': return 'Worn'
-    case 'attuned': return 'Attuned'
+    case 'head': return 'Head'
+    case 'neck': return 'Neck'
+    case 'cloak': return 'Cloak'
+    case 'armor': return 'Armor'
+    case 'belt': return 'Belt'
+    case 'hands': return 'Hands'
+    case 'ring_1': return 'Ring'
+    case 'ring_2': return 'Ring'
+    case 'feet': return 'Feet'
     default: return props.item.location
   }
 })

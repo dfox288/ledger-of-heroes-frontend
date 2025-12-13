@@ -35,11 +35,12 @@ const offHand = computed(() =>
 )
 
 const wornArmor = computed(() =>
-  props.equipment.find(e => e.equipped && e.location === 'worn')
+  props.equipment.find(e => e.equipped && e.location === 'armor')
 )
 
+// Attuned items: filter by is_attuned boolean (can be in any slot)
 const attunedItems = computed(() =>
-  props.equipment.filter(e => e.equipped && e.location === 'attuned')
+  props.equipment.filter(e => e.is_attuned === true)
 )
 
 // Check if main hand is two-handed
