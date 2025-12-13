@@ -15,7 +15,7 @@ export default defineEventHandler(async (event) => {
     const data = await $fetch(`${config.apiBaseServer}/characters/${id}/export`)
     return data
   } catch (error: unknown) {
-    const err = error as { statusCode?: number; statusMessage?: string }
+    const err = error as { statusCode?: number, statusMessage?: string }
     throw createError({
       statusCode: err.statusCode || 500,
       statusMessage: err.statusMessage || 'Failed to export character'
