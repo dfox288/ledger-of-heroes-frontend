@@ -365,6 +365,35 @@ describe('ConditionsManager', () => {
       expect(wrapper.emitted('refresh')).toBeTruthy()
     })
 
+    it('shows success toast after update', async () => {
+      setupStore()
+      apiFetchMock.mockResolvedValue({})
+
+      const wrapper = await mountSuspended(ConditionsManager, {
+        props: {
+          conditions: [mockExhaustion],
+          characterId: 42,
+          editable: true
+        },
+        ...getMountOptions()
+      })
+
+      const vm = wrapper.vm as unknown as ConditionsManagerVM
+      await vm.handleUpdateLevel({
+        slug: 'core:exhaustion',
+        level: 3,
+        source: 'Forced march',
+        duration: 'Until long rest'
+      })
+
+      expect(toastMock.add).toHaveBeenCalledWith(
+        expect.objectContaining({
+          title: 'Exhaustion updated',
+          color: 'success'
+        })
+      )
+    })
+
     it('shows error toast on update failure', async () => {
       setupStore()
       apiFetchMock.mockRejectedValue(new Error('Network error'))

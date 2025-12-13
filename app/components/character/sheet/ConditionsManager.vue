@@ -104,6 +104,10 @@ async function handleUpdateLevel(payload: {
       }
     })
     emit('refresh')
+    toast.add({
+      title: 'Exhaustion updated',
+      color: 'success'
+    })
   } catch (err) {
     logger.error('Failed to update exhaustion level:', err)
     toast.add({

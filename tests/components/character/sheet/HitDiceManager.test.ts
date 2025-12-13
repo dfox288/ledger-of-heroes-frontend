@@ -537,6 +537,32 @@ describe('HitDiceManager', () => {
 
       expect(vm.showLongRestModal).toBe(false)
     })
+
+    it('closes modal on long rest failure', async () => {
+      setupStore()
+      apiFetchMock.mockRejectedValue(new Error('Network error'))
+
+      const wrapper = await mountSuspended(HitDiceManager, {
+        props: {
+          hitDice: mockHitDice,
+          characterId: 42,
+          editable: true
+        },
+        ...getMountOptions()
+      })
+
+      const vm = wrapper.vm as unknown as HitDiceManagerVM
+
+      // Open modal first
+      vm.showLongRestModal = true
+      await flushPromises()
+
+      // Try long rest (will fail)
+      await vm.handleLongRest()
+
+      // Modal should still close
+      expect(vm.showLongRestModal).toBe(false)
+    })
   })
 
   // ===========================================================================

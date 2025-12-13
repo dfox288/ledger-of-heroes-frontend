@@ -152,6 +152,7 @@ async function handleLongRest() {
     })
   } catch (err) {
     logger.error('Failed to take long rest:', err)
+    showLongRestModal.value = false
     toast.add({
       title: 'Failed to take long rest',
       color: 'error'
