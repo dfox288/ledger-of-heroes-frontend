@@ -37,6 +37,7 @@ const {
 const characters = computed(() => data.value as CharacterSummary[])
 const perPage = 15
 const { apiFetch } = useApi()
+const toast = useToast()
 
 // Delete character by publicId
 async function deleteCharacter(publicId: string) {
@@ -47,6 +48,90 @@ async function deleteCharacter(publicId: string) {
     await refresh()
   } catch (err) {
     logger.error('Failed to delete character:', err)
+  }
+}
+
+// ============================================================================
+// Character Import
+// ============================================================================
+
+/** Import modal open state */
+const showImportModal = ref(false)
+
+/** Prevents double-submit during import */
+const isImporting = ref(false)
+
+/** Import response shape from backend */
+interface ImportResponse {
+  data: {
+    id: number
+    public_id: string
+    name: string
+  }
+}
+
+/** Import data shape from the modal */
+interface ImportData {
+  format_version: string
+  character: {
+    public_id: string
+    name: string
+    [key: string]: unknown
+  }
+  [key: string]: unknown
+}
+
+/**
+ * Handle character import from modal
+ * POSTs to import endpoint and navigates to new character
+ */
+async function handleImport(importData: ImportData) {
+  if (isImporting.value) return
+
+  isImporting.value = true
+
+  try {
+    const response = await apiFetch<ImportResponse>('/characters/import', {
+      method: 'POST',
+      body: importData
+    })
+
+    // Handle both { data: {...} } and direct response shapes
+    const character = response.data || response
+    const publicId = character.public_id
+    const name = character.name || 'Character'
+
+    toast.add({
+      title: 'Character imported!',
+      description: `${name} is ready to play`,
+      color: 'success'
+    })
+
+    // Navigate to the new character (or fall back to list if no public_id)
+    if (publicId) {
+      await navigateTo(`/characters/${publicId}`)
+    } else {
+      await refresh()
+    }
+  } catch (err: unknown) {
+    const error = err as { statusCode?: number, data?: { message?: string } }
+
+    if (error.statusCode === 422) {
+      toast.add({
+        title: 'Import failed',
+        description: error.data?.message || 'Invalid character data',
+        color: 'error'
+      })
+    } else {
+      logger.error('Failed to import character:', err)
+      toast.add({
+        title: 'Import failed',
+        description: 'Could not import character. Please try again.',
+        color: 'error'
+      })
+    }
+  } finally {
+    isImporting.value = false
   }
 }
 </script>
@@ -64,13 +149,23 @@ async function deleteCharacter(publicId: string) {
         </p>
       </div>
 
-      <UButton
-        to="/characters/create"
-        icon="i-heroicons-plus"
-        size="lg"
-      >
-        Create Character
-      </UButton>
+      <div class="flex gap-2">
+        <UButton
+          icon="i-heroicons-arrow-up-tray"
+          size="lg"
+          variant="outline"
+          @click="showImportModal = true"
+        >
+          Import
+        </UButton>
+        <UButton
+          to="/characters/create"
+          icon="i-heroicons-plus"
+          size="lg"
+        >
+          Create Character
+        </UButton>
+      </div>
     </div>
 
     <!-- Search Input -->
@@ -155,5 +250,11 @@ async function deleteCharacter(publicId: string) {
         />
       </template>
     </UiListStates>
+
+    <!-- Import Character Modal -->
+    <CharacterImportModal
+      v-model:open="showImportModal"
+      @import="handleImport"
+    />
   </div>
 </template>

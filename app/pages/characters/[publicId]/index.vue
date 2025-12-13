@@ -796,6 +796,61 @@ async function handleDeadlyExhaustionConfirmed() {
   pendingDeadlyExhaustion.value = null
 }
 
+// ============================================================================
+// Export Character
+// ============================================================================
+
+/** Prevents double-clicks during export */
+const isExporting = ref(false)
+
+/**
+ * Export character to JSON file
+ * Downloads as {publicId}-{YYYY-MM-DD-HHmm}.json
+ */
+async function handleExport() {
+  if (isExporting.value || !character.value) return
+
+  isExporting.value = true
+
+  try {
+    // Fetch export data from API
+    const response = await apiFetch<{ data: unknown }>(`/characters/${character.value.public_id}/export`)
+
+    // Generate filename: publicId-YYYY-MM-DD-HHmm.json
+    const now = new Date()
+    const year = now.getFullYear()
+    const month = String(now.getMonth() + 1).padStart(2, '0')
+    const day = String(now.getDate()).padStart(2, '0')
+    const hours = String(now.getHours()).padStart(2, '0')
+    const minutes = String(now.getMinutes()).padStart(2, '0')
+    const filename = `${character.value.public_id}-${year}-${month}-${day}-${hours}${minutes}.json`
+
+    // Create blob and trigger download
+    const blob = new Blob([JSON.stringify(response.data, null, 2)], { type: 'application/json' })
+    const url = URL.createObjectURL(blob)
+    const link = document.createElement('a')
+    link.href = url
+    link.download = filename
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
+    URL.revokeObjectURL(url)
+
+    toast.add({
+      title: 'Character exported',
+      color: 'success'
+    })
+  } catch (err) {
+    logger.error('Failed to export character:', err)
+    toast.add({
+      title: 'Failed to export character',
+      color: 'error'
+    })
+  } finally {
+    isExporting.value = false
+  }
+}
+
 // Validation - check for dangling references when sourcebooks are removed
 const characterId = computed(() => character.value?.id ?? null)
 const { validationResult, validateReferences } = useCharacterValidation(characterId)
@@ -890,6 +945,7 @@ const tabItems = computed(() => {
         @add-condition="handleAddConditionClick"
         @level-up="showLevelUpModal = true"
         @revive="handleRevive"
+        @export="handleExport"
       />
 
       <!-- Validation Warning - shows when sourcebook content was removed -->

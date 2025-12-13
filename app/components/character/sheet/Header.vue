@@ -11,6 +11,7 @@ const emit = defineEmits<{
   'add-condition': []
   'level-up': []
   'revive': []
+  'export': []
 }>()
 
 /**
@@ -124,6 +125,15 @@ const actionMenuItems = computed(() => {
       }
     ])
   }
+
+  // Export (always available)
+  items.push([
+    {
+      label: 'Export Character',
+      icon: 'i-heroicons-arrow-down-tray',
+      onSelect: () => emit('export')
+    }
+  ])
 
   return items
 })

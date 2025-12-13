@@ -327,4 +327,48 @@ describe('CharacterSheetHeader', () => {
     // Testing dropdown menu item clicks requires opening the dropdown first
     // which is better suited for E2E tests. These unit tests verify the dropdown exists.
   })
+
+  describe('export action', () => {
+    it('includes Export Character in action menu items', async () => {
+      const wrapper = await mountSuspended(Header, {
+        props: { character: mockCharacter }
+      })
+
+      // Access the computed actionMenuItems from the component instance
+      const vm = wrapper.vm as unknown as { actionMenuItems: Array<Array<{ label: string }>> }
+      const allItems = vm.actionMenuItems.flat()
+      const exportItem = allItems.find(item => item.label === 'Export Character')
+
+      expect(exportItem).toBeDefined()
+    })
+
+    it('includes Export Character for draft characters', async () => {
+      const wrapper = await mountSuspended(Header, {
+        props: { character: { ...mockCharacter, is_complete: false } }
+      })
+
+      const vm = wrapper.vm as unknown as { actionMenuItems: Array<Array<{ label: string }>> }
+      const allItems = vm.actionMenuItems.flat()
+      const exportItem = allItems.find(item => item.label === 'Export Character')
+
+      expect(exportItem).toBeDefined()
+    })
+
+    it('emits export event when export action is clicked', async () => {
+      const wrapper = await mountSuspended(Header, {
+        props: { character: mockCharacter }
+      })
+
+      // Get the export action's onSelect handler
+      const vm = wrapper.vm as unknown as { actionMenuItems: Array<Array<{ label: string, onSelect?: () => void }>> }
+      const allItems = vm.actionMenuItems.flat()
+      const exportItem = allItems.find(item => item.label === 'Export Character')
+
+      // Call the onSelect handler directly (simulates clicking the menu item)
+      exportItem?.onSelect?.()
+
+      expect(wrapper.emitted('export')).toBeTruthy()
+      expect(wrapper.emitted('export')).toHaveLength(1)
+    })
+  })
 })
