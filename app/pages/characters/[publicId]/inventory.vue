@@ -285,11 +285,7 @@ useSeoMeta({
           @item-click="handleItemClick"
         />
 
-        <!-- Currency -->
-        <CharacterSheetCurrencyCard
-          data-testid="currency-card"
-          :currency="currency"
-        />
+        <!-- TODO: Add currency display here (refactor from CombatStatsGrid first) -->
 
         <!-- Encumbrance Bar -->
         <CharacterInventoryEncumbranceBar
