@@ -15,7 +15,7 @@ const props = defineProps<{
 const open = defineModel<boolean>('open', { default: false })
 
 const emit = defineEmits<{
-  'confirm': []
+  confirm: []
 }>()
 
 const router = useRouter()

@@ -23,6 +23,17 @@ export interface HitDice {
   current: number
 }
 
+/**
+ * API response type for hit dice endpoint
+ * @see GET /api/characters/{id}/hit-dice
+ */
+interface HitDiceApiResponse {
+  data: {
+    hit_dice: Record<string, { available: number, max: number, spent: number }>
+    total: { available: number, max: number, spent: number }
+  }
+}
+
 export interface UseCharacterSheetReturn {
   // Raw API data
   character: ComputedRef<Character | null>
@@ -47,6 +58,7 @@ export interface UseCharacterSheetReturn {
 
   // Refresh functions
   refresh: () => Promise<void>
+  refreshHitDice: () => Promise<void>
   refreshForShortRest: () => Promise<void>
   refreshForLongRest: () => Promise<void>
 }
@@ -123,6 +135,14 @@ export function useCharacterSheet(characterId: Ref<string | number>): UseCharact
       () => apiFetch<{ data: CharacterCondition[] }>(`/characters/${characterId.value}/conditions`)
     )
 
+  // Fetch hit dice (dedicated endpoint - no caching, fresh data)
+  // @see #541 - Use /hit-dice endpoint instead of deriving from /stats
+  const { data: hitDiceData, pending: hitDicePending, refresh: refreshHitDice }
+    = useAsyncData(
+      `character-${characterId.value}-hit-dice`,
+      () => apiFetch<HitDiceApiResponse>(`/characters/${characterId.value}/hit-dice`)
+    )
+
   // Fetch skills reference data
   const { data: skillsReference } = useReferenceData<SkillReference>('/skills')
 
@@ -148,6 +168,7 @@ export function useCharacterSheet(characterId: Ref<string | number>): UseCharact
     || languagesPending.value
     || notesPending.value
     || conditionsPending.value
+    || hitDicePending.value
   )
 
   // Computed: First error encountered
@@ -224,22 +245,19 @@ export function useCharacterSheet(characterId: Ref<string | number>): UseCharact
     })
   })
 
-  // Computed: Transform hit dice from object to array format
-  // API returns: { d8: { available: 1, max: 1, spent: 0 } }
+  // Computed: Transform hit dice from API format to component format
+  // API returns: { hit_dice: { d8: { available: 1, max: 1, spent: 0 } }, total: {...} }
   // Component expects: [{ die: 'd8', total: 1, current: 1 }]
+  // @see #541 - Now fetched from dedicated /hit-dice endpoint (no caching, fresh data)
   const hitDice = computed<HitDice[]>(() => {
-    const rawHitDice = stats.value?.hit_dice
+    const rawHitDice = hitDiceData.value?.data?.hit_dice
     if (!rawHitDice || typeof rawHitDice !== 'object') return []
 
-    return Object.entries(rawHitDice).map(([die, data]) => {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const hitDiceData = data as any
-      return {
-        die,
-        total: hitDiceData.max,
-        current: hitDiceData.available
-      }
-    })
+    return Object.entries(rawHitDice).map(([die, data]) => ({
+      die,
+      total: data.max,
+      current: data.available
+    }))
   })
 
   // Refresh all data
@@ -253,7 +271,8 @@ export function useCharacterSheet(characterId: Ref<string | number>): UseCharact
       refreshSpells(),
       refreshLanguages(),
       refreshNotes(),
-      refreshConditions()
+      refreshConditions(),
+      refreshHitDice()
     ])
   }
 
@@ -261,27 +280,31 @@ export function useCharacterSheet(characterId: Ref<string | number>): UseCharact
    * Refresh only data that changes during a short rest
    * - Stats: for pact slot reset
    * - Features: for feature usage counter reset
+   * - Hit Dice: for spent/available tracking
    */
   const refreshForShortRest = async () => {
     await Promise.all([
       refreshStats(),
-      refreshFeatures()
+      refreshFeatures(),
+      refreshHitDice()
     ])
   }
 
   /**
    * Refresh data that changes during a long rest
    * - Character: death saves, HP
-   * - Stats: HP, spell slots, hit dice, pact slots
+   * - Stats: HP, spell slots, pact slots
    * - Features: all feature counters reset
    * - Spells: slot availability
+   * - Hit Dice: recovered after long rest
    */
   const refreshForLongRest = async () => {
     await Promise.all([
       refreshCharacter(),
       refreshStats(),
       refreshFeatures(),
-      refreshSpells()
+      refreshSpells(),
+      refreshHitDice()
     ])
   }
 
@@ -302,6 +325,7 @@ export function useCharacterSheet(characterId: Ref<string | number>): UseCharact
     loading,
     error,
     refresh,
+    refreshHitDice,
     refreshForShortRest,
     refreshForLongRest
   }

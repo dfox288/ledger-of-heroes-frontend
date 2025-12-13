@@ -32,6 +32,7 @@ const {
   loading,
   error,
   refresh,
+  refreshHitDice,
   refreshForShortRest,
   refreshForLongRest
 } = useCharacterSheet(publicId)
@@ -310,6 +311,8 @@ const isResting = ref(false)
 /**
  * Handle spending a hit die
  * Just marks the die as spent - player rolls physical dice
+ * Uses dedicated refreshHitDice() instead of full refresh() for efficiency
+ * @see #541 - Use /hit-dice endpoint for HitDice component
  */
 async function handleHitDiceSpend({ dieType }: { dieType: string }) {
   if (isResting.value || !character.value) return
@@ -321,7 +324,8 @@ async function handleHitDiceSpend({ dieType }: { dieType: string }) {
       method: 'POST',
       body: { die_type: dieType, quantity: 1 }
     })
-    await refresh()
+    // Only refresh hit dice, not all data
+    await refreshHitDice()
   } catch (err) {
     logger.error('Failed to spend hit die:', err)
     toast.add({
