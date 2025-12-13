@@ -53,6 +53,15 @@ interface HpUpdateResponse {
     temp_hit_points: number
     death_save_successes: number
     death_save_failures: number
+    is_dead?: boolean
+  }
+}
+
+interface DeathSaveUpdateResponse {
+  data: {
+    is_dead?: boolean
+    death_save_successes?: number
+    death_save_failures?: number
   }
 }
 
@@ -174,6 +183,9 @@ export const useCharacterPlayStateStore = defineStore('characterPlayState', () =
       hitPoints.temporary = response.data.temp_hit_points
       deathSaves.successes = response.data.death_save_successes
       deathSaves.failures = response.data.death_save_failures
+      if (response.data.is_dead !== undefined) {
+        isDead.value = response.data.is_dead
+      }
     } catch (err) {
       // Rollback on error
       hitPoints.current = oldCurrent
@@ -209,6 +221,9 @@ export const useCharacterPlayStateStore = defineStore('characterPlayState', () =
       hitPoints.temporary = response.data.temp_hit_points
       deathSaves.successes = response.data.death_save_successes
       deathSaves.failures = response.data.death_save_failures
+      if (response.data.is_dead !== undefined) {
+        isDead.value = response.data.is_dead
+      }
     } catch (err) {
       hitPoints.temporary = oldTemporary
       throw err
@@ -239,6 +254,9 @@ export const useCharacterPlayStateStore = defineStore('characterPlayState', () =
       hitPoints.temporary = response.data.temp_hit_points
       deathSaves.successes = response.data.death_save_successes
       deathSaves.failures = response.data.death_save_failures
+      if (response.data.is_dead !== undefined) {
+        isDead.value = response.data.is_dead
+      }
     } catch (err) {
       hitPoints.temporary = oldTemporary
       throw err
@@ -313,12 +331,17 @@ export const useCharacterPlayStateStore = defineStore('characterPlayState', () =
     deathSaves[field] = value
 
     try {
-      await apiFetch(`/characters/${characterId.value}`, {
+      const response = await apiFetch<DeathSaveUpdateResponse>(`/characters/${characterId.value}`, {
         method: 'PATCH',
         body: {
           [`death_save_${field}`]: value
         }
       })
+
+      // Update isDead from authoritative backend response
+      if (response.data.is_dead !== undefined) {
+        isDead.value = response.data.is_dead
+      }
     } catch (err) {
       // Rollback on error
       deathSaves[field] = oldValue

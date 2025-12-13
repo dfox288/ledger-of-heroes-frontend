@@ -215,6 +215,27 @@ describe('characterPlayState store', () => {
       expect(store.deathSaves.failures).toBe(0)
     })
 
+    it('updates isDead from response when character dies from damage', async () => {
+      const store = useCharacterPlayStateStore()
+      store.initialize(mockInitialData)
+      expect(store.isDead).toBe(false)
+
+      mockApiFetch.mockResolvedValue({
+        data: {
+          current_hit_points: 0,
+          max_hit_points: 30,
+          temp_hit_points: 0,
+          death_save_successes: 0,
+          death_save_failures: 0,
+          is_dead: true // Massive damage killed them
+        }
+      })
+
+      await store.updateHp(-100)
+
+      expect(store.isDead).toBe(true)
+    })
+
     it('sets loading flag during update', async () => {
       const store = useCharacterPlayStateStore()
       store.initialize(mockInitialData)
@@ -493,6 +514,24 @@ describe('characterPlayState store', () => {
 
       expect(loadingDuringCall).toBe(true)
       expect(store.isUpdatingDeathSaves).toBe(false)
+    })
+
+    it('updates isDead from response when 3 failures recorded', async () => {
+      const store = useCharacterPlayStateStore()
+      store.initialize(mockInitialData)
+      expect(store.isDead).toBe(false)
+
+      mockApiFetch.mockResolvedValue({
+        data: {
+          is_dead: true,
+          death_save_successes: 0,
+          death_save_failures: 3
+        }
+      })
+
+      await store.updateDeathSaves('failures', 3)
+
+      expect(store.isDead).toBe(true)
     })
   })
 
