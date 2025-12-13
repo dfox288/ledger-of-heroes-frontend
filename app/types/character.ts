@@ -102,9 +102,10 @@ export type Character = components['schemas']['CharacterResource'] & {
    * - Instant death effects
    *
    * When true, all play mode controls should be disabled.
+   * Optional for backwards compatibility with older backend versions.
    * @see Issue #544
    */
-  is_dead: boolean
+  is_dead?: boolean
 }
 
 /**

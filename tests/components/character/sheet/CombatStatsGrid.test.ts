@@ -480,5 +480,85 @@ describe('CharacterSheetCombatStatsGrid', () => {
       })
       expect(wrapper.find('[data-testid="ac-cell"]').exists()).toBe(true)
     })
+
+    it('shows shield with unarmored for characters with only shield equipped', async () => {
+      const shieldOnlyCharacter = {
+        ...mockBarbarianCharacter,
+        classes: [
+          {
+            class: { id: 3, name: 'Wizard', slug: 'phb:wizard' },
+            level: 1,
+            is_primary: true
+          }
+        ],
+        equipped: {
+          armor: null,
+          shield: { id: '456', name: 'Shield', armor_class: '2' }
+        }
+      }
+      const wrapper = await mountSuspended(CombatStatsGrid, {
+        props: { character: shieldOnlyCharacter, stats: { ...mockStats, armor_class: 14 } }
+      })
+      const vm = wrapper.vm as any
+      expect(vm.acTooltipText).toContain('Unarmored')
+      expect(vm.acTooltipText).toContain('DEX')
+      expect(vm.acTooltipText).toContain('Shield')
+    })
+  })
+
+  // =========================================================================
+  // is_dead Flag Tests (#544)
+  // =========================================================================
+
+  describe('is_dead flag', () => {
+    it('uses backend is_dead flag when available', async () => {
+      const deadCharacter = {
+        ...mockCharacter,
+        is_dead: true,
+        death_save_failures: 0 // Shouldn't matter - is_dead takes precedence
+      }
+      const wrapper = await mountSuspended(CombatStatsGrid, {
+        props: {
+          character: deadCharacter,
+          stats: { ...mockStats, hit_points: { current: 10, max: 20, temporary: 0 } }
+        }
+      })
+      const vm = wrapper.vm as any
+      expect(vm.isDead).toBe(true)
+    })
+
+    it('shows alive when is_dead is false even with 3 death save failures', async () => {
+      const notDeadCharacter = {
+        ...mockCharacter,
+        is_dead: false,
+        death_save_failures: 3 // Should be overridden by is_dead
+      }
+      const wrapper = await mountSuspended(CombatStatsGrid, {
+        props: {
+          character: notDeadCharacter,
+          stats: { ...mockStats, hit_points: { current: 0, max: 20, temporary: 0 } }
+        }
+      })
+      const vm = wrapper.vm as any
+      expect(vm.isDead).toBe(false)
+    })
+
+    it('falls back to death save calculation when is_dead is undefined', async () => {
+      const legacyCharacter = {
+        ...mockCharacter,
+        death_save_failures: 3
+      }
+      // Remove is_dead to simulate legacy data
+      delete (legacyCharacter as any).is_dead
+      const wrapper = await mountSuspended(CombatStatsGrid, {
+        props: {
+          character: legacyCharacter,
+          stats: { ...mockStats, hit_points: { current: 0, max: 20, temporary: 0 } },
+          deathSaveFailures: 3
+        }
+      })
+      const vm = wrapper.vm as any
+      expect(vm.isDead).toBe(true)
+    })
   })
 })

@@ -212,32 +212,31 @@ function formatMod(value: number | null | undefined): string {
 const acTooltipText = computed(() => {
   const ac = props.stats.armor_class
   const mods = props.character.modifiers
+  const dexMod = formatMod(mods?.DEX)
+
+  // Shield suffix - used for both armored and unarmored cases
+  const shieldSuffix = hasShield.value
+    ? ` + ${props.character.equipped!.shield!.name} (+2)`
+    : ''
 
   if (isWearingArmor.value) {
     const armor = props.character.equipped!.armor!
-    let text = `${armor.name}`
-    if (hasShield.value) {
-      const shield = props.character.equipped!.shield!
-      text += ` + ${shield.name}`
-    }
-    return text
+    return `${armor.name}${shieldSuffix}`
   }
 
   // Unarmored - check for special class features
-  const dexMod = formatMod(mods?.DEX)
-
   if (unarmoredDefenseClass.value === 'barbarian') {
     const conMod = formatMod(mods?.CON)
-    return `Unarmored Defense: 10 + DEX (${dexMod}) + CON (${conMod}) = ${ac}`
+    return `Unarmored Defense: 10 + DEX (${dexMod}) + CON (${conMod})${shieldSuffix} = ${ac}`
   }
 
   if (unarmoredDefenseClass.value === 'monk') {
     const wisMod = formatMod(mods?.WIS)
-    return `Unarmored Defense: 10 + DEX (${dexMod}) + WIS (${wisMod}) = ${ac}`
+    return `Unarmored Defense: 10 + DEX (${dexMod}) + WIS (${wisMod})${shieldSuffix} = ${ac}`
   }
 
-  // Basic unarmored AC
-  return `Unarmored: 10 + DEX (${dexMod}) = ${ac}`
+  // Basic unarmored AC (potentially with shield)
+  return `Unarmored: 10 + DEX (${dexMod})${shieldSuffix} = ${ac}`
 })
 </script>
 

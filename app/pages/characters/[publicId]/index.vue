@@ -316,7 +316,18 @@ async function handleRevive() {
   isUpdatingHp.value = true
 
   try {
-    // First clear death saves
+    // Heal to 1 HP FIRST - this should set is_dead=false on backend
+    // Resurrection spells typically leave you at 1 HP
+    // Order matters: if we cleared death saves first but HP update failed,
+    // character would be in inconsistent state (no death saves but still dead)
+    const response = await apiFetch<HpUpdateResponse>(`/characters/${character.value.id}/hp`, {
+      method: 'PATCH',
+      body: { hp: '+1' }
+    })
+
+    syncFromHpResponse(response)
+
+    // Then clear death saves (cosmetic cleanup - backend should have reset them)
     await apiFetch(`/characters/${character.value.id}`, {
       method: 'PATCH',
       body: {
@@ -324,14 +335,6 @@ async function handleRevive() {
         death_save_failures: 0
       }
     })
-
-    // Then heal to 1 HP (resurrection spells typically leave you at 1 HP)
-    const response = await apiFetch<HpUpdateResponse>(`/characters/${character.value.id}/hp`, {
-      method: 'PATCH',
-      body: { hp: '+1' }
-    })
-
-    syncFromHpResponse(response)
 
     // Refresh character to get updated is_dead flag
     await refresh()
