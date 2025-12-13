@@ -157,19 +157,32 @@ export function useCharacterSheet(characterId: Ref<string | number>): UseCharact
   const notes = computed(() => notesData.value?.data ?? {})
   const conditions = computed(() => conditionsData.value?.data ?? [])
 
-  // Computed: Aggregate loading state
-  const loading = computed(() =>
-    characterPending.value
-    || statsPending.value
-    || proficienciesPending.value
-    || featuresPending.value
-    || equipmentPending.value
-    || spellsPending.value
-    || languagesPending.value
-    || notesPending.value
-    || conditionsPending.value
-    || hitDicePending.value
-  )
+  // Track if initial load is complete (prevents skeleton flash on refresh)
+  const hasLoadedOnce = ref(false)
+
+  // Mark as loaded once character data arrives
+  watch(character, (char) => {
+    if (char && !hasLoadedOnce.value) {
+      hasLoadedOnce.value = true
+    }
+  })
+
+  // Computed: Aggregate loading state (only for initial load)
+  // After first load, we don't show skeleton during refreshes
+  const loading = computed(() => {
+    if (hasLoadedOnce.value) return false
+
+    return characterPending.value
+      || statsPending.value
+      || proficienciesPending.value
+      || featuresPending.value
+      || equipmentPending.value
+      || spellsPending.value
+      || languagesPending.value
+      || notesPending.value
+      || conditionsPending.value
+      || hitDicePending.value
+  })
 
   // Computed: First error encountered
   const error = computed(() => characterError.value as Error | null)

@@ -92,135 +92,6 @@ const isPlayMode = computed(() => pageHeaderRef.value?.isPlayMode ?? false)
 const canEdit = computed(() => isPlayMode.value && !playStateStore.isDead)
 
 // ============================================================================
-// Rest Actions (Play Mode)
-// ============================================================================
-
-/** Long rest confirmation modal state */
-const showLongRestModal = ref(false)
-
-/** Prevents race conditions from rapid rest actions */
-const isResting = ref(false)
-
-/**
- * Handle spending a hit die
- * Just marks the die as spent - player rolls physical dice
- * Uses dedicated refreshHitDice() instead of full refresh() for efficiency
- * @see #541 - Use /hit-dice endpoint for HitDice component
- */
-async function handleHitDiceSpend({ dieType }: { dieType: string }) {
-  if (isResting.value || !character.value) return
-
-  isResting.value = true
-
-  try {
-    await apiFetch(`/characters/${character.value.id}/hit-dice/spend`, {
-      method: 'POST',
-      body: { die_type: dieType, quantity: 1 }
-    })
-    // Only refresh hit dice, not all data
-    await refreshHitDice()
-  } catch (err) {
-    logger.error('Failed to spend hit die:', err)
-    toast.add({
-      title: 'Failed to spend hit die',
-      color: 'error'
-    })
-  } finally {
-    isResting.value = false
-  }
-}
-
-/**
- * Handle short rest
- * Resets short-rest features (Action Surge, pact slots, etc.)
- */
-async function handleShortRest() {
-  if (isResting.value || !character.value) return
-
-  isResting.value = true
-
-  try {
-    interface ShortRestResponse {
-      data: {
-        pact_magic_reset: boolean
-        features_reset: string[]
-      }
-    }
-    const response = await apiFetch<ShortRestResponse>(`/characters/${character.value.id}/short-rest`, {
-      method: 'POST'
-    })
-    await refreshForShortRest()
-
-    // Build toast message
-    const resetCount = response.data.features_reset.length
-    const message = resetCount > 0
-      ? `${resetCount} feature${resetCount > 1 ? 's' : ''} reset`
-      : 'Short rest complete'
-    toast.add({
-      title: message,
-      color: 'success'
-    })
-  } catch (err) {
-    logger.error('Failed to take short rest:', err)
-    toast.add({
-      title: 'Failed to take short rest',
-      color: 'error'
-    })
-  } finally {
-    isResting.value = false
-  }
-}
-
-/**
- * Handle long rest (after confirmation)
- * Restores HP, spell slots, hit dice, clears death saves
- */
-async function handleLongRest() {
-  if (isResting.value || !character.value) return
-
-  isResting.value = true
-
-  try {
-    interface LongRestResponse {
-      data: {
-        hp_restored: number
-        hit_dice_recovered: number
-        spell_slots_reset: boolean
-        death_saves_cleared: boolean
-        features_reset: string[]
-      }
-    }
-    const response = await apiFetch<LongRestResponse>(`/characters/${character.value.id}/long-rest`, {
-      method: 'POST'
-    })
-    await refreshForLongRest()
-
-    // Re-initialize store from refreshed server data
-    // The watch on [character, stats] will handle this automatically
-
-    // Build toast message
-    const parts: string[] = []
-    if (response.data.hp_restored > 0) parts.push(`${response.data.hp_restored} HP restored`)
-    if (response.data.hit_dice_recovered > 0) parts.push(`${response.data.hit_dice_recovered} hit dice recovered`)
-    if (response.data.spell_slots_reset) parts.push('spell slots reset')
-
-    toast.add({
-      title: 'Long rest complete',
-      description: parts.join(', ') || undefined,
-      color: 'success'
-    })
-  } catch (err) {
-    logger.error('Failed to take long rest:', err)
-    toast.add({
-      title: 'Failed to take long rest',
-      color: 'error'
-    })
-  } finally {
-    isResting.value = false
-  }
-}
-
-// ============================================================================
 // Conditions Management (Play Mode)
 // Note: Add Condition is handled by PageHeader. This section handles
 // remove, update level, and deadly exhaustion confirmation.
@@ -422,15 +293,14 @@ const isSpellcaster = computed(() => !!stats.value?.spellcasting)
             :investigation="stats.passive_investigation"
             :insight="stats.passive_insight"
           />
-          <CharacterSheetHitDice
-            v-if="hitDice.length"
+          <CharacterSheetHitDiceManager
+            v-if="hitDice.length && character"
             :hit-dice="hitDice"
+            :character-id="character.id"
             :editable="canEdit"
-            :disabled="isResting"
-            :is-dead="playStateStore.isDead"
-            @spend="handleHitDiceSpend"
-            @short-rest="handleShortRest"
-            @long-rest="showLongRestModal = true"
+            @refresh-hit-dice="refreshHitDice"
+            @refresh-short-rest="refreshForShortRest"
+            @refresh-long-rest="refreshForLongRest"
           />
         </div>
 
@@ -499,12 +369,6 @@ const isSpellcaster = computed(() => !!stats.value?.spellcasting)
       </UTabs>
     </div>
   </div>
-
-  <!-- Long Rest Confirmation Modal -->
-  <CharacterSheetLongRestConfirmModal
-    v-model:open="showLongRestModal"
-    @confirm="handleLongRest"
-  />
 
   <!-- Deadly Exhaustion Confirmation Modal -->
   <CharacterSheetDeadlyExhaustionConfirmModal
