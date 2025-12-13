@@ -1,28 +1,30 @@
 // tests/components/character/sheet/CombatStatsGrid.test.ts
-import { describe, it, expect } from 'vitest'
+/**
+ * CombatStatsGrid Tests
+ *
+ * Tests the 6-cell grid layout component. HP and currency behavior
+ * is delegated to manager components (tested separately).
+ *
+ * @see HitPointsManager.test.ts - HP editing behavior
+ * @see CurrencyManager.test.ts - Currency editing behavior
+ * @see Issue #584 - Character sheet component refactor
+ */
+import { describe, it, expect, beforeEach } from 'vitest'
 import { mountSuspended } from '@nuxt/test-utils/runtime'
+import { setActivePinia, createPinia } from 'pinia'
 import CombatStatsGrid from '~/components/character/sheet/CombatStatsGrid.vue'
-
-const mockCharacter = {
-  speed: 30,
-  proficiency_bonus: 2,
-  has_inspiration: false
-}
-
-const mockStats = {
-  armor_class: 16,
-  hit_points: { max: 28, current: 22, temporary: 5 },
-  initiative_bonus: 2,
-  passive_perception: 14,
-  passive_investigation: 10,
-  passive_insight: 11
-}
+import { useCharacterPlayStateStore } from '~/stores/characterPlayState'
 
 // Character with Barbarian class (has Unarmored Defense: 10 + DEX + CON)
 const mockBarbarianCharacter = {
+  id: 1,
   speed: 30,
   proficiency_bonus: 2,
   has_inspiration: false,
+  is_dead: false,
+  death_save_successes: 0,
+  death_save_failures: 0,
+  currency: { pp: 0, gp: 50, ep: 0, sp: 25, cp: 0 },
   classes: [
     {
       class: { id: 1, name: 'Barbarian', slug: 'phb:barbarian' },
@@ -46,9 +48,14 @@ const mockBarbarianCharacter = {
 
 // Character with armor equipped
 const mockArmoredCharacter = {
+  id: 2,
   speed: 30,
   proficiency_bonus: 2,
   has_inspiration: false,
+  is_dead: false,
+  death_save_successes: 0,
+  death_save_failures: 0,
+  currency: { pp: 5, gp: 100, ep: 10, sp: 50, cp: 200 },
   classes: [
     {
       class: { id: 1, name: 'Fighter', slug: 'phb:fighter' },
@@ -70,167 +77,178 @@ const mockArmoredCharacter = {
   }
 }
 
+const mockStats = {
+  armor_class: 16,
+  hit_points: { max: 28, current: 22, temporary: 5 },
+  initiative_bonus: 2,
+  passive_perception: 14,
+  passive_investigation: 10,
+  passive_insight: 11
+}
+
+/** Global pinia instance for tests */
+let pinia: ReturnType<typeof createPinia>
+
+/**
+ * Helper to initialize the play state store before mounting CombatStatsGrid
+ */
+function initializeStore(character: any, stats: any) {
+  const store = useCharacterPlayStateStore()
+  store.initialize({
+    characterId: character.id,
+    isDead: character.is_dead ?? false,
+    hitPoints: {
+      current: stats.hit_points?.current ?? 0,
+      max: stats.hit_points?.max ?? 0,
+      temporary: stats.hit_points?.temporary ?? 0
+    },
+    deathSaves: {
+      successes: character.death_save_successes ?? 0,
+      failures: character.death_save_failures ?? 0
+    },
+    currency: character.currency ?? { pp: 0, gp: 0, ep: 0, sp: 0, cp: 0 }
+  })
+  return store
+}
+
 describe('CharacterSheetCombatStatsGrid', () => {
-  it('displays hit points as current/max', async () => {
-    const wrapper = await mountSuspended(CombatStatsGrid, {
-      props: { character: mockCharacter, stats: mockStats }
-    })
-    expect(wrapper.text()).toContain('22')
-    expect(wrapper.text()).toContain('28')
+  beforeEach(() => {
+    pinia = createPinia()
+    setActivePinia(pinia)
   })
 
-  it('displays armor class', async () => {
-    const wrapper = await mountSuspended(CombatStatsGrid, {
-      props: { character: mockCharacter, stats: mockStats }
+  describe('basic rendering', () => {
+    it('displays armor class', async () => {
+      initializeStore(mockArmoredCharacter, mockStats)
+      const wrapper = await mountSuspended(CombatStatsGrid, {
+        props: { character: mockArmoredCharacter, stats: mockStats },
+        global: { plugins: [pinia] }
+      })
+      expect(wrapper.text()).toContain('16')
+      expect(wrapper.text()).toContain('AC')
     })
-    expect(wrapper.text()).toContain('16')
-    expect(wrapper.text()).toContain('AC')
+
+    it('displays initiative bonus', async () => {
+      initializeStore(mockArmoredCharacter, mockStats)
+      const wrapper = await mountSuspended(CombatStatsGrid, {
+        props: { character: mockArmoredCharacter, stats: mockStats },
+        global: { plugins: [pinia] }
+      })
+      expect(wrapper.text()).toContain('+2')
+      expect(wrapper.text()).toContain('Initiative')
+    })
+
+    it('displays speed', async () => {
+      initializeStore(mockArmoredCharacter, mockStats)
+      const wrapper = await mountSuspended(CombatStatsGrid, {
+        props: { character: mockArmoredCharacter, stats: mockStats },
+        global: { plugins: [pinia] }
+      })
+      expect(wrapper.text()).toContain('30')
+      expect(wrapper.text()).toContain('ft')
+    })
+
+    it('displays proficiency bonus', async () => {
+      initializeStore(mockArmoredCharacter, mockStats)
+      const wrapper = await mountSuspended(CombatStatsGrid, {
+        props: { character: mockArmoredCharacter, stats: mockStats },
+        global: { plugins: [pinia] }
+      })
+      expect(wrapper.text()).toContain('+2')
+      expect(wrapper.text()).toContain('Prof')
+    })
   })
 
-  it('displays initiative bonus', async () => {
-    const wrapper = await mountSuspended(CombatStatsGrid, {
-      props: { character: mockCharacter, stats: mockStats }
+  describe('HP display (via HitPointsManager)', () => {
+    it('displays hit points from store', async () => {
+      initializeStore(mockArmoredCharacter, mockStats)
+      const wrapper = await mountSuspended(CombatStatsGrid, {
+        props: { character: mockArmoredCharacter, stats: mockStats },
+        global: { plugins: [pinia] }
+      })
+      expect(wrapper.text()).toContain('22')
+      expect(wrapper.text()).toContain('28')
     })
-    expect(wrapper.text()).toContain('+2')
-    expect(wrapper.text()).toContain('Initiative')
+
+    it('displays temporary HP from store', async () => {
+      initializeStore(mockArmoredCharacter, mockStats)
+      const wrapper = await mountSuspended(CombatStatsGrid, {
+        props: { character: mockArmoredCharacter, stats: mockStats },
+        global: { plugins: [pinia] }
+      })
+      expect(wrapper.text()).toContain('+5')
+    })
   })
 
-  it('displays speed', async () => {
-    const wrapper = await mountSuspended(CombatStatsGrid, {
-      props: { character: mockCharacter, stats: mockStats }
+  describe('currency display (via CurrencyManager)', () => {
+    it('displays currency section', async () => {
+      initializeStore(mockArmoredCharacter, mockStats)
+      const wrapper = await mountSuspended(CombatStatsGrid, {
+        props: { character: mockArmoredCharacter, stats: mockStats },
+        global: { plugins: [pinia] }
+      })
+      expect(wrapper.text()).toContain('Currency')
     })
-    expect(wrapper.text()).toContain('30')
-    expect(wrapper.text()).toContain('ft')
-  })
 
-  it('displays proficiency bonus', async () => {
-    const wrapper = await mountSuspended(CombatStatsGrid, {
-      props: { character: mockCharacter, stats: mockStats }
+    it('shows currency values from store', async () => {
+      initializeStore(mockArmoredCharacter, mockStats)
+      const wrapper = await mountSuspended(CombatStatsGrid, {
+        props: { character: mockArmoredCharacter, stats: mockStats },
+        global: { plugins: [pinia] }
+      })
+      expect(wrapper.text()).toContain('5') // pp
+      expect(wrapper.text()).toContain('100') // gp
     })
-    expect(wrapper.text()).toContain('+2')
-    expect(wrapper.text()).toContain('Prof')
-  })
-
-  it('displays currency section', async () => {
-    const wrapper = await mountSuspended(CombatStatsGrid, {
-      props: {
-        character: mockCharacter,
-        stats: mockStats,
-        currency: { pp: 5, gp: 100, ep: 10, sp: 50, cp: 200 }
-      }
-    })
-    expect(wrapper.text()).toContain('Currency')
-  })
-
-  it('shows all currency values when provided', async () => {
-    const wrapper = await mountSuspended(CombatStatsGrid, {
-      props: {
-        character: mockCharacter,
-        stats: mockStats,
-        currency: { pp: 5, gp: 100, ep: 10, sp: 50, cp: 200 }
-      }
-    })
-    expect(wrapper.text()).toContain('5')
-    expect(wrapper.text()).toContain('100')
-    expect(wrapper.text()).toContain('10')
-    expect(wrapper.text()).toContain('50')
-    expect(wrapper.text()).toContain('200')
-  })
-
-  it('shows placeholder when currency is null', async () => {
-    const wrapper = await mountSuspended(CombatStatsGrid, {
-      props: {
-        character: mockCharacter,
-        stats: mockStats,
-        currency: null
-      }
-    })
-    expect(wrapper.text()).toContain('—')
-  })
-
-  it('shows placeholder when all currencies are zero', async () => {
-    const wrapper = await mountSuspended(CombatStatsGrid, {
-      props: {
-        character: mockCharacter,
-        stats: mockStats,
-        currency: { pp: 0, gp: 0, ep: 0, sp: 0, cp: 0 }
-      }
-    })
-    expect(wrapper.text()).toContain('—')
-  })
-
-  it('only shows non-zero currencies', async () => {
-    const wrapper = await mountSuspended(CombatStatsGrid, {
-      props: {
-        character: mockCharacter,
-        stats: mockStats,
-        currency: { pp: 0, gp: 50, ep: 0, sp: 25, cp: 0 }
-      }
-    })
-    // Should show GP and SP
-    expect(wrapper.text()).toContain('50')
-    expect(wrapper.text()).toContain('25')
-    // Should NOT show coin indicators for zero currencies
-    // (We check by verifying only 2 coin circles exist)
-    const coins = wrapper.findAll('.rounded-full')
-    expect(coins.length).toBe(2)
-  })
-
-  it('shows temporary HP when present', async () => {
-    const wrapper = await mountSuspended(CombatStatsGrid, {
-      props: { character: mockCharacter, stats: mockStats }
-    })
-    expect(wrapper.text()).toContain('+5')
   })
 
   describe('alternate movement speeds', () => {
     it('shows fly speed when present', async () => {
+      const charWithFly = { ...mockArmoredCharacter, speeds: { walk: 30, fly: 50, swim: null, climb: null } }
+      initializeStore(charWithFly, mockStats)
       const wrapper = await mountSuspended(CombatStatsGrid, {
-        props: {
-          character: { ...mockCharacter, speeds: { walk: 30, fly: 50, swim: null, climb: null } },
-          stats: mockStats
-        }
+        props: { character: charWithFly, stats: mockStats },
+        global: { plugins: [pinia] }
       })
       expect(wrapper.text()).toContain('fly 50')
     })
 
     it('shows swim speed when present', async () => {
+      const charWithSwim = { ...mockArmoredCharacter, speeds: { walk: 30, fly: null, swim: 30, climb: null } }
+      initializeStore(charWithSwim, mockStats)
       const wrapper = await mountSuspended(CombatStatsGrid, {
-        props: {
-          character: { ...mockCharacter, speeds: { walk: 30, fly: null, swim: 30, climb: null } },
-          stats: mockStats
-        }
+        props: { character: charWithSwim, stats: mockStats },
+        global: { plugins: [pinia] }
       })
       expect(wrapper.text()).toContain('swim 30')
     })
 
     it('shows climb speed when present', async () => {
+      const charWithClimb = { ...mockArmoredCharacter, speeds: { walk: 30, fly: null, swim: null, climb: 30 } }
+      initializeStore(charWithClimb, mockStats)
       const wrapper = await mountSuspended(CombatStatsGrid, {
-        props: {
-          character: { ...mockCharacter, speeds: { walk: 30, fly: null, swim: null, climb: 30 } },
-          stats: mockStats
-        }
+        props: { character: charWithClimb, stats: mockStats },
+        global: { plugins: [pinia] }
       })
       expect(wrapper.text()).toContain('climb 30')
     })
 
     it('shows multiple alternate speeds', async () => {
+      const charWithSpeeds = { ...mockArmoredCharacter, speeds: { walk: 25, fly: 50, swim: 30, climb: null } }
+      initializeStore(charWithSpeeds, mockStats)
       const wrapper = await mountSuspended(CombatStatsGrid, {
-        props: {
-          character: { ...mockCharacter, speeds: { walk: 25, fly: 50, swim: 30, climb: null } },
-          stats: mockStats
-        }
+        props: { character: charWithSpeeds, stats: mockStats },
+        global: { plugins: [pinia] }
       })
       expect(wrapper.text()).toContain('fly 50')
       expect(wrapper.text()).toContain('swim 30')
     })
 
     it('hides alternate speeds when all are null', async () => {
+      const charNoSpeeds = { ...mockArmoredCharacter, speeds: { walk: 30, fly: null, swim: null, climb: null } }
+      initializeStore(charNoSpeeds, mockStats)
       const wrapper = await mountSuspended(CombatStatsGrid, {
-        props: {
-          character: { ...mockCharacter, speeds: { walk: 30, fly: null, swim: null, climb: null } },
-          stats: mockStats
-        }
+        props: { character: charNoSpeeds, stats: mockStats },
+        global: { plugins: [pinia] }
       })
       expect(wrapper.text()).not.toContain('fly')
       expect(wrapper.text()).not.toContain('swim')
@@ -238,11 +256,11 @@ describe('CharacterSheetCombatStatsGrid', () => {
     })
 
     it('handles missing speeds object gracefully', async () => {
+      const charNoSpeedsObj = { ...mockArmoredCharacter, speeds: null }
+      initializeStore(charNoSpeedsObj, mockStats)
       const wrapper = await mountSuspended(CombatStatsGrid, {
-        props: {
-          character: { ...mockCharacter, speeds: null },
-          stats: mockStats
-        }
+        props: { character: charNoSpeedsObj, stats: mockStats },
+        global: { plugins: [pinia] }
       })
       // Should still show walking speed from character.speed
       expect(wrapper.text()).toContain('30')
@@ -250,342 +268,54 @@ describe('CharacterSheetCombatStatsGrid', () => {
     })
   })
 
-  // =========================================================================
-  // Editable Mode Tests
-  // =========================================================================
-
-  describe('editable mode', () => {
-    describe('props', () => {
-      it('accepts editable prop', async () => {
-        const wrapper = await mountSuspended(CombatStatsGrid, {
-          props: { character: mockCharacter, stats: mockStats, editable: true }
-        })
-        expect(wrapper.props('editable')).toBe(true)
+  describe('editable prop', () => {
+    it('accepts editable prop', async () => {
+      initializeStore(mockArmoredCharacter, mockStats)
+      const wrapper = await mountSuspended(CombatStatsGrid, {
+        props: { character: mockArmoredCharacter, stats: mockStats, editable: true },
+        global: { plugins: [pinia] }
       })
-
-      it('defaults editable to false', async () => {
-        const wrapper = await mountSuspended(CombatStatsGrid, {
-          props: { character: mockCharacter, stats: mockStats }
-        })
-        expect(wrapper.props('editable')).toBeFalsy()
-      })
+      expect(wrapper.props('editable')).toBe(true)
     })
 
-    describe('HP cell interactivity', () => {
-      it('HP cell has data-testid', async () => {
-        const wrapper = await mountSuspended(CombatStatsGrid, {
-          props: { character: mockCharacter, stats: mockStats, editable: true }
-        })
-        const hpCell = wrapper.find('[data-testid="hp-cell"]')
-        expect(hpCell.exists()).toBe(true)
+    it('defaults editable to false', async () => {
+      initializeStore(mockArmoredCharacter, mockStats)
+      const wrapper = await mountSuspended(CombatStatsGrid, {
+        props: { character: mockArmoredCharacter, stats: mockStats },
+        global: { plugins: [pinia] }
       })
-
-      it('HP cell has cursor-pointer when editable', async () => {
-        const wrapper = await mountSuspended(CombatStatsGrid, {
-          props: { character: mockCharacter, stats: mockStats, editable: true }
-        })
-        const hpCell = wrapper.find('[data-testid="hp-cell"]')
-        expect(hpCell.classes()).toContain('cursor-pointer')
-      })
-
-      it('HP cell does not have cursor-pointer when not editable', async () => {
-        const wrapper = await mountSuspended(CombatStatsGrid, {
-          props: { character: mockCharacter, stats: mockStats, editable: false }
-        })
-        const hpCell = wrapper.find('[data-testid="hp-cell"]')
-        expect(hpCell.classes()).not.toContain('cursor-pointer')
-      })
-    })
-
-    describe('Add Temp HP button', () => {
-      it('shows Add Temp HP button when editable', async () => {
-        const wrapper = await mountSuspended(CombatStatsGrid, {
-          props: { character: mockCharacter, stats: mockStats, editable: true }
-        })
-        const addTempHpBtn = wrapper.find('[data-testid="add-temp-hp-btn"]')
-        expect(addTempHpBtn.exists()).toBe(true)
-      })
-
-      it('hides Add Temp HP button when not editable', async () => {
-        const wrapper = await mountSuspended(CombatStatsGrid, {
-          props: { character: mockCharacter, stats: mockStats, editable: false }
-        })
-        const addTempHpBtn = wrapper.find('[data-testid="add-temp-hp-btn"]')
-        expect(addTempHpBtn.exists()).toBe(false)
-      })
-    })
-
-    describe('modal state', () => {
-      it('opens HP modal when HP cell clicked', async () => {
-        const wrapper = await mountSuspended(CombatStatsGrid, {
-          props: { character: mockCharacter, stats: mockStats, editable: true }
-        })
-        const vm = wrapper.vm as any
-
-        expect(vm.isHpModalOpen).toBe(false)
-
-        const hpCell = wrapper.find('[data-testid="hp-cell"]')
-        await hpCell.trigger('click')
-
-        expect(vm.isHpModalOpen).toBe(true)
-      })
-
-      it('does not open HP modal when not editable', async () => {
-        const wrapper = await mountSuspended(CombatStatsGrid, {
-          props: { character: mockCharacter, stats: mockStats, editable: false }
-        })
-        const vm = wrapper.vm as any
-
-        const hpCell = wrapper.find('[data-testid="hp-cell"]')
-        await hpCell.trigger('click')
-
-        expect(vm.isHpModalOpen).toBe(false)
-      })
-
-      it('opens Temp HP modal when Add Temp HP clicked', async () => {
-        const wrapper = await mountSuspended(CombatStatsGrid, {
-          props: { character: mockCharacter, stats: mockStats, editable: true }
-        })
-        const vm = wrapper.vm as any
-
-        expect(vm.isTempHpModalOpen).toBe(false)
-
-        const addTempHpBtn = wrapper.find('[data-testid="add-temp-hp-btn"]')
-        await addTempHpBtn.trigger('click')
-
-        expect(vm.isTempHpModalOpen).toBe(true)
-      })
-    })
-
-    describe('event emissions', () => {
-      it('emits hp-change when HP modal applies', async () => {
-        const wrapper = await mountSuspended(CombatStatsGrid, {
-          props: { character: mockCharacter, stats: mockStats, editable: true }
-        })
-        const vm = wrapper.vm as any
-
-        // Simulate modal apply
-        vm.handleHpChange(-12)
-
-        expect(wrapper.emitted('hp-change')).toBeTruthy()
-        expect(wrapper.emitted('hp-change')![0]).toEqual([-12])
-      })
-
-      it('emits temp-hp-set when Temp HP modal applies', async () => {
-        const wrapper = await mountSuspended(CombatStatsGrid, {
-          props: { character: mockCharacter, stats: mockStats, editable: true }
-        })
-        const vm = wrapper.vm as any
-
-        vm.handleTempHpSet(10)
-
-        expect(wrapper.emitted('temp-hp-set')).toBeTruthy()
-        expect(wrapper.emitted('temp-hp-set')![0]).toEqual([10])
-      })
-
-      it('emits temp-hp-clear when Temp HP modal clears', async () => {
-        const wrapper = await mountSuspended(CombatStatsGrid, {
-          props: { character: mockCharacter, stats: mockStats, editable: true }
-        })
-        const vm = wrapper.vm as any
-
-        vm.handleTempHpClear()
-
-        expect(wrapper.emitted('temp-hp-clear')).toBeTruthy()
-      })
+      expect(wrapper.props('editable')).toBeFalsy()
     })
   })
-
-  // =========================================================================
-  // Currency Editing Tests (#546)
-  // =========================================================================
-
-  describe('currency editing', () => {
-    const currencyProps = {
-      character: mockCharacter,
-      stats: mockStats,
-      currency: { pp: 5, gp: 150, ep: 0, sp: 30, cp: 75 }
-    }
-
-    describe('currency cell interactivity', () => {
-      it('currency cell has data-testid', async () => {
-        const wrapper = await mountSuspended(CombatStatsGrid, {
-          props: { ...currencyProps, editable: true }
-        })
-        const currencyCell = wrapper.find('[data-testid="currency-cell"]')
-        expect(currencyCell.exists()).toBe(true)
-      })
-
-      it('currency cell has cursor-pointer when editable', async () => {
-        const wrapper = await mountSuspended(CombatStatsGrid, {
-          props: { ...currencyProps, editable: true }
-        })
-        const currencyCell = wrapper.find('[data-testid="currency-cell"]')
-        expect(currencyCell.classes()).toContain('cursor-pointer')
-      })
-
-      it('currency cell does not have cursor-pointer when not editable', async () => {
-        const wrapper = await mountSuspended(CombatStatsGrid, {
-          props: { ...currencyProps, editable: false }
-        })
-        const currencyCell = wrapper.find('[data-testid="currency-cell"]')
-        expect(currencyCell.classes()).not.toContain('cursor-pointer')
-      })
-    })
-
-    describe('currency modal state', () => {
-      it('opens currency modal when currency cell clicked', async () => {
-        const wrapper = await mountSuspended(CombatStatsGrid, {
-          props: { ...currencyProps, editable: true }
-        })
-        const vm = wrapper.vm as any
-
-        expect(vm.internalCurrencyModalOpen).toBe(false)
-
-        const currencyCell = wrapper.find('[data-testid="currency-cell"]')
-        await currencyCell.trigger('click')
-
-        expect(vm.internalCurrencyModalOpen).toBe(true)
-      })
-
-      it('does not open currency modal when not editable', async () => {
-        const wrapper = await mountSuspended(CombatStatsGrid, {
-          props: { ...currencyProps, editable: false }
-        })
-        const vm = wrapper.vm as any
-
-        const currencyCell = wrapper.find('[data-testid="currency-cell"]')
-        await currencyCell.trigger('click')
-
-        expect(vm.internalCurrencyModalOpen).toBe(false)
-      })
-    })
-
-    describe('currency event emissions', () => {
-      it('emits currency-apply when currency modal applies', async () => {
-        const wrapper = await mountSuspended(CombatStatsGrid, {
-          props: { ...currencyProps, editable: true }
-        })
-        const vm = wrapper.vm as any
-
-        // Simulate modal apply
-        vm.handleCurrencyApply({ gp: '-5', sp: '+10' })
-
-        expect(wrapper.emitted('currency-apply')).toBeTruthy()
-        expect(wrapper.emitted('currency-apply')![0]).toEqual([{ gp: '-5', sp: '+10' }])
-      })
-
-      it('does not close modal in apply handler (parent controls close)', async () => {
-        const wrapper = await mountSuspended(CombatStatsGrid, {
-          props: { ...currencyProps, editable: true }
-        })
-        const vm = wrapper.vm as any
-
-        // Open modal via click
-        const currencyCell = wrapper.find('[data-testid="currency-cell"]')
-        await currencyCell.trigger('click')
-
-        // Verify modal is open
-        expect(vm.internalCurrencyModalOpen).toBe(true)
-
-        // Apply should emit but NOT close the modal
-        vm.handleCurrencyApply({ gp: '-5' })
-
-        // Modal stays open (parent decides when to close based on success/failure)
-        // The internalCurrencyModalOpen should still be true because handleCurrencyApply
-        // only emits, it doesn't close the modal
-        expect(vm.internalCurrencyModalOpen).toBe(true)
-      })
-    })
-  })
-
-  // =========================================================================
-  // AC Tooltip Tests (#547)
-  // Note: Detailed tooltip logic is tested in StatArmorClass.test.ts
-  // These tests verify the component composition works correctly
-  // =========================================================================
 
   describe('AC tooltip', () => {
     it('renders StatArmorClass with tooltip', async () => {
+      initializeStore(mockArmoredCharacter, mockStats)
       const wrapper = await mountSuspended(CombatStatsGrid, {
-        props: { character: mockArmoredCharacter, stats: mockStats }
+        props: { character: mockArmoredCharacter, stats: mockStats },
+        global: { plugins: [pinia] }
       })
-      // StatArmorClass should be rendered with tooltip (cursor-help indicates tooltip)
       expect(wrapper.find('[data-testid="ac-cell"]').exists()).toBe(true)
       expect(wrapper.find('.cursor-help').exists()).toBe(true)
     })
 
     it('passes character data to StatArmorClass for tooltip', async () => {
+      initializeStore(mockBarbarianCharacter, { ...mockStats, armor_class: 15 })
       const wrapper = await mountSuspended(CombatStatsGrid, {
-        props: { character: mockBarbarianCharacter, stats: { ...mockStats, armor_class: 15 } }
+        props: { character: mockBarbarianCharacter, stats: { ...mockStats, armor_class: 15 } },
+        global: { plugins: [pinia] }
       })
-      // AC value should be displayed
       expect(wrapper.text()).toContain('15')
       expect(wrapper.text()).toContain('AC')
     })
 
     it('has AC cell with data-testid for tooltip', async () => {
+      initializeStore(mockArmoredCharacter, mockStats)
       const wrapper = await mountSuspended(CombatStatsGrid, {
-        props: { character: mockCharacter, stats: mockStats }
+        props: { character: mockArmoredCharacter, stats: mockStats },
+        global: { plugins: [pinia] }
       })
       expect(wrapper.find('[data-testid="ac-cell"]').exists()).toBe(true)
-    })
-  })
-
-  // =========================================================================
-  // is_dead Flag Tests (#544)
-  // Note: Detailed death state logic is tested in StatHitPoints.test.ts
-  // These tests verify the component composition works correctly
-  // =========================================================================
-
-  describe('is_dead flag', () => {
-    it('shows DEAD label when is_dead flag is true', async () => {
-      const deadCharacter = {
-        ...mockCharacter,
-        is_dead: true,
-        death_save_failures: 0 // Shouldn't matter - is_dead takes precedence
-      }
-      const wrapper = await mountSuspended(CombatStatsGrid, {
-        props: {
-          character: deadCharacter,
-          stats: { ...mockStats, hit_points: { current: 10, max: 20, temporary: 0 } }
-        }
-      })
-      expect(wrapper.text()).toContain('DEAD')
-    })
-
-    it('shows DYING label when is_dead is false even with 3 death save failures', async () => {
-      const notDeadCharacter = {
-        ...mockCharacter,
-        is_dead: false,
-        death_save_failures: 3 // Should be overridden by is_dead
-      }
-      const wrapper = await mountSuspended(CombatStatsGrid, {
-        props: {
-          character: notDeadCharacter,
-          stats: { ...mockStats, hit_points: { current: 0, max: 20, temporary: 0 } }
-        }
-      })
-      // is_dead=false overrides death saves, so should show DYING not DEAD
-      expect(wrapper.text()).toContain('DYING')
-      expect(wrapper.text()).not.toContain('DEAD')
-    })
-
-    it('shows DEAD label when falling back to death save calculation', async () => {
-      const legacyCharacter = {
-        ...mockCharacter,
-        death_save_failures: 3
-      }
-      // Remove is_dead to simulate legacy data
-      delete (legacyCharacter as any).is_dead
-      const wrapper = await mountSuspended(CombatStatsGrid, {
-        props: {
-          character: legacyCharacter,
-          stats: { ...mockStats, hit_points: { current: 0, max: 20, temporary: 0 } },
-          deathSaveFailures: 3
-        }
-      })
-      expect(wrapper.text()).toContain('DEAD')
     })
   })
 })

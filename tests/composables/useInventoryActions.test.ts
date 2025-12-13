@@ -223,7 +223,7 @@ describe('useInventoryActions', () => {
         { method: 'DELETE' }
       )
 
-      // Second call: add currency (string format: "+N" for add)
+      // Second call: add currency (API expects signed string format)
       expect(mockApiFetch).toHaveBeenNthCalledWith(
         2,
         '/characters/test-char-123/currency',
@@ -271,7 +271,7 @@ describe('useInventoryActions', () => {
         }
       )
 
-      // Second call: subtract currency (string format: "-N" for subtract)
+      // Second call: subtract currency (API expects signed string format)
       expect(mockApiFetch).toHaveBeenNthCalledWith(
         2,
         '/characters/test-char-123/currency',
