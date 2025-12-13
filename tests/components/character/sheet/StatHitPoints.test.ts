@@ -75,16 +75,18 @@ describe('StatHitPoints', () => {
       expect(wrapper.text()).toContain('STABLE')
     })
 
-    it('uses is_dead prop over death save calculation', async () => {
+    it('shows DEAD when 3 failures even if backend says isDead: false', async () => {
+      // Defensive behavior: show DEAD if local data indicates death
+      // even if backend hasn't computed is_dead yet (see issue #590)
       const wrapper = await mountSuspended(StatHitPoints, {
         props: {
           hitPoints: zeroHp,
-          isDead: false,
-          deathSaveFailures: 3 // Should be overridden by isDead
+          isDead: false, // Backend bug: should be true
+          deathSaveFailures: 3
         }
       })
-      // Should NOT show DEAD since isDead is explicitly false
-      expect(wrapper.text()).not.toContain('DEAD')
+      // Should show DEAD based on local death save data
+      expect(wrapper.text()).toContain('DEAD')
     })
 
     it('falls back to death save calculation when isDead is null', async () => {
