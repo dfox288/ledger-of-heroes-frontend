@@ -196,6 +196,9 @@ function copperToBreakdown(copperPieces: number) {
 
 const remainingCurrencyBreakdown = computed(() => copperToBreakdown(remainingCurrency.value))
 
+// Calculate total cost breakdown for display
+const totalCostBreakdown = computed(() => copperToBreakdown(totalCost.value))
+
 // Calculate shortfall amount for insufficient funds display
 const shortfallBreakdown = computed(() => copperToBreakdown(totalCost.value - totalCurrencyInCopper.value))
 
@@ -398,16 +401,40 @@ function getItemIcon(item: Item): string {
           <!-- Total Cost -->
           <div class="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
             <span class="text-sm text-gray-600 dark:text-gray-300">Total Cost</span>
-            <span
-              :class="[
-                'font-bold',
-                isInsufficientFunds
-                  ? 'text-error-600 dark:text-error-400'
-                  : 'text-gray-900 dark:text-white'
-              ]"
-            >
-              {{ formatCurrency(totalCost) }}
-            </span>
+            <div class="flex items-center gap-2">
+              <div
+                v-for="coin in totalCostBreakdown"
+                :key="coin.key"
+                class="flex items-center gap-1"
+              >
+                <div
+                  :class="[coin.bg, 'w-4 h-4 rounded-full flex items-center justify-center']"
+                >
+                  <span :class="[coin.text, 'text-[8px] font-black']">{{ coin.label }}</span>
+                </div>
+                <span
+                  :class="[
+                    'text-sm font-semibold tabular-nums',
+                    isInsufficientFunds
+                      ? 'text-error-600 dark:text-error-400'
+                      : 'text-gray-900 dark:text-white'
+                  ]"
+                >
+                  {{ coin.value.toLocaleString() }}
+                </span>
+              </div>
+              <span
+                v-if="totalCostBreakdown.length === 0"
+                :class="[
+                  'font-bold',
+                  isInsufficientFunds
+                    ? 'text-error-600 dark:text-error-400'
+                    : 'text-gray-900 dark:text-white'
+                ]"
+              >
+                0 cp
+              </span>
+            </div>
           </div>
 
           <!-- Insufficient Funds Warning -->
