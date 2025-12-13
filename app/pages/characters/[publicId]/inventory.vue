@@ -15,7 +15,6 @@ import type { Character, CharacterEquipment } from '~/types/character'
 import type { CurrencyDelta } from '~/components/character/sheet/CurrencyEditModal.vue'
 import type { EquipmentLocation } from '~/composables/useInventoryActions'
 import type { EquipmentSlot } from '~/utils/equipmentSlots'
-import { getValidSlots, getDefaultSlot, needsSlotPicker, guessSlotFromName } from '~/utils/equipmentSlots'
 import { logger } from '~/utils/logger'
 
 const route = useRoute()
