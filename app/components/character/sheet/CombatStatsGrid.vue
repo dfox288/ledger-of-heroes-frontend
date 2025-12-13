@@ -1,6 +1,7 @@
 <!-- app/components/character/sheet/CombatStatsGrid.vue -->
 <script setup lang="ts">
 import type { Character, CharacterStats, CharacterCurrency } from '~/types/character'
+import type { CurrencyDelta } from '~/components/character/sheet/CurrencyEditModal.vue'
 
 const props = defineProps<{
   character: Character
@@ -11,12 +12,21 @@ const props = defineProps<{
   deathSaveFailures?: number
   /** Live death save successes count (for "STABILIZED" state display) */
   deathSaveSuccesses?: number
+  /** Loading state for currency API call (passed to modal) */
+  currencyLoading?: boolean
+  /** Control currency modal open state from parent (v-model pattern) */
+  currencyModalOpen?: boolean
+  /** Error message to display in currency modal */
+  currencyError?: string | null
 }>()
 
 const emit = defineEmits<{
   'hp-change': [delta: number]
   'temp-hp-set': [value: number]
   'temp-hp-clear': []
+  'currency-apply': [payload: CurrencyDelta]
+  'update:currencyModalOpen': [value: boolean]
+  'clear-currency-error': []
 }>()
 
 // =========================================================================
@@ -25,6 +35,19 @@ const emit = defineEmits<{
 
 const isHpModalOpen = ref(false)
 const isTempHpModalOpen = ref(false)
+
+/**
+ * Currency modal state - supports both internal control and v-model from parent
+ * Uses internal ref when parent doesn't provide currencyModalOpen prop
+ */
+const internalCurrencyModalOpen = ref(false)
+const isCurrencyModalOpen = computed({
+  get: () => props.currencyModalOpen ?? internalCurrencyModalOpen.value,
+  set: (value: boolean) => {
+    internalCurrencyModalOpen.value = value
+    emit('update:currencyModalOpen', value)
+  }
+})
 
 // =========================================================================
 // HP Cell Click Handler
@@ -52,6 +75,24 @@ function handleTempHpSet(value: number) {
 function handleTempHpClear() {
   emit('temp-hp-clear')
   isTempHpModalOpen.value = false
+}
+
+// =========================================================================
+// Currency Cell Click Handler
+// =========================================================================
+
+function handleCurrencyCellClick() {
+  if (!props.editable) return
+  isCurrencyModalOpen.value = true
+}
+
+// =========================================================================
+// Currency Modal Event Handler
+// =========================================================================
+
+function handleCurrencyApply(payload: CurrencyDelta) {
+  emit('currency-apply', payload)
+  // Note: Do NOT close modal here - parent controls close on success/failure
 }
 
 // =========================================================================
@@ -364,7 +405,14 @@ const acTooltipText = computed(() => {
     </div>
 
     <!-- Currency -->
-    <div class="bg-gray-50 dark:bg-gray-800 rounded-lg p-4">
+    <div
+      data-testid="currency-cell"
+      :class="[
+        'bg-gray-50 dark:bg-gray-800 rounded-lg p-4 transition-colors',
+        editable ? 'cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700' : ''
+      ]"
+      @click="handleCurrencyCellClick"
+    >
       <div class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-2 text-center">
         Currency
       </div>
@@ -413,5 +461,15 @@ const acTooltipText = computed(() => {
     :current-temp-hp="stats.hit_points?.temporary ?? 0"
     @apply="handleTempHpSet"
     @clear="handleTempHpClear"
+  />
+
+  <!-- Currency Edit Modal -->
+  <CharacterSheetCurrencyEditModal
+    v-model:open="isCurrencyModalOpen"
+    :currency="currency ?? null"
+    :loading="currencyLoading"
+    :error="currencyError"
+    @apply="handleCurrencyApply"
+    @clear-error="emit('clear-currency-error')"
   />
 </template>

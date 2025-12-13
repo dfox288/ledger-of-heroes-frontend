@@ -397,6 +397,109 @@ describe('CharacterSheetCombatStatsGrid', () => {
   })
 
   // =========================================================================
+  // Currency Editing Tests (#546)
+  // =========================================================================
+
+  describe('currency editing', () => {
+    const currencyProps = {
+      character: mockCharacter,
+      stats: mockStats,
+      currency: { pp: 5, gp: 150, ep: 0, sp: 30, cp: 75 }
+    }
+
+    describe('currency cell interactivity', () => {
+      it('currency cell has data-testid', async () => {
+        const wrapper = await mountSuspended(CombatStatsGrid, {
+          props: { ...currencyProps, editable: true }
+        })
+        const currencyCell = wrapper.find('[data-testid="currency-cell"]')
+        expect(currencyCell.exists()).toBe(true)
+      })
+
+      it('currency cell has cursor-pointer when editable', async () => {
+        const wrapper = await mountSuspended(CombatStatsGrid, {
+          props: { ...currencyProps, editable: true }
+        })
+        const currencyCell = wrapper.find('[data-testid="currency-cell"]')
+        expect(currencyCell.classes()).toContain('cursor-pointer')
+      })
+
+      it('currency cell does not have cursor-pointer when not editable', async () => {
+        const wrapper = await mountSuspended(CombatStatsGrid, {
+          props: { ...currencyProps, editable: false }
+        })
+        const currencyCell = wrapper.find('[data-testid="currency-cell"]')
+        expect(currencyCell.classes()).not.toContain('cursor-pointer')
+      })
+    })
+
+    describe('currency modal state', () => {
+      it('opens currency modal when currency cell clicked', async () => {
+        const wrapper = await mountSuspended(CombatStatsGrid, {
+          props: { ...currencyProps, editable: true }
+        })
+        const vm = wrapper.vm as any
+
+        expect(vm.internalCurrencyModalOpen).toBe(false)
+
+        const currencyCell = wrapper.find('[data-testid="currency-cell"]')
+        await currencyCell.trigger('click')
+
+        expect(vm.internalCurrencyModalOpen).toBe(true)
+      })
+
+      it('does not open currency modal when not editable', async () => {
+        const wrapper = await mountSuspended(CombatStatsGrid, {
+          props: { ...currencyProps, editable: false }
+        })
+        const vm = wrapper.vm as any
+
+        const currencyCell = wrapper.find('[data-testid="currency-cell"]')
+        await currencyCell.trigger('click')
+
+        expect(vm.internalCurrencyModalOpen).toBe(false)
+      })
+    })
+
+    describe('currency event emissions', () => {
+      it('emits currency-apply when currency modal applies', async () => {
+        const wrapper = await mountSuspended(CombatStatsGrid, {
+          props: { ...currencyProps, editable: true }
+        })
+        const vm = wrapper.vm as any
+
+        // Simulate modal apply
+        vm.handleCurrencyApply({ gp: '-5', sp: '+10' })
+
+        expect(wrapper.emitted('currency-apply')).toBeTruthy()
+        expect(wrapper.emitted('currency-apply')![0]).toEqual([{ gp: '-5', sp: '+10' }])
+      })
+
+      it('does not close modal in apply handler (parent controls close)', async () => {
+        const wrapper = await mountSuspended(CombatStatsGrid, {
+          props: { ...currencyProps, editable: true }
+        })
+        const vm = wrapper.vm as any
+
+        // Open modal via click
+        const currencyCell = wrapper.find('[data-testid="currency-cell"]')
+        await currencyCell.trigger('click')
+
+        // Verify modal is open
+        expect(vm.internalCurrencyModalOpen).toBe(true)
+
+        // Apply should emit but NOT close the modal
+        vm.handleCurrencyApply({ gp: '-5' })
+
+        // Modal stays open (parent decides when to close based on success/failure)
+        // The internalCurrencyModalOpen should still be true because handleCurrencyApply
+        // only emits, it doesn't close the modal
+        expect(vm.internalCurrencyModalOpen).toBe(true)
+      })
+    })
+  })
+
+  // =========================================================================
   // AC Tooltip Tests (#547)
   // =========================================================================
 

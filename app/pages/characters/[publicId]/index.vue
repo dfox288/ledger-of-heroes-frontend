@@ -11,6 +11,7 @@
  * Play Mode: Toggle to enable interactive features (death saves, HP, etc.)
  */
 import type { Condition } from '~/types'
+import type { CurrencyDelta } from '~/components/character/sheet/CurrencyEditModal.vue'
 
 const route = useRoute()
 const publicId = computed(() => route.params.publicId as string)
@@ -355,6 +356,137 @@ async function handleRevive() {
     isUpdatingHp.value = false
   }
 }
+
+// ============================================================================
+// Currency Management (Play Mode)
+// ============================================================================
+
+/**
+ * Local reactive state for currency
+ * Needed for immediate UI feedback while API call is in progress
+ */
+const localCurrency = reactive({
+  pp: 0,
+  gp: 0,
+  ep: 0,
+  sp: 0,
+  cp: 0
+})
+
+/** Prevents race conditions from rapid currency updates */
+const isUpdatingCurrency = ref(false)
+
+/** Currency modal open state - controlled by character page for success/failure handling */
+const isCurrencyModalOpen = ref(false)
+
+/** Currency error message to display in modal (e.g., "Insufficient funds") */
+const currencyError = ref<string | null>(null)
+
+// Sync local currency state when character data loads
+watch(() => character.value, (char) => {
+  if (char?.currency) {
+    localCurrency.pp = char.currency.pp ?? 0
+    localCurrency.gp = char.currency.gp ?? 0
+    localCurrency.ep = char.currency.ep ?? 0
+    localCurrency.sp = char.currency.sp ?? 0
+    localCurrency.cp = char.currency.cp ?? 0
+  }
+}, { immediate: true })
+
+/** Response shape from PATCH /api/characters/:id/currency */
+interface CurrencyUpdateResponse {
+  data: {
+    pp: number
+    gp: number
+    ep: number
+    sp: number
+    cp: number
+  }
+}
+
+/**
+ * Handle currency updates from CurrencyEditModal
+ * Sends deltas to backend which handles:
+ * - Add/subtract/set operations
+ * - Auto-conversion ("making change") when needed
+ * - Validation of sufficient funds
+ */
+async function handleCurrencyUpdate(payload: CurrencyDelta) {
+  if (isUpdatingCurrency.value || !character.value) return
+
+  isUpdatingCurrency.value = true
+
+  // Store old values for rollback on error
+  const oldCurrency = { ...localCurrency }
+
+  try {
+    const response = await apiFetch<CurrencyUpdateResponse>(
+      `/characters/${character.value.id}/currency`,
+      {
+        method: 'PATCH',
+        body: payload
+      }
+    )
+
+    // Update local state from authoritative backend response
+    localCurrency.pp = response.data.pp
+    localCurrency.gp = response.data.gp
+    localCurrency.ep = response.data.ep
+    localCurrency.sp = response.data.sp
+    localCurrency.cp = response.data.cp
+
+    // Clear any previous error and close modal on success
+    currencyError.value = null
+    isCurrencyModalOpen.value = false
+
+    toast.add({
+      title: 'Currency updated',
+      color: 'success'
+    })
+  } catch (err: unknown) {
+    // Extract error message from Laravel response
+    // Structure: error.data contains Laravel's response { message, data: { message } }
+    // We want data.message (specific error) over message (generic)
+    const error = err as {
+      statusCode?: number
+      statusMessage?: string
+      data?: {
+        message?: string
+        data?: { message?: string }
+      }
+    }
+
+    // Rollback local state on any error
+    Object.assign(localCurrency, oldCurrency)
+
+    // Handle validation errors (insufficient funds) - show in modal
+    if (error.statusCode === 422) {
+      // Prefer nested data.message (specific) over top-level message (generic)
+      const message = error.data?.data?.message
+        || error.data?.message
+        || 'Insufficient funds'
+      currencyError.value = message
+      // Don't close modal - let user see error and retry
+    } else {
+      logger.error('Failed to update currency:', err)
+      currencyError.value = 'Failed to update currency. Please try again.'
+    }
+  } finally {
+    isUpdatingCurrency.value = false
+  }
+}
+
+/**
+ * Computed currency that uses local values when in play mode
+ * Falls back to server data when not in play mode
+ */
+const displayCurrency = computed(() => {
+  if (!character.value?.currency) return null
+
+  return isPlayMode.value
+    ? { ...localCurrency }
+    : character.value.currency
+})
 
 // ============================================================================
 // Rest Actions (Play Mode)
@@ -774,15 +906,20 @@ const tabItems = computed(() => {
           <!-- Combat Stats Grid -->
           <CharacterSheetCombatStatsGrid
             v-if="displayStats"
+            v-model:currency-modal-open="isCurrencyModalOpen"
             :character="character"
             :stats="displayStats"
-            :currency="character.currency"
+            :currency="displayCurrency"
             :editable="isPlayMode"
             :death-save-failures="localDeathSaves.failures"
             :death-save-successes="localDeathSaves.successes"
+            :currency-loading="isUpdatingCurrency"
+            :currency-error="currencyError"
             @hp-change="handleHpChange"
             @temp-hp-set="handleTempHpSet"
             @temp-hp-clear="handleTempHpClear"
+            @currency-apply="handleCurrencyUpdate"
+            @clear-currency-error="currencyError = null"
           />
 
           <!-- Defensive Traits -->
