@@ -1,6 +1,7 @@
 // tests/components/character/sheet/components.test.ts
-import { describe, it, expect } from 'vitest'
+import { describe, it, expect, beforeEach } from 'vitest'
 import { mountSuspended } from '@nuxt/test-utils/runtime'
+import { setActivePinia, createPinia } from 'pinia'
 import Header from '~/components/character/sheet/Header.vue'
 import AbilityScoreBlock from '~/components/character/sheet/AbilityScoreBlock.vue'
 import CombatStatsGrid from '~/components/character/sheet/CombatStatsGrid.vue'
@@ -11,6 +12,7 @@ import ProficienciesPanel from '~/components/character/sheet/ProficienciesPanel.
 import EquipmentPanel from '~/components/character/sheet/EquipmentPanel.vue'
 import SpellsPanel from '~/components/character/sheet/SpellsPanel.vue'
 import LanguagesPanel from '~/components/character/sheet/LanguagesPanel.vue'
+import { useCharacterPlayStateStore } from '~/stores/characterPlayState'
 
 // Mock data
 const mockCharacter = {
@@ -21,6 +23,10 @@ const mockCharacter = {
   has_inspiration: true,
   proficiency_bonus: 3,
   speed: 25,
+  is_dead: false,
+  death_save_successes: 0,
+  death_save_failures: 0,
+  currency: { pp: 0, gp: 50, ep: 0, sp: 25, cp: 100 },
   race: { id: 1, name: 'Dwarf', slug: 'dwarf' },
   class: { id: 1, name: 'Fighter', slug: 'fighter' },
   classes: [
@@ -175,31 +181,62 @@ describe('CharacterSheetAbilityScoreBlock', () => {
 })
 
 describe('CharacterSheetCombatStatsGrid', () => {
+  // CombatStatsGrid uses managers that read from characterPlayState store
+  let pinia: ReturnType<typeof createPinia>
+
+  function initializeStore() {
+    pinia = createPinia()
+    setActivePinia(pinia)
+    const store = useCharacterPlayStateStore()
+    store.initialize({
+      characterId: mockCharacter.id,
+      isDead: mockCharacter.is_dead,
+      hitPoints: {
+        current: mockStats.hit_points.current,
+        max: mockStats.hit_points.max,
+        temporary: mockStats.hit_points.temporary
+      },
+      deathSaves: {
+        successes: mockCharacter.death_save_successes,
+        failures: mockCharacter.death_save_failures
+      },
+      currency: mockCharacter.currency
+    })
+  }
+
   it('displays HP', async () => {
+    initializeStore()
     const wrapper = await mountSuspended(CombatStatsGrid, {
-      props: { character: mockCharacter, stats: mockStats }
+      props: { character: mockCharacter, stats: mockStats },
+      global: { plugins: [pinia] }
     })
     expect(wrapper.text()).toContain('22')
     expect(wrapper.text()).toContain('28')
   })
 
   it('displays AC', async () => {
+    initializeStore()
     const wrapper = await mountSuspended(CombatStatsGrid, {
-      props: { character: mockCharacter, stats: mockStats }
+      props: { character: mockCharacter, stats: mockStats },
+      global: { plugins: [pinia] }
     })
     expect(wrapper.text()).toContain('16')
   })
 
   it('displays initiative', async () => {
+    initializeStore()
     const wrapper = await mountSuspended(CombatStatsGrid, {
-      props: { character: mockCharacter, stats: mockStats }
+      props: { character: mockCharacter, stats: mockStats },
+      global: { plugins: [pinia] }
     })
     expect(wrapper.text()).toContain('+2')
   })
 
   it('displays speed', async () => {
+    initializeStore()
     const wrapper = await mountSuspended(CombatStatsGrid, {
-      props: { character: mockCharacter, stats: mockStats }
+      props: { character: mockCharacter, stats: mockStats },
+      global: { plugins: [pinia] }
     })
     expect(wrapper.text()).toContain('25')
     expect(wrapper.text()).toContain('ft')

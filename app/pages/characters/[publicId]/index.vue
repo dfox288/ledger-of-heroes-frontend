@@ -5,12 +5,15 @@
  *
  * Displays comprehensive D&D 5e character sheet with all data sections.
  * Uses useCharacterSheet composable for parallel data fetching.
+ * Uses characterPlayState store for interactive play mode state (HP, currency, death saves).
  *
  * URL: /characters/:publicId (e.g., /characters/shadow-warden-q3x9)
  *
  * Play Mode: Toggle to enable interactive features (death saves, HP, etc.)
+ *
+ * @see Issue #584 - Character sheet component refactor
  */
-import type { CurrencyDelta } from '~/components/character/sheet/CurrencyEditModal.vue'
+import { useCharacterPlayStateStore } from '~/stores/characterPlayState'
 
 const route = useRoute()
 const publicId = computed(() => route.params.publicId as string)
@@ -38,11 +41,44 @@ const {
 } = useCharacterSheet(publicId)
 
 // ============================================================================
-// Play Mode (from PageHeader)
+// Play State Store
 // ============================================================================
 
+const playStateStore = useCharacterPlayStateStore()
 const { apiFetch } = useApi()
 const toast = useToast()
+
+/**
+ * Initialize play state store when character and stats load
+ * Store manages HP, death saves, and currency state for play mode
+ */
+watch([character, stats], ([char, s]) => {
+  if (char && s) {
+    playStateStore.initialize({
+      characterId: char.id,
+      isDead: char.is_dead ?? false,
+      hitPoints: {
+        current: s.hit_points?.current ?? null,
+        max: s.hit_points?.max ?? null,
+        temporary: s.hit_points?.temporary ?? null
+      },
+      deathSaves: {
+        successes: char.death_save_successes ?? 0,
+        failures: char.death_save_failures ?? 0
+      },
+      currency: char.currency ?? { pp: 0, gp: 0, ep: 0, sp: 0, cp: 0 }
+    })
+  }
+}, { immediate: true })
+
+// Reset store when leaving the page
+onUnmounted(() => {
+  playStateStore.$reset()
+})
+
+// ============================================================================
+// Play Mode (from PageHeader)
+// ============================================================================
 
 // Reference to PageHeader to access isPlayMode (PageHeader owns play mode state)
 const pageHeaderRef = ref<{ isPlayMode: boolean } | null>(null)
@@ -53,368 +89,6 @@ const isPlayMode = computed(() => pageHeaderRef.value?.isPlayMode ?? false)
  * Dead characters can't interact with anything (must revive first)
  */
 const canEdit = computed(() => isPlayMode.value && !character.value?.is_dead)
-
-/**
- * Death saves are only editable when unconscious (0 HP) but not dead
- * D&D rules: You only make death saves when at exactly 0 HP
- */
-const canEditDeathSaves = computed(() => canEdit.value && localHitPoints.current === 0)
-
-/**
- * Local reactive state for death saves
- * Needed because character from useAsyncData is a computed ref that doesn't propagate mutations
- */
-const localDeathSaves = reactive({
-  successes: 0,
-  failures: 0
-})
-
-/** Prevents race conditions from rapid clicks */
-const isUpdatingDeathSaves = ref(false)
-
-// Sync local state when character data loads
-watch(() => character.value, (char) => {
-  if (char) {
-    localDeathSaves.successes = char.death_save_successes ?? 0
-    localDeathSaves.failures = char.death_save_failures ?? 0
-  }
-}, { immediate: true })
-
-/**
- * Handle death save updates
- * Uses optimistic UI - update locally first, then sync to API
- * Prevents race conditions by blocking during API call
- */
-async function handleDeathSaveUpdate(field: 'successes' | 'failures', value: number) {
-  if (isUpdatingDeathSaves.value || !character.value) return
-
-  isUpdatingDeathSaves.value = true
-  const oldValue = localDeathSaves[field]
-  localDeathSaves[field] = value
-
-  try {
-    await apiFetch(`/characters/${character.value.id}`, {
-      method: 'PATCH',
-      body: {
-        [`death_save_${field}`]: value
-      }
-    })
-  } catch (err) {
-    // Rollback on error
-    localDeathSaves[field] = oldValue
-    logger.error('Failed to update death saves:', err)
-    toast.add({
-      title: 'Failed to save',
-      description: 'Could not update death saves',
-      color: 'error'
-    })
-  } finally {
-    isUpdatingDeathSaves.value = false
-  }
-}
-
-// ============================================================================
-// HP Management (Play Mode)
-// ============================================================================
-
-/**
- * Local reactive state for HP
- * Needed because stats from useAsyncData doesn't propagate mutations
- */
-const localHitPoints = reactive({
-  current: 0,
-  max: 0,
-  temporary: 0
-})
-
-/** Prevents race conditions from rapid clicks */
-const isUpdatingHp = ref(false)
-
-// Sync local HP state when stats data loads
-watch(() => stats.value, (newStats) => {
-  if (newStats?.hit_points) {
-    localHitPoints.current = newStats.hit_points.current ?? 0
-    localHitPoints.max = newStats.hit_points.max ?? 0
-    localHitPoints.temporary = newStats.hit_points.temporary ?? 0
-  }
-}, { immediate: true })
-
-/** Response shape from PATCH /api/characters/:id/hp */
-interface HpUpdateResponse {
-  data: {
-    current_hit_points: number
-    max_hit_points: number
-    temp_hit_points: number
-    death_save_successes: number
-    death_save_failures: number
-  }
-}
-
-/**
- * Sync local state from HP endpoint response
- * Updates HP and death saves from backend's authoritative response
- */
-function syncFromHpResponse(response: HpUpdateResponse) {
-  localHitPoints.current = response.data.current_hit_points
-  localHitPoints.max = response.data.max_hit_points
-  localHitPoints.temporary = response.data.temp_hit_points
-  localDeathSaves.successes = response.data.death_save_successes
-  localDeathSaves.failures = response.data.death_save_failures
-}
-
-/**
- * Handle HP changes from HpEditModal
- * Sends delta to backend which handles all D&D rules:
- * - Temp HP absorbs damage first
- * - Healing caps at max HP
- * - Death saves reset when healing from 0
- */
-async function handleHpChange(delta: number) {
-  if (isUpdatingHp.value || !character.value) return
-  if (delta === 0) return // No-op
-
-  isUpdatingHp.value = true
-
-  // Store old values for rollback
-  const oldCurrent = localHitPoints.current
-  const oldTemp = localHitPoints.temporary
-  const oldDeathSuccesses = localDeathSaves.successes
-  const oldDeathFailures = localDeathSaves.failures
-
-  try {
-    // Send delta as signed string (e.g., "-12" or "+8")
-    const hpDelta = delta > 0 ? `+${delta}` : `${delta}`
-    const response = await apiFetch<HpUpdateResponse>(`/characters/${character.value.id}/hp`, {
-      method: 'PATCH',
-      body: { hp: hpDelta }
-    })
-
-    // Update local state from authoritative backend response
-    syncFromHpResponse(response)
-  } catch (err) {
-    // Rollback on error
-    localHitPoints.current = oldCurrent
-    localHitPoints.temporary = oldTemp
-    localDeathSaves.successes = oldDeathSuccesses
-    localDeathSaves.failures = oldDeathFailures
-    logger.error('Failed to update HP:', err)
-    toast.add({
-      title: 'Failed to save',
-      description: 'Could not update hit points',
-      color: 'error'
-    })
-  } finally {
-    isUpdatingHp.value = false
-  }
-}
-
-/**
- * Handle temp HP set from TempHpModal
- * Backend enforces D&D rule: Temp HP uses higher-wins (doesn't stack)
- */
-async function handleTempHpSet(value: number) {
-  if (isUpdatingHp.value || !character.value) return
-
-  isUpdatingHp.value = true
-  const oldTemp = localHitPoints.temporary
-
-  try {
-    const response = await apiFetch<HpUpdateResponse>(`/characters/${character.value.id}/hp`, {
-      method: 'PATCH',
-      body: { temp_hp: value }
-    })
-
-    // Update local state from authoritative backend response
-    syncFromHpResponse(response)
-  } catch (err) {
-    localHitPoints.temporary = oldTemp
-    logger.error('Failed to set temp HP:', err)
-    toast.add({
-      title: 'Failed to save',
-      description: 'Could not set temporary hit points',
-      color: 'error'
-    })
-  } finally {
-    isUpdatingHp.value = false
-  }
-}
-
-/**
- * Handle temp HP clear from TempHpModal
- * Sends temp_hp: 0 to clear (overrides higher-wins rule)
- */
-async function handleTempHpClear() {
-  if (isUpdatingHp.value || !character.value) return
-
-  isUpdatingHp.value = true
-  const oldTemp = localHitPoints.temporary
-
-  try {
-    const response = await apiFetch<HpUpdateResponse>(`/characters/${character.value.id}/hp`, {
-      method: 'PATCH',
-      body: { temp_hp: 0 }
-    })
-
-    // Update local state from authoritative backend response
-    syncFromHpResponse(response)
-  } catch (err) {
-    localHitPoints.temporary = oldTemp
-    logger.error('Failed to clear temp HP:', err)
-    toast.add({
-      title: 'Failed to save',
-      description: 'Could not clear temporary hit points',
-      color: 'error'
-    })
-  } finally {
-    isUpdatingHp.value = false
-  }
-}
-
-/**
- * Computed stats that uses local HP values when in play mode
- * Falls back to server data when not in play mode
- */
-const displayStats = computed(() => {
-  if (!stats.value) return null
-
-  return {
-    ...stats.value,
-    hit_points: isPlayMode.value
-      ? { current: localHitPoints.current, max: localHitPoints.max, temporary: localHitPoints.temporary }
-      : stats.value.hit_points
-  }
-})
-
-// ============================================================================
-// Currency Management (Play Mode)
-// ============================================================================
-
-/**
- * Local reactive state for currency
- * Needed for immediate UI feedback while API call is in progress
- */
-const localCurrency = reactive({
-  pp: 0,
-  gp: 0,
-  ep: 0,
-  sp: 0,
-  cp: 0
-})
-
-/** Prevents race conditions from rapid currency updates */
-const isUpdatingCurrency = ref(false)
-
-/** Currency modal open state - controlled by character page for success/failure handling */
-const isCurrencyModalOpen = ref(false)
-
-/** Currency error message to display in modal (e.g., "Insufficient funds") */
-const currencyError = ref<string | null>(null)
-
-// Sync local currency state when character data loads
-watch(() => character.value, (char) => {
-  if (char?.currency) {
-    localCurrency.pp = char.currency.pp ?? 0
-    localCurrency.gp = char.currency.gp ?? 0
-    localCurrency.ep = char.currency.ep ?? 0
-    localCurrency.sp = char.currency.sp ?? 0
-    localCurrency.cp = char.currency.cp ?? 0
-  }
-}, { immediate: true })
-
-/** Response shape from PATCH /api/characters/:id/currency */
-interface CurrencyUpdateResponse {
-  data: {
-    pp: number
-    gp: number
-    ep: number
-    sp: number
-    cp: number
-  }
-}
-
-/**
- * Handle currency updates from CurrencyEditModal
- * Sends deltas to backend which handles:
- * - Add/subtract/set operations
- * - Auto-conversion ("making change") when needed
- * - Validation of sufficient funds
- */
-async function handleCurrencyUpdate(payload: CurrencyDelta) {
-  if (isUpdatingCurrency.value || !character.value) return
-
-  isUpdatingCurrency.value = true
-
-  // Store old values for rollback on error
-  const oldCurrency = { ...localCurrency }
-
-  try {
-    const response = await apiFetch<CurrencyUpdateResponse>(
-      `/characters/${character.value.id}/currency`,
-      {
-        method: 'PATCH',
-        body: payload
-      }
-    )
-
-    // Update local state from authoritative backend response
-    localCurrency.pp = response.data.pp
-    localCurrency.gp = response.data.gp
-    localCurrency.ep = response.data.ep
-    localCurrency.sp = response.data.sp
-    localCurrency.cp = response.data.cp
-
-    // Clear any previous error and close modal on success
-    currencyError.value = null
-    isCurrencyModalOpen.value = false
-
-    toast.add({
-      title: 'Currency updated',
-      color: 'success'
-    })
-  } catch (err: unknown) {
-    // Extract error message from Laravel response
-    // Structure: error.data contains Laravel's response { message, data: { message } }
-    // We want data.message (specific error) over message (generic)
-    const error = err as {
-      statusCode?: number
-      statusMessage?: string
-      data?: {
-        message?: string
-        data?: { message?: string }
-      }
-    }
-
-    // Rollback local state on any error
-    Object.assign(localCurrency, oldCurrency)
-
-    // Handle validation errors (insufficient funds) - show in modal
-    if (error.statusCode === 422) {
-      // Prefer nested data.message (specific) over top-level message (generic)
-      const message = error.data?.data?.message
-        || error.data?.message
-        || 'Insufficient funds'
-      currencyError.value = message
-      // Don't close modal - let user see error and retry
-    } else {
-      logger.error('Failed to update currency:', err)
-      currencyError.value = 'Failed to update currency. Please try again.'
-    }
-  } finally {
-    isUpdatingCurrency.value = false
-  }
-}
-
-/**
- * Computed currency that uses local values when in play mode
- * Falls back to server data when not in play mode
- */
-const displayCurrency = computed(() => {
-  if (!character.value?.currency) return null
-
-  return isPlayMode.value
-    ? { ...localCurrency }
-    : character.value.currency
-})
 
 // ============================================================================
 // Rest Actions (Play Mode)
@@ -520,12 +194,8 @@ async function handleLongRest() {
     })
     await refreshForLongRest()
 
-    // Sync local HP state from server after long rest
-    if (stats.value?.hit_points) {
-      localHitPoints.current = stats.value.hit_points.current ?? 0
-      localHitPoints.max = stats.value.hit_points.max ?? 0
-      localHitPoints.temporary = stats.value.hit_points.temporary ?? 0
-    }
+    // Re-initialize store from refreshed server data
+    // The watch on [character, stats] will handle this automatically
 
     // Build toast message
     const parts: string[] = []
@@ -765,23 +435,11 @@ const isSpellcaster = computed(() => !!stats.value?.spellcasting)
 
         <!-- Right: Combat Stats + Saves/Skills -->
         <div class="space-y-6">
-          <!-- Combat Stats Grid -->
+          <!-- Combat Stats Grid (uses store via managers) -->
           <CharacterSheetCombatStatsGrid
-            v-if="displayStats"
-            v-model:currency-modal-open="isCurrencyModalOpen"
             :character="character"
-            :stats="displayStats"
-            :currency="displayCurrency"
+            :stats="stats"
             :editable="canEdit"
-            :death-save-failures="localDeathSaves.failures"
-            :death-save-successes="localDeathSaves.successes"
-            :currency-loading="isUpdatingCurrency"
-            :currency-error="currencyError"
-            @hp-change="handleHpChange"
-            @temp-hp-set="handleTempHpSet"
-            @temp-hp-clear="handleTempHpClear"
-            @currency-apply="handleCurrencyUpdate"
-            @clear-currency-error="currencyError = null"
           />
 
           <!-- Defensive Traits -->
@@ -798,14 +456,7 @@ const isSpellcaster = computed(() => !!stats.value?.spellcasting)
             <!-- Saving Throws + Death Saves stacked -->
             <div class="space-y-4">
               <CharacterSheetSavingThrowsList :saving-throws="savingThrows" />
-              <CharacterSheetDeathSaves
-                :successes="localDeathSaves.successes"
-                :failures="localDeathSaves.failures"
-                :editable="canEditDeathSaves"
-                :is-dead="character.is_dead"
-                @update:successes="handleDeathSaveUpdate('successes', $event)"
-                @update:failures="handleDeathSaveUpdate('failures', $event)"
-              />
+              <CharacterSheetDeathSavesManager :editable="canEdit" />
             </div>
             <CharacterSheetSkillsList
               :skills="skills"
