@@ -10,8 +10,8 @@
  */
 
 interface CharacterEquipped {
-  armor?: { name: string; armor_class?: string } | null
-  shield?: { name: string; armor_class?: string } | null
+  armor?: { name: string, armor_class?: string } | null
+  shield?: { name: string, armor_class?: string } | null
 }
 
 interface CharacterClass {

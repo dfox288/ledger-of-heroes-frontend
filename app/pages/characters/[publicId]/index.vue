@@ -13,6 +13,12 @@
 import type { Condition } from '~/types'
 import type { CurrencyDelta } from '~/components/character/sheet/CurrencyEditModal.vue'
 
+// ============================================================================
+// Edit Character (Name, Alignment, Portrait)
+// ============================================================================
+
+import type { EditPayload } from '~/components/character/sheet/EditModal.vue'
+
 const route = useRoute()
 const publicId = computed(() => route.params.publicId as string)
 
@@ -920,12 +926,6 @@ async function handleExport() {
     isExporting.value = false
   }
 }
-
-// ============================================================================
-// Edit Character (Name, Alignment, Portrait)
-// ============================================================================
-
-import type { EditPayload } from '~/components/character/sheet/EditModal.vue'
 
 /** Edit modal open state */
 const showEditModal = ref(false)

@@ -37,74 +37,74 @@ const backgroundImage = computed(() => {
         :style="{ backgroundImage: `url(${backgroundImage})` }"
       />
 
-    <template #header>
-      <div class="relative z-10 flex items-center justify-between">
-        <h3 class="font-semibold text-lg truncate">
-          {{ character.name }}
-        </h3>
-        <UBadge
-          :color="statusColor"
-          variant="subtle"
-          size="md"
-        >
-          {{ statusText }}
-        </UBadge>
-      </div>
-    </template>
-
-    <div class="relative z-10 space-y-2 text-sm text-gray-600 dark:text-gray-400">
-      <div class="flex items-center gap-2">
-        <UIcon
-          name="i-heroicons-globe-alt"
-          class="w-4 h-4"
-        />
-        <span>{{ character.race?.name ?? 'No race selected' }}</span>
-      </div>
-      <div class="flex items-center gap-2">
-        <UIcon
-          name="i-heroicons-shield-check"
-          class="w-4 h-4"
-        />
-        <span>{{ character.class?.name ?? 'No class selected' }}</span>
-      </div>
-      <div class="flex items-center gap-2">
-        <UIcon
-          name="i-heroicons-arrow-trending-up"
-          class="w-4 h-4"
-        />
-        <span>Level {{ character.level }}</span>
-      </div>
-    </div>
-
-    <template #footer>
-      <div class="relative z-10 flex justify-between items-center">
-        <div class="flex gap-2">
-          <UButton
-            :to="`/characters/${character.public_id}`"
-            variant="ghost"
-            size="sm"
+      <template #header>
+        <div class="relative z-10 flex items-center justify-between">
+          <h3 class="font-semibold text-lg truncate">
+            {{ character.name }}
+          </h3>
+          <UBadge
+            :color="statusColor"
+            variant="subtle"
+            size="md"
           >
-            View
-          </UButton>
-          <UButton
-            v-if="character.level === 1"
-            :to="`/characters/${character.public_id}/edit`"
-            variant="soft"
-            color="primary"
-            size="sm"
-          >
-            {{ character.is_complete ? 'Edit' : 'Continue' }}
-          </UButton>
+            {{ statusText }}
+          </UBadge>
         </div>
-        <UButton
-          variant="ghost"
-          color="error"
-          size="sm"
-          icon="i-heroicons-trash"
-          @click="$emit('delete')"
-        />
+      </template>
+
+      <div class="relative z-10 space-y-2 text-sm text-gray-600 dark:text-gray-400">
+        <div class="flex items-center gap-2">
+          <UIcon
+            name="i-heroicons-globe-alt"
+            class="w-4 h-4"
+          />
+          <span>{{ character.race?.name ?? 'No race selected' }}</span>
+        </div>
+        <div class="flex items-center gap-2">
+          <UIcon
+            name="i-heroicons-shield-check"
+            class="w-4 h-4"
+          />
+          <span>{{ character.class?.name ?? 'No class selected' }}</span>
+        </div>
+        <div class="flex items-center gap-2">
+          <UIcon
+            name="i-heroicons-arrow-trending-up"
+            class="w-4 h-4"
+          />
+          <span>Level {{ character.level }}</span>
+        </div>
       </div>
-    </template>
+
+      <template #footer>
+        <div class="relative z-10 flex justify-between items-center">
+          <div class="flex gap-2">
+            <UButton
+              :to="`/characters/${character.public_id}`"
+              variant="ghost"
+              size="sm"
+            >
+              View
+            </UButton>
+            <UButton
+              v-if="character.level === 1"
+              :to="`/characters/${character.public_id}/edit`"
+              variant="soft"
+              color="primary"
+              size="sm"
+            >
+              {{ character.is_complete ? 'Edit' : 'Continue' }}
+            </UButton>
+          </div>
+          <UButton
+            variant="ghost"
+            color="error"
+            size="sm"
+            icon="i-heroicons-trash"
+            @click="$emit('delete')"
+          />
+        </div>
+      </template>
     </UCard>
   </div>
 </template>

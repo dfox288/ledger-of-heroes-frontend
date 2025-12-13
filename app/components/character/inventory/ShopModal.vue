@@ -54,10 +54,10 @@ const customPrice = ref<number | null>(null)
 // Currency conversion rates (to copper pieces)
 const CURRENCY_TO_CP = {
   pp: 1000, // 1 platinum = 10 gold = 1000 copper
-  gp: 100,  // 1 gold = 100 copper
-  ep: 50,   // 1 electrum = 50 copper
-  sp: 10,   // 1 silver = 10 copper
-  cp: 1     // 1 copper = 1 copper
+  gp: 100, // 1 gold = 100 copper
+  ep: 50, // 1 electrum = 50 copper
+  sp: 10, // 1 silver = 10 copper
+  cp: 1 // 1 copper = 1 copper
 }
 
 // Debounced search
@@ -111,11 +111,11 @@ const totalCurrencyInCopper = computed((): number => {
   if (!props.currency) return 0
 
   return (
-    props.currency.pp * CURRENCY_TO_CP.pp +
-    props.currency.gp * CURRENCY_TO_CP.gp +
-    props.currency.ep * CURRENCY_TO_CP.ep +
-    props.currency.sp * CURRENCY_TO_CP.sp +
-    props.currency.cp * CURRENCY_TO_CP.cp
+    props.currency.pp * CURRENCY_TO_CP.pp
+    + props.currency.gp * CURRENCY_TO_CP.gp
+    + props.currency.ep * CURRENCY_TO_CP.ep
+    + props.currency.sp * CURRENCY_TO_CP.sp
+    + props.currency.cp * CURRENCY_TO_CP.cp
   )
 })
 

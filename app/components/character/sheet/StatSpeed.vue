@@ -26,7 +26,7 @@ const props = defineProps<{
 const alternateSpeeds = computed(() => {
   if (!props.speeds) return []
 
-  const result: { type: string; speed: number }[] = []
+  const result: { type: string, speed: number }[] = []
 
   if (props.speeds.fly) {
     result.push({ type: 'fly', speed: props.speeds.fly })

@@ -1,7 +1,6 @@
 // tests/components/character/inventory/ShopModal.test.ts
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { mount } from '@vue/test-utils'
-import { flushPromises } from '@vue/test-utils'
+import { mount, flushPromises } from '@vue/test-utils'
 import ShopModal from '~/components/character/inventory/ShopModal.vue'
 
 // Mock useApi to return items
@@ -310,11 +309,11 @@ describe('ShopModal', () => {
         props: {
           ...defaultProps,
           currency: {
-            pp: 1,    // 1000 cp
-            gp: 5,    // 500 cp
-            ep: 2,    // 100 cp
-            sp: 10,   // 100 cp
-            cp: 50    // 50 cp
+            pp: 1, // 1000 cp
+            gp: 5, // 500 cp
+            ep: 2, // 100 cp
+            sp: 10, // 100 cp
+            cp: 50 // 50 cp
           }
         }
       })

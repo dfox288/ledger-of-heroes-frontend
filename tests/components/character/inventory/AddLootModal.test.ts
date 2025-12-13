@@ -1,7 +1,6 @@
 // tests/components/character/inventory/AddLootModal.test.ts
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { mount } from '@vue/test-utils'
-import { flushPromises } from '@vue/test-utils'
+import { mount, flushPromises } from '@vue/test-utils'
 import AddLootModal from '~/components/character/inventory/AddLootModal.vue'
 
 // Mock useApi to return items

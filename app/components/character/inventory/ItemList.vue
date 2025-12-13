@@ -47,7 +47,7 @@ const filteredItems = computed(() => {
   if (!searchQuery.value.trim()) return props.items
 
   const query = searchQuery.value.toLowerCase().trim()
-  return props.items.filter(item => {
+  return props.items.filter((item) => {
     const name = getItemName(item).toLowerCase()
     return name.includes(query)
   })

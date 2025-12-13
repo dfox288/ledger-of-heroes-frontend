@@ -36,10 +36,10 @@ describe('StatCurrency', () => {
       const wrapper = await mountSuspended(StatCurrency, {
         props: { currency: mockCurrency }
       })
-      expect(wrapper.text()).toContain('5')   // PP
+      expect(wrapper.text()).toContain('5') // PP
       expect(wrapper.text()).toContain('100') // GP
-      expect(wrapper.text()).toContain('10')  // EP
-      expect(wrapper.text()).toContain('50')  // SP
+      expect(wrapper.text()).toContain('10') // EP
+      expect(wrapper.text()).toContain('50') // SP
       expect(wrapper.text()).toContain('200') // CP
     })
 
@@ -48,8 +48,8 @@ describe('StatCurrency', () => {
         props: { currency: partialCurrency }
       })
       // Should show GP and SP
-      expect(wrapper.text()).toContain('50')  // GP
-      expect(wrapper.text()).toContain('25')  // SP
+      expect(wrapper.text()).toContain('50') // GP
+      expect(wrapper.text()).toContain('25') // SP
       // Should have only 2 coin circles
       const coins = wrapper.findAll('.rounded-full')
       expect(coins.length).toBe(2)
