@@ -302,6 +302,13 @@ export interface CharacterSummary {
   background_slug: string | null
   /** Indicates if background reference couldn't be resolved */
   background_is_dangling?: boolean
+  /** Character portrait media */
+  portrait: {
+    original: string
+    thumb: string
+    medium: string
+    is_uploaded: boolean
+  } | null
 }
 
 /**

@@ -13,6 +13,7 @@ const emit = defineEmits<{
   'revive': []
   'export': []
   'toggle-inspiration': []
+  'edit': []
 }>()
 
 /**
@@ -159,6 +160,17 @@ const actionMenuItems = computed(() => {
         label: 'Continue Editing',
         icon: 'i-heroicons-pencil',
         to: `/characters/${props.character.public_id}/edit`
+      }
+    ])
+  }
+
+  // Edit character info (always available for complete characters)
+  if (props.character.is_complete) {
+    items.push([
+      {
+        label: 'Edit Character',
+        icon: 'i-heroicons-pencil-square',
+        onSelect: () => emit('edit')
       }
     ])
   }

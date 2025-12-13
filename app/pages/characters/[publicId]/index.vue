@@ -921,6 +921,130 @@ async function handleExport() {
   }
 }
 
+// ============================================================================
+// Edit Character (Name, Alignment, Portrait)
+// ============================================================================
+
+import type { EditPayload } from '~/components/character/sheet/EditModal.vue'
+
+/** Edit modal open state */
+const showEditModal = ref(false)
+
+/** Prevents race conditions during edit save */
+const isEditing = ref(false)
+
+/** Error message from edit operation */
+const editError = ref<string | null>(null)
+
+/**
+ * Handle edit button click from header dropdown
+ */
+function handleEditClick() {
+  editError.value = null
+  showEditModal.value = true
+}
+
+/**
+ * Handle save from edit modal
+ * Updates name/alignment via PATCH, uploads portrait separately if provided
+ */
+async function handleEditSave(payload: EditPayload) {
+  if (isEditing.value || !character.value) return
+
+  isEditing.value = true
+  editError.value = null
+
+  try {
+    // 1. Update name and alignment if changed
+    const hasNameChange = payload.name !== character.value.name
+    const hasAlignmentChange = payload.alignment !== character.value.alignment
+
+    if (hasNameChange || hasAlignmentChange) {
+      await apiFetch(`/characters/${character.value.id}`, {
+        method: 'PATCH',
+        body: {
+          name: payload.name,
+          alignment: payload.alignment
+        }
+      })
+    }
+
+    // 2. Upload portrait if file provided
+    if (payload.portraitFile) {
+      const formData = new FormData()
+      formData.append('file', payload.portraitFile)
+
+      await apiFetch(`/characters/${character.value.id}/media/portrait`, {
+        method: 'POST',
+        body: formData
+      })
+    }
+
+    // 3. Refresh character data to show updates
+    await refresh()
+
+    // 4. Close modal and show success with specific message
+    showEditModal.value = false
+
+    // Build descriptive toast message
+    const changes: string[] = []
+    if (hasNameChange || hasAlignmentChange) changes.push('details')
+    if (payload.portraitFile) changes.push('portrait')
+    const toastTitle = changes.length > 1
+      ? 'Character details and portrait updated'
+      : payload.portraitFile
+        ? 'Portrait updated'
+        : 'Character updated'
+
+    toast.add({
+      title: toastTitle,
+      color: 'success'
+    })
+  } catch (err: unknown) {
+    const error = err as { statusCode?: number, data?: { message?: string } }
+
+    if (error.statusCode === 422) {
+      editError.value = error.data?.message || 'Validation failed'
+    } else {
+      logger.error('Failed to update character:', err)
+      editError.value = 'Failed to update character. Please try again.'
+    }
+  } finally {
+    isEditing.value = false
+  }
+}
+
+/**
+ * Handle portrait removal from edit modal
+ */
+async function handleRemovePortrait() {
+  if (isEditing.value || !character.value) return
+
+  isEditing.value = true
+
+  try {
+    await apiFetch(`/characters/${character.value.id}/media/portrait`, {
+      method: 'DELETE'
+    })
+
+    // Refresh character data to show portrait removal
+    await refresh()
+
+    toast.add({
+      title: 'Portrait removed',
+      color: 'success'
+    })
+  } catch (err) {
+    logger.error('Failed to remove portrait:', err)
+    toast.add({
+      title: 'Failed to remove portrait',
+      color: 'error'
+    })
+  } finally {
+    isEditing.value = false
+  }
+}
+
 // Validation - check for dangling references when sourcebooks are removed
 const characterId = computed(() => character.value?.id ?? null)
 const { validationResult, validateReferences } = useCharacterValidation(characterId)
@@ -1017,6 +1141,7 @@ const tabItems = computed(() => {
         @revive="handleRevive"
         @export="handleExport"
         @toggle-inspiration="handleToggleInspiration"
+        @edit="handleEditClick"
       />
 
       <!-- Validation Warning - shows when sourcebook content was removed -->
@@ -1173,5 +1298,16 @@ const tabItems = computed(() => {
   <CharacterSheetDeadlyExhaustionConfirmModal
     v-model:open="showDeadlyExhaustionModal"
     @confirm="handleDeadlyExhaustionConfirmed"
+  />
+
+  <!-- Edit Character Modal -->
+  <CharacterSheetEditModal
+    v-if="character"
+    v-model:open="showEditModal"
+    :character="character"
+    :loading="isEditing"
+    :error="editError"
+    @save="handleEditSave"
+    @remove-portrait="handleRemovePortrait"
   />
 </template>

@@ -24,7 +24,13 @@ const mockCharacters: CharacterSummary[] = [
     race: { id: 1, name: 'Human', slug: 'human' },
     class: { id: 1, name: 'Wizard', slug: 'wizard', equipment: [] },
     classes: [],
-    background: { id: 1, name: 'Sage', slug: 'sage' }
+    background: { id: 1, name: 'Sage', slug: 'sage' },
+    portrait: {
+      original: 'http://localhost:8080/storage/1/gandalf.webp',
+      thumb: 'http://localhost:8080/storage/1/conversions/gandalf-thumb.webp',
+      medium: 'http://localhost:8080/storage/1/conversions/gandalf-medium.webp',
+      is_uploaded: true
+    }
   },
   {
     id: 2,
@@ -37,7 +43,8 @@ const mockCharacters: CharacterSummary[] = [
     race: { id: 2, name: 'Halfling', slug: 'halfling' },
     class: { id: 2, name: 'Rogue', slug: 'rogue', equipment: [] },
     classes: [],
-    background: { id: 2, name: 'Criminal', slug: 'criminal' }
+    background: { id: 2, name: 'Criminal', slug: 'criminal' },
+    portrait: null
   },
   {
     id: 3,
@@ -50,7 +57,8 @@ const mockCharacters: CharacterSummary[] = [
     race: { id: 1, name: 'Human', slug: 'human' },
     class: { id: 3, name: 'Paladin', slug: 'paladin', equipment: [] },
     classes: [],
-    background: { id: 3, name: 'Noble', slug: 'noble' }
+    background: { id: 3, name: 'Noble', slug: 'noble' },
+    portrait: null
   }
 ] as CharacterSummary[]
 
