@@ -26,7 +26,8 @@ const mockArmor: CharacterEquipment = {
   custom_description: null,
   quantity: 1,
   equipped: true,
-  location: 'worn'
+  location: 'armor',
+  is_attuned: false
 }
 
 const mockPotion: CharacterEquipment = {
@@ -38,7 +39,8 @@ const mockPotion: CharacterEquipment = {
   custom_description: null,
   quantity: 3,
   equipped: false,
-  location: 'inventory'
+  location: 'backpack',
+  is_attuned: false
 }
 
 const mockGear: CharacterEquipment = {
@@ -50,7 +52,8 @@ const mockGear: CharacterEquipment = {
   custom_description: null,
   quantity: 1,
   equipped: false,
-  location: 'inventory'
+  location: 'backpack',
+  is_attuned: false
 }
 
 const mockMagicRing: CharacterEquipment = {
@@ -62,7 +65,8 @@ const mockMagicRing: CharacterEquipment = {
   custom_description: null,
   quantity: 1,
   equipped: true,
-  location: 'attuned'
+  location: 'ring_1',
+  is_attuned: true
 }
 
 const mockEquipment = [mockWeapon, mockArmor, mockPotion, mockGear, mockMagicRing]
@@ -310,8 +314,8 @@ describe('ItemTable', () => {
       await btn.trigger('click')
 
       expect(wrapper.emitted('equip')).toBeTruthy()
-      // Armor should equip to 'worn'
-      expect(wrapper.emitted('equip')![0]).toEqual([2, 'worn'])
+      // Armor should equip to 'armor' slot
+      expect(wrapper.emitted('equip')![0]).toEqual([2, 'armor'])
     })
 
     it('shows dropdown with hand options for weapon equip', async () => {

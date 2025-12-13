@@ -53,9 +53,13 @@ export type CharacterProficiency = components['schemas']['CharacterProficiencyRe
 
 /**
  * Character equipment item from API
+ * Extended with is_attuned field from expanded equipment slots (PR #154)
  * @see CharacterEquipmentResource in OpenAPI spec
  */
-export type CharacterEquipment = components['schemas']['CharacterEquipmentResource']
+export type CharacterEquipment = components['schemas']['CharacterEquipmentResource'] & {
+  /** Attunement status for magic items (separated from location in expanded slot system) */
+  is_attuned?: boolean
+}
 
 /**
  * Character spell from API

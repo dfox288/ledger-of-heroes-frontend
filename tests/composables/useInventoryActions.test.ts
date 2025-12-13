@@ -53,6 +53,85 @@ describe('useInventoryActions', () => {
 
       expect(result).toEqual(mockResponse)
     })
+
+    it('supports armor slot', async () => {
+      mockApiFetch.mockResolvedValueOnce({ data: { id: 1, location: 'armor' } })
+
+      const { equipItem } = useInventoryActions('test-char-123')
+      await equipItem(1, 'armor')
+
+      expect(mockApiFetch).toHaveBeenCalledWith(
+        '/characters/test-char-123/equipment/1',
+        {
+          method: 'PATCH',
+          body: { location: 'armor' }
+        }
+      )
+    })
+
+    it('supports ring slots', async () => {
+      mockApiFetch.mockResolvedValueOnce({ data: { id: 1, location: 'ring_1' } })
+
+      const { equipItem } = useInventoryActions('test-char-123')
+      await equipItem(1, 'ring_1')
+
+      expect(mockApiFetch).toHaveBeenCalledWith(
+        '/characters/test-char-123/equipment/1',
+        {
+          method: 'PATCH',
+          body: { location: 'ring_1' }
+        }
+      )
+    })
+
+    it('supports body slots (head, neck, cloak, belt, hands, feet)', async () => {
+      const bodySlots = ['head', 'neck', 'cloak', 'belt', 'hands', 'feet'] as const
+
+      for (const slot of bodySlots) {
+        mockApiFetch.mockResolvedValueOnce({ data: { id: 1, location: slot } })
+
+        const { equipItem } = useInventoryActions('test-char-123')
+        await equipItem(1, slot)
+
+        expect(mockApiFetch).toHaveBeenLastCalledWith(
+          '/characters/test-char-123/equipment/1',
+          {
+            method: 'PATCH',
+            body: { location: slot }
+          }
+        )
+      }
+    })
+
+    it('sends is_attuned when provided', async () => {
+      mockApiFetch.mockResolvedValueOnce({ data: { id: 1, location: 'ring_1', is_attuned: true } })
+
+      const { equipItem } = useInventoryActions('test-char-123')
+      await equipItem(1, 'ring_1', { isAttuned: true })
+
+      expect(mockApiFetch).toHaveBeenCalledWith(
+        '/characters/test-char-123/equipment/1',
+        {
+          method: 'PATCH',
+          body: { location: 'ring_1', is_attuned: true }
+        }
+      )
+    })
+
+    it('does not send is_attuned when not provided', async () => {
+      mockApiFetch.mockResolvedValueOnce({ data: { id: 1, location: 'armor' } })
+
+      const { equipItem } = useInventoryActions('test-char-123')
+      await equipItem(1, 'armor')
+
+      expect(mockApiFetch).toHaveBeenCalledWith(
+        '/characters/test-char-123/equipment/1',
+        {
+          method: 'PATCH',
+          body: { location: 'armor' }
+        }
+      )
+    })
   })
 
   describe('unequipItem', () => {
@@ -144,13 +223,13 @@ describe('useInventoryActions', () => {
         { method: 'DELETE' }
       )
 
-      // Second call: add currency
+      // Second call: add currency (string format: "+N" for add)
       expect(mockApiFetch).toHaveBeenNthCalledWith(
         2,
         '/characters/test-char-123/currency',
         {
           method: 'PATCH',
-          body: { cp: { add: 1500 } }
+          body: { cp: '+1500' }
         }
       )
     })
@@ -192,13 +271,13 @@ describe('useInventoryActions', () => {
         }
       )
 
-      // Second call: subtract currency
+      // Second call: subtract currency (string format: "-N" for subtract)
       expect(mockApiFetch).toHaveBeenNthCalledWith(
         2,
         '/characters/test-char-123/currency',
         {
           method: 'PATCH',
-          body: { cp: { subtract: 1500 } }
+          body: { cp: '-1500' }
         }
       )
     })

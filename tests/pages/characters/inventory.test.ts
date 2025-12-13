@@ -64,7 +64,8 @@ const mockEquipment = [
     custom_description: null,
     quantity: 1,
     equipped: true,
-    location: 'worn'
+    location: 'armor',
+    is_attuned: false
   },
   {
     id: 3,
@@ -75,7 +76,8 @@ const mockEquipment = [
     custom_description: null,
     quantity: 1,
     equipped: false,
-    location: 'inventory'
+    location: 'backpack',
+    is_attuned: false
   }
 ]
 

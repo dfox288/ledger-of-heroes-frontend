@@ -3,12 +3,15 @@
  *
  * Used for equip/unequip actions by changing location:
  * - 'main_hand', 'off_hand' - wielded weapons/shields
- * - 'worn' - armor
- * - 'attuned' - attuned magic items
+ * - 'head', 'neck', 'cloak', 'armor', 'belt', 'hands', 'feet' - body slots
+ * - 'ring_1', 'ring_2' - ring slots
  * - 'backpack' - stored/unequipped
  *
+ * Attunement is handled separately via 'is_attuned' boolean field.
+ *
  * @example PATCH /api/characters/1/equipment/5
- * Body: { location: 'main_hand' }
+ * Body: { location: 'armor' }
+ * Body: { location: 'ring_1', is_attuned: true }
  */
 export default defineEventHandler(async (event) => {
   const config = useRuntimeConfig()

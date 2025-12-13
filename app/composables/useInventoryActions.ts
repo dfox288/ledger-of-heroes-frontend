@@ -25,7 +25,24 @@ export interface EquipmentResponse {
   data: CharacterEquipment
 }
 
-export type EquipmentLocation = 'main_hand' | 'off_hand' | 'worn' | 'attuned' | 'backpack'
+export type EquipmentLocation
+  = | 'main_hand'
+    | 'off_hand'
+    | 'head'
+    | 'neck'
+    | 'cloak'
+    | 'armor'
+    | 'belt'
+    | 'hands'
+    | 'ring_1'
+    | 'ring_2'
+    | 'feet'
+    | 'backpack'
+
+export interface EquipOptions {
+  /** Set attunement status (for magic items that require attunement) */
+  isAttuned?: boolean
+}
 
 export function useInventoryActions(publicId: string | Ref<string>) {
   const { apiFetch } = useApi()
@@ -36,14 +53,25 @@ export function useInventoryActions(publicId: string | Ref<string>) {
   /**
    * Equip an item to a specific slot
    * @param equipmentId - The character_equipment record ID
-   * @param location - Target slot: main_hand, off_hand, worn, attuned
+   * @param location - Target slot: main_hand, off_hand, armor, head, etc.
+   * @param options - Optional settings like attunement
    */
-  async function equipItem(equipmentId: number, location: EquipmentLocation): Promise<EquipmentResponse> {
+  async function equipItem(
+    equipmentId: number,
+    location: EquipmentLocation,
+    options?: EquipOptions
+  ): Promise<EquipmentResponse> {
+    const body: { location: EquipmentLocation, is_attuned?: boolean } = { location }
+
+    if (options?.isAttuned !== undefined) {
+      body.is_attuned = options.isAttuned
+    }
+
     return await apiFetch<EquipmentResponse>(
       `/characters/${resolvedId.value}/equipment/${equipmentId}`,
       {
         method: 'PATCH',
-        body: { location }
+        body
       }
     )
   }

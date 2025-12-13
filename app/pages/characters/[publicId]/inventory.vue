@@ -13,6 +13,7 @@
 
 import type { Character, CharacterEquipment } from '~/types/character'
 import type { CurrencyDelta } from '~/components/character/sheet/CurrencyEditModal.vue'
+import type { EquipmentLocation } from '~/composables/useInventoryActions'
 import { logger } from '~/utils/logger'
 
 const route = useRoute()
@@ -110,7 +111,7 @@ const {
 // Item action handlers
 async function handleEquip(itemId: number, slot: string) {
   try {
-    await equipItem(itemId, slot as 'main_hand' | 'off_hand' | 'worn' | 'attuned')
+    await equipItem(itemId, slot as EquipmentLocation)
     toast.add({ title: 'Item equipped!', color: 'success' })
     await refreshEquipment()
   } catch (error) {
