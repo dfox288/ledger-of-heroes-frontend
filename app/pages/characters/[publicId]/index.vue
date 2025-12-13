@@ -45,8 +45,6 @@ const {
 // ============================================================================
 
 const playStateStore = useCharacterPlayStateStore()
-const { apiFetch } = useApi()
-const toast = useToast()
 
 /**
  * Initialize play state store when character and stats load
@@ -90,110 +88,6 @@ const isPlayMode = computed(() => pageHeaderRef.value?.isPlayMode ?? false)
  * Uses store.isDead for reactivity when death state changes mid-session
  */
 const canEdit = computed(() => isPlayMode.value && !playStateStore.isDead)
-
-// ============================================================================
-// Conditions Management (Play Mode)
-// Note: Add Condition is handled by PageHeader. This section handles
-// remove, update level, and deadly exhaustion confirmation.
-// ============================================================================
-
-/** Deadly exhaustion confirmation modal state */
-const showDeadlyExhaustionModal = ref(false)
-
-/** Pending deadly exhaustion data for confirmation */
-const pendingDeadlyExhaustion = ref<{ slug: string, currentLevel: number, targetLevel: number, source: string | null, duration: string | null } | null>(null)
-
-/** Prevents race conditions from rapid condition updates */
-const isUpdatingConditions = ref(false)
-
-/**
- * Handle remove condition from Conditions panel
- * DELETEs condition from backend
- */
-async function handleRemoveCondition(conditionSlug: string) {
-  if (isUpdatingConditions.value || !character.value) return
-
-  isUpdatingConditions.value = true
-
-  try {
-    await apiFetch(`/characters/${character.value.id}/conditions/${conditionSlug}`, {
-      method: 'DELETE'
-    })
-    await refresh()
-    toast.add({
-      title: 'Condition removed',
-      color: 'success'
-    })
-  } catch (err) {
-    logger.error('Failed to remove condition:', err)
-    toast.add({
-      title: 'Failed to remove condition',
-      color: 'error'
-    })
-  } finally {
-    isUpdatingConditions.value = false
-  }
-}
-
-/**
- * Handle exhaustion level update from Conditions panel
- * POSTs updated level to backend (upsert behavior)
- * Preserves source and duration from the original condition
- */
-async function handleUpdateConditionLevel(payload: { slug: string, level: number, source: string | null, duration: string | null }) {
-  if (isUpdatingConditions.value || !character.value) return
-
-  isUpdatingConditions.value = true
-
-  try {
-    await apiFetch(`/characters/${character.value.id}/conditions`, {
-      method: 'POST',
-      body: {
-        condition: payload.slug,
-        level: payload.level,
-        source: payload.source ?? '',
-        duration: payload.duration ?? ''
-      }
-    })
-    await refresh()
-  } catch (err) {
-    logger.error('Failed to update exhaustion level:', err)
-    toast.add({
-      title: 'Failed to update exhaustion',
-      color: 'error'
-    })
-  } finally {
-    isUpdatingConditions.value = false
-  }
-}
-
-/**
- * Handle deadly exhaustion confirmation request
- * Shows confirmation modal before allowing level 6
- * Preserves source and duration for when confirmation is accepted
- */
-function handleDeadlyExhaustionConfirm(payload: { slug: string, currentLevel: number, targetLevel: number, source: string | null, duration: string | null }) {
-  pendingDeadlyExhaustion.value = payload
-  showDeadlyExhaustionModal.value = true
-}
-
-/**
- * Handle confirmed deadly exhaustion
- * Called when user confirms level 6 in the modal
- * Passes through source and duration from pending data
- */
-async function handleDeadlyExhaustionConfirmed() {
-  if (!pendingDeadlyExhaustion.value) return
-
-  await handleUpdateConditionLevel({
-    slug: pendingDeadlyExhaustion.value.slug,
-    level: pendingDeadlyExhaustion.value.targetLevel,
-    source: pendingDeadlyExhaustion.value.source,
-    duration: pendingDeadlyExhaustion.value.duration
-  })
-
-  pendingDeadlyExhaustion.value = null
-}
 
 // Validation - check for dangling references when sourcebooks are removed
 const characterId = computed(() => character.value?.id ?? null)
@@ -273,14 +167,12 @@ const isSpellcaster = computed(() => !!stats.value?.spellcasting)
       <CharacterSheetValidationWarning :validation-result="validationResult" />
 
       <!-- Active Conditions - only shows when character has conditions -->
-      <CharacterSheetConditions
-        v-if="conditions.length > 0"
+      <CharacterSheetConditionsManager
+        v-if="conditions.length > 0 && character"
         :conditions="conditions"
+        :character-id="character.id"
         :editable="canEdit"
-        :is-dead="playStateStore.isDead"
-        @remove="handleRemoveCondition"
-        @update-level="handleUpdateConditionLevel"
-        @confirm-deadly-exhaustion="handleDeadlyExhaustionConfirm"
+        @refresh="refresh"
       />
 
       <!-- Main Grid: Abilities sidebar + Stats/Skills -->
@@ -370,9 +262,4 @@ const isSpellcaster = computed(() => !!stats.value?.spellcasting)
     </div>
   </div>
 
-  <!-- Deadly Exhaustion Confirmation Modal -->
-  <CharacterSheetDeadlyExhaustionConfirmModal
-    v-model:open="showDeadlyExhaustionModal"
-    @confirm="handleDeadlyExhaustionConfirmed"
-  />
 </template>
