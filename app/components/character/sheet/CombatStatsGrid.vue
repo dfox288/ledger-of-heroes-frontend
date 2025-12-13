@@ -298,7 +298,7 @@ const acTooltipText = computed(() => {
               : 'bg-gray-50 dark:bg-gray-800',
         editable && !isDead && !isAtZeroHp ? 'cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700' : '',
         editable && isAtZeroHp && !isDead && !isStabilized ? 'cursor-pointer hover:bg-error-200 dark:hover:bg-error-900/60' : '',
-        editable && isStabilized ? 'cursor-pointer hover:bg-info-200 dark:hover:bg-info-900/60' : ''
+        editable && !isDead && isStabilized ? 'cursor-pointer hover:bg-info-200 dark:hover:bg-info-900/60' : ''
       ]"
       @click="handleHpCellClick"
     >
@@ -338,9 +338,9 @@ const acTooltipText = computed(() => {
       >
         +{{ stats.hit_points.temporary }} temp
       </div>
-      <!-- Add Temp HP button (only when editable and conscious) -->
+      <!-- Add Temp HP button (only when editable, conscious, and alive) -->
       <UButton
-        v-if="editable && !isAtZeroHp"
+        v-if="editable && !isAtZeroHp && !isDead"
         data-testid="add-temp-hp-btn"
         size="xs"
         variant="link"
