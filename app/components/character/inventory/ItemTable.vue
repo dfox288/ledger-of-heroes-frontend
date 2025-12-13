@@ -110,6 +110,11 @@ function getItemGroup(equipment: CharacterEquipment): ItemGroup {
   return 'Miscellaneous'
 }
 
+// Check if item requires attunement
+function requiresAttunement(equipment: CharacterEquipment): boolean {
+  return (equipment.item as { requires_attunement?: boolean } | null)?.requires_attunement === true
+}
+
 // Check if item is equippable
 function isEquippable(equipment: CharacterEquipment): boolean {
   const itemType = getItemType(equipment)?.toLowerCase() ?? ''
@@ -119,8 +124,17 @@ function isEquippable(equipment: CharacterEquipment): boolean {
     || itemType.includes('ranged')
     || itemType.includes('armor')
     || itemType.includes('shield')
-    || (equipment.item as { requires_attunement?: boolean } | null)?.requires_attunement === true
+    || requiresAttunement(equipment)
   )
+}
+
+// Get equip/unequip button label
+function getEquipLabel(equipment: CharacterEquipment): string {
+  return requiresAttunement(equipment) ? 'Attune' : 'Equip'
+}
+
+function getUnequipLabel(equipment: CharacterEquipment): string {
+  return requiresAttunement(equipment) ? 'Unattune' : 'Unequip'
 }
 
 // Get icon for item type
@@ -343,7 +357,7 @@ function handleEquip(item: CharacterEquipment) {
               class="flex items-center gap-1"
               @click.stop
             >
-              <!-- Equip/Unequip toggle -->
+              <!-- Equip/Unequip toggle (shows Attune/Unattune for attunement items) -->
               <UButton
                 v-if="isEquippable(item) && item.equipped"
                 data-testid="action-unequip"
@@ -352,7 +366,7 @@ function handleEquip(item: CharacterEquipment) {
                 color="primary"
                 @click="emit('unequip', item.id)"
               >
-                Unequip
+                {{ getUnequipLabel(item) }}
               </UButton>
               <UButton
                 v-else-if="isEquippable(item)"
@@ -361,7 +375,7 @@ function handleEquip(item: CharacterEquipment) {
                 variant="ghost"
                 @click="handleEquip(item)"
               >
-                Equip
+                {{ getEquipLabel(item) }}
               </UButton>
 
               <!-- Quantity buttons -->
