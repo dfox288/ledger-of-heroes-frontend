@@ -270,4 +270,81 @@ describe('CharacterSheetHitDice', () => {
       expect(filledDice.length).toBe(0)
     })
   })
+
+  // ============================================================================
+  // isDead Prop Tests (#544)
+  // ============================================================================
+
+  describe('isDead prop', () => {
+    it('disables dice spending when isDead is true', async () => {
+      const wrapper = await mountSuspended(HitDice, {
+        props: {
+          hitDice: [{ die: 'd8', total: 3, current: 2 }],
+          editable: true,
+          isDead: true
+        }
+      })
+
+      // Dice should not be clickable
+      const filledDie = wrapper.find('[data-testid="dice-d8-filled"]')
+      expect(filledDie.classes()).not.toContain('cursor-pointer')
+
+      // Clicking should not emit
+      await filledDie.trigger('click')
+      expect(wrapper.emitted('spend')).toBeFalsy()
+    })
+
+    it('disables rest buttons when isDead is true', async () => {
+      const wrapper = await mountSuspended(HitDice, {
+        props: {
+          hitDice: [{ die: 'd8', total: 3, current: 2 }],
+          editable: true,
+          isDead: true
+        }
+      })
+
+      // Rest buttons should be disabled
+      const shortRestBtn = wrapper.find('[data-testid="short-rest-btn"]')
+      const longRestBtn = wrapper.find('[data-testid="long-rest-btn"]')
+
+      expect(shortRestBtn.attributes('disabled')).toBeDefined()
+      expect(longRestBtn.attributes('disabled')).toBeDefined()
+    })
+
+    it('does not emit rest events when isDead is true', async () => {
+      const wrapper = await mountSuspended(HitDice, {
+        props: {
+          hitDice: [{ die: 'd8', total: 3, current: 2 }],
+          editable: true,
+          isDead: true
+        }
+      })
+
+      await wrapper.find('[data-testid="short-rest-btn"]').trigger('click')
+      await wrapper.find('[data-testid="long-rest-btn"]').trigger('click')
+
+      // Buttons are disabled, so no events should be emitted
+      // Note: disabled buttons don't emit click events in Vue
+      expect(wrapper.emitted('short-rest')).toBeFalsy()
+      expect(wrapper.emitted('long-rest')).toBeFalsy()
+    })
+
+    it('remains interactive when isDead is false', async () => {
+      const wrapper = await mountSuspended(HitDice, {
+        props: {
+          hitDice: [{ die: 'd8', total: 3, current: 2 }],
+          editable: true,
+          isDead: false
+        }
+      })
+
+      // Dice should be clickable
+      const filledDie = wrapper.find('[data-testid="dice-d8-filled"]')
+      expect(filledDie.classes()).toContain('cursor-pointer')
+
+      // Rest buttons should not be disabled
+      const shortRestBtn = wrapper.find('[data-testid="short-rest-btn"]')
+      expect(shortRestBtn.attributes('disabled')).toBeUndefined()
+    })
+  })
 })

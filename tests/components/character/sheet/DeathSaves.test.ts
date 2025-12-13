@@ -195,4 +195,49 @@ describe('CharacterSheetDeathSaves', () => {
       expect(wrapper.emitted('update:successes')![0]).toEqual([2])
     })
   })
+
+  // =========================================================================
+  // isDead Prop Tests (#544)
+  // =========================================================================
+
+  describe('isDead prop', () => {
+    it('disables all circles when isDead is true', async () => {
+      const wrapper = await mountSuspended(DeathSaves, {
+        props: { successes: 1, failures: 2, editable: true, isDead: true }
+      })
+      // Success circles should not have cursor-pointer
+      const successCircle = wrapper.find('[data-testid="success-filled-1"]')
+      expect(successCircle.classes()).not.toContain('cursor-pointer')
+
+      // Failure circles should not have cursor-pointer
+      const failureCircle = wrapper.find('[data-testid="failure-filled-1"]')
+      expect(failureCircle.classes()).not.toContain('cursor-pointer')
+    })
+
+    it('does not emit events when isDead is true even if editable', async () => {
+      const wrapper = await mountSuspended(DeathSaves, {
+        props: { successes: 1, failures: 1, editable: true, isDead: true }
+      })
+      // Try clicking success circle
+      const successCircle = wrapper.find('[data-testid="success-filled-1"]')
+      await successCircle.trigger('click')
+      expect(wrapper.emitted('update:successes')).toBeUndefined()
+
+      // Try clicking failure circle
+      const failureCircle = wrapper.find('[data-testid="failure-filled-1"]')
+      await failureCircle.trigger('click')
+      expect(wrapper.emitted('update:failures')).toBeUndefined()
+    })
+
+    it('remains interactive when isDead is false', async () => {
+      const wrapper = await mountSuspended(DeathSaves, {
+        props: { successes: 1, failures: 0, editable: true, isDead: false }
+      })
+      const successCircle = wrapper.find('[data-testid="success-filled-1"]')
+      expect(successCircle.classes()).toContain('cursor-pointer')
+
+      await successCircle.trigger('click')
+      expect(wrapper.emitted('update:successes')).toBeTruthy()
+    })
+  })
 })

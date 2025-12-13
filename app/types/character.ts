@@ -91,6 +91,21 @@ export type Character = components['schemas']['CharacterResource'] & {
    * Used in URLs instead of numeric ID for better UX
    */
   public_id: string
+
+  /**
+   * Whether the character is dead
+   *
+   * Set by backend when:
+   * - 3 death save failures
+   * - Massive damage (damage >= max HP while at 0)
+   * - Exhaustion level 6
+   * - Instant death effects
+   *
+   * When true, all play mode controls should be disabled.
+   * Optional for backwards compatibility with older backend versions.
+   * @see Issue #544
+   */
+  is_dead?: boolean
 }
 
 /**

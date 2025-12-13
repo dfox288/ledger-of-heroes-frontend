@@ -71,10 +71,24 @@ const isAtZeroHp = computed(() => {
 })
 
 /**
- * Check if character is dead (3 failed death saves)
- * Uses prop if provided (live value), falls back to character data
+ * Check if character is dead
+ *
+ * Uses the backend's is_dead flag which is the authoritative source.
+ * Backend sets is_dead for:
+ * - 3 death save failures
+ * - Massive damage (damage >= max HP while at 0)
+ * - Exhaustion level 6
+ * - Instant death effects
+ *
+ * Falls back to death save calculation if is_dead is not available.
+ * @see Issue #544
  */
 const isDead = computed(() => {
+  // Use backend flag if available
+  if (props.character.is_dead !== undefined) {
+    return props.character.is_dead
+  }
+  // Fallback: derive from death saves (legacy behavior)
   const failures = props.deathSaveFailures ?? props.character.death_save_failures ?? 0
   return isAtZeroHp.value && failures >= 3
 })
@@ -140,6 +154,89 @@ const visibleCurrencies = computed(() => {
       ...c,
       value: props.currency![c.key as keyof CharacterCurrency]
     }))
+})
+
+// =========================================================================
+// AC Tooltip (#547)
+// =========================================================================
+
+/**
+ * Check if character has a class with Unarmored Defense
+ * Returns the class type: 'barbarian' | 'monk' | null
+ */
+const unarmoredDefenseClass = computed(() => {
+  const classes = props.character.classes
+  if (!classes) return null
+
+  for (const entry of classes) {
+    const slug = entry.class?.slug?.toLowerCase() ?? ''
+    if (slug.includes('barbarian')) return 'barbarian'
+    if (slug.includes('monk')) return 'monk'
+  }
+  return null
+})
+
+/**
+ * Check if character is wearing armor
+ */
+const isWearingArmor = computed(() => {
+  return props.character.equipped?.armor != null
+})
+
+/**
+ * Check if character has a shield equipped
+ */
+const hasShield = computed(() => {
+  return props.character.equipped?.shield != null
+})
+
+/**
+ * Format a modifier for display (+2 or -1)
+ */
+function formatMod(value: number | null | undefined): string {
+  if (value === null || value === undefined) return '+0'
+  return value >= 0 ? `+${value}` : `${value}`
+}
+
+/**
+ * Get the AC tooltip text based on equipment and class
+ *
+ * Shows different information based on:
+ * - Wearing armor: "Chain Mail (AC 16)" or "Chain Mail + Shield"
+ * - Unarmored with Barbarian: "Unarmored Defense: 10 + DEX + CON"
+ * - Unarmored with Monk: "Unarmored Defense: 10 + DEX + WIS"
+ * - Unarmored without special class: "Unarmored: 10 + DEX"
+ *
+ * @see Issue #547
+ */
+const acTooltipText = computed(() => {
+  const ac = props.stats.armor_class
+  const mods = props.character.modifiers
+  const dexMod = formatMod(mods?.DEX)
+
+  // Shield suffix - used for both armored and unarmored cases
+  const shieldSuffix = hasShield.value
+    ? ` + ${props.character.equipped!.shield!.name} (+2)`
+    : ''
+
+  if (isWearingArmor.value) {
+    const armor = props.character.equipped!.armor!
+    return `${armor.name}${shieldSuffix}`
+  }
+
+  // Unarmored - check for special class features
+  if (unarmoredDefenseClass.value === 'barbarian') {
+    const conMod = formatMod(mods?.CON)
+    return `Unarmored Defense: 10 + DEX (${dexMod}) + CON (${conMod})${shieldSuffix} = ${ac}`
+  }
+
+  if (unarmoredDefenseClass.value === 'monk') {
+    const wisMod = formatMod(mods?.WIS)
+    return `Unarmored Defense: 10 + DEX (${dexMod}) + WIS (${wisMod})${shieldSuffix} = ${ac}`
+  }
+
+  // Basic unarmored AC (potentially with shield)
+  return `Unarmored: 10 + DEX (${dexMod})${shieldSuffix} = ${ac}`
 })
 </script>
 
@@ -213,14 +310,19 @@ const visibleCurrencies = computed(() => {
       </UButton>
     </div>
 
-    <div class="bg-gray-50 dark:bg-gray-800 rounded-lg p-4 text-center">
-      <div class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1">
-        AC
+    <UTooltip :text="acTooltipText">
+      <div
+        data-testid="ac-cell"
+        class="bg-gray-50 dark:bg-gray-800 rounded-lg p-4 text-center cursor-help"
+      >
+        <div class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1">
+          AC
+        </div>
+        <div class="text-2xl font-bold text-gray-900 dark:text-white">
+          {{ stats.armor_class ?? '—' }}
+        </div>
       </div>
-      <div class="text-2xl font-bold text-gray-900 dark:text-white">
-        {{ stats.armor_class ?? '—' }}
-      </div>
-    </div>
+    </UTooltip>
 
     <div class="bg-gray-50 dark:bg-gray-800 rounded-lg p-4 text-center">
       <div class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1">
