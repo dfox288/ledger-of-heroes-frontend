@@ -18,6 +18,8 @@
  */
 
 import type { CharacterEquipment } from '~/types/character'
+import type { EquipmentSlot } from '~/utils/equipmentSlots'
+import { getValidSlots, getDefaultSlot, needsSlotPicker, guessSlotFromName } from '~/utils/equipmentSlots'
 
 interface Props {
   items: CharacterEquipment[]
@@ -38,6 +40,7 @@ const emit = defineEmits<{
   'sell': [itemId: number]
   'drop': [itemId: number]
   'edit-qty': [itemId: number]
+  'equip-with-picker': [itemId: number, validSlots: EquipmentSlot[], suggestedSlot: EquipmentSlot | null]
 }>()
 
 // Group display order
@@ -258,21 +261,23 @@ function getMenuItems(item: CharacterEquipment) {
 
 // Handle equip with smart slot selection
 function handleEquip(item: CharacterEquipment) {
-  const itemType = getItemType(item)?.toLowerCase() ?? ''
+  const itemData = item.item as { item_type?: string, name?: string } | null
+  const itemType = itemData?.item_type ?? null
+  const itemName = item.custom_name || itemData?.name || ''
 
-  // Determine appropriate slot based on item type
-  let slot = 'main_hand'
-  if (itemType.includes('armor') && !itemType.includes('shield')) {
-    slot = 'armor'
-  } else if (itemType.includes('shield')) {
-    slot = 'off_hand'
-  } else if (itemType.includes('ring')) {
-    slot = 'ring_1' // Default to ring_1, UI can offer ring_2 if occupied
+  // Check if we need slot picker
+  if (needsSlotPicker(itemType)) {
+    const validSlots = getValidSlots(itemType)
+    const suggestedSlot = guessSlotFromName(itemName)
+    emit('equip-with-picker', item.id, validSlots, suggestedSlot)
+    return
   }
-  // Note: Attunement is now handled separately via is_attuned flag
-  // The parent component should set is_attuned when equipping attuneable items
 
-  emit('equip', item.id, slot)
+  // Auto-equip to default slot
+  const defaultSlot = getDefaultSlot(itemType)
+  if (defaultSlot) {
+    emit('equip', item.id, defaultSlot)
+  }
 }
 </script>
 
