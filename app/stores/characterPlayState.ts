@@ -60,8 +60,6 @@ interface HpUpdateResponse {
 interface DeathSaveUpdateResponse {
   data: {
     is_dead?: boolean
-    death_save_successes?: number
-    death_save_failures?: number
   }
 }
 
