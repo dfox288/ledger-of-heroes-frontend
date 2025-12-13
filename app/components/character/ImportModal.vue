@@ -221,9 +221,18 @@ watch(() => props.open, (isOpen) => {
  * Watch pasted JSON for changes and validate
  */
 watch(pastedJson, () => {
-  if (activeTab.value === 'paste') {
-    validateAndParse()
-  }
+  validateAndParse()
+})
+
+/**
+ * Clear state when switching tabs to avoid confusion
+ */
+watch(activeTab, () => {
+  // Reset all input state when tab changes
+  selectedFile.value = null
+  pastedJson.value = ''
+  error.value = null
+  parsedData.value = null
 })
 </script>
 
