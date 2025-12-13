@@ -377,7 +377,10 @@ function getItemIcon(item: Item): string {
 
           <!-- Quantity and Price -->
           <div class="grid grid-cols-2 gap-3">
-            <UFormField label="Quantity" class="w-full">
+            <UFormField
+              label="Quantity"
+              class="w-full"
+            >
               <UInput
                 v-model.number="quantity"
                 data-testid="quantity-input"
@@ -386,7 +389,10 @@ function getItemIcon(item: Item): string {
                 :ui="{ root: 'w-full' }"
               />
             </UFormField>
-            <UFormField label="Your Price (cp)" class="w-full">
+            <UFormField
+              label="Your Price (cp)"
+              class="w-full"
+            >
               <UInput
                 v-model.number="customPrice"
                 data-testid="custom-price-input"

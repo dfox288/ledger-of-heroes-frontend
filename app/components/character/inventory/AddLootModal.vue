@@ -206,7 +206,10 @@ function getItemIcon(item: Item): string {
         <!-- Tab Content Container - consistent min height -->
         <div class="min-h-[180px]">
           <!-- Search Tab Content -->
-          <div v-if="activeTab === 'search'" class="space-y-3">
+          <div
+            v-if="activeTab === 'search'"
+            class="space-y-3"
+          >
             <!-- Selected Item Display -->
             <div
               v-if="selectedItem"
@@ -299,8 +302,15 @@ function getItemIcon(item: Item): string {
           </div>
 
           <!-- Custom Tab Content -->
-          <div v-else-if="activeTab === 'custom'" class="space-y-4">
-            <UFormField label="Item Name" required class="w-full">
+          <div
+            v-else-if="activeTab === 'custom'"
+            class="space-y-4"
+          >
+            <UFormField
+              label="Item Name"
+              required
+              class="w-full"
+            >
               <UInput
                 v-model="customName"
                 data-testid="custom-name-input"
@@ -310,7 +320,10 @@ function getItemIcon(item: Item): string {
                 :ui="{ root: 'w-full' }"
               />
             </UFormField>
-            <UFormField label="Description" class="w-full">
+            <UFormField
+              label="Description"
+              class="w-full"
+            >
               <UTextarea
                 v-model="customDescription"
                 data-testid="custom-description-input"

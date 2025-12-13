@@ -161,7 +161,7 @@ describe('ItemDetailModal', () => {
     it('shows loading state while fetching', async () => {
       // Create a promise that won't resolve immediately
       let resolvePromise: (value: unknown) => void
-      mockApiFetch.mockReturnValue(new Promise(resolve => {
+      mockApiFetch.mockReturnValue(new Promise((resolve) => {
         resolvePromise = resolve
       }))
 
