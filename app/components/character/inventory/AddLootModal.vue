@@ -7,10 +7,11 @@
  * Supports both compendium items (searched from /items) and custom items.
  *
  * Features:
+ * - Tabbed interface: Search compendium vs Custom item
  * - Search compendium items with debounced input
  * - Select item from search results
  * - Set quantity
- * - Toggle for custom items (name + description)
+ * - Custom items with name + description
  *
  * @see Design: docs/frontend/plans/2025-12-13-inventory-tab-design-v2.md
  */
@@ -38,6 +39,13 @@ const emit = defineEmits<{
 
 const { apiFetch } = useApi()
 
+// Tab state
+const activeTab = ref('search')
+const tabItems = [
+  { label: 'Search', value: 'search', icon: 'i-heroicons-magnifying-glass' },
+  { label: 'Custom', value: 'custom', icon: 'i-heroicons-pencil-square' }
+]
+
 // Search state
 const searchQuery = ref('')
 const searchResults = ref<Item[]>([])
@@ -48,9 +56,11 @@ const selectedItem = ref<Item | null>(null)
 const quantity = ref(1)
 
 // Custom item state
-const isCustomMode = ref(false)
 const customName = ref('')
 const customDescription = ref('')
+
+// Computed for custom mode check
+const isCustomMode = computed(() => activeTab.value === 'custom')
 
 // Debounced search
 let searchTimeout: NodeJS.Timeout | null = null
@@ -96,20 +106,19 @@ function clearSelection() {
   selectedItem.value = null
 }
 
-// Toggle custom item mode
-function toggleCustomMode() {
-  isCustomMode.value = !isCustomMode.value
-  if (isCustomMode.value) {
+// Clear state when switching tabs
+watch(activeTab, (newTab) => {
+  if (newTab === 'custom') {
     // Clear compendium selection when entering custom mode
     selectedItem.value = null
     searchQuery.value = ''
     searchResults.value = []
   } else {
-    // Clear custom fields when exiting custom mode
+    // Clear custom fields when entering search mode
     customName.value = ''
     customDescription.value = ''
   }
-}
+})
 
 // Validation
 const canAdd = computed(() => {
@@ -148,11 +157,11 @@ function handleCancel() {
 watch(() => props.open, (isOpen) => {
   if (isOpen) {
     // Reset all state
+    activeTab.value = 'search'
     searchQuery.value = ''
     searchResults.value = []
     selectedItem.value = null
     quantity.value = 1
-    isCustomMode.value = false
     customName.value = ''
     customDescription.value = ''
     isSearching.value = false
@@ -186,132 +195,148 @@ function getItemIcon(item: Item): string {
 
     <template #body>
       <div class="space-y-4">
-        <!-- Mode Toggle -->
-        <div class="flex items-center justify-between">
-          <span class="text-sm text-gray-600 dark:text-gray-300">
-            {{ isCustomMode ? 'Custom Item' : 'Search Compendium' }}
-          </span>
-          <UButton
-            data-testid="custom-item-toggle"
-            variant="ghost"
-            size="xs"
-            @click="toggleCustomMode"
-          >
-            {{ isCustomMode ? 'Search Items' : 'Create Custom' }}
-          </UButton>
-        </div>
+        <!-- Tabs -->
+        <UTabs
+          v-model="activeTab"
+          :items="tabItems"
+          :content="false"
+          :ui="{ list: 'w-full grid grid-cols-2' }"
+        />
 
-        <!-- Compendium Search Mode -->
-        <template v-if="!isCustomMode">
-          <!-- Selected Item Display -->
-          <div
-            v-if="selectedItem"
-            data-testid="selected-item"
-            class="flex items-center justify-between p-3 bg-primary-50 dark:bg-primary-900/20 rounded-lg border border-primary-200 dark:border-primary-800"
-          >
-            <div class="flex items-center gap-3">
-              <UIcon
-                :name="getItemIcon(selectedItem)"
-                class="w-5 h-5 text-primary-600 dark:text-primary-400"
-              />
-              <div>
-                <p class="font-medium text-gray-900 dark:text-white">
-                  {{ selectedItem.name }}
-                </p>
-                <p
-                  v-if="selectedItem.item_type"
-                  class="text-xs text-gray-500 dark:text-gray-400"
-                >
-                  {{ selectedItem.item_type.name }}
-                </p>
-              </div>
-            </div>
-            <UButton
-              variant="ghost"
-              size="xs"
-              icon="i-heroicons-x-mark"
-              @click="clearSelection"
-            />
-          </div>
-
-          <!-- Search Input (hidden when item is selected) -->
-          <div v-else>
-            <UInput
-              v-model="searchQuery"
-              data-testid="loot-search"
-              placeholder="Search items..."
-              icon="i-heroicons-magnifying-glass"
-              :loading="isSearching"
-            />
-
-            <!-- Search Results -->
+        <!-- Tab Content Container - consistent min height -->
+        <div class="min-h-[180px]">
+          <!-- Search Tab Content -->
+          <div v-if="activeTab === 'search'" class="space-y-3">
+            <!-- Selected Item Display -->
             <div
-              v-if="searchResults.length > 0"
-              class="mt-2 max-h-48 overflow-y-auto border border-gray-200 dark:border-gray-700 rounded-lg divide-y divide-gray-200 dark:divide-gray-700"
+              v-if="selectedItem"
+              data-testid="selected-item"
+              class="flex items-center justify-between p-3 bg-primary-50 dark:bg-primary-900/20 rounded-lg border border-primary-200 dark:border-primary-800"
             >
-              <button
-                v-for="item in searchResults"
-                :key="item.id"
-                :data-testid="`item-result-${item.id}`"
-                class="w-full flex items-center gap-3 p-3 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors text-left"
-                @click="selectItem(item)"
-              >
+              <div class="flex items-center gap-3">
                 <UIcon
-                  :name="getItemIcon(item)"
-                  class="w-5 h-5 text-gray-400 flex-shrink-0"
+                  :name="getItemIcon(selectedItem)"
+                  class="w-5 h-5 text-primary-600 dark:text-primary-400"
                 />
-                <div class="flex-1 min-w-0">
-                  <p class="font-medium text-gray-900 dark:text-white truncate">
-                    {{ item.name }}
+                <div>
+                  <p class="font-medium text-gray-900 dark:text-white">
+                    {{ selectedItem.name }}
                   </p>
                   <p
-                    v-if="item.item_type"
+                    v-if="selectedItem.item_type"
                     class="text-xs text-gray-500 dark:text-gray-400"
                   >
-                    {{ item.item_type.name }}
+                    {{ selectedItem.item_type.name }}
                   </p>
                 </div>
-              </button>
+              </div>
+              <UButton
+                variant="ghost"
+                size="xs"
+                icon="i-heroicons-x-mark"
+                @click="clearSelection"
+              />
             </div>
 
-            <!-- Empty Search State -->
-            <p
-              v-else-if="searchQuery.trim() && !isSearching"
-              class="mt-2 text-sm text-gray-500 dark:text-gray-400 text-center py-4"
-            >
-              No items found
-            </p>
+            <!-- Search Input (hidden when item is selected) -->
+            <template v-else>
+              <UInput
+                v-model="searchQuery"
+                data-testid="loot-search"
+                placeholder="Search for items in the compendium..."
+                icon="i-heroicons-magnifying-glass"
+                :loading="isSearching"
+                size="lg"
+                :ui="{ root: 'w-full' }"
+              />
+
+              <!-- Search Results -->
+              <div
+                v-if="searchResults.length > 0"
+                class="max-h-[140px] overflow-y-auto border border-gray-200 dark:border-gray-700 rounded-lg divide-y divide-gray-200 dark:divide-gray-700"
+              >
+                <button
+                  v-for="item in searchResults"
+                  :key="item.id"
+                  :data-testid="`item-result-${item.id}`"
+                  class="w-full flex items-center gap-3 p-3 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors text-left"
+                  @click="selectItem(item)"
+                >
+                  <UIcon
+                    :name="getItemIcon(item)"
+                    class="w-5 h-5 text-gray-400 flex-shrink-0"
+                  />
+                  <div class="flex-1 min-w-0">
+                    <p class="font-medium text-gray-900 dark:text-white truncate">
+                      {{ item.name }}
+                    </p>
+                    <p
+                      v-if="item.item_type"
+                      class="text-xs text-gray-500 dark:text-gray-400"
+                    >
+                      {{ item.item_type.name }}
+                    </p>
+                  </div>
+                </button>
+              </div>
+
+              <!-- Empty/Prompt State -->
+              <p
+                v-else-if="!searchQuery.trim()"
+                class="text-sm text-gray-400 dark:text-gray-500 text-center py-6"
+              >
+                Start typing to search for items
+              </p>
+
+              <!-- No Results State -->
+              <p
+                v-else-if="!isSearching"
+                class="text-sm text-gray-500 dark:text-gray-400 text-center py-6"
+              >
+                No items found for "{{ searchQuery }}"
+              </p>
+            </template>
           </div>
-        </template>
 
-        <!-- Custom Item Mode -->
-        <template v-else>
-          <UInput
-            v-model="customName"
-            data-testid="custom-name-input"
-            placeholder="Item name"
-            icon="i-heroicons-tag"
-          />
-          <UTextarea
-            v-model="customDescription"
-            data-testid="custom-description-input"
-            placeholder="Description (optional)"
-            :rows="3"
-          />
-        </template>
+          <!-- Custom Tab Content -->
+          <div v-else-if="activeTab === 'custom'" class="space-y-4">
+            <UFormField label="Item Name" required class="w-full">
+              <UInput
+                v-model="customName"
+                data-testid="custom-name-input"
+                placeholder="e.g., Mysterious Amulet"
+                icon="i-heroicons-tag"
+                size="lg"
+                :ui="{ root: 'w-full' }"
+              />
+            </UFormField>
+            <UFormField label="Description" class="w-full">
+              <UTextarea
+                v-model="customDescription"
+                data-testid="custom-description-input"
+                placeholder="Describe the item (optional)"
+                :rows="3"
+                :ui="{ root: 'w-full' }"
+              />
+            </UFormField>
+          </div>
+        </div>
 
-        <!-- Quantity Input (always visible) -->
-        <div class="flex items-center gap-3">
-          <label class="text-sm text-gray-600 dark:text-gray-300">
-            Quantity
-          </label>
-          <UInput
-            v-model.number="quantity"
-            data-testid="quantity-input"
-            type="number"
-            :min="1"
-            class="w-24"
-          />
+        <!-- Quantity Input (always visible) - with separator -->
+        <div class="pt-2 border-t border-gray-200 dark:border-gray-700">
+          <div class="flex items-center justify-between">
+            <label class="text-sm font-medium text-gray-700 dark:text-gray-300">
+              Quantity
+            </label>
+            <UInput
+              v-model.number="quantity"
+              data-testid="quantity-input"
+              type="number"
+              :min="1"
+              class="w-24"
+              size="md"
+            />
+          </div>
         </div>
       </div>
     </template>

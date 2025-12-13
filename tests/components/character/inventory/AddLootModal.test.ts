@@ -37,14 +37,14 @@ interface AddLootModalVM {
   searchResults: Array<{ id: number, name: string, slug: string }>
   selectedItem: { id: number, name: string, slug: string } | null
   quantity: number
-  isCustomMode: boolean
+  activeTab: string
+  isCustomMode: boolean // computed from activeTab
   customName: string
   customDescription: string
   canAdd: boolean
   handleAdd: () => void
   handleCancel: () => void
   selectItem: (item: { id: number, name: string, slug: string }) => void
-  toggleCustomMode: () => void
   clearSelection: () => void
 }
 
@@ -216,25 +216,26 @@ describe('AddLootModal', () => {
   })
 
   // =========================================================================
-  // Custom Item Mode Tests
+  // Custom Item Mode Tests (Tab-based)
   // =========================================================================
 
   describe('custom item mode', () => {
-    it('toggleCustomMode switches to custom mode', async () => {
+    it('switching to custom tab sets isCustomMode', async () => {
       const wrapper = mount(AddLootModal, {
         props: defaultProps
       })
       const vm = wrapper.vm as unknown as AddLootModalVM
 
       expect(vm.isCustomMode).toBe(false)
+      expect(vm.activeTab).toBe('search')
 
-      vm.toggleCustomMode()
+      vm.activeTab = 'custom'
       await flushPromises()
 
       expect(vm.isCustomMode).toBe(true)
     })
 
-    it('toggling to custom mode clears selected item', async () => {
+    it('switching to custom tab clears selected item', async () => {
       const wrapper = mount(AddLootModal, {
         props: defaultProps
       })
@@ -244,19 +245,21 @@ describe('AddLootModal', () => {
       vm.selectItem(mockItem)
       await flushPromises()
 
-      vm.toggleCustomMode()
+      vm.activeTab = 'custom'
       await flushPromises()
 
       expect(vm.selectedItem).toBe(null)
     })
 
-    it('canAdd is false in custom mode when name is empty', () => {
+    it('canAdd is false in custom mode when name is empty', async () => {
       const wrapper = mount(AddLootModal, {
         props: defaultProps
       })
       const vm = wrapper.vm as unknown as AddLootModalVM
 
-      vm.toggleCustomMode()
+      vm.activeTab = 'custom'
+      await flushPromises()
+
       expect(vm.isCustomMode).toBe(true)
       expect(vm.customName).toBe('')
       expect(vm.canAdd).toBe(false)
@@ -268,25 +271,25 @@ describe('AddLootModal', () => {
       })
       const vm = wrapper.vm as unknown as AddLootModalVM
 
-      vm.toggleCustomMode()
+      vm.activeTab = 'custom'
       vm.customName = 'Mysterious Amulet'
       await flushPromises()
 
       expect(vm.canAdd).toBe(true)
     })
 
-    it('toggling back from custom mode clears custom fields', async () => {
+    it('switching back to search tab clears custom fields', async () => {
       const wrapper = mount(AddLootModal, {
         props: defaultProps
       })
       const vm = wrapper.vm as unknown as AddLootModalVM
 
-      vm.toggleCustomMode()
+      vm.activeTab = 'custom'
       vm.customName = 'Test Item'
       vm.customDescription = 'Test Description'
       await flushPromises()
 
-      vm.toggleCustomMode() // Toggle back to search mode
+      vm.activeTab = 'search' // Switch back to search mode
       await flushPromises()
 
       expect(vm.customName).toBe('')
@@ -326,7 +329,7 @@ describe('AddLootModal', () => {
       })
       const vm = wrapper.vm as unknown as AddLootModalVM
 
-      vm.toggleCustomMode()
+      vm.activeTab = 'custom'
       vm.customName = 'Mysterious Amulet'
       vm.customDescription = 'Glows faintly in moonlight'
       vm.quantity = 1
@@ -349,7 +352,7 @@ describe('AddLootModal', () => {
       })
       const vm = wrapper.vm as unknown as AddLootModalVM
 
-      vm.toggleCustomMode()
+      vm.activeTab = 'custom'
       vm.customName = 'Plain Ring'
       vm.customDescription = '' // Empty description
       vm.quantity = 1
@@ -405,7 +408,7 @@ describe('AddLootModal', () => {
       vm.searchQuery = 'test'
       vm.selectItem(mockItem)
       vm.quantity = 5
-      vm.isCustomMode = true
+      vm.activeTab = 'custom'
       vm.customName = 'Custom'
       vm.customDescription = 'Desc'
       await flushPromises()
@@ -418,6 +421,7 @@ describe('AddLootModal', () => {
       expect(vm.searchQuery).toBe('')
       expect(vm.selectedItem).toBe(null)
       expect(vm.quantity).toBe(1)
+      expect(vm.activeTab).toBe('search')
       expect(vm.isCustomMode).toBe(false)
       expect(vm.customName).toBe('')
       expect(vm.customDescription).toBe('')
