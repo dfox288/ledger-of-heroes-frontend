@@ -370,4 +370,50 @@ describe('CharacterSheetConditions', () => {
       }])
     })
   })
+
+  // =========================================================================
+  // isDead Prop Tests (#544)
+  // =========================================================================
+
+  describe('isDead prop', () => {
+    const mockCondition = createCondition({
+      id: 1,
+      name: 'Poisoned',
+      slug: 'core:poisoned',
+      source: 'Giant Spider bite',
+      duration: '2 hours'
+    })
+
+    const mockExhaustion = createCondition({
+      id: 2,
+      name: 'Exhaustion',
+      slug: 'core:exhaustion',
+      level: 2,
+      source: 'Forced march',
+      duration: 'Until long rest',
+      isExhaustion: true
+    })
+
+    it('hides remove button when isDead is true even if editable', async () => {
+      const wrapper = await mountSuspended(Conditions, {
+        props: { conditions: [mockCondition], editable: true, isDead: true }
+      })
+      expect(wrapper.find('[data-testid="remove-condition-core:poisoned"]').exists()).toBe(false)
+    })
+
+    it('hides exhaustion stepper when isDead is true even if editable', async () => {
+      const wrapper = await mountSuspended(Conditions, {
+        props: { conditions: [mockExhaustion], editable: true, isDead: true }
+      })
+      expect(wrapper.find('[data-testid="exhaustion-increment"]').exists()).toBe(false)
+      expect(wrapper.find('[data-testid="exhaustion-decrement"]').exists()).toBe(false)
+    })
+
+    it('shows controls when isDead is false and editable', async () => {
+      const wrapper = await mountSuspended(Conditions, {
+        props: { conditions: [mockCondition], editable: true, isDead: false }
+      })
+      expect(wrapper.find('[data-testid="remove-condition-core:poisoned"]').exists()).toBe(true)
+    })
+  })
 })

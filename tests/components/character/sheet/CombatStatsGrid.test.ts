@@ -18,6 +18,58 @@ const mockStats = {
   passive_insight: 11
 }
 
+// Character with Barbarian class (has Unarmored Defense: 10 + DEX + CON)
+const mockBarbarianCharacter = {
+  speed: 30,
+  proficiency_bonus: 2,
+  has_inspiration: false,
+  classes: [
+    {
+      class: { id: 1, name: 'Barbarian', slug: 'phb:barbarian' },
+      level: 1,
+      is_primary: true
+    }
+  ],
+  equipped: {
+    armor: null,
+    shield: null
+  },
+  modifiers: {
+    STR: 2,
+    DEX: 2,
+    CON: 3,
+    INT: 0,
+    WIS: 1,
+    CHA: -1
+  }
+}
+
+// Character with armor equipped
+const mockArmoredCharacter = {
+  speed: 30,
+  proficiency_bonus: 2,
+  has_inspiration: false,
+  classes: [
+    {
+      class: { id: 1, name: 'Fighter', slug: 'phb:fighter' },
+      level: 1,
+      is_primary: true
+    }
+  ],
+  equipped: {
+    armor: { id: '123', name: 'Chain Mail', armor_class: '16' },
+    shield: null
+  },
+  modifiers: {
+    STR: 2,
+    DEX: 1,
+    CON: 2,
+    INT: 0,
+    WIS: 1,
+    CHA: 0
+  }
+}
+
 describe('CharacterSheetCombatStatsGrid', () => {
   it('displays hit points as current/max', async () => {
     const wrapper = await mountSuspended(CombatStatsGrid, {
@@ -341,6 +393,92 @@ describe('CharacterSheetCombatStatsGrid', () => {
 
         expect(wrapper.emitted('temp-hp-clear')).toBeTruthy()
       })
+    })
+  })
+
+  // =========================================================================
+  // AC Tooltip Tests (#547)
+  // =========================================================================
+
+  describe('AC tooltip', () => {
+    it('shows armor name when character has armor equipped', async () => {
+      const wrapper = await mountSuspended(CombatStatsGrid, {
+        props: { character: mockArmoredCharacter, stats: mockStats }
+      })
+      const vm = wrapper.vm as any
+      expect(vm.acTooltipText).toContain('Chain Mail')
+    })
+
+    it('shows Unarmored Defense for Barbarian without armor', async () => {
+      const wrapper = await mountSuspended(CombatStatsGrid, {
+        props: { character: mockBarbarianCharacter, stats: { ...mockStats, armor_class: 15 } }
+      })
+      const vm = wrapper.vm as any
+      expect(vm.acTooltipText).toContain('Unarmored Defense')
+      expect(vm.acTooltipText).toContain('DEX')
+      expect(vm.acTooltipText).toContain('CON')
+    })
+
+    it('shows Unarmored Defense for Monk without armor', async () => {
+      const monkCharacter = {
+        ...mockBarbarianCharacter,
+        classes: [
+          {
+            class: { id: 2, name: 'Monk', slug: 'phb:monk' },
+            level: 1,
+            is_primary: true
+          }
+        ]
+      }
+      const wrapper = await mountSuspended(CombatStatsGrid, {
+        props: { character: monkCharacter, stats: { ...mockStats, armor_class: 14 } }
+      })
+      const vm = wrapper.vm as any
+      expect(vm.acTooltipText).toContain('Unarmored Defense')
+      expect(vm.acTooltipText).toContain('DEX')
+      expect(vm.acTooltipText).toContain('WIS')
+    })
+
+    it('shows basic unarmored AC for other classes', async () => {
+      const wizardCharacter = {
+        ...mockBarbarianCharacter,
+        classes: [
+          {
+            class: { id: 3, name: 'Wizard', slug: 'phb:wizard' },
+            level: 1,
+            is_primary: true
+          }
+        ]
+      }
+      const wrapper = await mountSuspended(CombatStatsGrid, {
+        props: { character: wizardCharacter, stats: { ...mockStats, armor_class: 12 } }
+      })
+      const vm = wrapper.vm as any
+      expect(vm.acTooltipText).toContain('Unarmored')
+      expect(vm.acTooltipText).toContain('DEX')
+    })
+
+    it('shows armor with shield when both equipped', async () => {
+      const shieldedCharacter = {
+        ...mockArmoredCharacter,
+        equipped: {
+          armor: { id: '123', name: 'Chain Mail', armor_class: '16' },
+          shield: { id: '456', name: 'Shield', armor_class: '2' }
+        }
+      }
+      const wrapper = await mountSuspended(CombatStatsGrid, {
+        props: { character: shieldedCharacter, stats: { ...mockStats, armor_class: 18 } }
+      })
+      const vm = wrapper.vm as any
+      expect(vm.acTooltipText).toContain('Chain Mail')
+      expect(vm.acTooltipText).toContain('Shield')
+    })
+
+    it('has AC cell with data-testid for tooltip', async () => {
+      const wrapper = await mountSuspended(CombatStatsGrid, {
+        props: { character: mockCharacter, stats: mockStats }
+      })
+      expect(wrapper.find('[data-testid="ac-cell"]').exists()).toBe(true)
     })
   })
 })

@@ -16,6 +16,7 @@ const props = defineProps<{
   successes: number // 0-3
   failures: number // 0-3
   editable?: boolean // Enable play mode interactions
+  isDead?: boolean // When true, all interactions are disabled (#544)
 }>()
 
 const emit = defineEmits<{
@@ -27,12 +28,18 @@ const emit = defineEmits<{
 const DEATH_SAVE_MAX = 3
 
 /**
+ * Check if interactions are allowed
+ * Must be editable and character must not be dead
+ */
+const isInteractive = computed(() => props.editable && !props.isDead)
+
+/**
  * Handle click on a success circle
  * If circle is filled (i <= successes), decrement to i-1
  * If circle is empty (i > successes), increment to i
  */
 function handleSuccessClick(circleIndex: number) {
-  if (!props.editable) return
+  if (!isInteractive.value) return
 
   const isFilled = circleIndex <= props.successes
   if (isFilled) {
@@ -49,7 +56,7 @@ function handleSuccessClick(circleIndex: number) {
  * Same logic as success circles
  */
 function handleFailureClick(circleIndex: number) {
-  if (!props.editable) return
+  if (!isInteractive.value) return
 
   const isFilled = circleIndex <= props.failures
   if (isFilled) {
@@ -112,7 +119,7 @@ const isDead = computed(() => props.failures >= DEATH_SAVE_MAX)
           :name="i <= successes ? 'i-heroicons-check-circle-solid' : 'i-heroicons-check-circle'"
           :class="[
             i <= successes ? 'text-green-600 dark:text-green-500' : 'text-gray-300 dark:text-gray-600',
-            editable ? 'cursor-pointer hover:opacity-80 transition-opacity' : ''
+            isInteractive ? 'cursor-pointer hover:opacity-80 transition-opacity' : ''
           ]"
           class="w-6 h-6"
           :data-testid="i <= successes ? `success-filled-${i}` : `success-empty-${i}`"
@@ -134,7 +141,7 @@ const isDead = computed(() => props.failures >= DEATH_SAVE_MAX)
           :name="i <= failures ? 'i-heroicons-x-circle-solid' : 'i-heroicons-x-circle'"
           :class="[
             i <= failures ? 'text-red-600 dark:text-red-500' : 'text-gray-300 dark:text-gray-600',
-            editable ? 'cursor-pointer hover:opacity-80 transition-opacity' : ''
+            isInteractive ? 'cursor-pointer hover:opacity-80 transition-opacity' : ''
           ]"
           class="w-6 h-6"
           :data-testid="i <= failures ? `failure-filled-${i}` : `failure-empty-${i}`"

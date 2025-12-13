@@ -295,6 +295,64 @@ const displayStats = computed(() => {
   }
 })
 
+/**
+ * Handle reviving a dead character
+ * Sets HP to 1 and clears death saves
+ * Used when resurrection magic brings a character back
+ *
+ * @see Issue #544 - is_dead flag support
+ */
+async function handleRevive() {
+  if (isUpdatingHp.value || !character.value) return
+  if (!character.value.is_dead) {
+    toast.add({
+      title: 'Character is not dead',
+      description: 'This character does not need to be revived',
+      color: 'warning'
+    })
+    return
+  }
+
+  isUpdatingHp.value = true
+
+  try {
+    // First clear death saves
+    await apiFetch(`/characters/${character.value.id}`, {
+      method: 'PATCH',
+      body: {
+        death_save_successes: 0,
+        death_save_failures: 0
+      }
+    })
+
+    // Then heal to 1 HP (resurrection spells typically leave you at 1 HP)
+    const response = await apiFetch<HpUpdateResponse>(`/characters/${character.value.id}/hp`, {
+      method: 'PATCH',
+      body: { hp: '+1' }
+    })
+
+    syncFromHpResponse(response)
+
+    // Refresh character to get updated is_dead flag
+    await refresh()
+
+    toast.add({
+      title: 'Character revived!',
+      description: `${character.value.name} has been brought back with 1 HP`,
+      color: 'success'
+    })
+  } catch (err) {
+    logger.error('Failed to revive character:', err)
+    toast.add({
+      title: 'Failed to revive',
+      description: 'Could not revive character. Try again.',
+      color: 'error'
+    })
+  } finally {
+    isUpdatingHp.value = false
+  }
+}
+
 // ============================================================================
 // Rest Actions (Play Mode)
 // ============================================================================
@@ -669,6 +727,7 @@ const tabItems = computed(() => {
         :is-play-mode="isPlayMode"
         @add-condition="handleAddConditionClick"
         @level-up="showLevelUpModal = true"
+        @revive="handleRevive"
       />
 
       <!-- Validation Warning - shows when sourcebook content was removed -->
@@ -679,6 +738,7 @@ const tabItems = computed(() => {
         v-if="conditions.length > 0"
         :conditions="conditions"
         :editable="isPlayMode"
+        :is-dead="character.is_dead"
         @remove="handleRemoveCondition"
         @update-level="handleUpdateConditionLevel"
         @confirm-deadly-exhaustion="handleDeadlyExhaustionConfirm"
@@ -699,6 +759,7 @@ const tabItems = computed(() => {
             :hit-dice="hitDice"
             :editable="isPlayMode"
             :disabled="isResting"
+            :is-dead="character.is_dead"
             @spend="handleHitDiceSpend"
             @short-rest="handleShortRest"
             @long-rest="showLongRestModal = true"
@@ -739,6 +800,7 @@ const tabItems = computed(() => {
                 :successes="localDeathSaves.successes"
                 :failures="localDeathSaves.failures"
                 :editable="isPlayMode"
+                :is-dead="character.is_dead"
                 @update:successes="handleDeathSaveUpdate('successes', $event)"
                 @update:failures="handleDeathSaveUpdate('failures', $event)"
               />

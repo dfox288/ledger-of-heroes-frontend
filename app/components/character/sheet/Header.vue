@@ -10,6 +10,7 @@ const props = defineProps<{
 const emit = defineEmits<{
   'add-condition': []
   'level-up': []
+  'revive': []
 }>()
 
 /**
@@ -77,13 +78,29 @@ const actionMenuItems = computed(() => {
 
   // Play mode actions (only for complete characters in play mode)
   if (props.character.is_complete && props.isPlayMode) {
-    items.push([
-      {
+    const playModeActions: Array<{ label: string, icon: string, onSelect: () => void }> = []
+
+    // Revive action (only for dead characters)
+    if (props.character.is_dead) {
+      playModeActions.push({
+        label: 'Revive Character',
+        icon: 'i-heroicons-sparkles',
+        onSelect: () => emit('revive')
+      })
+    }
+
+    // Add condition (always available in play mode, unless dead)
+    if (!props.character.is_dead) {
+      playModeActions.push({
         label: 'Add Condition',
         icon: 'i-heroicons-exclamation-triangle',
         onSelect: () => emit('add-condition')
-      }
-    ])
+      })
+    }
+
+    if (playModeActions.length > 0) {
+      items.push(playModeActions)
+    }
   }
 
   // Character progression (only for complete characters under max level)

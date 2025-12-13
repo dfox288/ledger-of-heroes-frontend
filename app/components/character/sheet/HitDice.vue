@@ -19,6 +19,8 @@ const props = defineProps<{
   editable?: boolean
   /** Disables all interactions (used during rest actions to prevent race conditions) */
   disabled?: boolean
+  /** When true, all interactions are disabled because the character is dead (#544) */
+  isDead?: boolean
 }>()
 
 const emit = defineEmits<{
@@ -28,10 +30,22 @@ const emit = defineEmits<{
 }>()
 
 /**
+ * Check if interactions are allowed
+ * Must be editable, not disabled, and character must not be dead
+ */
+const isInteractive = computed(() => props.editable && !props.disabled && !props.isDead)
+
+/**
+ * Check if rest buttons should be disabled
+ * Disabled when: disabled prop is true, OR character is dead
+ */
+const isRestDisabled = computed(() => props.disabled || props.isDead)
+
+/**
  * Handle clicking a filled die - spend it
  */
 function handleDieClick(dieType: string) {
-  if (!props.editable || props.disabled) return
+  if (!isInteractive.value) return
   emit('spend', { dieType })
 }
 </script>
@@ -62,15 +76,15 @@ function handleDieClick(dieType: string) {
 
       <!-- Dice Icons -->
       <div class="flex gap-1 flex-wrap">
-        <!-- Current (filled) dice - clickable when editable and not disabled -->
+        <!-- Current (filled) dice - clickable when editable and not disabled/dead -->
         <UIcon
           v-for="i in dice.current"
           :key="`${dice.die}-filled-${i}`"
           name="i-game-icons-perspective-dice-six"
           :class="[
             'w-5 h-5 text-primary-600 dark:text-primary-500',
-            editable && !disabled ? 'cursor-pointer hover:opacity-80 transition-opacity' : '',
-            disabled ? 'opacity-50' : ''
+            isInteractive ? 'cursor-pointer hover:opacity-80 transition-opacity' : '',
+            disabled || isDead ? 'opacity-50' : ''
           ]"
           :data-testid="`dice-${dice.die}-filled`"
           @click="handleDieClick(dice.die)"
@@ -96,7 +110,7 @@ function handleDieClick(dieType: string) {
             variant="soft"
             size="xs"
             block
-            :disabled="disabled"
+            :disabled="isRestDisabled"
             @click="emit('short-rest')"
           >
             <UIcon
@@ -111,7 +125,7 @@ function handleDieClick(dieType: string) {
             variant="soft"
             size="xs"
             block
-            :disabled="disabled"
+            :disabled="isRestDisabled"
             @click="emit('long-rest')"
           >
             <UIcon

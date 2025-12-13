@@ -12,6 +12,8 @@ import type { CharacterCondition } from '~/types/character'
 const props = defineProps<{
   conditions?: CharacterCondition[]
   editable?: boolean
+  /** When true, all interactions are disabled because the character is dead (#544) */
+  isDead?: boolean
 }>()
 
 const emit = defineEmits<{
@@ -26,6 +28,12 @@ const emit = defineEmits<{
 const hasConditions = computed(() => {
   return props.conditions && props.conditions.length > 0
 })
+
+/**
+ * Check if interactions are allowed
+ * Must be editable and character must not be dead
+ */
+const isInteractive = computed(() => props.editable && !props.isDead)
 
 /**
  * Format condition display text
@@ -182,7 +190,7 @@ function isDeadlyExhaustion(condition: CharacterCondition): boolean {
 
         <!-- Editable controls -->
         <div
-          v-if="editable"
+          v-if="isInteractive"
           class="flex items-center gap-2 flex-shrink-0"
         >
           <!-- Exhaustion controls -->
