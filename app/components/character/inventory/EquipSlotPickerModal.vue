@@ -79,6 +79,7 @@ function handleEquip() {
           <input
             v-model="selectedSlot"
             type="radio"
+            name="equipment-slot"
             :value="slot"
             class="text-primary focus:ring-primary"
           >

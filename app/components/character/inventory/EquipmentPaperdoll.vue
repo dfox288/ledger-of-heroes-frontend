@@ -39,6 +39,14 @@ function handleItemClick(item: CharacterEquipment | undefined) {
   }
 }
 
+// Check if main hand weapon is two-handed (blocks off-hand)
+const isTwoHanded = computed(() => {
+  const mainHand = getEquippedItem('main_hand')
+  if (!mainHand) return false
+  const item = mainHand.item as { properties?: string[] } | null
+  return item?.properties?.includes('Two-Handed') ?? false
+})
+
 // Slot positions for grid layout (row, col)
 const slotPositions: Record<EquipmentSlot, { row: number, col: number }> = {
   head: { row: 1, col: 2 },
@@ -89,6 +97,12 @@ const slotPositions: Record<EquipmentSlot, { row: number, col: number }> = {
           >
             {{ getItemName(getEquippedItem(slot)!) }}
           </button>
+          <span
+            v-else-if="slot === 'off_hand' && isTwoHanded"
+            class="text-xs text-gray-400 dark:text-gray-500 italic"
+          >
+            (two-handed)
+          </span>
           <span
             v-else
             class="text-xs text-gray-400 dark:text-gray-500 italic"
