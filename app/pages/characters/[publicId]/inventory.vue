@@ -14,6 +14,7 @@
 import type { Character, CharacterEquipment } from '~/types/character'
 import type { CurrencyDelta } from '~/components/character/sheet/CurrencyEditModal.vue'
 import type { EquipmentLocation } from '~/composables/useInventoryActions'
+import type { EquipmentSlot } from '~/utils/equipmentSlots'
 import { logger } from '~/utils/logger'
 
 const route = useRoute()
@@ -39,6 +40,13 @@ const isSelling = ref(false)
 const isUpdatingQty = ref(false)
 const isCurrencyLoading = ref(false)
 const currencyError = ref<string | null>(null)
+
+// Slot picker modal state
+const isSlotPickerOpen = ref(false)
+const slotPickerItem = ref<CharacterEquipment | null>(null)
+const slotPickerValidSlots = ref<EquipmentSlot[]>([])
+const slotPickerSuggestedSlot = ref<EquipmentSlot | null>(null)
+const isEquipping = ref(false)
 
 // Search state
 const searchQuery = ref('')
@@ -117,6 +125,34 @@ async function handleEquip(itemId: number, slot: string) {
   } catch (error) {
     logger.error('Failed to equip item:', error)
     toast.add({ title: 'Failed to equip item', color: 'error' })
+  }
+}
+
+function handleEquipWithPicker(itemId: number, validSlots: EquipmentSlot[], suggestedSlot: EquipmentSlot | null) {
+  const item = equipment.value.find(e => e.id === itemId)
+  if (!item) return
+
+  slotPickerItem.value = item
+  slotPickerValidSlots.value = validSlots
+  slotPickerSuggestedSlot.value = suggestedSlot
+  isSlotPickerOpen.value = true
+}
+
+async function handleSlotSelected(slot: EquipmentSlot) {
+  if (!slotPickerItem.value) return
+
+  isEquipping.value = true
+  try {
+    await equipItem(slotPickerItem.value.id, slot as EquipmentLocation)
+    toast.add({ title: 'Item equipped!', color: 'success' })
+    isSlotPickerOpen.value = false
+    slotPickerItem.value = null
+    await refreshEquipment()
+  } catch (error) {
+    logger.error('Failed to equip item:', error)
+    toast.add({ title: 'Failed to equip item', color: 'error' })
+  } finally {
+    isEquipping.value = false
   }
 }
 
@@ -367,7 +403,7 @@ useSeoMeta({
       class="space-y-4"
     >
       <USkeleton class="h-32 w-full" />
-      <div class="grid lg:grid-cols-[1fr_280px] gap-6">
+      <div class="grid lg:grid-cols-[2fr_1fr] gap-6">
         <USkeleton class="h-96" />
         <USkeleton class="h-96" />
       </div>
@@ -388,7 +424,7 @@ useSeoMeta({
       <!-- Inventory Content -->
       <div
         data-testid="inventory-layout"
-        class="grid lg:grid-cols-[1fr_280px] gap-6 mt-6"
+        class="grid lg:grid-cols-[2fr_1fr] gap-6 mt-6"
       >
         <!-- Left Column: Item Table -->
         <div class="space-y-4">
@@ -440,6 +476,7 @@ useSeoMeta({
             :search-query="searchQuery"
             @item-click="handleItemClick"
             @equip="handleEquip"
+            @equip-with-picker="handleEquipWithPicker"
             @unequip="handleUnequip"
             @increment-qty="handleIncrementQty"
             @decrement-qty="handleDecrementQty"
@@ -526,6 +563,16 @@ useSeoMeta({
       :loading="isUpdatingQty"
       @update:open="isEditQtyModalOpen = $event"
       @update-quantity="handleEditQtyConfirm"
+    />
+
+    <!-- Slot Picker Modal -->
+    <CharacterInventoryEquipSlotPickerModal
+      v-model:open="isSlotPickerOpen"
+      :item-name="slotPickerItem?.custom_name || (slotPickerItem?.item as any)?.name || 'Item'"
+      :valid-slots="slotPickerValidSlots"
+      :suggested-slot="slotPickerSuggestedSlot"
+      :loading="isEquipping"
+      @select="handleSlotSelected"
     />
   </div>
 </template>

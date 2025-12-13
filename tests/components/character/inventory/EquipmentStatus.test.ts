@@ -2,6 +2,7 @@
 import { describe, it, expect } from 'vitest'
 import { mountSuspended } from '@nuxt/test-utils/runtime'
 import EquipmentStatus from '~/components/character/inventory/EquipmentStatus.vue'
+import EquipmentPaperdoll from '~/components/character/inventory/EquipmentPaperdoll.vue'
 import type { CharacterEquipment } from '~/types/character'
 
 // Mock equipment with various locations (using expanded slot system)
@@ -69,29 +70,18 @@ const mockEquipment: CharacterEquipment[] = [
 ]
 
 describe('EquipmentStatus', () => {
-  it('displays wielded section with main hand and off hand', async () => {
+  it('renders the EquipmentPaperdoll component', async () => {
     const wrapper = await mountSuspended(EquipmentStatus, {
       props: { equipment: mockEquipment }
     })
 
-    expect(wrapper.text()).toContain('Wielded')
-    expect(wrapper.text()).toContain('Main Hand')
-    expect(wrapper.text()).toContain('Off Hand')
-    expect(wrapper.text()).toContain('Longsword')
-    expect(wrapper.text()).toContain('Shield')
+    // Should render the paperdoll component
+    const paperdoll = wrapper.findComponent(EquipmentPaperdoll)
+    expect(paperdoll.exists()).toBe(true)
+    expect(paperdoll.props('equipment')).toEqual(mockEquipment)
   })
 
-  it('displays worn armor with AC', async () => {
-    const wrapper = await mountSuspended(EquipmentStatus, {
-      props: { equipment: mockEquipment }
-    })
-
-    expect(wrapper.text()).toContain('Armor')
-    expect(wrapper.text()).toContain('Chain Mail')
-    expect(wrapper.text()).toContain('AC 16')
-  })
-
-  it('displays attuned items with count', async () => {
+  it('displays attuned items section with count', async () => {
     const wrapper = await mountSuspended(EquipmentStatus, {
       props: { equipment: mockEquipment }
     })
@@ -101,70 +91,98 @@ describe('EquipmentStatus', () => {
     expect(wrapper.text()).toContain('Ring of Protection')
   })
 
-  it('shows empty states when nothing equipped', async () => {
+  it('shows empty state when no items are attuned', async () => {
     const emptyEquipment: CharacterEquipment[] = []
 
     const wrapper = await mountSuspended(EquipmentStatus, {
       props: { equipment: emptyEquipment }
     })
 
-    // Wielded and Armor show "Empty" / "No armor"
-    expect(wrapper.text()).toContain('Empty')
-    expect(wrapper.text()).toContain('No armor')
-    // Attuned shows "None" instead of empty slot placeholders
+    // Attuned shows "None"
     expect(wrapper.text()).toContain('None')
     expect(wrapper.text()).toContain('0/3')
   })
 
-  it('shows two-handed indicator when main hand has two-handed weapon', async () => {
-    const twoHandedEquipment: CharacterEquipment[] = [
+  it('emits item-click when paperdoll emits item-click', async () => {
+    const wrapper = await mountSuspended(EquipmentStatus, {
+      props: { equipment: mockEquipment }
+    })
+
+    // Find the paperdoll component
+    const paperdoll = wrapper.findComponent(EquipmentPaperdoll)
+
+    // Emit item-click from paperdoll
+    await paperdoll.vm.$emit('item-click', 1)
+
+    // Should pass through to parent
+    expect(wrapper.emitted('item-click')).toBeTruthy()
+    expect(wrapper.emitted('item-click')![0]).toEqual([1])
+  })
+
+  it('emits item-click when clicking on attuned item', async () => {
+    const wrapper = await mountSuspended(EquipmentStatus, {
+      props: { equipment: mockEquipment }
+    })
+
+    // Find and click the attuned item
+    const attunedItem = wrapper.find('[data-testid="attuned-item-4"]')
+    await attunedItem.trigger('click')
+
+    expect(wrapper.emitted('item-click')).toBeTruthy()
+    expect(wrapper.emitted('item-click')![0]).toEqual([4])
+  })
+
+  it('displays multiple attuned items', async () => {
+    const multipleAttunedEquipment: CharacterEquipment[] = [
       {
         id: 1,
-        item: { name: 'Greatsword', properties: ['Two-Handed'] },
-        item_slug: 'phb:greatsword',
+        item: { name: 'Ring of Protection', requires_attunement: true },
+        item_slug: 'dmg:ring-of-protection',
         is_dangling: 'false',
         custom_name: null,
         custom_description: null,
         quantity: 1,
         equipped: true,
-        location: 'main_hand'
+        location: 'ring_1',
+        is_attuned: true
+      },
+      {
+        id: 2,
+        item: { name: 'Cloak of Elvenkind', requires_attunement: true },
+        item_slug: 'dmg:cloak-of-elvenkind',
+        is_dangling: 'false',
+        custom_name: null,
+        custom_description: null,
+        quantity: 1,
+        equipped: true,
+        location: 'cloak',
+        is_attuned: true
       }
     ]
 
     const wrapper = await mountSuspended(EquipmentStatus, {
-      props: { equipment: twoHandedEquipment }
+      props: { equipment: multipleAttunedEquipment }
     })
 
-    expect(wrapper.text()).toContain('Greatsword')
-    // Off hand should indicate two-handed
-    expect(wrapper.text()).toMatch(/two.handed/i)
+    expect(wrapper.text()).toContain('Attuned')
+    expect(wrapper.text()).toContain('2/3')
+    expect(wrapper.text()).toContain('Ring of Protection')
+    expect(wrapper.text()).toContain('Cloak of Elvenkind')
   })
 
-  it('emits item-click when clicking on an equipped item', async () => {
-    const wrapper = await mountSuspended(EquipmentStatus, {
-      props: { equipment: mockEquipment }
-    })
-
-    // Find and click the main hand item
-    const mainHandItem = wrapper.find('[data-testid="main-hand-item"]')
-    await mainHandItem.trigger('click')
-
-    expect(wrapper.emitted('item-click')).toBeTruthy()
-    expect(wrapper.emitted('item-click')![0]).toEqual([1]) // itemId = 1
-  })
-
-  it('uses custom_name when present', async () => {
+  it('uses custom_name for attuned items when present', async () => {
     const customNameEquipment: CharacterEquipment[] = [
       {
         id: 1,
-        item: { name: 'Longsword' },
-        item_slug: 'phb:longsword',
+        item: { name: 'Ring of Protection', requires_attunement: true },
+        item_slug: 'dmg:ring-of-protection',
         is_dangling: 'false',
-        custom_name: 'Flametongue',
+        custom_name: 'Lucky Ring',
         custom_description: null,
         quantity: 1,
         equipped: true,
-        location: 'main_hand'
+        location: 'ring_1',
+        is_attuned: true
       }
     ]
 
@@ -172,7 +190,7 @@ describe('EquipmentStatus', () => {
       props: { equipment: customNameEquipment }
     })
 
-    expect(wrapper.text()).toContain('Flametongue')
-    expect(wrapper.text()).not.toContain('Longsword')
+    expect(wrapper.text()).toContain('Lucky Ring')
+    expect(wrapper.text()).not.toContain('Ring of Protection')
   })
 })
