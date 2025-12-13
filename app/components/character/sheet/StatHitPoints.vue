@@ -41,17 +41,25 @@ const isAtZeroHp = computed(() => {
 /**
  * Check if character is dead
  *
- * Uses the backend's is_dead flag which is the authoritative source.
- * Falls back to death save calculation if is_dead is not available.
+ * Shows DEAD if:
+ * - Backend explicitly says is_dead: true, OR
+ * - Local data shows 3+ death save failures at 0 HP
+ *
+ * This defensive approach ensures correct display even if backend
+ * hasn't yet computed is_dead (e.g., death save just recorded).
  */
 const isDead = computed(() => {
-  // Use backend flag if explicitly provided (true or false)
-  if (props.isDead === true || props.isDead === false) {
-    return props.isDead
+  // Backend says dead - trust it
+  if (props.isDead === true) {
+    return true
   }
-  // Fallback: derive from death saves (legacy behavior)
+  // Check local death save data (defensive - don't rely solely on backend)
   const failures = props.deathSaveFailures ?? 0
-  return isAtZeroHp.value && failures >= 3
+  if (isAtZeroHp.value && failures >= 3) {
+    return true
+  }
+  // Not dead
+  return false
 })
 
 /**

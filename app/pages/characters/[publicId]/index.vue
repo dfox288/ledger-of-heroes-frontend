@@ -87,8 +87,9 @@ const isPlayMode = computed(() => pageHeaderRef.value?.isPlayMode ?? false)
 /**
  * Effective edit mode - play mode is enabled AND character is alive
  * Dead characters can't interact with anything (must revive first)
+ * Uses store.isDead for reactivity when death state changes mid-session
  */
-const canEdit = computed(() => isPlayMode.value && !character.value?.is_dead)
+const canEdit = computed(() => isPlayMode.value && !playStateStore.isDead)
 
 // ============================================================================
 // Rest Actions (Play Mode)
@@ -405,7 +406,7 @@ const isSpellcaster = computed(() => !!stats.value?.spellcasting)
         v-if="conditions.length > 0"
         :conditions="conditions"
         :editable="canEdit"
-        :is-dead="character.is_dead"
+        :is-dead="playStateStore.isDead"
         @remove="handleRemoveCondition"
         @update-level="handleUpdateConditionLevel"
         @confirm-deadly-exhaustion="handleDeadlyExhaustionConfirm"
@@ -426,7 +427,7 @@ const isSpellcaster = computed(() => !!stats.value?.spellcasting)
             :hit-dice="hitDice"
             :editable="canEdit"
             :disabled="isResting"
-            :is-dead="character.is_dead"
+            :is-dead="playStateStore.isDead"
             @spend="handleHitDiceSpend"
             @short-rest="handleShortRest"
             @long-rest="showLongRestModal = true"
