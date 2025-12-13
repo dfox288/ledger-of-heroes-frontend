@@ -45,8 +45,6 @@ const {
 // ============================================================================
 
 const playStateStore = useCharacterPlayStateStore()
-const { apiFetch } = useApi()
-const toast = useToast()
 
 /**
  * Initialize play state store when character and stats load
@@ -90,239 +88,6 @@ const isPlayMode = computed(() => pageHeaderRef.value?.isPlayMode ?? false)
  * Uses store.isDead for reactivity when death state changes mid-session
  */
 const canEdit = computed(() => isPlayMode.value && !playStateStore.isDead)
-
-// ============================================================================
-// Rest Actions (Play Mode)
-// ============================================================================
-
-/** Long rest confirmation modal state */
-const showLongRestModal = ref(false)
-
-/** Prevents race conditions from rapid rest actions */
-const isResting = ref(false)
-
-/**
- * Handle spending a hit die
- * Just marks the die as spent - player rolls physical dice
- * Uses dedicated refreshHitDice() instead of full refresh() for efficiency
- * @see #541 - Use /hit-dice endpoint for HitDice component
- */
-async function handleHitDiceSpend({ dieType }: { dieType: string }) {
-  if (isResting.value || !character.value) return
-
-  isResting.value = true
-
-  try {
-    await apiFetch(`/characters/${character.value.id}/hit-dice/spend`, {
-      method: 'POST',
-      body: { die_type: dieType, quantity: 1 }
-    })
-    // Only refresh hit dice, not all data
-    await refreshHitDice()
-  } catch (err) {
-    logger.error('Failed to spend hit die:', err)
-    toast.add({
-      title: 'Failed to spend hit die',
-      color: 'error'
-    })
-  } finally {
-    isResting.value = false
-  }
-}
-
-/**
- * Handle short rest
- * Resets short-rest features (Action Surge, pact slots, etc.)
- */
-async function handleShortRest() {
-  if (isResting.value || !character.value) return
-
-  isResting.value = true
-
-  try {
-    interface ShortRestResponse {
-      data: {
-        pact_magic_reset: boolean
-        features_reset: string[]
-      }
-    }
-    const response = await apiFetch<ShortRestResponse>(`/characters/${character.value.id}/short-rest`, {
-      method: 'POST'
-    })
-    await refreshForShortRest()
-
-    // Build toast message
-    const resetCount = response.data.features_reset.length
-    const message = resetCount > 0
-      ? `${resetCount} feature${resetCount > 1 ? 's' : ''} reset`
-      : 'Short rest complete'
-    toast.add({
-      title: message,
-      color: 'success'
-    })
-  } catch (err) {
-    logger.error('Failed to take short rest:', err)
-    toast.add({
-      title: 'Failed to take short rest',
-      color: 'error'
-    })
-  } finally {
-    isResting.value = false
-  }
-}
-
-/**
- * Handle long rest (after confirmation)
- * Restores HP, spell slots, hit dice, clears death saves
- */
-async function handleLongRest() {
-  if (isResting.value || !character.value) return
-
-  isResting.value = true
-
-  try {
-    interface LongRestResponse {
-      data: {
-        hp_restored: number
-        hit_dice_recovered: number
-        spell_slots_reset: boolean
-        death_saves_cleared: boolean
-        features_reset: string[]
-      }
-    }
-    const response = await apiFetch<LongRestResponse>(`/characters/${character.value.id}/long-rest`, {
-      method: 'POST'
-    })
-    await refreshForLongRest()
-
-    // Re-initialize store from refreshed server data
-    // The watch on [character, stats] will handle this automatically
-
-    // Build toast message
-    const parts: string[] = []
-    if (response.data.hp_restored > 0) parts.push(`${response.data.hp_restored} HP restored`)
-    if (response.data.hit_dice_recovered > 0) parts.push(`${response.data.hit_dice_recovered} hit dice recovered`)
-    if (response.data.spell_slots_reset) parts.push('spell slots reset')
-
-    toast.add({
-      title: 'Long rest complete',
-      description: parts.join(', ') || undefined,
-      color: 'success'
-    })
-  } catch (err) {
-    logger.error('Failed to take long rest:', err)
-    toast.add({
-      title: 'Failed to take long rest',
-      color: 'error'
-    })
-  } finally {
-    isResting.value = false
-  }
-}
-
-// ============================================================================
-// Conditions Management (Play Mode)
-// Note: Add Condition is handled by PageHeader. This section handles
-// remove, update level, and deadly exhaustion confirmation.
-// ============================================================================
-
-/** Deadly exhaustion confirmation modal state */
-const showDeadlyExhaustionModal = ref(false)
-
-/** Pending deadly exhaustion data for confirmation */
-const pendingDeadlyExhaustion = ref<{ slug: string, currentLevel: number, targetLevel: number, source: string | null, duration: string | null } | null>(null)
-
-/** Prevents race conditions from rapid condition updates */
-const isUpdatingConditions = ref(false)
-
-/**
- * Handle remove condition from Conditions panel
- * DELETEs condition from backend
- */
-async function handleRemoveCondition(conditionSlug: string) {
-  if (isUpdatingConditions.value || !character.value) return
-
-  isUpdatingConditions.value = true
-
-  try {
-    await apiFetch(`/characters/${character.value.id}/conditions/${conditionSlug}`, {
-      method: 'DELETE'
-    })
-    await refresh()
-    toast.add({
-      title: 'Condition removed',
-      color: 'success'
-    })
-  } catch (err) {
-    logger.error('Failed to remove condition:', err)
-    toast.add({
-      title: 'Failed to remove condition',
-      color: 'error'
-    })
-  } finally {
-    isUpdatingConditions.value = false
-  }
-}
-
-/**
- * Handle exhaustion level update from Conditions panel
- * POSTs updated level to backend (upsert behavior)
- * Preserves source and duration from the original condition
- */
-async function handleUpdateConditionLevel(payload: { slug: string, level: number, source: string | null, duration: string | null }) {
-  if (isUpdatingConditions.value || !character.value) return
-
-  isUpdatingConditions.value = true
-
-  try {
-    await apiFetch(`/characters/${character.value.id}/conditions`, {
-      method: 'POST',
-      body: {
-        condition: payload.slug,
-        level: payload.level,
-        source: payload.source ?? '',
-        duration: payload.duration ?? ''
-      }
-    })
-    await refresh()
-  } catch (err) {
-    logger.error('Failed to update exhaustion level:', err)
-    toast.add({
-      title: 'Failed to update exhaustion',
-      color: 'error'
-    })
-  } finally {
-    isUpdatingConditions.value = false
-  }
-}
-
-/**
- * Handle deadly exhaustion confirmation request
- * Shows confirmation modal before allowing level 6
- * Preserves source and duration for when confirmation is accepted
- */
-function handleDeadlyExhaustionConfirm(payload: { slug: string, currentLevel: number, targetLevel: number, source: string | null, duration: string | null }) {
-  pendingDeadlyExhaustion.value = payload
-  showDeadlyExhaustionModal.value = true
-}
-
-/**
- * Handle confirmed deadly exhaustion
- * Called when user confirms level 6 in the modal
- * Passes through source and duration from pending data
- */
-async function handleDeadlyExhaustionConfirmed() {
-  if (!pendingDeadlyExhaustion.value) return
-
-  await handleUpdateConditionLevel({
-    slug: pendingDeadlyExhaustion.value.slug,
-    level: pendingDeadlyExhaustion.value.targetLevel,
-    source: pendingDeadlyExhaustion.value.source,
-    duration: pendingDeadlyExhaustion.value.duration
-  })
-
-  pendingDeadlyExhaustion.value = null
-}
 
 // Validation - check for dangling references when sourcebooks are removed
 const characterId = computed(() => character.value?.id ?? null)
@@ -402,14 +167,12 @@ const isSpellcaster = computed(() => !!stats.value?.spellcasting)
       <CharacterSheetValidationWarning :validation-result="validationResult" />
 
       <!-- Active Conditions - only shows when character has conditions -->
-      <CharacterSheetConditions
-        v-if="conditions.length > 0"
+      <CharacterSheetConditionsManager
+        v-if="conditions.length > 0 && character"
         :conditions="conditions"
+        :character-id="character.id"
         :editable="canEdit"
-        :is-dead="playStateStore.isDead"
-        @remove="handleRemoveCondition"
-        @update-level="handleUpdateConditionLevel"
-        @confirm-deadly-exhaustion="handleDeadlyExhaustionConfirm"
+        @refresh="refresh"
       />
 
       <!-- Main Grid: Abilities sidebar + Stats/Skills -->
@@ -422,15 +185,14 @@ const isSpellcaster = computed(() => !!stats.value?.spellcasting)
             :investigation="stats.passive_investigation"
             :insight="stats.passive_insight"
           />
-          <CharacterSheetHitDice
-            v-if="hitDice.length"
+          <CharacterSheetHitDiceManager
+            v-if="hitDice.length && character"
             :hit-dice="hitDice"
+            :character-id="character.id"
             :editable="canEdit"
-            :disabled="isResting"
-            :is-dead="playStateStore.isDead"
-            @spend="handleHitDiceSpend"
-            @short-rest="handleShortRest"
-            @long-rest="showLongRestModal = true"
+            @refresh-hit-dice="refreshHitDice"
+            @refresh-short-rest="refreshForShortRest"
+            @refresh-long-rest="refreshForLongRest"
           />
         </div>
 
@@ -500,15 +262,4 @@ const isSpellcaster = computed(() => !!stats.value?.spellcasting)
     </div>
   </div>
 
-  <!-- Long Rest Confirmation Modal -->
-  <CharacterSheetLongRestConfirmModal
-    v-model:open="showLongRestModal"
-    @confirm="handleLongRest"
-  />
-
-  <!-- Deadly Exhaustion Confirmation Modal -->
-  <CharacterSheetDeadlyExhaustionConfirmModal
-    v-model:open="showDeadlyExhaustionModal"
-    @confirm="handleDeadlyExhaustionConfirmed"
-  />
 </template>
