@@ -285,6 +285,12 @@ useSeoMeta({
           @item-click="handleItemClick"
         />
 
+        <!-- Currency -->
+        <CharacterSheetCurrencyCard
+          data-testid="currency-card"
+          :currency="currency"
+        />
+
         <!-- Encumbrance Bar -->
         <CharacterInventoryEncumbranceBar
           v-if="stats?.carrying_capacity"

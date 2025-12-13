@@ -90,7 +90,7 @@ const itemIcon = computed(() => {
   return 'i-heroicons-cube'
 })
 
-// Dropdown menu items for quick actions
+// Dropdown menu items for quick actions (NuxtUI 4 uses onSelect instead of click)
 const actionMenuItems = computed(() => {
   const items = []
 
@@ -98,26 +98,26 @@ const actionMenuItems = computed(() => {
     items.push({
       label: 'Unequip',
       icon: 'i-heroicons-arrow-down-tray',
-      click: () => emit('unequip', props.item.id)
+      onSelect: () => emit('unequip', props.item.id)
     })
   }
 
   items.push({
     label: 'Edit Qty',
     icon: 'i-heroicons-pencil',
-    click: () => emit('edit-qty', props.item.id)
+    onSelect: () => emit('edit-qty', props.item.id)
   })
 
   items.push({
     label: 'Sell',
     icon: 'i-heroicons-currency-dollar',
-    click: () => emit('sell', props.item.id)
+    onSelect: () => emit('sell', props.item.id)
   })
 
   items.push({
     label: 'Drop',
     icon: 'i-heroicons-trash',
-    click: () => emit('drop', props.item.id)
+    onSelect: () => emit('drop', props.item.id)
   })
 
   return [items]
@@ -161,18 +161,18 @@ const actionMenuItems = computed(() => {
       </span>
 
       <!-- Action Menu (dropdown) -->
-      <UDropdown
+      <UDropdownMenu
         v-if="editable"
-        data-testid="item-actions"
         :items="actionMenuItems"
-        @click.stop
       >
         <UButton
+          data-testid="item-actions"
           variant="ghost"
           icon="i-heroicons-ellipsis-vertical"
           size="xs"
+          @click.stop
         />
-      </UDropdown>
+      </UDropdownMenu>
 
       <UIcon
         :name="isExpanded ? 'i-heroicons-chevron-up' : 'i-heroicons-chevron-down'"
