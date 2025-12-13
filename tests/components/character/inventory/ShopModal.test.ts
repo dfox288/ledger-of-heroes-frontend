@@ -52,7 +52,8 @@ interface ShopModalVM {
   canPurchase: boolean
   isInsufficientFunds: boolean
   totalCost: number
-  remainingGold: number
+  totalCurrencyInCopper: number
+  remainingCurrency: number
   handlePurchase: () => void
   handleCancel: () => void
   selectItem: (item: { id: number, name: string, slug: string, cost_cp: number | null }) => void
@@ -301,7 +302,7 @@ describe('ShopModal', () => {
       await flushPromises()
 
       // Remaining = 10000 - 1500 = 8500 cp = 85 gp
-      expect(vm.remainingGold).toBe(8500)
+      expect(vm.remainingCurrency).toBe(8500)
     })
 
     it('converts all currency types to copper for calculation', async () => {
@@ -324,7 +325,7 @@ describe('ShopModal', () => {
       await flushPromises()
 
       expect(vm.isInsufficientFunds).toBe(false)
-      expect(vm.remainingGold).toBe(250) // 1750 - 1500 = 250 cp
+      expect(vm.remainingCurrency).toBe(250) // 1750 - 1500 = 250 cp
     })
   })
 
@@ -462,6 +463,61 @@ describe('ShopModal', () => {
       expect(vm.formatCurrency(50)).toBe('5 sp')
       expect(vm.formatCurrency(10)).toBe('1 sp')
       expect(vm.formatCurrency(5)).toBe('5 cp')
+    })
+
+    it('formats mixed amounts with remainders', () => {
+      const wrapper = mount(ShopModal, {
+        props: defaultProps
+      })
+      const vm = wrapper.vm as unknown as ShopModalVM
+
+      // 15 gp 3 sp 7 cp = 1500 + 30 + 7 = 1537 cp
+      expect(vm.formatCurrency(1537)).toBe('15 gp 3 sp 7 cp')
+      // 2 gp 5 sp = 200 + 50 = 250 cp
+      expect(vm.formatCurrency(250)).toBe('2 gp 5 sp')
+      // 1 sp 5 cp = 10 + 5 = 15 cp
+      expect(vm.formatCurrency(15)).toBe('1 sp 5 cp')
+    })
+
+    it('formats zero correctly', () => {
+      const wrapper = mount(ShopModal, {
+        props: defaultProps
+      })
+      const vm = wrapper.vm as unknown as ShopModalVM
+
+      expect(vm.formatCurrency(0)).toBe('0 cp')
+    })
+  })
+
+  // =========================================================================
+  // Currency Display Tests
+  // =========================================================================
+
+  describe('currency display', () => {
+    it('exposes currency prop for display', () => {
+      const mixedCurrency = {
+        pp: 2,
+        gp: 15,
+        ep: 5,
+        sp: 30,
+        cp: 50
+      }
+      const wrapper = mount(ShopModal, {
+        props: { ...defaultProps, currency: mixedCurrency }
+      })
+
+      // Currency should be accessible for display
+      expect(wrapper.props('currency')).toEqual(mixedCurrency)
+    })
+
+    it('handles null currency gracefully', () => {
+      const wrapper = mount(ShopModal, {
+        props: { ...defaultProps, currency: null }
+      })
+      const vm = wrapper.vm as unknown as ShopModalVM
+
+      // Should default to 0 total copper
+      expect(vm.totalCurrencyInCopper).toBe(0)
     })
   })
 

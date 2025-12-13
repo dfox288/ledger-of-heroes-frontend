@@ -99,12 +99,12 @@ export function useInventoryActions(publicId: string | Ref<string>) {
       { method: 'DELETE' }
     )
 
-    // Then add the currency
+    // Then add the currency (API expects string format: "+50" for add)
     await apiFetch(
       `/characters/${resolvedId.value}/currency`,
       {
         method: 'PATCH',
-        body: { cp: { add: priceInCopper } }
+        body: { cp: `+${priceInCopper}` }
       }
     )
   }
@@ -144,12 +144,12 @@ export function useInventoryActions(publicId: string | Ref<string>) {
       }
     )
 
-    // Then subtract the currency
+    // Then subtract the currency (API expects string format: "-50" for subtract)
     await apiFetch(
       `/characters/${resolvedId.value}/currency`,
       {
         method: 'PATCH',
-        body: { cp: { subtract: totalCostInCopper } }
+        body: { cp: `-${totalCostInCopper}` }
       }
     )
 

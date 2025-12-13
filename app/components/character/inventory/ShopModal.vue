@@ -60,6 +60,30 @@ const CURRENCY_TO_CP = {
   cp: 1 // 1 copper = 1 copper
 }
 
+/**
+ * Currency display configuration (matches StatCurrency component)
+ */
+const currencyConfig = [
+  { key: 'pp', label: 'P', bg: 'bg-gray-300 dark:bg-gray-500', text: 'text-gray-700 dark:text-gray-200' },
+  { key: 'gp', label: 'G', bg: 'bg-yellow-400 dark:bg-yellow-500', text: 'text-yellow-800 dark:text-yellow-900' },
+  { key: 'ep', label: 'E', bg: 'bg-gray-200 dark:bg-gray-400', text: 'text-gray-600 dark:text-gray-700' },
+  { key: 'sp', label: 'S', bg: 'bg-slate-300 dark:bg-slate-400', text: 'text-slate-700 dark:text-slate-800' },
+  { key: 'cp', label: 'C', bg: 'bg-orange-400 dark:bg-orange-500', text: 'text-orange-800 dark:text-orange-900' }
+] as const
+
+/**
+ * Filter to only include currencies with non-zero values
+ */
+const visibleCurrencies = computed(() => {
+  if (!props.currency) return []
+  return currencyConfig
+    .filter(c => props.currency![c.key as keyof CharacterCurrency] > 0)
+    .map(c => ({
+      ...c,
+      value: props.currency![c.key as keyof CharacterCurrency]
+    }))
+})
+
 // Debounced search
 let searchTimeout: NodeJS.Timeout | null = null
 
@@ -75,7 +99,7 @@ async function searchItems(query: string) {
       params: { q: query, per_page: 10 }
     })
     searchResults.value = response.data || []
-  } catch (error) {
+  } catch {
     searchResults.value = []
   } finally {
     isSearching.value = false
@@ -132,10 +156,48 @@ const totalCost = computed((): number => {
   return unitPrice.value * quantity.value
 })
 
-// Calculate remaining currency after purchase
-const remainingGold = computed((): number => {
+// Calculate remaining currency after purchase (in copper)
+const remainingCurrency = computed((): number => {
   return totalCurrencyInCopper.value - totalCost.value
 })
+
+/**
+ * Convert copper pieces to currency breakdown for display with icons
+ * Returns array of { key, label, bg, text, value } for non-zero denominations
+ */
+function copperToBreakdown(copperPieces: number) {
+  let cp = copperPieces
+  if (cp <= 0) return []
+
+  // Convert to each denomination (highest to lowest)
+  const gp = Math.floor(cp / 100)
+  cp = cp % 100
+  const sp = Math.floor(cp / 10)
+  cp = cp % 10
+
+  // Build breakdown using currencyConfig styling
+  const breakdown: Array<{ key: string, label: string, bg: string, text: string, value: number }> = []
+
+  if (gp > 0) {
+    const config = currencyConfig.find(c => c.key === 'gp')!
+    breakdown.push({ ...config, value: gp })
+  }
+  if (sp > 0) {
+    const config = currencyConfig.find(c => c.key === 'sp')!
+    breakdown.push({ ...config, value: sp })
+  }
+  if (cp > 0) {
+    const config = currencyConfig.find(c => c.key === 'cp')!
+    breakdown.push({ ...config, value: cp })
+  }
+
+  return breakdown
+}
+
+const remainingCurrencyBreakdown = computed(() => copperToBreakdown(remainingCurrency.value))
+
+// Calculate shortfall amount for insufficient funds display
+const shortfallBreakdown = computed(() => copperToBreakdown(totalCost.value - totalCurrencyInCopper.value))
 
 // Check if funds are insufficient
 const isInsufficientFunds = computed((): boolean => {
@@ -217,18 +279,6 @@ function formatCurrency(copperPieces: number): string {
   return `${copperPieces} cp`
 }
 
-/**
- * Format currency for display (simplified - just gold equivalent)
- */
-function formatGoldEquivalent(copperPieces: number): string {
-  const gp = Math.floor(copperPieces / 100)
-  const remainder = copperPieces % 100
-  if (remainder === 0) {
-    return `${gp} gp`
-  }
-  return `${(copperPieces / 100).toFixed(2)} gp`
-}
-
 // Get item type icon
 function getItemIcon(item: Item): string {
   const typeCode = item.item_type?.code
@@ -256,12 +306,38 @@ function getItemIcon(item: Item): string {
 
     <template #body>
       <div class="space-y-4">
-        <!-- Current Gold Display -->
-        <div class="flex items-center justify-between p-3 bg-yellow-50 dark:bg-yellow-900/20 rounded-lg border border-yellow-200 dark:border-yellow-800">
-          <span class="text-sm text-yellow-700 dark:text-yellow-300">Your Gold</span>
-          <span class="font-semibold text-yellow-800 dark:text-yellow-200">
-            {{ formatGoldEquivalent(totalCurrencyInCopper) }}
-          </span>
+        <!-- Current Currency Display -->
+        <div class="p-3 bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
+          <div class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-2 text-center">
+            Your Currency
+          </div>
+          <!-- Show non-zero currencies with coin icons -->
+          <div
+            v-if="visibleCurrencies.length > 0"
+            class="flex flex-wrap justify-center gap-x-3 gap-y-1"
+          >
+            <div
+              v-for="coin in visibleCurrencies"
+              :key="coin.key"
+              class="flex items-center gap-1"
+            >
+              <div
+                :class="[coin.bg, 'w-5 h-5 rounded-full flex items-center justify-center']"
+              >
+                <span :class="[coin.text, 'text-[10px] font-black']">{{ coin.label }}</span>
+              </div>
+              <span class="text-sm font-semibold text-gray-900 dark:text-white tabular-nums">
+                {{ coin.value.toLocaleString() }}
+              </span>
+            </div>
+          </div>
+          <!-- Empty state when no currency -->
+          <div
+            v-else
+            class="text-center text-gray-400 dark:text-gray-500 text-sm"
+          >
+            No currency
+          </div>
         </div>
 
         <!-- Selected Item Display -->
@@ -298,29 +374,25 @@ function getItemIcon(item: Item): string {
 
           <!-- Quantity and Price -->
           <div class="grid grid-cols-2 gap-3">
-            <div>
-              <label class="text-xs text-gray-500 dark:text-gray-400 mb-1 block">
-                Quantity
-              </label>
+            <UFormField label="Quantity" class="w-full">
               <UInput
                 v-model.number="quantity"
                 data-testid="quantity-input"
                 type="number"
                 :min="1"
+                :ui="{ root: 'w-full' }"
               />
-            </div>
-            <div>
-              <label class="text-xs text-gray-500 dark:text-gray-400 mb-1 block">
-                Your Price (cp)
-              </label>
+            </UFormField>
+            <UFormField label="Your Price (cp)" class="w-full">
               <UInput
                 v-model.number="customPrice"
                 data-testid="custom-price-input"
                 type="number"
                 :min="0"
                 :placeholder="String(selectedItem.cost_cp ?? 0)"
+                :ui="{ root: 'w-full' }"
               />
-            </div>
+            </UFormField>
           </div>
 
           <!-- Total Cost -->
@@ -344,9 +416,30 @@ function getItemIcon(item: Item): string {
             data-testid="insufficient-funds-warning"
             class="p-3 bg-error-50 dark:bg-error-900/30 border border-error-200 dark:border-error-800 rounded-lg"
           >
-            <p class="text-sm text-error-700 dark:text-error-300 text-center font-medium">
-              Insufficient funds! You need {{ formatCurrency(totalCost - totalCurrencyInCopper) }} more.
-            </p>
+            <div class="flex items-center justify-center gap-2 flex-wrap">
+              <span class="text-sm text-error-700 dark:text-error-300 font-medium">
+                Insufficient funds! You need
+              </span>
+              <div class="flex items-center gap-2">
+                <div
+                  v-for="coin in shortfallBreakdown"
+                  :key="coin.key"
+                  class="flex items-center gap-1"
+                >
+                  <div
+                    :class="[coin.bg, 'w-4 h-4 rounded-full flex items-center justify-center']"
+                  >
+                    <span :class="[coin.text, 'text-[8px] font-black']">{{ coin.label }}</span>
+                  </div>
+                  <span class="text-sm font-semibold text-error-700 dark:text-error-300 tabular-nums">
+                    {{ coin.value.toLocaleString() }}
+                  </span>
+                </div>
+              </div>
+              <span class="text-sm text-error-700 dark:text-error-300 font-medium">
+                more.
+              </span>
+            </div>
           </div>
 
           <!-- Currency Preview -->
@@ -355,9 +448,28 @@ function getItemIcon(item: Item): string {
             class="flex items-center justify-between text-sm"
           >
             <span class="text-gray-500 dark:text-gray-400">After purchase:</span>
-            <span class="text-success-600 dark:text-success-400 font-medium">
-              {{ formatGoldEquivalent(remainingGold) }} remaining
-            </span>
+            <div class="flex items-center gap-2">
+              <div
+                v-for="coin in remainingCurrencyBreakdown"
+                :key="coin.key"
+                class="flex items-center gap-1"
+              >
+                <div
+                  :class="[coin.bg, 'w-4 h-4 rounded-full flex items-center justify-center']"
+                >
+                  <span :class="[coin.text, 'text-[8px] font-black']">{{ coin.label }}</span>
+                </div>
+                <span class="text-sm font-semibold text-success-600 dark:text-success-400 tabular-nums">
+                  {{ coin.value.toLocaleString() }}
+                </span>
+              </div>
+              <span
+                v-if="remainingCurrencyBreakdown.length === 0"
+                class="text-success-600 dark:text-success-400 font-medium"
+              >
+                0 cp
+              </span>
+            </div>
           </div>
         </div>
 
@@ -369,6 +481,8 @@ function getItemIcon(item: Item): string {
             placeholder="Search items to buy..."
             icon="i-heroicons-magnifying-glass"
             :loading="isSearching"
+            size="lg"
+            :ui="{ root: 'w-full' }"
           />
 
           <!-- Search Results -->
