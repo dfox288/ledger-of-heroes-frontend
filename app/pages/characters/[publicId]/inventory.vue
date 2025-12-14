@@ -80,7 +80,25 @@ const { data: statsData, pending: statsPending } = await useAsyncData(
   )
 )
 
-const loading = computed(() => characterPending.value || equipmentPending.value || statsPending.value)
+// Track initial load vs refresh - only show skeleton on initial load
+const hasLoadedOnce = ref(false)
+const loading = computed(() => {
+  // After initial load, never show loading skeleton (prevents flash on refresh)
+  if (hasLoadedOnce.value) return false
+  return characterPending.value || equipmentPending.value || statsPending.value
+})
+
+// Mark as loaded once all data is available
+watch(
+  () => !characterPending.value && !equipmentPending.value && !statsPending.value,
+  (allLoaded) => {
+    if (allLoaded && !hasLoadedOnce.value) {
+      hasLoadedOnce.value = true
+    }
+  },
+  { immediate: true }
+)
+
 const character = computed(() => characterData.value?.data ?? null)
 const equipment = computed(() => equipmentData.value?.data ?? [])
 const stats = computed(() => statsData.value?.data ?? null)

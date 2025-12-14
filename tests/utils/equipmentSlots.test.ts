@@ -1,78 +1,99 @@
 import { describe, it, expect } from 'vitest'
 import {
-  getValidSlots,
-  getDefaultSlot,
-  needsSlotPicker,
-  guessSlotFromName,
-  BODY_SLOTS
+  getSlotsFromBackend,
+  getDefaultSlotFromBackend,
+  needsSlotPickerFromBackend,
+  guessSlotFromName
 } from '~/utils/equipmentSlots'
 
 describe('equipmentSlots', () => {
-  describe('getValidSlots', () => {
-    it('returns armor slot for armor types', () => {
-      expect(getValidSlots('Light Armor')).toEqual(['armor'])
-      expect(getValidSlots('Medium Armor')).toEqual(['armor'])
-      expect(getValidSlots('Heavy Armor')).toEqual(['armor'])
+  describe('getSlotsFromBackend', () => {
+    it('returns armor slot for ARMOR equipment_slot', () => {
+      expect(getSlotsFromBackend('ARMOR')).toEqual(['armor'])
     })
 
-    it('returns off_hand for shield', () => {
-      expect(getValidSlots('Shield')).toEqual(['off_hand'])
+    it('returns off_hand for SHIELD equipment_slot', () => {
+      expect(getSlotsFromBackend('SHIELD')).toEqual(['off_hand'])
     })
 
-    it('returns main_hand and off_hand for melee weapon', () => {
-      expect(getValidSlots('Melee Weapon')).toEqual(['main_hand', 'off_hand'])
+    it('returns main_hand and off_hand for HAND/WEAPON equipment_slot', () => {
+      expect(getSlotsFromBackend('HAND')).toEqual(['main_hand', 'off_hand'])
+      expect(getSlotsFromBackend('WEAPON')).toEqual(['main_hand', 'off_hand'])
     })
 
-    it('returns main_hand only for ranged weapon', () => {
-      expect(getValidSlots('Ranged Weapon')).toEqual(['main_hand'])
+    it('returns ring slots for RING equipment_slot', () => {
+      expect(getSlotsFromBackend('RING')).toEqual(['ring_1', 'ring_2'])
     })
 
-    it('returns ring slots for ring', () => {
-      expect(getValidSlots('Ring')).toEqual(['ring_1', 'ring_2'])
+    it('returns body slots correctly', () => {
+      expect(getSlotsFromBackend('HEAD')).toEqual(['head'])
+      expect(getSlotsFromBackend('NECK')).toEqual(['neck'])
+      expect(getSlotsFromBackend('CLOAK')).toEqual(['cloak'])
+      expect(getSlotsFromBackend('BELT')).toEqual(['belt'])
+      expect(getSlotsFromBackend('HANDS')).toEqual(['hands'])
+      expect(getSlotsFromBackend('FEET')).toEqual(['feet'])
     })
 
-    it('returns body slots for wondrous item', () => {
-      expect(getValidSlots('Wondrous Item')).toEqual(BODY_SLOTS)
+    it('handles aliases', () => {
+      expect(getSlotsFromBackend('GLOVES')).toEqual(['hands'])
+      expect(getSlotsFromBackend('BOOTS')).toEqual(['feet'])
+      expect(getSlotsFromBackend('HELMET')).toEqual(['head'])
+      expect(getSlotsFromBackend('AMULET')).toEqual(['neck'])
     })
 
-    it('returns empty array for non-equippable items', () => {
-      expect(getValidSlots('Potion')).toEqual([])
-      expect(getValidSlots('Scroll')).toEqual([])
-      expect(getValidSlots('Adventuring Gear')).toEqual([])
-    })
-  })
-
-  describe('getDefaultSlot', () => {
-    it('returns armor for armor types', () => {
-      expect(getDefaultSlot('Light Armor')).toBe('armor')
+    it('returns empty array for null/undefined equipment_slot', () => {
+      expect(getSlotsFromBackend(null)).toEqual([])
+      expect(getSlotsFromBackend(undefined)).toEqual([])
     })
 
-    it('returns main_hand for weapons', () => {
-      expect(getDefaultSlot('Melee Weapon')).toBe('main_hand')
-      expect(getDefaultSlot('Ranged Weapon')).toBe('main_hand')
+    it('returns empty array for unknown equipment_slot', () => {
+      expect(getSlotsFromBackend('UNKNOWN')).toEqual([])
     })
 
-    it('returns ring_1 for ring', () => {
-      expect(getDefaultSlot('Ring')).toBe('ring_1')
-    })
-
-    it('returns null for wondrous item', () => {
-      expect(getDefaultSlot('Wondrous Item')).toBeNull()
+    it('is case insensitive', () => {
+      expect(getSlotsFromBackend('armor')).toEqual(['armor'])
+      expect(getSlotsFromBackend('Armor')).toEqual(['armor'])
+      expect(getSlotsFromBackend('ARMOR')).toEqual(['armor'])
     })
   })
 
-  describe('needsSlotPicker', () => {
-    it('returns false for single-slot items', () => {
-      expect(needsSlotPicker('Light Armor')).toBe(false)
-      expect(needsSlotPicker('Shield')).toBe(false)
+  describe('getDefaultSlotFromBackend', () => {
+    it('returns the slot for single-slot equipment_slots', () => {
+      expect(getDefaultSlotFromBackend('ARMOR')).toBe('armor')
+      expect(getDefaultSlotFromBackend('HEAD')).toBe('head')
+      expect(getDefaultSlotFromBackend('CLOAK')).toBe('cloak')
+      expect(getDefaultSlotFromBackend('SHIELD')).toBe('off_hand')
     })
 
-    it('returns true for wondrous item', () => {
-      expect(needsSlotPicker('Wondrous Item')).toBe(true)
+    it('returns null for multi-slot equipment_slots (RING, WEAPON, HAND)', () => {
+      expect(getDefaultSlotFromBackend('RING')).toBeNull()
+      expect(getDefaultSlotFromBackend('WEAPON')).toBeNull()
+      expect(getDefaultSlotFromBackend('HAND')).toBeNull()
     })
 
-    it('returns true for ring (user chooses slot)', () => {
-      expect(needsSlotPicker('Ring')).toBe(true)
+    it('returns null for null/undefined equipment_slot', () => {
+      expect(getDefaultSlotFromBackend(null)).toBeNull()
+      expect(getDefaultSlotFromBackend(undefined)).toBeNull()
+    })
+  })
+
+  describe('needsSlotPickerFromBackend', () => {
+    it('returns false for single-slot equipment_slots', () => {
+      expect(needsSlotPickerFromBackend('ARMOR')).toBe(false)
+      expect(needsSlotPickerFromBackend('SHIELD')).toBe(false)
+      expect(needsSlotPickerFromBackend('HEAD')).toBe(false)
+      expect(needsSlotPickerFromBackend('CLOAK')).toBe(false)
+    })
+
+    it('returns true for multi-slot equipment_slots', () => {
+      expect(needsSlotPickerFromBackend('RING')).toBe(true)
+      expect(needsSlotPickerFromBackend('WEAPON')).toBe(true)
+      expect(needsSlotPickerFromBackend('HAND')).toBe(true)
+    })
+
+    it('returns false for null/undefined equipment_slot', () => {
+      expect(needsSlotPickerFromBackend(null)).toBe(false)
+      expect(needsSlotPickerFromBackend(undefined)).toBe(false)
     })
   })
 

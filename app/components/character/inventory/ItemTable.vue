@@ -147,46 +147,19 @@ function canAttune(equipment: CharacterEquipment): boolean {
   return requiresAttunement(equipment) && !isAttuned(equipment)
 }
 
-// Check if item is equippable (has equipment_slot from backend or known equippable type)
+// Check if item is equippable (requires equipment_slot from backend)
+// Backend issue: https://github.com/dfox288/ledger-of-heroes/issues/598
 function isEquippable(equipment: CharacterEquipment): boolean {
-  const equipmentSlot = getEquipmentSlot(equipment)
-
-  // If backend provides equipment_slot, item is equippable
-  if (equipmentSlot) return true
-
-  // Legacy fallback for items without equipment_slot
-  const itemType = getItemType(equipment)?.toLowerCase() ?? ''
-  return (
-    itemType.includes('weapon')
-    || itemType.includes('melee')
-    || itemType.includes('ranged')
-    || itemType.includes('armor')
-    || itemType.includes('shield')
-    || itemType.includes('ring')
-    || itemType.includes('wondrous')
-    || itemType.includes('staff')
-    || itemType.includes('rod')
-    || itemType.includes('wand')
-  )
+  return !!getEquipmentSlot(equipment)
 }
 
 // Check if item is a weapon (needs hand selector)
 function isWeapon(equipment: CharacterEquipment): boolean {
   const equipmentSlot = getEquipmentSlot(equipment)
+  if (!equipmentSlot) return false
 
-  // Check backend equipment_slot first
-  if (equipmentSlot) {
-    const upper = equipmentSlot.toUpperCase()
-    return upper === 'WEAPON' || upper === 'MAIN_HAND'
-  }
-
-  // Legacy fallback
-  const itemType = getItemType(equipment)?.toLowerCase() ?? ''
-  return (
-    itemType.includes('weapon')
-    || itemType.includes('melee')
-    || itemType.includes('ranged')
-  ) && !itemType.includes('shield')
+  const upper = equipmentSlot.toUpperCase()
+  return upper === 'WEAPON' || upper === 'MAIN_HAND' || upper === 'HAND'
 }
 
 // Get equip dropdown items for weapons (hand selector)
@@ -323,21 +296,22 @@ function getMenuItems(item: CharacterEquipment) {
 
 // Handle equip with smart slot selection (uses backend equipment_slot)
 function handleEquip(item: CharacterEquipment) {
-  const itemData = item.item as { item_type?: string, name?: string, equipment_slot?: string | null } | null
-  const itemType = itemData?.item_type ?? null
-  const equipmentSlot = itemData?.equipment_slot ?? null
+  const equipmentSlot = getEquipmentSlot(item)
+  if (!equipmentSlot) return // Not equippable
+
+  const itemData = item.item as { name?: string } | null
   const itemName = item.custom_name || itemData?.name || ''
 
-  // Check if we need slot picker (rings, wondrous items)
-  if (needsSlotPickerFromBackend(equipmentSlot, itemType)) {
-    const validSlots = getSlotsFromBackend(equipmentSlot, itemType)
+  // Check if we need slot picker (rings, weapons)
+  if (needsSlotPickerFromBackend(equipmentSlot)) {
+    const validSlots = getSlotsFromBackend(equipmentSlot)
     const suggestedSlot = guessSlotFromName(itemName)
     emit('equip-with-picker', item.id, validSlots, suggestedSlot)
     return
   }
 
   // Auto-equip to default slot
-  const defaultSlot = getDefaultSlotFromBackend(equipmentSlot, itemType)
+  const defaultSlot = getDefaultSlotFromBackend(equipmentSlot)
   if (defaultSlot) {
     emit('equip', item.id, defaultSlot)
   }

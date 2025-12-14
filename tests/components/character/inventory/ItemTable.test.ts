@@ -7,7 +7,7 @@ import type { CharacterEquipment } from '~/types/character'
 
 const mockWeapon: CharacterEquipment = {
   id: 1,
-  item: { name: 'Longsword', item_type: 'Melee Weapon', weight: '3.00' },
+  item: { name: 'Longsword', item_type: 'Melee Weapon', weight: '3.00', equipment_slot: 'HAND' },
   item_slug: 'phb:longsword',
   is_dangling: 'false',
   custom_name: null,
@@ -19,7 +19,7 @@ const mockWeapon: CharacterEquipment = {
 
 const mockArmor: CharacterEquipment = {
   id: 2,
-  item: { name: 'Chain Mail', item_type: 'Heavy Armor', armor_class: 16 },
+  item: { name: 'Chain Mail', item_type: 'Heavy Armor', armor_class: 16, equipment_slot: 'ARMOR' },
   item_slug: 'phb:chain-mail',
   is_dangling: 'false',
   custom_name: null,
@@ -255,6 +255,38 @@ describe('ItemTable', () => {
       expect(wrapper.find('[data-testid="action-unequip"]').exists()).toBe(false)
     })
 
+    it('hides equip button for Adventuring Gear items', async () => {
+      // Common Clothes, Pouch, Thieves' Tools, etc. should NOT be equippable
+      // Fixes bug where "Adventuring Gear" matched "ring" due to substring check
+      const wrapper = await mountSuspended(ItemTable, {
+        props: { items: [mockGear], editable: true }
+      })
+
+      expect(wrapper.find('[data-testid="action-equip"]').exists()).toBe(false)
+      expect(wrapper.find('[data-testid="action-unequip"]').exists()).toBe(false)
+    })
+
+    it('hides equip button for Tool items', async () => {
+      const thiefTools: CharacterEquipment = {
+        id: 20,
+        item: { name: "Thieves' Tools", item_type: 'Tool', weight: '1.00' },
+        item_slug: 'phb:thieves-tools',
+        is_dangling: 'false',
+        custom_name: null,
+        custom_description: null,
+        quantity: 1,
+        equipped: false,
+        location: 'backpack',
+        is_attuned: false
+      }
+
+      const wrapper = await mountSuspended(ItemTable, {
+        props: { items: [thiefTools], editable: true }
+      })
+
+      expect(wrapper.find('[data-testid="action-equip"]').exists()).toBe(false)
+    })
+
     it('shows quantity buttons for stacked items', async () => {
       const wrapper = await mountSuspended(ItemTable, {
         props: { items: [mockPotion], editable: true }
@@ -391,7 +423,7 @@ describe('ItemTable', () => {
   describe('attunement (issue #588)', () => {
     const mockAttunedBackpackItem: CharacterEquipment = {
       id: 10,
-      item: { name: 'Staff of Power', item_type: 'Weapon', requires_attunement: true },
+      item: { name: 'Staff of Power', item_type: 'Weapon', requires_attunement: true, equipment_slot: 'HAND' },
       item_slug: 'dmg:staff-of-power',
       is_dangling: 'false',
       custom_name: null,
