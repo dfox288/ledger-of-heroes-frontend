@@ -2,12 +2,12 @@
 import { describe, it, expect } from 'vitest'
 import { mountSuspended } from '@nuxt/test-utils/runtime'
 import CombatTable from '~/components/dm-screen/CombatTable.vue'
-import type { DmScreenCharacter } from '~/types/dm-screen'
+import type { DmScreenCharacter, EncounterMonster } from '~/types/dm-screen'
 
-// Default combat state for tests
+// Default combat state for tests (using string keys for combatant IDs)
 const mockCombatState = {
-  initiatives: {} as Record<number, number>,
-  currentTurnId: null as number | null,
+  initiatives: {} as Record<string, number>,
+  currentTurnId: null as string | null,
   round: 1,
   inCombat: false
 }
@@ -114,5 +114,87 @@ describe('DmScreenCombatTable', () => {
       props: { characters: [], combatState: mockCombatState }
     })
     expect(wrapper.text()).toMatch(/no character|empty/i)
+  })
+
+  describe('monster integration', () => {
+    const mockMonster: EncounterMonster = {
+      id: 1,
+      monster_id: 42,
+      label: 'Goblin 1',
+      current_hp: 7,
+      max_hp: 7,
+      monster: {
+        name: 'Goblin',
+        slug: 'mm:goblin',
+        armor_class: 15,
+        hit_points: { average: 7, formula: '2d6' },
+        speed: { walk: 30, fly: null, swim: null, climb: null },
+        challenge_rating: '1/4',
+        actions: [
+          { name: 'Scimitar', attack_bonus: 4, damage: '1d6+2 slashing', reach: '5 ft.', range: null }
+        ]
+      }
+    }
+
+    it('shows Add Monster button', async () => {
+      const wrapper = await mountSuspended(CombatTable, {
+        props: { characters: mockCharacters, combatState: mockCombatState }
+      })
+      expect(wrapper.find('[data-testid="add-monster-btn"]').exists()).toBe(true)
+    })
+
+    it('emits addMonster event when button clicked', async () => {
+      const wrapper = await mountSuspended(CombatTable, {
+        props: { characters: mockCharacters, combatState: mockCombatState }
+      })
+      await wrapper.find('[data-testid="add-monster-btn"]').trigger('click')
+      expect(wrapper.emitted('addMonster')).toBeTruthy()
+    })
+
+    it('renders monster rows alongside characters', async () => {
+      const wrapper = await mountSuspended(CombatTable, {
+        props: {
+          characters: mockCharacters,
+          monsters: [mockMonster],
+          combatState: mockCombatState
+        }
+      })
+      expect(wrapper.text()).toContain('Aldric')
+      expect(wrapper.text()).toContain('Goblin 1')
+    })
+
+    it('sorts combatants by initiative', async () => {
+      const combatStateWithInit = {
+        ...mockCombatState,
+        initiatives: {
+          'char_1': 10,
+          'char_2': 20,
+          'monster_1': 15
+        }
+      }
+      const wrapper = await mountSuspended(CombatTable, {
+        props: {
+          characters: mockCharacters,
+          monsters: [mockMonster],
+          combatState: combatStateWithInit
+        }
+      })
+      const rows = wrapper.findAll('[data-testid="combat-row"], [data-testid="monster-row"]')
+      // Order should be: Mira (20), Goblin (15), Aldric (10)
+      expect(rows.length).toBe(3)
+    })
+
+    it('emits removeMonster when monster removed', async () => {
+      const wrapper = await mountSuspended(CombatTable, {
+        props: {
+          characters: mockCharacters,
+          monsters: [mockMonster],
+          combatState: mockCombatState
+        }
+      })
+      await wrapper.find('[data-testid="remove-btn"]').trigger('click')
+      expect(wrapper.emitted('removeMonster')).toBeTruthy()
+      expect(wrapper.emitted('removeMonster')?.[0]).toEqual([1])
+    })
   })
 })

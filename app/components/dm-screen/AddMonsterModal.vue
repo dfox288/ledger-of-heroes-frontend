@@ -118,7 +118,7 @@ watch(() => props.open, (isOpen) => {
               <div class="font-medium">{{ selectedMonster.name }}</div>
               <div class="text-sm text-neutral-500">
                 CR {{ selectedMonster.challenge_rating }} ·
-                HP {{ selectedMonster.hit_points?.average }} ·
+                HP {{ selectedMonster.hit_points_average }} ·
                 AC {{ selectedMonster.armor_class }}
               </div>
             </div>
@@ -170,7 +170,7 @@ watch(() => props.open, (isOpen) => {
             <div class="font-medium">{{ monster.name }}</div>
             <div class="text-sm text-neutral-500">
               CR {{ monster.challenge_rating }} ·
-              HP {{ monster.hit_points?.average }} ·
+              HP {{ monster.hit_points_average }} ·
               AC {{ monster.armor_class }}
             </div>
           </div>

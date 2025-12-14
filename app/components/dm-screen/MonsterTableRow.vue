@@ -139,7 +139,7 @@ function handleRemove(event: Event) {
         <div>
           <div class="font-medium text-neutral-900 dark:text-white flex items-center gap-2">
             {{ monster.label }}
-            <UBadge color="red" variant="subtle" size="md">
+            <UBadge color="monster" variant="subtle" size="md">
               CR {{ monster.monster.challenge_rating }}
             </UBadge>
           </div>
@@ -195,7 +195,7 @@ function handleRemove(event: Event) {
 
     <!-- AC -->
     <td class="py-3 px-4 text-center">
-      <UBadge color="red" variant="subtle" size="lg" class="font-mono font-bold">
+      <UBadge color="monster" variant="subtle" size="lg" class="font-mono font-bold">
         {{ monster.monster.armor_class }}
       </UBadge>
     </td>
@@ -229,8 +229,11 @@ function handleRemove(event: Event) {
       </button>
     </td>
 
-    <!-- Actions (condensed) -->
-    <td class="py-3 px-4 text-sm text-neutral-600 dark:text-neutral-400">
+    <!-- Actions (condensed) - spans 2 columns to match character Perc/Inv -->
+    <td
+      colspan="2"
+      class="py-3 px-4 text-sm text-neutral-600 dark:text-neutral-400"
+    >
       <div
         v-for="action in monster.monster.actions.slice(0, 2)"
         :key="action.name"
@@ -246,7 +249,7 @@ function handleRemove(event: Event) {
       </div>
     </td>
 
-    <!-- Remove button -->
+    <!-- Remove button - matches character Ins column -->
     <td
       class="py-3 px-4 text-center"
       @click.stop
@@ -254,7 +257,7 @@ function handleRemove(event: Event) {
       <UButton
         data-testid="remove-btn"
         icon="i-heroicons-trash"
-        color="red"
+        color="error"
         variant="ghost"
         size="xs"
         @click="handleRemove"
