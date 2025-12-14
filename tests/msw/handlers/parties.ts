@@ -3,6 +3,13 @@
  */
 import { http, HttpResponse } from 'msw'
 import type { PartyListItem, Party } from '~/types'
+import type { EncounterMonster } from '~/types/dm-screen'
+import {
+  mockEncounterMonsters,
+  goblinTemplate,
+  bugbearTemplate,
+  createEncounterMonster
+} from '../fixtures/encounter-monsters'
 
 const mockParties: PartyListItem[] = [
   {
@@ -75,5 +82,78 @@ export const partyHandlers = [
   // Remove character from party
   http.delete('/api/parties/:id/characters/:characterId', () => {
     return HttpResponse.json({ message: 'Character removed from party' })
+  }),
+
+  // ============================================================================
+  // Encounter Monster Endpoints
+  // ============================================================================
+
+  // List encounter monsters for a party
+  http.get('/api/parties/:id/monsters', () => {
+    return HttpResponse.json({ data: mockEncounterMonsters })
+  }),
+
+  // Add monster(s) to encounter
+  http.post('/api/parties/:id/monsters', async ({ request }) => {
+    const body = await request.json() as { monster_id: number; quantity: number }
+    const quantity = body.quantity || 1
+
+    // Select template based on monster_id (simplified mock logic)
+    const template = body.monster_id === 42 ? goblinTemplate : bugbearTemplate
+    const baseName = template.name
+
+    // Find existing count for this monster type
+    const existingCount = mockEncounterMonsters.filter(
+      m => m.monster.name === baseName
+    ).length
+
+    const newMonsters: EncounterMonster[] = []
+    for (let i = 0; i < quantity; i++) {
+      const label = `${baseName} ${existingCount + i + 1}`
+      const monster = createEncounterMonster(body.monster_id, template, label)
+      newMonsters.push(monster)
+      mockEncounterMonsters.push(monster)
+    }
+
+    return HttpResponse.json({ data: newMonsters }, { status: 201 })
+  }),
+
+  // Update monster instance (HP, label)
+  http.patch('/api/parties/:id/monsters/:monsterId', async ({ params, request }) => {
+    const monsterId = Number(params.monsterId)
+    const body = await request.json() as { current_hp?: number; label?: string }
+
+    const monster = mockEncounterMonsters.find(m => m.id === monsterId)
+    if (!monster) {
+      return HttpResponse.json({ error: 'Monster not found' }, { status: 404 })
+    }
+
+    if (body.current_hp !== undefined) {
+      monster.current_hp = body.current_hp
+    }
+    if (body.label !== undefined) {
+      monster.label = body.label
+    }
+
+    return HttpResponse.json({ data: monster })
+  }),
+
+  // Remove single monster instance
+  http.delete('/api/parties/:id/monsters/:monsterId', ({ params }) => {
+    const monsterId = Number(params.monsterId)
+    const index = mockEncounterMonsters.findIndex(m => m.id === monsterId)
+
+    if (index === -1) {
+      return HttpResponse.json({ error: 'Monster not found' }, { status: 404 })
+    }
+
+    mockEncounterMonsters.splice(index, 1)
+    return HttpResponse.json({ success: true })
+  }),
+
+  // Clear all monsters (end encounter)
+  http.delete('/api/parties/:id/monsters', () => {
+    mockEncounterMonsters.length = 0
+    return HttpResponse.json({ success: true })
   })
 ]

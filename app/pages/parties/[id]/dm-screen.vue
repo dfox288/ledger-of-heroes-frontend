@@ -2,10 +2,20 @@
 <script setup lang="ts">
 import type { DmScreenPartyStats } from '~/types/dm-screen'
 import { useDmScreenCombat } from '~/composables/useDmScreenCombat'
+import { useEncounterMonsters } from '~/composables/useEncounterMonsters'
 import { logger } from '~/utils/logger'
+
+// Disable SSR for this page - combat state is client-side only
+definePageMeta({
+  ssr: false
+})
 
 const route = useRoute()
 const partyId = computed(() => route.params.id as string)
+const toast = useToast()
+
+// Encounter monsters management
+const encounterMonsters = useEncounterMonsters(partyId.value)
 
 const { apiFetch } = useApi()
 
@@ -22,7 +32,7 @@ const combat = ref<ReturnType<typeof useDmScreenCombat> | null>(null)
 
 watchEffect(() => {
   if (stats.value?.characters && !combat.value) {
-    combat.value = useDmScreenCombat(partyId.value, stats.value.characters)
+    combat.value = useDmScreenCombat(partyId.value, stats.value.characters, encounterMonsters.monsters)
   }
 })
 
@@ -34,10 +44,6 @@ const combatState = computed(() => {
 })
 
 // Combat action handlers
-function handleRollAll() {
-  combat.value?.rollAll()
-}
-
 function handleStartCombat() {
   combat.value?.startCombat()
 }
@@ -54,8 +60,45 @@ function handleResetCombat() {
   combat.value?.resetCombat()
 }
 
-function handleSetInitiative(characterId: number, value: number) {
-  combat.value?.setInitiative(characterId, value)
+function handleSetInitiative(key: string, value: number) {
+  combat.value?.setInitiative(key, value)
+}
+
+// Monster handlers
+const showAddMonsterModal = ref(false)
+const addingMonster = ref(false)
+
+async function handleAddMonster(monsterId: number, quantity: number) {
+  addingMonster.value = true
+  try {
+    await encounterMonsters.addMonster(monsterId, quantity)
+    showAddMonsterModal.value = false
+  } catch (err) {
+    logger.error('Failed to add monster:', err)
+    toast.add({ title: 'Failed to add monster', color: 'error' })
+  } finally {
+    addingMonster.value = false
+  }
+}
+
+async function handleUpdateMonsterHp(instanceId: number, hp: number) {
+  // Optimistic update
+  const monster = encounterMonsters.monsters.value.find(m => m.id === instanceId)
+  if (monster) monster.current_hp = hp
+  // Sync to backend (debounced in component, but we handle immediate here)
+  await encounterMonsters.updateMonsterHp(instanceId, hp)
+}
+
+async function handleRemoveMonster(instanceId: number) {
+  await encounterMonsters.removeMonster(instanceId)
+}
+
+async function handleUpdateMonsterLabel(instanceId: number, label: string) {
+  await encounterMonsters.updateMonsterLabel(instanceId, label)
+}
+
+async function handleClearEncounter() {
+  await encounterMonsters.clearEncounter()
 }
 
 // SEO
@@ -69,7 +112,7 @@ const STORAGE_KEY = 'dm-screen-summary-collapsed'
 
 const summaryCollapsed = ref(false)
 
-onMounted(() => {
+onMounted(async () => {
   if (import.meta.client) {
     try {
       const stored = localStorage.getItem(STORAGE_KEY)
@@ -80,6 +123,8 @@ onMounted(() => {
       // localStorage unavailable (private browsing, storage full)
     }
   }
+  // Fetch encounter monsters
+  await encounterMonsters.fetchMonsters()
 })
 
 watch(summaryCollapsed, (val) => {
@@ -193,15 +238,27 @@ async function handleRefresh() {
       >
         <DmScreenCombatTable
           :characters="stats.characters"
+          :monsters="encounterMonsters.monsters.value"
           :combat-state="combatState"
-          @roll-all="handleRollAll"
           @start-combat="handleStartCombat"
           @next-turn="handleNextTurn"
           @previous-turn="handlePreviousTurn"
           @reset-combat="handleResetCombat"
           @set-initiative="handleSetInitiative"
+          @add-monster="showAddMonsterModal = true"
+          @update-monster-hp="handleUpdateMonsterHp"
+          @update-monster-label="handleUpdateMonsterLabel"
+          @remove-monster="handleRemoveMonster"
+          @clear-encounter="handleClearEncounter"
         />
       </div>
     </template>
+
+    <!-- Add Monster Modal -->
+    <DmScreenAddMonsterModal
+      v-model:open="showAddMonsterModal"
+      :loading="addingMonster"
+      @add="handleAddMonster"
+    />
   </div>
 </template>

@@ -60,6 +60,12 @@ export default defineNuxtConfig({
     appManifest: process.env.NODE_ENV === 'test' ? false : true
   },
 
+  // Route-specific rules
+  routeRules: {
+    // DM screen is client-only - combat state is ephemeral
+    '/parties/*/dm-screen': { ssr: false }
+  },
+
   compatibilityDate: '2025-01-15',
 
   eslint: {
