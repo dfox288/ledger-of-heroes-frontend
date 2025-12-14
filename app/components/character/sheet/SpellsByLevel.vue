@@ -1,9 +1,21 @@
 <!-- app/components/character/sheet/SpellsByLevel.vue -->
 <script setup lang="ts">
+/**
+ * Spells grouped by level
+ *
+ * Displays character spells organized by spell level with SpellCard
+ * components that support preparation toggling.
+ *
+ * @see Issue #556 - Spells Tab
+ * @see Issue #616 - Spell preparation toggle
+ */
 import type { CharacterSpell } from '~/types/character'
 
 const props = defineProps<{
   spells: CharacterSpell[]
+  characterId?: number
+  editable?: boolean
+  atPrepLimit?: boolean
 }>()
 
 /**
@@ -78,25 +90,16 @@ const spellsByLevel = computed(() => {
         </span>
       </div>
 
-      <!-- Spells Grid -->
-      <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
-        <div
+      <!-- Spells Grid using SpellCard -->
+      <div class="grid grid-cols-1 gap-2">
+        <CharacterSheetSpellCard
           v-for="spell in group.spells"
           :key="spell.id"
-          class="flex items-center gap-2"
-        >
-          <UIcon
-            :name="spell.is_prepared ? 'i-heroicons-check-circle' : 'i-heroicons-circle'"
-            :class="spell.is_prepared ? 'text-success-500' : 'text-gray-400 dark:text-gray-500'"
-            class="w-4 h-4 flex-shrink-0"
-          />
-          <span
-            :class="spell.is_prepared ? 'text-gray-900 dark:text-white' : 'text-gray-600 dark:text-gray-400'"
-            class="text-sm"
-          >
-            {{ spell.spell!.name }}
-          </span>
-        </div>
+          :spell="spell"
+          :character-id="characterId"
+          :editable="editable"
+          :at-prep-limit="atPrepLimit"
+        />
       </div>
     </div>
   </div>

@@ -47,10 +47,10 @@ const {
 const playStateStore = useCharacterPlayStateStore()
 
 /**
- * Initialize play state store when character and stats load
- * Store manages HP, death saves, and currency state for play mode
+ * Initialize play state store when character, stats, and spells load
+ * Store manages HP, death saves, currency, and spellcasting state for play mode
  */
-watch([character, stats], ([char, s]) => {
+watch([character, stats, spells], ([char, s, sp]) => {
   if (char && s) {
     playStateStore.initialize({
       characterId: char.id,
@@ -66,6 +66,31 @@ watch([character, stats], ([char, s]) => {
       },
       currency: char.currency ?? { pp: 0, gp: 0, ep: 0, sp: 0, cp: 0 }
     })
+
+    // Initialize spellcasting state if character is a spellcaster
+    if (s.spellcasting && sp) {
+      // Convert spell_slots array/object to level-based array
+      const slotData: Array<{ level: number, total: number }> = []
+      if (Array.isArray(s.spell_slots)) {
+        s.spell_slots.forEach((total: number, index: number) => {
+          if (total > 0) {
+            slotData.push({ level: index + 1, total })
+          }
+        })
+      } else if (s.spell_slots && typeof s.spell_slots === 'object') {
+        Object.entries(s.spell_slots as Record<string, number>).forEach(([level, total]) => {
+          if (total > 0) {
+            slotData.push({ level: parseInt(level), total })
+          }
+        })
+      }
+
+      playStateStore.initializeSpellSlots(slotData)
+      playStateStore.initializeSpellPreparation({
+        spells: sp,
+        preparationLimit: s.preparation_limit ?? null
+      })
+    }
   }
 }, { immediate: true })
 
@@ -232,9 +257,11 @@ const isSpellcaster = computed(() => !!stats.value?.spellcasting)
 
         <template #spells>
           <CharacterSheetSpellsPanel
-            v-if="stats.spellcasting"
+            v-if="stats.spellcasting && character"
             :spells="spells"
             :stats="stats"
+            :character-id="character.id"
+            :editable="canEdit"
           />
         </template>
 
