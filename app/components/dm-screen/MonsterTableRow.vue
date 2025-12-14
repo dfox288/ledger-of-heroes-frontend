@@ -16,11 +16,11 @@ const props = withDefaults(defineProps<Props>(), {
 })
 
 const emit = defineEmits<{
-  toggle: []
+  'toggle': []
   'update:hp': [value: number]
   'update:label': [value: string]
   'update:initiative': [value: number]
-  remove: []
+  'remove': []
 }>()
 
 // Initiative editing state
@@ -205,7 +205,10 @@ function increaseHp(event: Event) {
     @click="emit('toggle')"
   >
     <!-- Label + CR -->
-    <td class="py-3 px-4" @click.stop>
+    <td
+      class="py-3 px-4"
+      @click.stop
+    >
       <div class="flex items-center gap-2">
         <span
           v-if="isCurrentTurn"
@@ -234,7 +237,11 @@ function increaseHp(event: Event) {
             >
               {{ monster.label }}
             </button>
-            <UBadge color="monster" variant="subtle" size="md">
+            <UBadge
+              color="monster"
+              variant="subtle"
+              size="md"
+            >
               CR {{ monster.monster.challenge_rating }}
             </UBadge>
           </div>
@@ -316,7 +323,12 @@ function increaseHp(event: Event) {
 
     <!-- AC -->
     <td class="py-3 px-4 text-center">
-      <UBadge color="monster" variant="subtle" size="lg" class="font-mono font-bold">
+      <UBadge
+        color="monster"
+        variant="subtle"
+        size="lg"
+        class="font-mono font-bold"
+      >
         {{ monster.monster.armor_class }}
       </UBadge>
     </td>

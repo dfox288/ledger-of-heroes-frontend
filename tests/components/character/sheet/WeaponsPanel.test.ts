@@ -1,5 +1,5 @@
 // tests/components/character/sheet/WeaponsPanel.test.ts
-import { describe, it, expect, beforeEach } from 'vitest'
+import { describe, it, expect } from 'vitest'
 import { mountSuspended } from '@nuxt/test-utils/runtime'
 import WeaponsPanel from '~/components/character/sheet/WeaponsPanel.vue'
 import type { CharacterWeapon, AbilityScoreCode } from '~/types/character'

@@ -116,7 +116,9 @@ watch(() => props.open, (isOpen) => {
         >
           <div class="flex justify-between items-start">
             <div>
-              <div class="font-medium">{{ selectedMonster.name }}</div>
+              <div class="font-medium">
+                {{ selectedMonster.name }}
+              </div>
               <div class="text-sm text-neutral-500">
                 CR {{ selectedMonster.challenge_rating }} ·
                 HP {{ selectedMonster.hit_points_average }} ·
@@ -168,7 +170,9 @@ watch(() => props.open, (isOpen) => {
             class="p-3 rounded-lg border border-neutral-200 dark:border-neutral-700 cursor-pointer hover:border-primary-500 hover:bg-neutral-50 dark:hover:bg-neutral-800 transition-colors"
             @click="selectMonster(monster)"
           >
-            <div class="font-medium">{{ monster.name }}</div>
+            <div class="font-medium">
+              {{ monster.name }}
+            </div>
             <div class="text-sm text-neutral-500">
               CR {{ monster.challenge_rating }} ·
               HP {{ monster.hit_points_average }} ·

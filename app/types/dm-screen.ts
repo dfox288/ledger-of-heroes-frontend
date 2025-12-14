@@ -174,6 +174,6 @@ export interface EncounterMonster {
 }
 
 // Combatant union type for initiative tracking
-export type Combatant =
-  | { type: 'character'; key: string; data: DmScreenCharacter }
-  | { type: 'monster'; key: string; data: EncounterMonster }
+export type Combatant
+  = | { type: 'character', key: string, data: DmScreenCharacter }
+    | { type: 'monster', key: string, data: EncounterMonster }

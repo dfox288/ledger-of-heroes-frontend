@@ -95,7 +95,7 @@ export const partyHandlers = [
 
   // Add monster(s) to encounter
   http.post('/api/parties/:id/monsters', async ({ request }) => {
-    const body = await request.json() as { monster_id: number; quantity: number }
+    const body = await request.json() as { monster_id: number, quantity: number }
     const quantity = body.quantity || 1
 
     // Select template based on monster_id (simplified mock logic)
@@ -121,7 +121,7 @@ export const partyHandlers = [
   // Update monster instance (HP, label)
   http.patch('/api/parties/:id/monsters/:monsterId', async ({ params, request }) => {
     const monsterId = Number(params.monsterId)
-    const body = await request.json() as { current_hp?: number; label?: string }
+    const body = await request.json() as { current_hp?: number, label?: string }
 
     const monster = mockEncounterMonsters.find(m => m.id === monsterId)
     if (!monster) {
