@@ -124,11 +124,13 @@ async function finishWizard() {
         :push-drag-lift="stats?.push_drag_lift"
       />
 
-      <!-- Spells (conditional) -->
+      <!-- Spells (conditional) - read-only in review mode -->
       <CharacterSheetSpellsPanel
-        v-if="stats.spellcasting"
+        v-if="stats.spellcasting && character"
         :spells="spells"
         :stats="stats"
+        :character-id="character.id"
+        :editable="false"
       />
 
       <!-- Features -->

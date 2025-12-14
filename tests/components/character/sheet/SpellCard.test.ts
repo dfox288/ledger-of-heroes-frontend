@@ -1,7 +1,20 @@
 // tests/components/character/sheet/SpellCard.test.ts
-import { describe, it, expect } from 'vitest'
+/**
+ * SpellCard Component Tests
+ *
+ * Tests the expandable spell card component including:
+ * - Collapsed/expanded states
+ * - Preparation toggle (click card body to prepare/unprepare)
+ * - Greyed out states when at prep limit
+ *
+ * @see Issue #556 - Spells Tab
+ * @see Issue #616 - Spell preparation toggle
+ */
+import { describe, it, expect, vi } from 'vitest'
 import { mountSuspended } from '@nuxt/test-utils/runtime'
+import { setActivePinia, createPinia } from 'pinia'
 import SpellCard from '~/components/character/sheet/SpellCard.vue'
+import { useCharacterPlayStateStore } from '~/stores/characterPlayState'
 import type { CharacterSpell } from '~/types/character'
 
 // Mock spell data
@@ -195,12 +208,12 @@ describe('SpellCard', () => {
       expect(wrapper.text()).not.toContain('Casting Time')
     })
 
-    it('expands when clicked', async () => {
+    it('expands when expand toggle is clicked', async () => {
       const wrapper = await mountSuspended(SpellCard, {
         props: { spell: mockLeveledSpell }
       })
 
-      await wrapper.find('[data-testid="spell-card"]').trigger('click')
+      await wrapper.find('[data-testid="expand-toggle"]').trigger('click')
 
       expect(wrapper.text()).toContain('Casting Time')
       expect(wrapper.text()).toContain('1 action')
@@ -211,7 +224,7 @@ describe('SpellCard', () => {
         props: { spell: mockLeveledSpell }
       })
 
-      await wrapper.find('[data-testid="spell-card"]').trigger('click')
+      await wrapper.find('[data-testid="expand-toggle"]').trigger('click')
 
       expect(wrapper.text()).toContain('Range')
       expect(wrapper.text()).toContain('150 feet')
@@ -222,7 +235,7 @@ describe('SpellCard', () => {
         props: { spell: mockLeveledSpell }
       })
 
-      await wrapper.find('[data-testid="spell-card"]').trigger('click')
+      await wrapper.find('[data-testid="expand-toggle"]').trigger('click')
 
       expect(wrapper.text()).toContain('Components')
       expect(wrapper.text()).toContain('V, S, M')
@@ -233,7 +246,7 @@ describe('SpellCard', () => {
         props: { spell: mockLeveledSpell }
       })
 
-      await wrapper.find('[data-testid="spell-card"]').trigger('click')
+      await wrapper.find('[data-testid="expand-toggle"]').trigger('click')
 
       expect(wrapper.text()).toContain('Duration')
       expect(wrapper.text()).toContain('Instantaneous')
@@ -244,9 +257,9 @@ describe('SpellCard', () => {
         props: { spell: mockLeveledSpell }
       })
 
-      const card = wrapper.find('[data-testid="spell-card"]')
-      await card.trigger('click') // Expand
-      await card.trigger('click') // Collapse
+      const toggle = wrapper.find('[data-testid="expand-toggle"]')
+      await toggle.trigger('click') // Expand
+      await toggle.trigger('click') // Collapse
 
       expect(wrapper.text()).not.toContain('Casting Time')
     })
@@ -258,6 +271,180 @@ describe('SpellCard', () => {
         props: { spell: mockLeveledSpell }
       })
       expect(wrapper.text()).toContain('Evocation')
+    })
+  })
+
+  // ==========================================================================
+  // PREPARATION TOGGLE TESTS (Issue #616)
+  // ==========================================================================
+
+  describe('preparation toggle', () => {
+    let pinia: ReturnType<typeof createPinia>
+
+    function setupStore() {
+      pinia = createPinia()
+      setActivePinia(pinia)
+      return useCharacterPlayStateStore()
+    }
+
+    function getMountOptions() {
+      return {
+        global: {
+          plugins: [pinia]
+        }
+      }
+    }
+
+    it('clicking card body toggles preparation when editable', async () => {
+      const store = setupStore()
+      store.initialize({
+        characterId: 1,
+        isDead: false,
+        hitPoints: { current: 10, max: 10, temporary: 0 },
+        deathSaves: { successes: 0, failures: 0 },
+        currency: { pp: 0, gp: 0, ep: 0, sp: 0, cp: 0 }
+      })
+      store.initializeSpellPreparation({
+        spells: [{ id: mockLeveledSpell.id, is_prepared: true, is_always_prepared: false }],
+        preparationLimit: 5
+      })
+
+      const toggleSpy = vi.spyOn(store, 'toggleSpellPreparation').mockResolvedValue()
+
+      const wrapper = await mountSuspended(SpellCard, {
+        props: {
+          spell: mockLeveledSpell,
+          characterId: 1,
+          editable: true,
+          atPrepLimit: false
+        },
+        ...getMountOptions()
+      })
+
+      // Click the card body (not the expand button)
+      await wrapper.find('[data-testid="spell-card-body"]').trigger('click')
+
+      expect(toggleSpy).toHaveBeenCalledWith(mockLeveledSpell.id, true)
+    })
+
+    it('clicking expand chevron expands details without toggling preparation', async () => {
+      const store = setupStore()
+      store.initialize({
+        characterId: 1,
+        isDead: false,
+        hitPoints: { current: 10, max: 10, temporary: 0 },
+        deathSaves: { successes: 0, failures: 0 },
+        currency: { pp: 0, gp: 0, ep: 0, sp: 0, cp: 0 }
+      })
+      const toggleSpy = vi.spyOn(store, 'toggleSpellPreparation')
+
+      const wrapper = await mountSuspended(SpellCard, {
+        props: {
+          spell: mockLeveledSpell,
+          characterId: 1,
+          editable: true,
+          atPrepLimit: false
+        },
+        ...getMountOptions()
+      })
+
+      await wrapper.find('[data-testid="expand-toggle"]').trigger('click')
+
+      expect(toggleSpy).not.toHaveBeenCalled()
+      expect(wrapper.find('[data-testid="spell-details"]').exists()).toBe(true)
+    })
+
+    it('card is greyed out and not clickable when at prep limit and unprepared', async () => {
+      const store = setupStore()
+      const toggleSpy = vi.spyOn(store, 'toggleSpellPreparation')
+
+      const unpreparedSpell = { ...mockLeveledSpell, is_prepared: false, preparation_status: 'known' as const }
+
+      const wrapper = await mountSuspended(SpellCard, {
+        props: {
+          spell: unpreparedSpell,
+          characterId: 1,
+          editable: true,
+          atPrepLimit: true
+        },
+        ...getMountOptions()
+      })
+
+      await wrapper.find('[data-testid="spell-card-body"]').trigger('click')
+
+      expect(toggleSpy).not.toHaveBeenCalled()
+      // Check for greyed out state (opacity-40)
+      const card = wrapper.find('[data-testid="spell-card"]')
+      expect(card.classes().join(' ')).toMatch(/opacity-40/)
+    })
+
+    it('always-prepared spells cannot be toggled', async () => {
+      const store = setupStore()
+      const toggleSpy = vi.spyOn(store, 'toggleSpellPreparation')
+
+      const wrapper = await mountSuspended(SpellCard, {
+        props: {
+          spell: mockAlwaysPreparedSpell,
+          characterId: 1,
+          editable: true,
+          atPrepLimit: false
+        },
+        ...getMountOptions()
+      })
+
+      await wrapper.find('[data-testid="spell-card-body"]').trigger('click')
+
+      expect(toggleSpy).not.toHaveBeenCalled()
+    })
+
+    it('does not toggle when editable is false', async () => {
+      const store = setupStore()
+      const toggleSpy = vi.spyOn(store, 'toggleSpellPreparation')
+
+      const wrapper = await mountSuspended(SpellCard, {
+        props: {
+          spell: mockLeveledSpell,
+          characterId: 1,
+          editable: false,
+          atPrepLimit: false
+        },
+        ...getMountOptions()
+      })
+
+      await wrapper.find('[data-testid="spell-card-body"]').trigger('click')
+
+      expect(toggleSpy).not.toHaveBeenCalled()
+    })
+
+    it('prepared spells can be unprepared even at prep limit', async () => {
+      const store = setupStore()
+      store.initialize({
+        characterId: 1,
+        isDead: false,
+        hitPoints: { current: 10, max: 10, temporary: 0 },
+        deathSaves: { successes: 0, failures: 0 },
+        currency: { pp: 0, gp: 0, ep: 0, sp: 0, cp: 0 }
+      })
+      store.initializeSpellPreparation({
+        spells: [{ id: mockLeveledSpell.id, is_prepared: true, is_always_prepared: false }],
+        preparationLimit: 1
+      })
+
+      const toggleSpy = vi.spyOn(store, 'toggleSpellPreparation').mockResolvedValue()
+
+      const wrapper = await mountSuspended(SpellCard, {
+        props: {
+          spell: mockLeveledSpell,
+          characterId: 1,
+          editable: true,
+          atPrepLimit: true
+        },
+        ...getMountOptions()
+      })
+
+      await wrapper.find('[data-testid="spell-card-body"]').trigger('click')
+
+      expect(toggleSpy).toHaveBeenCalledWith(mockLeveledSpell.id, true)
     })
   })
 })

@@ -536,6 +536,198 @@ describe('characterPlayState store', () => {
   })
 
   // ===========================================================================
+  // SPELL SLOT TRACKING
+  // ===========================================================================
+
+  describe('spell slot tracking', () => {
+    beforeEach(() => {
+      setActivePinia(createPinia())
+    })
+
+    it('initializes spell slots from stats', () => {
+      const store = useCharacterPlayStateStore()
+      store.initializeSpellSlots([
+        { level: 1, total: 4 },
+        { level: 2, total: 3 }
+      ])
+
+      expect(store.getSlotState(1)).toEqual({ total: 4, spent: 0, available: 4 })
+      expect(store.getSlotState(2)).toEqual({ total: 3, spent: 0, available: 3 })
+    })
+
+    it('useSpellSlot increments spent count', async () => {
+      const store = useCharacterPlayStateStore()
+      store.initialize({
+        characterId: 1,
+        isDead: false,
+        hitPoints: { current: 10, max: 10, temporary: 0 },
+        deathSaves: { successes: 0, failures: 0 },
+        currency: { pp: 0, gp: 0, ep: 0, sp: 0, cp: 0 }
+      })
+      store.initializeSpellSlots([{ level: 1, total: 4 }])
+
+      // Mock API call
+      vi.spyOn(store, 'useSpellSlot').mockImplementation(async (level) => {
+        store.spellSlots.set(level, { total: 4, spent: 1, slotType: 'standard' })
+      })
+
+      await store.useSpellSlot(1)
+
+      expect(store.getSlotState(1).spent).toBe(1)
+      expect(store.getSlotState(1).available).toBe(3)
+    })
+
+    it('restoreSpellSlot decrements spent count', async () => {
+      const store = useCharacterPlayStateStore()
+      store.initialize({
+        characterId: 1,
+        isDead: false,
+        hitPoints: { current: 10, max: 10, temporary: 0 },
+        deathSaves: { successes: 0, failures: 0 },
+        currency: { pp: 0, gp: 0, ep: 0, sp: 0, cp: 0 }
+      })
+      store.initializeSpellSlots([{ level: 1, total: 4 }])
+      store.spellSlots.set(1, { total: 4, spent: 2, slotType: 'standard' })
+
+      vi.spyOn(store, 'restoreSpellSlot').mockImplementation(async (level) => {
+        store.spellSlots.set(level, { total: 4, spent: 1, slotType: 'standard' })
+      })
+
+      await store.restoreSpellSlot(1)
+
+      expect(store.getSlotState(1).spent).toBe(1)
+      expect(store.getSlotState(1).available).toBe(3)
+    })
+
+    it('cannot use slot when none available', () => {
+      const store = useCharacterPlayStateStore()
+      store.initializeSpellSlots([{ level: 1, total: 2 }])
+      store.spellSlots.set(1, { total: 2, spent: 2, slotType: 'standard' })
+
+      expect(store.canUseSlot(1)).toBe(false)
+    })
+
+    it('cannot restore slot when none spent', () => {
+      const store = useCharacterPlayStateStore()
+      store.initializeSpellSlots([{ level: 1, total: 2 }])
+
+      expect(store.canRestoreSlot(1)).toBe(false)
+    })
+  })
+
+  // ===========================================================================
+  // SPELL PREPARATION TRACKING
+  // ===========================================================================
+
+  describe('spell preparation tracking', () => {
+    beforeEach(() => {
+      setActivePinia(createPinia())
+    })
+
+    it('initializes prepared spell IDs from spells array', () => {
+      const store = useCharacterPlayStateStore()
+      store.initializeSpellPreparation({
+        spells: [
+          { id: 1, is_prepared: true, is_always_prepared: false },
+          { id: 2, is_prepared: false, is_always_prepared: false },
+          { id: 3, is_prepared: true, is_always_prepared: true }
+        ] as any[],
+        preparationLimit: 5
+      })
+
+      expect(store.preparedSpellIds.has(1)).toBe(true)
+      expect(store.preparedSpellIds.has(2)).toBe(false)
+      expect(store.preparedSpellIds.has(3)).toBe(true)
+      expect(store.preparedSpellCount).toBe(2)
+    })
+
+    it('atPreparationLimit returns true when at limit', () => {
+      const store = useCharacterPlayStateStore()
+      store.initializeSpellPreparation({
+        spells: [
+          { id: 1, is_prepared: true, is_always_prepared: false },
+          { id: 2, is_prepared: true, is_always_prepared: false }
+        ] as any[],
+        preparationLimit: 2
+      })
+
+      expect(store.atPreparationLimit).toBe(true)
+    })
+
+    it('atPreparationLimit returns false when under limit', () => {
+      const store = useCharacterPlayStateStore()
+      store.initializeSpellPreparation({
+        spells: [
+          { id: 1, is_prepared: true, is_always_prepared: false }
+        ] as any[],
+        preparationLimit: 5
+      })
+
+      expect(store.atPreparationLimit).toBe(false)
+    })
+
+    it('atPreparationLimit returns false when no limit (known casters)', () => {
+      const store = useCharacterPlayStateStore()
+      store.initializeSpellPreparation({
+        spells: [
+          { id: 1, is_prepared: true, is_always_prepared: false }
+        ] as any[],
+        preparationLimit: null
+      })
+
+      expect(store.atPreparationLimit).toBe(false)
+    })
+
+    it('toggleSpellPreparation prepares an unprepared spell', async () => {
+      const store = useCharacterPlayStateStore()
+      store.initialize({
+        characterId: 1,
+        isDead: false,
+        hitPoints: { current: 10, max: 10, temporary: 0 },
+        deathSaves: { successes: 0, failures: 0 },
+        currency: { pp: 0, gp: 0, ep: 0, sp: 0, cp: 0 }
+      })
+      store.initializeSpellPreparation({
+        spells: [{ id: 42, is_prepared: false, is_always_prepared: false }] as any[],
+        preparationLimit: 5
+      })
+
+      vi.spyOn(store, 'toggleSpellPreparation').mockImplementation(async (id, current) => {
+        if (!current) store.preparedSpellIds.add(id)
+        else store.preparedSpellIds.delete(id)
+      })
+
+      await store.toggleSpellPreparation(42, false)
+
+      expect(store.preparedSpellIds.has(42)).toBe(true)
+    })
+
+    it('toggleSpellPreparation unprepares a prepared spell', async () => {
+      const store = useCharacterPlayStateStore()
+      store.initialize({
+        characterId: 1,
+        isDead: false,
+        hitPoints: { current: 10, max: 10, temporary: 0 },
+        deathSaves: { successes: 0, failures: 0 },
+        currency: { pp: 0, gp: 0, ep: 0, sp: 0, cp: 0 }
+      })
+      store.initializeSpellPreparation({
+        spells: [{ id: 42, is_prepared: true, is_always_prepared: false }] as any[],
+        preparationLimit: 5
+      })
+
+      vi.spyOn(store, 'toggleSpellPreparation').mockImplementation(async (id, current) => {
+        if (!current) store.preparedSpellIds.add(id)
+        else store.preparedSpellIds.delete(id)
+      })
+
+      await store.toggleSpellPreparation(42, true)
+
+      expect(store.preparedSpellIds.has(42)).toBe(false)
+    })
+  })
+
+  // ===========================================================================
   // RESET
   // ===========================================================================
 

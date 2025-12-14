@@ -1,11 +1,28 @@
 <!-- app/components/character/sheet/SpellsPanel.vue -->
 <script setup lang="ts">
+/**
+ * Spells Panel
+ *
+ * Displays character's spellcasting stats, spell slots, and spell lists.
+ * Integrates with characterPlayStateStore for interactive spell slots
+ * and preparation toggling.
+ *
+ * @see Issue #556 - Spells Tab
+ * @see Issue #616 - Spell slot tracking
+ */
+import { storeToRefs } from 'pinia'
 import type { CharacterSpell, CharacterStats } from '~/types/character'
+import { useCharacterPlayStateStore } from '~/stores/characterPlayState'
 
 const props = defineProps<{
   spells: CharacterSpell[]
   stats: CharacterStats
+  characterId: number
+  editable: boolean
 }>()
+
+const store = useCharacterPlayStateStore()
+const { atPreparationLimit } = storeToRefs(store)
 
 // Filter out dangling spell references (sourcebook removed)
 const validSpells = computed(() => props.spells.filter(s => s.spell !== null))
@@ -58,10 +75,11 @@ function formatModifier(value: number): string {
       Prepared: {{ stats.prepared_spell_count }} / {{ stats.preparation_limit }}
     </div>
 
-    <!-- Spell Slots -->
-    <CharacterSheetSpellSlots
+    <!-- Interactive Spell Slots Manager -->
+    <CharacterSheetSpellSlotsManager
       v-if="stats.spell_slots && (Array.isArray(stats.spell_slots) ? stats.spell_slots.some(s => s > 0) : Object.values(stats.spell_slots).some(s => s > 0))"
-      :spell-slots="stats.spell_slots"
+      :character-id="characterId"
+      :editable="editable"
     />
 
     <!-- Cantrips -->
@@ -86,6 +104,9 @@ function formatModifier(value: number): string {
     <CharacterSheetSpellsByLevel
       v-if="leveledSpells.length > 0"
       :spells="leveledSpells"
+      :character-id="characterId"
+      :editable="editable"
+      :at-prep-limit="atPreparationLimit"
     />
 
     <div

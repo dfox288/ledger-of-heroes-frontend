@@ -370,6 +370,30 @@ export interface CharacterSpellSlots {
 }
 
 /**
+ * Spell slot state for play mode tracking
+ * Tracks both total and spent for each level
+ */
+export interface SpellSlotState {
+  level: number
+  total: number
+  spent: number
+  slotType: 'standard' | 'pact_magic'
+}
+
+/**
+ * API response from PATCH spell-slots endpoint
+ */
+export interface SpellSlotUpdateResponse {
+  data: {
+    level: number
+    total: number
+    spent: number
+    available: number
+    slot_type: 'standard' | 'pact_magic'
+  }
+}
+
+/**
  * Skill with computed modifier for character sheet display
  */
 export interface CharacterSkill {

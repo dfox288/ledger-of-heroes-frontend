@@ -109,10 +109,21 @@ export const useCharacterPlayStateStore = defineStore('characterPlayState', () =
     cp: 0
   })
 
+  /** Spell slots state - tracks total and spent for each level */
+  const spellSlots = ref(new Map<number, { total: number, spent: number, slotType: 'standard' | 'pact_magic' }>())
+
+  /** Spell preparation state - tracks which spells are prepared */
+  const preparedSpellIds = ref(new Set<number>())
+
+  /** Preparation limit for prepared casters (null for known casters) */
+  const preparationLimit = ref<number | null>(null)
+
   /** Loading flags to prevent race conditions */
   const isUpdatingHp = ref(false)
   const isUpdatingCurrency = ref(false)
   const isUpdatingDeathSaves = ref(false)
+  const isUpdatingSpellSlot = ref(false)
+  const isUpdatingSpellPreparation = ref(false)
 
   // ===========================================================================
   // COMPUTED
@@ -120,6 +131,67 @@ export const useCharacterPlayStateStore = defineStore('characterPlayState', () =
 
   /** Can the user interact with the character? (play mode ON and not dead) */
   const canEdit = computed(() => isPlayMode.value && !isDead.value)
+
+  // ===========================================================================
+  // SPELL SLOT GETTERS
+  // ===========================================================================
+
+  /**
+   * Get spell slot state for a given level
+   */
+  function getSlotState(level: number): { total: number, spent: number, available: number } {
+    const slot = spellSlots.value.get(level)
+    if (!slot) return { total: 0, spent: 0, available: 0 }
+    return {
+      total: slot.total,
+      spent: slot.spent,
+      available: slot.total - slot.spent
+    }
+  }
+
+  /**
+   * Check if a slot can be used (has available slots)
+   */
+  function canUseSlot(level: number): boolean {
+    const slot = spellSlots.value.get(level)
+    return slot ? slot.spent < slot.total : false
+  }
+
+  /**
+   * Check if a slot can be restored (has spent slots)
+   */
+  function canRestoreSlot(level: number): boolean {
+    const slot = spellSlots.value.get(level)
+    return slot ? slot.spent > 0 : false
+  }
+
+  // ===========================================================================
+  // SPELL PREPARATION GETTERS
+  // ===========================================================================
+
+  /**
+   * Get count of prepared spells
+   */
+  const preparedSpellCount = computed(() => {
+    return preparedSpellIds.value.size
+  })
+
+  /**
+   * Check if character is at preparation limit
+   *
+   * Returns false for known casters (limit is null)
+   */
+  const atPreparationLimit = computed(() => {
+    if (preparationLimit.value === null) return false
+    return preparedSpellIds.value.size >= preparationLimit.value
+  })
+
+  /**
+   * Check if a spell is prepared
+   */
+  function isSpellPrepared(characterSpellId: number): boolean {
+    return preparedSpellIds.value.has(characterSpellId)
+  }
 
   // ===========================================================================
   // PLAY MODE
@@ -396,35 +468,215 @@ export const useCharacterPlayStateStore = defineStore('characterPlayState', () =
   }
 
   // ===========================================================================
+  // SPELL SLOT ACTIONS
+  // ===========================================================================
+
+  /**
+   * Initialize spell slots from character stats
+   *
+   * Call this when character data loads
+   */
+  function initializeSpellSlots(slots: Array<{ level: number, total: number }>) {
+    spellSlots.value.clear()
+    for (const slot of slots) {
+      spellSlots.value.set(slot.level, {
+        total: slot.total,
+        spent: 0,
+        slotType: 'standard'
+      })
+    }
+  }
+
+  /**
+   * Use a spell slot (optimistic update)
+   *
+   * Increments spent count, calls API, reverts on error
+   */
+  async function useSpellSlot(level: number): Promise<void> {
+    if (!canUseSlot(level) || !characterId.value || isUpdatingSpellSlot.value) return
+
+    const slot = spellSlots.value.get(level)
+    if (!slot) return
+
+    isUpdatingSpellSlot.value = true
+
+    // Optimistic update
+    const previousSpent = slot.spent
+    slot.spent += 1
+    spellSlots.value.set(level, { ...slot })
+
+    try {
+      await apiFetch(`/characters/${characterId.value}/spell-slots/${level}`, {
+        method: 'PATCH',
+        body: { action: 'use' }
+      })
+    } catch (error) {
+      // Revert on failure
+      slot.spent = previousSpent
+      spellSlots.value.set(level, { ...slot })
+      throw error
+    } finally {
+      isUpdatingSpellSlot.value = false
+    }
+  }
+
+  /**
+   * Restore a spell slot (optimistic update)
+   *
+   * Decrements spent count, calls API, reverts on error
+   */
+  async function restoreSpellSlot(level: number): Promise<void> {
+    if (!canRestoreSlot(level) || !characterId.value || isUpdatingSpellSlot.value) return
+
+    const slot = spellSlots.value.get(level)
+    if (!slot) return
+
+    isUpdatingSpellSlot.value = true
+
+    // Optimistic update
+    const previousSpent = slot.spent
+    slot.spent -= 1
+    spellSlots.value.set(level, { ...slot })
+
+    try {
+      await apiFetch(`/characters/${characterId.value}/spell-slots/${level}`, {
+        method: 'PATCH',
+        body: { action: 'restore' }
+      })
+    } catch (error) {
+      // Revert on failure
+      slot.spent = previousSpent
+      spellSlots.value.set(level, { ...slot })
+      throw error
+    } finally {
+      isUpdatingSpellSlot.value = false
+    }
+  }
+
+  /**
+   * Reset all spell slots to 0 spent
+   *
+   * Called during long rest (backend handles persistence)
+   */
+  async function resetSpellSlots(): Promise<void> {
+    if (!characterId.value) return
+
+    // Reset all slots to 0 spent
+    for (const [level, slot] of spellSlots.value) {
+      spellSlots.value.set(level, { ...slot, spent: 0 })
+    }
+
+    // Note: Long rest endpoint handles this on backend
+  }
+
+  // ===========================================================================
+  // SPELL PREPARATION ACTIONS
+  // ===========================================================================
+
+  /**
+   * Initialize spell preparation state from character data
+   *
+   * Call this when character spells load
+   */
+  function initializeSpellPreparation(data: {
+    spells: Array<{ id: number, is_prepared: boolean, is_always_prepared: boolean }>
+    preparationLimit: number | null
+  }) {
+    preparedSpellIds.value.clear()
+    preparationLimit.value = data.preparationLimit
+
+    for (const spell of data.spells) {
+      if (spell.is_prepared || spell.is_always_prepared) {
+        preparedSpellIds.value.add(spell.id)
+      }
+    }
+  }
+
+  /**
+   * Toggle spell preparation (optimistic update)
+   *
+   * Checks preparation limit before preparing a spell
+   */
+  async function toggleSpellPreparation(characterSpellId: number, currentlyPrepared: boolean): Promise<void> {
+    if (!characterId.value || isUpdatingSpellPreparation.value) return
+
+    const newPreparedState = !currentlyPrepared
+
+    // Check limit when preparing
+    if (newPreparedState && atPreparationLimit.value) {
+      throw new Error('Preparation limit reached')
+    }
+
+    isUpdatingSpellPreparation.value = true
+
+    // Optimistic update
+    if (newPreparedState) {
+      preparedSpellIds.value.add(characterSpellId)
+    } else {
+      preparedSpellIds.value.delete(characterSpellId)
+    }
+
+    try {
+      await apiFetch(`/characters/${characterId.value}/spells/${characterSpellId}`, {
+        method: 'PATCH',
+        body: { is_prepared: newPreparedState }
+      })
+    } catch (error) {
+      // Revert on failure
+      if (newPreparedState) {
+        preparedSpellIds.value.delete(characterSpellId)
+      } else {
+        preparedSpellIds.value.add(characterSpellId)
+      }
+      throw error
+    } finally {
+      isUpdatingSpellPreparation.value = false
+    }
+  }
+
+  // ===========================================================================
   // RESET
   // ===========================================================================
 
   /**
    * Reset store to initial state
    *
-   * Call this when leaving the character page
+   * Call this when leaving the character page.
+   * Loading flags reset first to ensure clean state if navigating away mid-request.
    */
   function $reset() {
+    // Reset loading flags first (prevents stale loading state if navigating mid-request)
+    isUpdatingHp.value = false
+    isUpdatingCurrency.value = false
+    isUpdatingDeathSaves.value = false
+    isUpdatingSpellSlot.value = false
+    isUpdatingSpellPreparation.value = false
+
+    // Reset identity/mode
     characterId.value = null
     isPlayMode.value = false
     isDead.value = false
 
+    // Reset HP
     hitPoints.current = 0
     hitPoints.max = 0
     hitPoints.temporary = 0
 
+    // Reset death saves
     deathSaves.successes = 0
     deathSaves.failures = 0
 
+    // Reset currency
     currency.pp = 0
     currency.gp = 0
     currency.ep = 0
     currency.sp = 0
     currency.cp = 0
 
-    isUpdatingHp.value = false
-    isUpdatingCurrency.value = false
-    isUpdatingDeathSaves.value = false
+    // Reset spell state
+    spellSlots.value.clear()
+    preparedSpellIds.value.clear()
+    preparationLimit.value = null
   }
 
   // ===========================================================================
@@ -439,12 +691,25 @@ export const useCharacterPlayStateStore = defineStore('characterPlayState', () =
     hitPoints,
     deathSaves,
     currency,
+    spellSlots,
+    preparedSpellIds,
+    preparationLimit,
     isUpdatingHp,
     isUpdatingCurrency,
     isUpdatingDeathSaves,
+    isUpdatingSpellSlot,
+    isUpdatingSpellPreparation,
 
     // Computed
     canEdit,
+    preparedSpellCount,
+    atPreparationLimit,
+
+    // Getters
+    getSlotState,
+    canUseSlot,
+    canRestoreSlot,
+    isSpellPrepared,
 
     // Actions
     initialize,
@@ -455,6 +720,12 @@ export const useCharacterPlayStateStore = defineStore('characterPlayState', () =
     clearTempHp,
     updateCurrency,
     updateDeathSaves,
+    initializeSpellSlots,
+    useSpellSlot,
+    restoreSpellSlot,
+    resetSpellSlots,
+    initializeSpellPreparation,
+    toggleSpellPreparation,
     $reset
   }
 })
