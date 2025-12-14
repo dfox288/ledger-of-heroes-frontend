@@ -38,11 +38,14 @@ const isShopOpen = ref(false)
 const isItemDetailOpen = ref(false)
 const isSellModalOpen = ref(false)
 const isEditQtyModalOpen = ref(false)
+const isDropConfirmOpen = ref(false)
 const selectedItem = ref<CharacterEquipment | null>(null)
+const itemToDrop = ref<CharacterEquipment | null>(null)
 const isAddingItem = ref(false)
 const isPurchasing = ref(false)
 const isSelling = ref(false)
 const isUpdatingQty = ref(false)
+const isDropping = ref(false)
 
 // Slot picker modal state
 const isSlotPickerOpen = ref(false)
@@ -265,14 +268,28 @@ function handleSell(itemId: number) {
   isSellModalOpen.value = true
 }
 
-async function handleDrop(itemId: number) {
+function handleDrop(itemId: number) {
+  const item = equipment.value.find(e => e.id === itemId)
+  if (!item) return
+  itemToDrop.value = item
+  isDropConfirmOpen.value = true
+}
+
+async function handleDropConfirm() {
+  if (!itemToDrop.value) return
+
+  isDropping.value = true
   try {
-    await dropItem(itemId)
+    await dropItem(itemToDrop.value.id)
     toast.add({ title: 'Item dropped', color: 'success' })
+    isDropConfirmOpen.value = false
+    itemToDrop.value = null
     await refreshEquipment()
   } catch (error) {
     logger.error('Failed to drop item:', error)
     toast.add({ title: 'Failed to drop item', color: 'error' })
+  } finally {
+    isDropping.value = false
   }
 }
 
@@ -605,6 +622,15 @@ useSeoMeta({
       :loading="isUpdatingQty"
       @update:open="isEditQtyModalOpen = $event"
       @update-quantity="handleEditQtyConfirm"
+    />
+
+    <!-- Drop Confirmation Modal -->
+    <CharacterInventoryDropConfirmModal
+      :open="isDropConfirmOpen"
+      :item-name="itemToDrop?.custom_name || (itemToDrop?.item as any)?.name || 'Item'"
+      :loading="isDropping"
+      @update:open="isDropConfirmOpen = $event"
+      @confirm="handleDropConfirm"
     />
 
     <!-- Slot Picker Modal -->
