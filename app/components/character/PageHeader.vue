@@ -208,11 +208,10 @@ function handleLevelUpClick() {
 }
 
 // ============================================================================
-// Add Condition Modal (self-contained)
+// Add Condition Modal (uses store)
 // ============================================================================
 
 const showAddConditionModal = ref(false)
-const isAddingCondition = ref(false)
 
 // Fetch available conditions
 const { data: availableConditions } = useReferenceData<Condition>('/conditions')
@@ -222,21 +221,11 @@ function handleAddConditionClick() {
 }
 
 async function handleAddCondition(payload: { condition: string, source: string, duration: string, level?: number }) {
-  if (isAddingCondition.value) return
-  isAddingCondition.value = true
-
-  try {
-    await apiFetch(`/characters/${props.character.id}/conditions`, {
-      method: 'POST',
-      body: payload
-    })
+  const success = await playStateStore.addCondition(payload)
+  if (success) {
     toast.add({ title: 'Condition added', color: 'success' })
-    emit('updated')
-  } catch (err) {
-    logger.error('Failed to add condition:', err)
+  } else {
     toast.add({ title: 'Failed to add condition', color: 'error' })
-  } finally {
-    isAddingCondition.value = false
   }
 }
 

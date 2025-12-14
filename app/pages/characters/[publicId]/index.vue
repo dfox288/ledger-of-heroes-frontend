@@ -27,7 +27,7 @@ const {
   equipment,
   spells,
   languages,
-  conditions,
+  // conditions now come from store
   skills,
   skillAdvantages,
   savingThrows,
@@ -48,9 +48,9 @@ const playStateStore = useCharacterPlayStateStore()
 
 /**
  * Initialize play state store when character, stats, and spells load
- * Store manages HP, death saves, currency, and spellcasting state for play mode
+ * Store manages HP, death saves, currency, spellcasting, and conditions state for play mode
  */
-watch([character, stats, spells], ([char, s, sp]) => {
+watch([character, stats, spells], async ([char, s, sp]) => {
   if (char && s) {
     playStateStore.initialize({
       characterId: char.id,
@@ -91,6 +91,9 @@ watch([character, stats, spells], ([char, s, sp]) => {
         preparationLimit: s.preparation_limit ?? null
       })
     }
+
+    // Fetch conditions into store
+    await playStateStore.fetchConditions()
   }
 }, { immediate: true })
 
@@ -104,9 +107,9 @@ watch([character, stats, spells], ([char, s, sp]) => {
 
 /**
  * canEdit is now computed in the store (isPlayMode && !isDead)
- * This removes the need for the ref pattern to access PageHeader's isPlayMode
+ * conditions are also managed by the store for reactivity across pages
  */
-const { canEdit } = storeToRefs(playStateStore)
+const { canEdit, conditions } = storeToRefs(playStateStore)
 
 // Validation - check for dangling references when sourcebooks are removed
 const characterId = computed(() => character.value?.id ?? null)
@@ -176,13 +179,10 @@ const isSpellcaster = computed(() => !!stats.value?.spellcasting)
       <!-- Validation Warning - shows when sourcebook content was removed -->
       <CharacterSheetValidationWarning :validation-result="validationResult" />
 
-      <!-- Active Conditions - only shows when character has conditions -->
+      <!-- Active Conditions (from store) - only shows when character has conditions -->
       <CharacterSheetConditionsManager
-        v-if="conditions.length > 0 && character"
-        :conditions="conditions"
-        :character-id="character.id"
+        v-if="conditions.length > 0"
         :editable="canEdit"
-        @refresh="refresh"
       />
 
       <!-- Main Grid: Abilities sidebar + Stats/Skills -->

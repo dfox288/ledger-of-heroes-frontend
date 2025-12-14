@@ -12,7 +12,7 @@
  * @see Issue #554 - Battle Tab implementation
  */
 
-import type { Character, CharacterCondition, CharacterStats, AbilityScoreCode } from '~/types/character'
+import type { Character, CharacterStats, AbilityScoreCode } from '~/types/character'
 import { storeToRefs } from 'pinia'
 import { useCharacterPlayStateStore } from '~/stores/characterPlayState'
 
@@ -20,9 +20,9 @@ const route = useRoute()
 const publicId = computed(() => route.params.publicId as string)
 const { apiFetch } = useApi()
 
-// Play State Store
+// Play State Store (includes conditions)
 const playStateStore = useCharacterPlayStateStore()
-const { canEdit, hitPoints } = storeToRefs(playStateStore)
+const { canEdit, hitPoints, conditions } = storeToRefs(playStateStore)
 
 // Fetch character data
 // Use same cache keys as useCharacterSheet to share data across pages
@@ -37,22 +37,15 @@ const { data: statsData, pending: statsPending } = await useAsyncData(
   () => apiFetch<{ data: CharacterStats }>(`/characters/${publicId.value}/stats`)
 )
 
-// Fetch conditions
-// Shared cache key ensures condition changes sync between battle/overview pages
-const { data: conditionsData, pending: conditionsPending, refresh: refreshConditions } = await useAsyncData(
-  `character-${publicId.value}-conditions`,
-  () => apiFetch<{ data: CharacterCondition[] }>(`/characters/${publicId.value}/conditions`)
-)
-
 // Track initial load vs refresh
 const hasLoadedOnce = ref(false)
 const loading = computed(() => {
   if (hasLoadedOnce.value) return false
-  return characterPending.value || statsPending.value || conditionsPending.value
+  return characterPending.value || statsPending.value
 })
 
 watch(
-  () => !characterPending.value && !statsPending.value && !conditionsPending.value,
+  () => !characterPending.value && !statsPending.value,
   (allLoaded) => {
     if (allLoaded && !hasLoadedOnce.value) {
       hasLoadedOnce.value = true
@@ -63,7 +56,6 @@ watch(
 
 const character = computed(() => characterData.value?.data ?? null)
 const stats = computed(() => statsData.value?.data ?? null)
-const conditions = computed(() => conditionsData.value?.data ?? [])
 const isSpellcaster = computed(() => !!stats.value?.spellcasting)
 
 // Extract ability modifiers for WeaponsPanel
@@ -110,7 +102,8 @@ const isAtZeroHp = computed(() => hitPoints.value.current === 0)
 const showDeathSaves = computed(() => canEdit.value || isAtZeroHp.value)
 
 // Initialize play state store when character and stats load
-watch([character, statsData], ([char, s]) => {
+// Also fetch conditions from store
+watch([character, statsData], async ([char, s]) => {
   if (char && s?.data) {
     playStateStore.initialize({
       characterId: char.id,
@@ -126,25 +119,10 @@ watch([character, statsData], ([char, s]) => {
       },
       currency: char.currency ?? { pp: 0, gp: 0, ep: 0, sp: 0, cp: 0 }
     })
+    // Fetch conditions into store
+    await playStateStore.fetchConditions()
   }
 }, { immediate: true })
-
-// Handle conditions refresh
-// Clear cache first to ensure fresh data when using shared cache keys
-async function handleConditionsRefresh() {
-  clearNuxtData(`character-${publicId.value}-conditions`)
-  await refreshConditions()
-}
-
-// Handle full refresh (character + conditions)
-// Called when PageHeader emits 'updated' (e.g., after adding condition)
-async function handleFullRefresh() {
-  clearNuxtData(`character-${publicId.value}-conditions`)
-  await Promise.all([
-    refreshCharacter(),
-    refreshConditions()
-  ])
-}
 
 useSeoMeta({
   title: () => character.value ? `${character.value.name} - Battle` : 'Battle'
@@ -176,17 +154,14 @@ useSeoMeta({
           :is-spellcaster="isSpellcaster"
           :back-to="`/characters/${publicId}`"
           back-label="Back to Character"
-          @updated="handleFullRefresh"
+          @updated="refreshCharacter"
         />
 
-        <!-- Active Conditions -->
+        <!-- Active Conditions (from store) -->
         <CharacterSheetConditionsManager
           v-if="conditions.length > 0"
-          :conditions="conditions"
-          :character-id="character.id"
           :editable="canEdit"
           class="mt-6"
-          @refresh="handleConditionsRefresh"
         />
 
         <!-- Combat Stats Row (no currency for battle view) -->
