@@ -1,25 +1,57 @@
 // tests/components/character/sheet/SpellSlotsManager.test.ts
-import { describe, it, expect, beforeEach, vi } from 'vitest'
+/**
+ * SpellSlotsManager Component Tests
+ *
+ * Tests the interactive spell slot manager that:
+ * - Reads spell slot state from characterPlayStateStore
+ * - Renders crystals (filled = available, empty = spent)
+ * - Handles click interactions to use/restore slots
+ * - Respects editable prop for read-only mode
+ *
+ * @see Issue #616 - Spell slot tracking
+ */
+import { describe, it, expect, vi } from 'vitest'
 import { mountSuspended } from '@nuxt/test-utils/runtime'
 import { setActivePinia, createPinia } from 'pinia'
 import SpellSlotsManager from '~/components/character/sheet/SpellSlotsManager.vue'
 import { useCharacterPlayStateStore } from '~/stores/characterPlayState'
 
-describe('SpellSlotsManager', () => {
-  beforeEach(() => {
-    setActivePinia(createPinia())
-  })
+// =============================================================================
+// HELPERS
+// =============================================================================
 
+let pinia: ReturnType<typeof createPinia>
+
+function setupStore() {
+  pinia = createPinia()
+  setActivePinia(pinia)
+  return useCharacterPlayStateStore()
+}
+
+function getMountOptions() {
+  return {
+    global: {
+      plugins: [pinia]
+    }
+  }
+}
+
+// =============================================================================
+// TESTS
+// =============================================================================
+
+describe('SpellSlotsManager', () => {
   describe('rendering', () => {
     it('renders filled crystals for available slots', async () => {
-      const store = useCharacterPlayStateStore()
+      const store = setupStore()
       store.initializeSpellSlots([{ level: 1, total: 4 }])
 
       const wrapper = await mountSuspended(SpellSlotsManager, {
         props: {
           characterId: 1,
           editable: true
-        }
+        },
+        ...getMountOptions()
       })
 
       const crystals = wrapper.findAll('[data-testid="slot-1-available"]')
@@ -27,7 +59,7 @@ describe('SpellSlotsManager', () => {
     })
 
     it('renders empty crystals for spent slots', async () => {
-      const store = useCharacterPlayStateStore()
+      const store = setupStore()
       store.initializeSpellSlots([{ level: 1, total: 4 }])
       store.spellSlots.set(1, { total: 4, spent: 2, slotType: 'standard' })
 
@@ -35,7 +67,8 @@ describe('SpellSlotsManager', () => {
         props: {
           characterId: 1,
           editable: true
-        }
+        },
+        ...getMountOptions()
       })
 
       const available = wrapper.findAll('[data-testid="slot-1-available"]')
@@ -45,7 +78,7 @@ describe('SpellSlotsManager', () => {
     })
 
     it('displays level labels with ordinals', async () => {
-      const store = useCharacterPlayStateStore()
+      const store = setupStore()
       store.initializeSpellSlots([
         { level: 1, total: 4 },
         { level: 2, total: 3 },
@@ -56,7 +89,8 @@ describe('SpellSlotsManager', () => {
         props: {
           characterId: 1,
           editable: true
-        }
+        },
+        ...getMountOptions()
       })
 
       expect(wrapper.text()).toContain('1st')
@@ -65,12 +99,15 @@ describe('SpellSlotsManager', () => {
     })
 
     it('renders nothing when no spell slots', async () => {
+      setupStore()
       // Don't initialize any slots
+
       const wrapper = await mountSuspended(SpellSlotsManager, {
         props: {
           characterId: 1,
           editable: true
-        }
+        },
+        ...getMountOptions()
       })
 
       expect(wrapper.text()).not.toContain('Spell Slots')
@@ -79,7 +116,7 @@ describe('SpellSlotsManager', () => {
 
   describe('interactions', () => {
     it('clicking available crystal calls useSpellSlot', async () => {
-      const store = useCharacterPlayStateStore()
+      const store = setupStore()
       store.initialize({
         characterId: 1,
         isDead: false,
@@ -95,7 +132,8 @@ describe('SpellSlotsManager', () => {
         props: {
           characterId: 1,
           editable: true
-        }
+        },
+        ...getMountOptions()
       })
 
       const crystal = wrapper.find('[data-testid="slot-1-available"]')
@@ -105,7 +143,7 @@ describe('SpellSlotsManager', () => {
     })
 
     it('clicking spent crystal calls restoreSpellSlot', async () => {
-      const store = useCharacterPlayStateStore()
+      const store = setupStore()
       store.initialize({
         characterId: 1,
         isDead: false,
@@ -122,7 +160,8 @@ describe('SpellSlotsManager', () => {
         props: {
           characterId: 1,
           editable: true
-        }
+        },
+        ...getMountOptions()
       })
 
       const crystal = wrapper.find('[data-testid="slot-1-spent"]')
@@ -132,7 +171,7 @@ describe('SpellSlotsManager', () => {
     })
 
     it('crystals are not clickable when editable is false', async () => {
-      const store = useCharacterPlayStateStore()
+      const store = setupStore()
       store.initialize({
         characterId: 1,
         isDead: false,
@@ -148,7 +187,8 @@ describe('SpellSlotsManager', () => {
         props: {
           characterId: 1,
           editable: false
-        }
+        },
+        ...getMountOptions()
       })
 
       const crystal = wrapper.find('[data-testid="slot-1-available"]')
@@ -160,7 +200,7 @@ describe('SpellSlotsManager', () => {
 
   describe('multiple spell levels', () => {
     it('handles multiple spell levels correctly', async () => {
-      const store = useCharacterPlayStateStore()
+      const store = setupStore()
       store.initializeSpellSlots([
         { level: 1, total: 4 },
         { level: 2, total: 3 },
@@ -174,7 +214,8 @@ describe('SpellSlotsManager', () => {
         props: {
           characterId: 1,
           editable: true
-        }
+        },
+        ...getMountOptions()
       })
 
       // Level 1: 3 available, 1 spent
@@ -191,7 +232,7 @@ describe('SpellSlotsManager', () => {
     })
 
     it('clicking different level slots calls store with correct level', async () => {
-      const store = useCharacterPlayStateStore()
+      const store = setupStore()
       store.initialize({
         characterId: 1,
         isDead: false,
@@ -210,7 +251,8 @@ describe('SpellSlotsManager', () => {
         props: {
           characterId: 1,
           editable: true
-        }
+        },
+        ...getMountOptions()
       })
 
       // Click level 2 slot
