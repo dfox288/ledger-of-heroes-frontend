@@ -23,6 +23,7 @@ const emit = defineEmits<{
 // Initiative editing state
 const isEditingInit = ref(false)
 const editValue = ref('')
+const initInput = ref<HTMLInputElement | null>(null)
 
 function formatModifier(mod: number): string {
   return mod >= 0 ? `+${mod}` : `${mod}`
@@ -33,15 +34,15 @@ function startEditInit(event: Event) {
   isEditingInit.value = true
   editValue.value = props.initiative?.toString() ?? ''
   nextTick(() => {
-    const input = document.querySelector('[data-testid="init-input"]') as HTMLInputElement
-    input?.focus()
-    input?.select()
+    initInput.value?.focus()
+    initInput.value?.select()
   })
 }
 
 function saveInit() {
   const value = parseInt(editValue.value, 10)
-  if (!isNaN(value)) {
+  // D&D initiative range: -10 (very low DEX) to 50 (high DEX + bonuses)
+  if (!isNaN(value) && value >= -10 && value <= 50) {
     emit('update:initiative', value)
   }
   isEditingInit.value = false
@@ -170,10 +171,11 @@ const modifierHint = computed(() => {
       <!-- Edit mode -->
       <input
         v-if="isEditingInit"
+        ref="initInput"
         v-model="editValue"
         data-testid="init-input"
         type="number"
-        class="w-14 px-2 py-1 text-center font-mono text-sm rounded border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-800 focus:outline-none focus:ring-2 focus:ring-primary-500"
+        class="w-16 px-2 py-1 text-center font-mono text-sm rounded border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-800 focus:outline-none focus:ring-2 focus:ring-primary-500"
         @blur="saveInit"
         @keydown="handleInitKeydown"
       >
@@ -183,6 +185,7 @@ const modifierHint = computed(() => {
         data-testid="init-display"
         class="inline-flex flex-col items-center px-2 py-1 rounded hover:bg-neutral-100 dark:hover:bg-neutral-700 transition-colors"
         :class="{ 'bg-neutral-100 dark:bg-neutral-700': initiative !== null }"
+        :aria-label="`Edit initiative for ${character.name}`"
         @click="startEditInit"
       >
         <span class="font-mono font-medium">{{ initiativeDisplay }}</span>

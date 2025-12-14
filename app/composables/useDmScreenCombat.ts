@@ -98,11 +98,13 @@ export function useDmScreenCombat(partyId: string, characters: DmScreenCharacter
       }
     }
 
-    // Sort by initiative descending
+    // Sort by initiative descending, tiebreaker: DEX modifier (D&D rules)
     withInit.sort((a, b) => {
       const initA = state.value.initiatives[a.id] ?? 0
       const initB = state.value.initiatives[b.id] ?? 0
-      return initB - initA
+      if (initB !== initA) return initB - initA
+      // Tiebreaker: higher DEX modifier goes first
+      return b.combat.initiative_modifier - a.combat.initiative_modifier
     })
 
     return [...withInit, ...withoutInit]

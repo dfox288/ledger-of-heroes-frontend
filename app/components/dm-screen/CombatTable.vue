@@ -35,7 +35,7 @@ function toggleExpand(characterId: number) {
   }
 }
 
-// Sort characters by initiative (highest first)
+// Sort characters by initiative (highest first), tiebreaker: DEX modifier
 // Characters without initiative go to end in original order
 const sortedCharacters = computed(() => {
   const withInit: DmScreenCharacter[] = []
@@ -52,7 +52,9 @@ const sortedCharacters = computed(() => {
   withInit.sort((a, b) => {
     const initA = props.combatState.initiatives[a.id] ?? 0
     const initB = props.combatState.initiatives[b.id] ?? 0
-    return initB - initA
+    if (initB !== initA) return initB - initA
+    // Tiebreaker: higher DEX modifier goes first (D&D rules)
+    return b.combat.initiative_modifier - a.combat.initiative_modifier
   })
 
   return [...withInit, ...withoutInit]
