@@ -31,7 +31,8 @@ const isCompendiumActive = computed(() => {
 
 // Tools dropdown items (utility tools and generators)
 const toolsItems = ref([
-  { label: 'Character Builder', to: '/characters', icon: 'i-heroicons-user-plus' }
+  { label: 'Character Builder', to: '/characters', icon: 'i-heroicons-user-plus' },
+  { label: 'Parties', to: '/parties', icon: 'i-heroicons-user-group' }
 ])
 
 // Check if current route is in tools section

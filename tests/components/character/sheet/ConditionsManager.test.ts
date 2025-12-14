@@ -275,7 +275,7 @@ describe('ConditionsManager', () => {
     it('prevents concurrent remove operations', async () => {
       setupStore()
       let resolveFirst: () => void
-      const firstPromise = new Promise<void>(resolve => { resolveFirst = resolve })
+      const firstPromise = new Promise<void>((resolve) => { resolveFirst = resolve })
       apiFetchMock.mockImplementationOnce(() => firstPromise)
 
       const wrapper = await mountSuspended(ConditionsManager, {
@@ -563,7 +563,7 @@ describe('ConditionsManager', () => {
     it('sets isUpdating during remove operation', async () => {
       setupStore()
       let resolveRemove: () => void
-      const removePromise = new Promise<void>(resolve => { resolveRemove = resolve })
+      const removePromise = new Promise<void>((resolve) => { resolveRemove = resolve })
       apiFetchMock.mockImplementation(() => removePromise)
 
       const wrapper = await mountSuspended(ConditionsManager, {

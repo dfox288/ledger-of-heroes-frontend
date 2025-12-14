@@ -256,5 +256,4 @@ const isSpellcaster = computed(() => !!stats.value?.spellcasting)
       </UTabs>
     </div>
   </div>
-
 </template>
