@@ -42,6 +42,11 @@ export interface Item extends Omit<ItemFromAPI, 'sources' | 'item_type' | 'damag
   damage_type?: { id: number, name: string }
   modifiers?: Modifier[]
   sources?: EntitySource[]
+
+  // Equipment slot assigned by backend (Issue #589)
+  // Determines where this item can be equipped on the character
+  equipment_slot?: string | null
+
   // All other fields inherited from ItemFromAPI
 }
 

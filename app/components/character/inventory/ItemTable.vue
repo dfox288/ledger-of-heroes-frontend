@@ -19,7 +19,12 @@
 
 import type { CharacterEquipment } from '~/types/character'
 import type { EquipmentSlot } from '~/utils/equipmentSlots'
-import { getValidSlots, getDefaultSlot, needsSlotPicker, guessSlotFromName } from '~/utils/equipmentSlots'
+import {
+  getSlotsFromBackend,
+  getDefaultSlotFromBackend,
+  needsSlotPickerFromBackend,
+  guessSlotFromName
+} from '~/utils/equipmentSlots'
 
 interface Props {
   items: CharacterEquipment[]
@@ -95,6 +100,12 @@ function getItemType(equipment: CharacterEquipment): string | null {
   return item?.item_type ?? null
 }
 
+// Get equipment_slot from backend (Issue #589)
+function getEquipmentSlot(equipment: CharacterEquipment): string | null {
+  const item = equipment.item as { equipment_slot?: string | null } | null
+  return item?.equipment_slot ?? null
+}
+
 // Get the group for an item (backend provides group field directly)
 function getItemGroup(equipment: CharacterEquipment): ItemGroup {
   // Backend now provides group field directly on equipment
@@ -130,8 +141,14 @@ function canAttune(equipment: CharacterEquipment): boolean {
   return requiresAttunement(equipment) && !isAttuned(equipment)
 }
 
-// Check if item is equippable
+// Check if item is equippable (has equipment_slot from backend)
 function isEquippable(equipment: CharacterEquipment): boolean {
+  const equipmentSlot = getEquipmentSlot(equipment)
+
+  // If backend provides equipment_slot, item is equippable
+  if (equipmentSlot) return true
+
+  // Legacy fallback for items without equipment_slot
   const itemType = getItemType(equipment)?.toLowerCase() ?? ''
   return (
     itemType.includes('weapon')
@@ -139,14 +156,21 @@ function isEquippable(equipment: CharacterEquipment): boolean {
     || itemType.includes('ranged')
     || itemType.includes('armor')
     || itemType.includes('shield')
-    || requiresAttunement(equipment)
   )
 }
 
 // Check if item is a weapon (needs hand selector)
 function isWeapon(equipment: CharacterEquipment): boolean {
+  const equipmentSlot = getEquipmentSlot(equipment)
+
+  // Check backend equipment_slot first
+  if (equipmentSlot) {
+    const upper = equipmentSlot.toUpperCase()
+    return upper === 'WEAPON' || upper === 'MAIN_HAND'
+  }
+
+  // Legacy fallback
   const itemType = getItemType(equipment)?.toLowerCase() ?? ''
-  // Weapons need hand selector, but not shields (always off-hand) or armor (always worn)
   return (
     itemType.includes('weapon')
     || itemType.includes('melee')
@@ -171,12 +195,13 @@ function getEquipMenuItems(item: CharacterEquipment) {
 }
 
 // Get equip/unequip button label
-function getEquipLabel(equipment: CharacterEquipment): string {
-  return requiresAttunement(equipment) ? 'Attune' : 'Equip'
+// Note: Attunement is now a separate action, so we always use Equip/Unequip
+function getEquipLabel(_equipment: CharacterEquipment): string {
+  return 'Equip'
 }
 
-function getUnequipLabel(equipment: CharacterEquipment): string {
-  return requiresAttunement(equipment) ? 'Unattune' : 'Unequip'
+function getUnequipLabel(_equipment: CharacterEquipment): string {
+  return 'Unequip'
 }
 
 // Get icon for item type
@@ -285,22 +310,23 @@ function getMenuItems(item: CharacterEquipment) {
   return [items]
 }
 
-// Handle equip with smart slot selection
+// Handle equip with smart slot selection (uses backend equipment_slot)
 function handleEquip(item: CharacterEquipment) {
-  const itemData = item.item as { item_type?: string, name?: string } | null
+  const itemData = item.item as { item_type?: string, name?: string, equipment_slot?: string | null } | null
   const itemType = itemData?.item_type ?? null
+  const equipmentSlot = itemData?.equipment_slot ?? null
   const itemName = item.custom_name || itemData?.name || ''
 
-  // Check if we need slot picker
-  if (needsSlotPicker(itemType)) {
-    const validSlots = getValidSlots(itemType)
+  // Check if we need slot picker (rings, wondrous items)
+  if (needsSlotPickerFromBackend(equipmentSlot, itemType)) {
+    const validSlots = getSlotsFromBackend(equipmentSlot, itemType)
     const suggestedSlot = guessSlotFromName(itemName)
     emit('equip-with-picker', item.id, validSlots, suggestedSlot)
     return
   }
 
   // Auto-equip to default slot
-  const defaultSlot = getDefaultSlot(itemType)
+  const defaultSlot = getDefaultSlotFromBackend(equipmentSlot, itemType)
   if (defaultSlot) {
     emit('equip', item.id, defaultSlot)
   }
@@ -462,7 +488,7 @@ function handleEquip(item: CharacterEquipment) {
                 </UButton>
               </UDropdownMenu>
 
-              <!-- Direct equip button for non-weapons (armor, shield, attunement) -->
+              <!-- Direct equip button for non-weapons (armor, shield, rings, wondrous) -->
               <UButton
                 v-else-if="isEquippable(item)"
                 data-testid="action-equip"
@@ -473,9 +499,9 @@ function handleEquip(item: CharacterEquipment) {
                 {{ getEquipLabel(item) }}
               </UButton>
 
-              <!-- Attune button for backpack items that require attunement -->
+              <!-- Attune button for EQUIPPED items that can be attuned -->
               <UButton
-                v-if="canAttune(item) && !item.equipped"
+                v-if="canAttune(item) && item.equipped"
                 data-testid="action-attune"
                 size="xs"
                 variant="ghost"

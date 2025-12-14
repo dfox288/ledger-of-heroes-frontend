@@ -58,7 +58,7 @@ const mockGear: CharacterEquipment = {
 
 const mockMagicRing: CharacterEquipment = {
   id: 5,
-  item: { name: 'Ring of Protection', item_type: 'Ring', requires_attunement: true },
+  item: { name: 'Ring of Protection', item_type: 'Ring', requires_attunement: true, equipment_slot: 'RING' },
   item_slug: 'dmg:ring-of-protection',
   is_dangling: 'false',
   custom_name: null,
@@ -404,7 +404,7 @@ describe('ItemTable', () => {
 
     const mockUnattunedBackpackItem: CharacterEquipment = {
       id: 11,
-      item: { name: 'Cloak of Displacement', item_type: 'Wondrous Item', requires_attunement: true },
+      item: { name: 'Cloak of Displacement', item_type: 'Wondrous Item', requires_attunement: true, equipment_slot: 'CLOAK' },
       item_slug: 'dmg:cloak-of-displacement',
       is_dangling: 'false',
       custom_name: null,
@@ -412,6 +412,20 @@ describe('ItemTable', () => {
       quantity: 1,
       equipped: false,
       location: 'backpack',
+      is_attuned: false
+    }
+
+    // Equipped item that requires attunement but is not yet attuned
+    const mockEquippedUnattunedItem: CharacterEquipment = {
+      id: 12,
+      item: { name: 'Cloak of Protection', item_type: 'Wondrous Item', requires_attunement: true, equipment_slot: 'CLOAK' },
+      item_slug: 'dmg:cloak-of-protection',
+      is_dangling: 'false',
+      custom_name: null,
+      custom_description: null,
+      quantity: 1,
+      equipped: true,
+      location: 'cloak',
       is_attuned: false
     }
 
@@ -439,9 +453,21 @@ describe('ItemTable', () => {
       expect(wrapper.find('[data-testid="attuned-badge-11"]').exists()).toBe(false)
     })
 
-    it('shows "Attune" button for unattuned items that require attunement', async () => {
+    it('shows "Equip" button for unequipped items (not Attune)', async () => {
+      // Items with equipment_slot should show "Equip", not "Attune"
       const wrapper = await mountSuspended(ItemTable, {
         props: { items: [mockUnattunedBackpackItem], editable: true }
+      })
+
+      expect(wrapper.find('[data-testid="action-equip"]').exists()).toBe(true)
+      // Attune button should NOT show for unequipped items - equip first
+      expect(wrapper.find('[data-testid="action-attune"]').exists()).toBe(false)
+    })
+
+    it('shows "Attune" button for equipped items that require attunement', async () => {
+      // Attune button shows for EQUIPPED items that can be attuned
+      const wrapper = await mountSuspended(ItemTable, {
+        props: { items: [mockEquippedUnattunedItem], editable: true }
       })
 
       expect(wrapper.find('[data-testid="action-attune"]').exists()).toBe(true)
@@ -458,24 +484,26 @@ describe('ItemTable', () => {
     })
 
     it('emits attune event when Attune button clicked', async () => {
+      // Use equipped item that can be attuned
       const wrapper = await mountSuspended(ItemTable, {
-        props: { items: [mockUnattunedBackpackItem], editable: true }
+        props: { items: [mockEquippedUnattunedItem], editable: true }
       })
 
       const btn = wrapper.find('[data-testid="action-attune"]')
       await btn.trigger('click')
 
       expect(wrapper.emitted('attune')).toBeTruthy()
-      expect(wrapper.emitted('attune')![0]).toEqual([11])
+      expect(wrapper.emitted('attune')![0]).toEqual([12])
     })
 
-    it('shows "Unattune" instead of "Unequip" for attuned equipped items', async () => {
+    it('shows "Unequip" for equipped items (unified label)', async () => {
+      // Unequip label is always "Unequip" regardless of attunement
       const wrapper = await mountSuspended(ItemTable, {
         props: { items: [mockMagicRing], editable: true }
       })
 
       const unequipBtn = wrapper.find('[data-testid="action-unequip"]')
-      expect(unequipBtn.text()).toContain('Unattune')
+      expect(unequipBtn.text()).toContain('Unequip')
     })
   })
 })
