@@ -103,8 +103,8 @@ function startEditHp(event: Event) {
 
 function saveHp() {
   const value = parseInt(hpValue.value, 10)
-  // Allow HP up to 2x max for temp HP scenarios
-  if (!isNaN(value) && value >= 0 && value <= props.monster.max_hp * 2) {
+  // Clamp HP to 0-max range (monsters don't have temp HP)
+  if (!isNaN(value) && value >= 0 && value <= props.monster.max_hp) {
     emit('update:hp', value)
   }
   isEditingHp.value = false

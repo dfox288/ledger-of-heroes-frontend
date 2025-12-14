@@ -7,6 +7,7 @@ import { logger } from '~/utils/logger'
 
 const route = useRoute()
 const partyId = computed(() => route.params.id as string)
+const toast = useToast()
 
 // Encounter monsters management
 const encounterMonsters = useEncounterMonsters(partyId.value)
@@ -66,9 +67,12 @@ async function handleAddMonster(monsterId: number, quantity: number) {
   addingMonster.value = true
   try {
     await encounterMonsters.addMonster(monsterId, quantity)
+    showAddMonsterModal.value = false
+  } catch (err) {
+    logger.error('Failed to add monster:', err)
+    toast.add({ title: 'Failed to add monster', color: 'error' })
   } finally {
     addingMonster.value = false
-    showAddMonsterModal.value = false
   }
 }
 
