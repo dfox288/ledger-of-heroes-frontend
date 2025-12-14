@@ -255,6 +255,7 @@ const hasCombatants = computed(() => {
         <!-- Character Row -->
         <DmScreenCombatTableRow
           v-if="combatant.type === 'character'"
+          :key="`${combatant.key}-row`"
           :character="(combatant.data as DmScreenCharacter)"
           :expanded="expandedKey === combatant.key"
           :is-current-turn="isCurrentTurn(combatant.key)"
@@ -266,6 +267,7 @@ const hasCombatants = computed(() => {
         <!-- Monster Row -->
         <DmScreenMonsterTableRow
           v-else
+          :key="`${combatant.key}-row`"
           :monster="(combatant.data as EncounterMonster)"
           :expanded="expandedKey === combatant.key"
           :is-current-turn="isCurrentTurn(combatant.key)"
@@ -279,6 +281,7 @@ const hasCombatants = computed(() => {
         <!-- Expanded Detail -->
         <tr
           v-if="expandedKey === combatant.key"
+          :key="`${combatant.key}-detail`"
           :data-testid="combatant.type === 'character' ? 'character-detail' : 'monster-detail'"
         >
           <td colspan="7">

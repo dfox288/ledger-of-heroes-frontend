@@ -18,8 +18,8 @@ const mockMonster: EncounterMonster = {
     speed: { walk: 30, fly: null, swim: null, climb: null },
     challenge_rating: '1/4',
     actions: [
-      { name: 'Scimitar', attack_bonus: 4, damage: '1d6+2 slashing', reach: '5 ft.', range: null },
-      { name: 'Shortbow', attack_bonus: 4, damage: '1d6+2 piercing', reach: null, range: '80/320 ft.' }
+      { name: 'Scimitar', attack_bonus: 4, damage: '1d6+2 slashing', description: 'Melee Weapon Attack: +4 to hit, reach 5 ft., one target.', action_type: 'action', recharge: null, sort_order: 1 },
+      { name: 'Shortbow', attack_bonus: 4, damage: '1d6+2 piercing', description: 'Ranged Weapon Attack: +4 to hit, range 80/320 ft., one target.', action_type: 'action', recharge: null, sort_order: 2 }
     ]
   }
 }
@@ -93,18 +93,18 @@ describe('DmScreenMonsterDetail', () => {
       expect(wrapper.text()).toContain('1d6+2 piercing')
     })
 
-    it('displays reach for melee attacks', async () => {
+    it('displays description for melee attacks', async () => {
       const wrapper = await mountSuspended(MonsterDetail, {
         props: { monster: mockMonster }
       })
-      expect(wrapper.text()).toContain('5 ft.')
+      expect(wrapper.text()).toContain('reach 5 ft.')
     })
 
-    it('displays range for ranged attacks', async () => {
+    it('displays description for ranged attacks', async () => {
       const wrapper = await mountSuspended(MonsterDetail, {
         props: { monster: mockMonster }
       })
-      expect(wrapper.text()).toContain('80/320 ft.')
+      expect(wrapper.text()).toContain('range 80/320 ft.')
     })
   })
 

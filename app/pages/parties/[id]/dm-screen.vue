@@ -5,6 +5,11 @@ import { useDmScreenCombat } from '~/composables/useDmScreenCombat'
 import { useEncounterMonsters } from '~/composables/useEncounterMonsters'
 import { logger } from '~/utils/logger'
 
+// Disable SSR for this page - combat state is client-side only
+definePageMeta({
+  ssr: false
+})
+
 const route = useRoute()
 const partyId = computed(() => route.params.id as string)
 const toast = useToast()

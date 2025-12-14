@@ -136,10 +136,12 @@ export interface DmScreenPartyStats {
 // Monster action for quick combat reference
 export interface EncounterMonsterAction {
   name: string
-  attack_bonus: number | null
   damage: string | null
-  reach: string | null
-  range: string | null
+  attack_bonus: number | null
+  description: string
+  action_type: string
+  recharge: string | null
+  sort_order: number
 }
 
 // Nested monster data from compendium

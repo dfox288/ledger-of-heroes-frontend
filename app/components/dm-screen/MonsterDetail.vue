@@ -151,18 +151,12 @@ const hasActions = computed(() => {
               <span v-if="action.damage">
                 {{ action.damage }}
               </span>
-              <span
-                v-if="action.reach"
-                class="ml-2 text-neutral-500"
-              >
-                Reach {{ action.reach }}
-              </span>
-              <span
-                v-if="action.range"
-                class="ml-2 text-neutral-500"
-              >
-                Range {{ action.range }}
-              </span>
+            </div>
+            <div
+              v-if="action.description"
+              class="text-xs text-neutral-500 mt-1"
+            >
+              {{ action.description }}
             </div>
           </div>
         </div>

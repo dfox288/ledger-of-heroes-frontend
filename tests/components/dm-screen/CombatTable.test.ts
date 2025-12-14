@@ -131,7 +131,7 @@ describe('DmScreenCombatTable', () => {
         speed: { walk: 30, fly: null, swim: null, climb: null },
         challenge_rating: '1/4',
         actions: [
-          { name: 'Scimitar', attack_bonus: 4, damage: '1d6+2 slashing', reach: '5 ft.', range: null }
+          { name: 'Scimitar', attack_bonus: 4, damage: '1d6+2 slashing', description: 'Melee Weapon Attack: +4 to hit, reach 5 ft., one target.', action_type: 'action', recharge: null, sort_order: 1 }
         ]
       }
     }
@@ -184,7 +184,7 @@ describe('DmScreenCombatTable', () => {
       expect(rows.length).toBe(3)
     })
 
-    it('emits removeMonster when monster removed', async () => {
+    it('emits removeMonster when monster removed and confirmed', async () => {
       const wrapper = await mountSuspended(CombatTable, {
         props: {
           characters: mockCharacters,
@@ -192,7 +192,10 @@ describe('DmScreenCombatTable', () => {
           combatState: mockCombatState
         }
       })
+      // Click remove button to show confirmation
       await wrapper.find('[data-testid="remove-btn"]').trigger('click')
+      // Click confirm to emit removeMonster
+      await wrapper.find('[data-testid="confirm-remove-btn"]').trigger('click')
       expect(wrapper.emitted('removeMonster')).toBeTruthy()
       expect(wrapper.emitted('removeMonster')?.[0]).toEqual([1])
     })
