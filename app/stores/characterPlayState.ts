@@ -161,6 +161,11 @@ export const useCharacterPlayStateStore = defineStore('characterPlayState', () =
     isDead.value = data.isDead
     loadPlayMode()
 
+    // Force play mode off for dead characters
+    if (isDead.value && isPlayMode.value) {
+      isPlayMode.value = false
+    }
+
     // Set hit points (handle null/undefined)
     hitPoints.current = data.hitPoints.current ?? 0
     hitPoints.max = data.hitPoints.max ?? 0

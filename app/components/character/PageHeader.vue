@@ -62,13 +62,6 @@ const playStateStore = useCharacterPlayStateStore()
 // Use storeToRefs for reactive binding to template
 const { isPlayMode } = storeToRefs(playStateStore)
 
-// Load play mode from localStorage on mount (if character is complete)
-onMounted(() => {
-  if (props.character.is_complete) {
-    playStateStore.loadPlayMode()
-  }
-})
-
 // Disable play mode for draft characters
 watch(() => props.character.is_complete, (isComplete) => {
   if (!isComplete && isPlayMode.value) {
@@ -80,9 +73,6 @@ watch(() => props.character.is_complete, (isComplete) => {
 function handlePlayModeToggle(enabled: boolean) {
   playStateStore.setPlayMode(enabled)
 }
-
-/** Expose play mode for parent components that need it (backwards compat) */
-defineExpose({ isPlayMode })
 
 // ============================================================================
 // Inspiration Toggle (self-contained)
