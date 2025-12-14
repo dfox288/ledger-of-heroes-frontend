@@ -115,6 +115,21 @@ function handleRemove(event: Event) {
   event.stopPropagation()
   emit('remove')
 }
+
+// Quick HP adjustment functions
+function decreaseHp(event: Event) {
+  event.stopPropagation()
+  if (props.monster.current_hp > 0) {
+    emit('update:hp', props.monster.current_hp - 1)
+  }
+}
+
+function increaseHp(event: Event) {
+  event.stopPropagation()
+  if (props.monster.current_hp < props.monster.max_hp) {
+    emit('update:hp', props.monster.current_hp + 1)
+  }
+}
 </script>
 
 <template>
@@ -172,25 +187,50 @@ function handleRemove(event: Event) {
         <span class="text-neutral-500">/ {{ monster.max_hp }}</span>
       </div>
       <!-- Display mode -->
-      <button
+      <div
         v-else
-        data-testid="hp-bar"
-        class="w-full text-left"
-        @click="startEditHp"
+        class="flex items-center gap-1"
       >
-        <div class="flex items-center gap-2">
-          <div class="flex-1 h-4 bg-neutral-200 dark:bg-neutral-700 rounded overflow-hidden">
-            <div
-              class="h-full transition-all"
-              :class="hpColor"
-              :style="{ width: `${hpPercent}%` }"
-            />
+        <!-- Minus button -->
+        <UButton
+          data-testid="hp-minus-btn"
+          icon="i-heroicons-minus"
+          size="xs"
+          variant="ghost"
+          color="error"
+          :disabled="monster.current_hp <= 0"
+          @click="decreaseHp"
+        />
+        <!-- HP bar (clickable to edit) -->
+        <button
+          data-testid="hp-bar"
+          class="flex-1 text-left"
+          @click="startEditHp"
+        >
+          <div class="flex items-center gap-2">
+            <div class="flex-1 h-4 bg-neutral-200 dark:bg-neutral-700 rounded overflow-hidden">
+              <div
+                class="h-full transition-all"
+                :class="hpColor"
+                :style="{ width: `${hpPercent}%` }"
+              />
+            </div>
+            <span class="text-sm font-mono w-14 text-right">
+              {{ monster.current_hp }}/{{ monster.max_hp }}
+            </span>
           </div>
-          <span class="text-sm font-mono w-16 text-right">
-            {{ monster.current_hp }}/{{ monster.max_hp }}
-          </span>
-        </div>
-      </button>
+        </button>
+        <!-- Plus button -->
+        <UButton
+          data-testid="hp-plus-btn"
+          icon="i-heroicons-plus"
+          size="xs"
+          variant="ghost"
+          color="success"
+          :disabled="monster.current_hp >= monster.max_hp"
+          @click="increaseHp"
+        />
+      </div>
     </td>
 
     <!-- AC -->

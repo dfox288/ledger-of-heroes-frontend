@@ -122,4 +122,50 @@ describe('DmScreenMonsterTableRow', () => {
     })
     expect(wrapper.text()).toContain('—')
   })
+
+  describe('HP adjustment buttons', () => {
+    it('shows +/- buttons for quick HP adjustment', async () => {
+      const wrapper = await mountSuspended(MonsterTableRow, {
+        props: { monster: mockMonster }
+      })
+      expect(wrapper.find('[data-testid="hp-minus-btn"]').exists()).toBe(true)
+      expect(wrapper.find('[data-testid="hp-plus-btn"]').exists()).toBe(true)
+    })
+
+    it('emits update:hp with decreased value when minus clicked', async () => {
+      const wrapper = await mountSuspended(MonsterTableRow, {
+        props: { monster: mockMonster }
+      })
+      await wrapper.find('[data-testid="hp-minus-btn"]').trigger('click')
+      expect(wrapper.emitted('update:hp')).toBeTruthy()
+      expect(wrapper.emitted('update:hp')?.[0]).toEqual([4]) // 5 - 1 = 4
+    })
+
+    it('emits update:hp with increased value when plus clicked', async () => {
+      const wrapper = await mountSuspended(MonsterTableRow, {
+        props: { monster: mockMonster }
+      })
+      await wrapper.find('[data-testid="hp-plus-btn"]').trigger('click')
+      expect(wrapper.emitted('update:hp')).toBeTruthy()
+      expect(wrapper.emitted('update:hp')?.[0]).toEqual([6]) // 5 + 1 = 6
+    })
+
+    it('does not decrease HP below 0', async () => {
+      const deadMonster = { ...mockMonster, current_hp: 0 }
+      const wrapper = await mountSuspended(MonsterTableRow, {
+        props: { monster: deadMonster }
+      })
+      await wrapper.find('[data-testid="hp-minus-btn"]').trigger('click')
+      expect(wrapper.emitted('update:hp')).toBeFalsy()
+    })
+
+    it('does not increase HP above max', async () => {
+      const fullHpMonster = { ...mockMonster, current_hp: 7, max_hp: 7 }
+      const wrapper = await mountSuspended(MonsterTableRow, {
+        props: { monster: fullHpMonster }
+      })
+      await wrapper.find('[data-testid="hp-plus-btn"]').trigger('click')
+      expect(wrapper.emitted('update:hp')).toBeFalsy()
+    })
+  })
 })
