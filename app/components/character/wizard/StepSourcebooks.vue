@@ -12,9 +12,16 @@ const route = useRoute()
 
 // Reset store when starting a NEW character (not editing existing)
 // The /characters/new/* route is for new characters only
+// Guard against multiple calls during Vue hydration - only reset if truly fresh
 onMounted(() => {
   if (route.path.startsWith('/characters/new')) {
-    store.reset()
+    // Only reset if wizard state is truly uninitialized
+    // This prevents hydration from wiping out user selections
+    const hasSelectedSources = selectedSources.value.length > 0
+    const hasCharacterId = store.characterId !== null
+    if (!hasSelectedSources && !hasCharacterId) {
+      store.reset()
+    }
   }
 })
 
