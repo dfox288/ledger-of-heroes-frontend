@@ -69,10 +69,9 @@ watch([character, stats], ([char, s]) => {
   }
 }, { immediate: true })
 
-// Reset store when leaving the page
-onUnmounted(() => {
-  playStateStore.$reset()
-})
+// Note: We intentionally don't reset the store on unmount
+// The store persists play mode between character sub-pages (overview/inventory/notes)
+// Each page's initialize() will update the store with fresh data when mounting
 
 // ============================================================================
 // Play Mode (from store)

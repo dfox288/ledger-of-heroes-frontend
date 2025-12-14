@@ -72,6 +72,12 @@ export interface UseCharacterSheetReturn {
 export function useCharacterSheet(characterId: Ref<string | number>): UseCharacterSheetReturn {
   const { apiFetch } = useApi()
 
+  // Check if core data is already cached (prevents skeleton flash on navigation)
+  // useNuxtData provides synchronous access to cached useAsyncData results
+  const { data: cachedCharacter } = useNuxtData(`character-${characterId.value}`)
+  const { data: cachedStats } = useNuxtData(`character-${characterId.value}-stats`)
+  const dataAlreadyCached = cachedCharacter.value !== null && cachedStats.value !== null
+
   // Fetch character base data
   const { data: characterData, pending: characterPending, error: characterError, refresh: refreshCharacter }
     = useAsyncData(
@@ -158,14 +164,19 @@ export function useCharacterSheet(characterId: Ref<string | number>): UseCharact
   const conditions = computed(() => conditionsData.value?.data ?? [])
 
   // Track if initial load is complete (prevents skeleton flash on refresh)
-  const hasLoadedOnce = ref(false)
+  // Initialize as true if data was already cached (detected at top of composable)
+  const hasLoadedOnce = ref(dataAlreadyCached)
 
-  // Mark as loaded once character data arrives
-  watch(character, (char) => {
-    if (char && !hasLoadedOnce.value) {
-      hasLoadedOnce.value = true
-    }
-  })
+  // Mark as loaded once all data fetches complete (for fresh loads)
+  watch(
+    () => !characterPending.value && !statsPending.value,
+    (allLoaded) => {
+      if (allLoaded && !hasLoadedOnce.value) {
+        hasLoadedOnce.value = true
+      }
+    },
+    { immediate: true }
+  )
 
   // Computed: Aggregate loading state (only for initial load)
   // After first load, we don't show skeleton during refreshes
