@@ -107,7 +107,7 @@ const spellsByLevel = computed(() => {
   }
   // Sort by spell name within each level
   for (const level in grouped) {
-    grouped[level].sort((a, b) => a.spell!.name.localeCompare(b.spell!.name))
+    grouped[level]!.sort((a, b) => a.spell!.name.localeCompare(b.spell!.name))
   }
   return grouped
 })
@@ -175,128 +175,148 @@ useSeoMeta({
     <!-- Main Content -->
     <template v-else-if="character">
       <div data-testid="spells-layout">
-      <!-- Unified Page Header -->
-      <CharacterPageHeader
-        :character="character"
-        :is-spellcaster="isSpellcaster"
-        :back-to="`/characters/${publicId}`"
-        back-label="Back to Character"
-        @updated="refreshCharacter"
-      />
-
-      <!-- Non-spellcaster message -->
-      <div
-        v-if="!isSpellcaster"
-        class="mt-6 text-center py-12 text-gray-500 dark:text-gray-400"
-      >
-        <UIcon
-          name="i-heroicons-x-circle"
-          class="w-12 h-12 mx-auto mb-4"
+        <!-- Unified Page Header -->
+        <CharacterPageHeader
+          :character="character"
+          :is-spellcaster="isSpellcaster"
+          :back-to="`/characters/${publicId}`"
+          back-label="Back to Character"
+          @updated="refreshCharacter"
         />
-        <p class="text-lg">This character cannot cast spells.</p>
-        <NuxtLink
-          :to="`/characters/${publicId}`"
-          class="text-primary-500 hover:underline mt-2 inline-block"
-        >
-          Return to character sheet
-        </NuxtLink>
-      </div>
 
-      <!-- Spellcaster Content -->
-      <template v-else>
-        <!-- Spellcasting Stats Bar -->
-        <div class="mt-6 p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
-          <div class="flex flex-wrap gap-6 items-center justify-between">
-            <!-- Stats -->
-            <div class="flex gap-4 flex-wrap">
-              <div class="text-center">
-                <div class="text-xs text-gray-500 uppercase">Spell DC</div>
-                <div class="text-2xl font-bold">{{ stats?.spellcasting?.spell_save_dc }}</div>
-              </div>
-              <div class="text-center">
-                <div class="text-xs text-gray-500 uppercase">Attack</div>
-                <div class="text-2xl font-bold">{{ formatModifier(stats?.spellcasting?.spell_attack_bonus ?? 0) }}</div>
-              </div>
-              <div class="text-center">
-                <div class="text-xs text-gray-500 uppercase">Ability</div>
-                <div class="text-2xl font-bold">{{ stats?.spellcasting?.ability }}</div>
-              </div>
-            </div>
-
-            <!-- Preparation Counter -->
-            <div
-              v-if="spellSlots?.preparation_limit !== null"
-              class="text-center"
-            >
-              <div class="text-xs text-gray-500 uppercase">Prepared</div>
-              <div class="text-lg font-medium">
-                {{ spellSlots?.prepared_count ?? 0 }} / {{ spellSlots?.preparation_limit }}
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Spell Slots -->
+        <!-- Non-spellcaster message -->
         <div
-          v-if="spellSlots?.slots && Object.keys(spellSlots.slots).length > 0"
-          class="mt-6"
-        >
-          <CharacterSheetSpellSlots
-            :spell-slots="Object.fromEntries(
-              Object.entries(spellSlots.slots).map(([k, v]) => [k, v.total])
-            )"
-            :pact-slots="spellSlots.pact_magic ? { count: spellSlots.pact_magic.count, level: spellSlots.pact_magic.level } : null"
-          />
-        </div>
-
-        <!-- Cantrips Section -->
-        <div
-          v-if="cantrips.length > 0"
-          class="mt-8"
-        >
-          <h3 class="text-lg font-semibold text-gray-700 dark:text-gray-300 mb-3">
-            Cantrips
-          </h3>
-          <div class="space-y-2">
-            <CharacterSheetSpellCard
-              v-for="spell in cantrips"
-              :key="spell.id"
-              :spell="spell"
-            />
-          </div>
-        </div>
-
-        <!-- Leveled Spells by Level -->
-        <div
-          v-for="level in sortedLevels"
-          :key="level"
-          class="mt-8"
-        >
-          <h3 class="text-lg font-semibold text-gray-700 dark:text-gray-300 mb-3">
-            {{ formatLevelOrdinal(level) }} Level
-          </h3>
-          <div class="space-y-2">
-            <CharacterSheetSpellCard
-              v-for="spell in spellsByLevel[level]"
-              :key="spell.id"
-              :spell="spell"
-            />
-          </div>
-        </div>
-
-        <!-- Empty State -->
-        <div
-          v-if="validSpells.length === 0"
-          class="mt-8 text-center py-12 text-gray-500 dark:text-gray-400"
+          v-if="!isSpellcaster"
+          class="mt-6 text-center py-12 text-gray-500 dark:text-gray-400"
         >
           <UIcon
-            name="i-heroicons-sparkles"
+            name="i-heroicons-x-circle"
             class="w-12 h-12 mx-auto mb-4"
           />
-          <p class="text-lg">No spells known yet.</p>
-          <p class="text-sm mt-2">Learn spells through the character builder.</p>
+          <p class="text-lg">
+            This character cannot cast spells.
+          </p>
+          <NuxtLink
+            :to="`/characters/${publicId}`"
+            class="text-primary-500 hover:underline mt-2 inline-block"
+          >
+            Return to character sheet
+          </NuxtLink>
         </div>
-      </template>
+
+        <!-- Spellcaster Content -->
+        <template v-else>
+          <!-- Spellcasting Stats Bar -->
+          <div class="mt-6 p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
+            <div class="flex flex-wrap gap-6 items-center justify-between">
+              <!-- Stats -->
+              <div class="flex gap-4 flex-wrap">
+                <div class="text-center">
+                  <div class="text-xs text-gray-500 uppercase">
+                    Spell DC
+                  </div>
+                  <div class="text-2xl font-bold">
+                    {{ stats?.spellcasting?.spell_save_dc }}
+                  </div>
+                </div>
+                <div class="text-center">
+                  <div class="text-xs text-gray-500 uppercase">
+                    Attack
+                  </div>
+                  <div class="text-2xl font-bold">
+                    {{ formatModifier(stats?.spellcasting?.spell_attack_bonus ?? 0) }}
+                  </div>
+                </div>
+                <div class="text-center">
+                  <div class="text-xs text-gray-500 uppercase">
+                    Ability
+                  </div>
+                  <div class="text-2xl font-bold">
+                    {{ stats?.spellcasting?.ability }}
+                  </div>
+                </div>
+              </div>
+
+              <!-- Preparation Counter -->
+              <div
+                v-if="spellSlots?.preparation_limit !== null"
+                class="text-center"
+              >
+                <div class="text-xs text-gray-500 uppercase">
+                  Prepared
+                </div>
+                <div class="text-lg font-medium">
+                  {{ spellSlots?.prepared_count ?? 0 }} / {{ spellSlots?.preparation_limit }}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Spell Slots -->
+          <div
+            v-if="spellSlots?.slots && Object.keys(spellSlots.slots).length > 0"
+            class="mt-6"
+          >
+            <CharacterSheetSpellSlots
+              :spell-slots="Object.fromEntries(
+                Object.entries(spellSlots.slots).map(([k, v]) => [k, v.total])
+              )"
+              :pact-slots="spellSlots.pact_magic ? { count: spellSlots.pact_magic.count, level: spellSlots.pact_magic.level } : null"
+            />
+          </div>
+
+          <!-- Cantrips Section -->
+          <div
+            v-if="cantrips.length > 0"
+            class="mt-8"
+          >
+            <h3 class="text-lg font-semibold text-gray-700 dark:text-gray-300 mb-3">
+              Cantrips
+            </h3>
+            <div class="space-y-2">
+              <CharacterSheetSpellCard
+                v-for="spell in cantrips"
+                :key="spell.id"
+                :spell="spell"
+              />
+            </div>
+          </div>
+
+          <!-- Leveled Spells by Level -->
+          <div
+            v-for="level in sortedLevels"
+            :key="level"
+            class="mt-8"
+          >
+            <h3 class="text-lg font-semibold text-gray-700 dark:text-gray-300 mb-3">
+              {{ formatLevelOrdinal(level) }} Level
+            </h3>
+            <div class="space-y-2">
+              <CharacterSheetSpellCard
+                v-for="spell in spellsByLevel[level]"
+                :key="spell.id"
+                :spell="spell"
+              />
+            </div>
+          </div>
+
+          <!-- Empty State -->
+          <div
+            v-if="validSpells.length === 0"
+            class="mt-8 text-center py-12 text-gray-500 dark:text-gray-400"
+          >
+            <UIcon
+              name="i-heroicons-sparkles"
+              class="w-12 h-12 mx-auto mb-4"
+            />
+            <p class="text-lg">
+              No spells known yet.
+            </p>
+            <p class="text-sm mt-2">
+              Learn spells through the character builder.
+            </p>
+          </div>
+        </template>
       </div>
     </template>
   </div>

@@ -144,19 +144,27 @@ const spellData = computed(() => props.spell.spell)
       <div class="grid grid-cols-2 gap-2">
         <div>
           <span class="text-gray-500 dark:text-gray-400">Casting Time</span>
-          <p class="font-medium">{{ spellData.casting_time }}</p>
+          <p class="font-medium">
+            {{ spellData.casting_time }}
+          </p>
         </div>
         <div>
           <span class="text-gray-500 dark:text-gray-400">Range</span>
-          <p class="font-medium">{{ spellData.range }}</p>
+          <p class="font-medium">
+            {{ spellData.range }}
+          </p>
         </div>
         <div>
           <span class="text-gray-500 dark:text-gray-400">Components</span>
-          <p class="font-medium">{{ spellData.components }}</p>
+          <p class="font-medium">
+            {{ spellData.components }}
+          </p>
         </div>
         <div>
           <span class="text-gray-500 dark:text-gray-400">Duration</span>
-          <p class="font-medium">{{ spellData.duration }}</p>
+          <p class="font-medium">
+            {{ spellData.duration }}
+          </p>
         </div>
       </div>
     </div>
