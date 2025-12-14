@@ -616,6 +616,118 @@ describe('characterPlayState store', () => {
   })
 
   // ===========================================================================
+  // SPELL PREPARATION TRACKING
+  // ===========================================================================
+
+  describe('spell preparation tracking', () => {
+    beforeEach(() => {
+      setActivePinia(createPinia())
+    })
+
+    it('initializes prepared spell IDs from spells array', () => {
+      const store = useCharacterPlayStateStore()
+      store.initializeSpellPreparation({
+        spells: [
+          { id: 1, is_prepared: true, is_always_prepared: false },
+          { id: 2, is_prepared: false, is_always_prepared: false },
+          { id: 3, is_prepared: true, is_always_prepared: true }
+        ] as any[],
+        preparationLimit: 5
+      })
+
+      expect(store.preparedSpellIds.has(1)).toBe(true)
+      expect(store.preparedSpellIds.has(2)).toBe(false)
+      expect(store.preparedSpellIds.has(3)).toBe(true)
+      expect(store.preparedSpellCount).toBe(2)
+    })
+
+    it('atPreparationLimit returns true when at limit', () => {
+      const store = useCharacterPlayStateStore()
+      store.initializeSpellPreparation({
+        spells: [
+          { id: 1, is_prepared: true, is_always_prepared: false },
+          { id: 2, is_prepared: true, is_always_prepared: false }
+        ] as any[],
+        preparationLimit: 2
+      })
+
+      expect(store.atPreparationLimit).toBe(true)
+    })
+
+    it('atPreparationLimit returns false when under limit', () => {
+      const store = useCharacterPlayStateStore()
+      store.initializeSpellPreparation({
+        spells: [
+          { id: 1, is_prepared: true, is_always_prepared: false }
+        ] as any[],
+        preparationLimit: 5
+      })
+
+      expect(store.atPreparationLimit).toBe(false)
+    })
+
+    it('atPreparationLimit returns false when no limit (known casters)', () => {
+      const store = useCharacterPlayStateStore()
+      store.initializeSpellPreparation({
+        spells: [
+          { id: 1, is_prepared: true, is_always_prepared: false }
+        ] as any[],
+        preparationLimit: null
+      })
+
+      expect(store.atPreparationLimit).toBe(false)
+    })
+
+    it('toggleSpellPreparation prepares an unprepared spell', async () => {
+      const store = useCharacterPlayStateStore()
+      store.initialize({
+        characterId: 1,
+        isDead: false,
+        hitPoints: { current: 10, max: 10, temporary: 0 },
+        deathSaves: { successes: 0, failures: 0 },
+        currency: { pp: 0, gp: 0, ep: 0, sp: 0, cp: 0 }
+      })
+      store.initializeSpellPreparation({
+        spells: [{ id: 42, is_prepared: false, is_always_prepared: false }] as any[],
+        preparationLimit: 5
+      })
+
+      vi.spyOn(store, 'toggleSpellPreparation').mockImplementation(async (id, current) => {
+        if (!current) store.preparedSpellIds.add(id)
+        else store.preparedSpellIds.delete(id)
+      })
+
+      await store.toggleSpellPreparation(42, false)
+
+      expect(store.preparedSpellIds.has(42)).toBe(true)
+    })
+
+    it('toggleSpellPreparation unprepares a prepared spell', async () => {
+      const store = useCharacterPlayStateStore()
+      store.initialize({
+        characterId: 1,
+        isDead: false,
+        hitPoints: { current: 10, max: 10, temporary: 0 },
+        deathSaves: { successes: 0, failures: 0 },
+        currency: { pp: 0, gp: 0, ep: 0, sp: 0, cp: 0 }
+      })
+      store.initializeSpellPreparation({
+        spells: [{ id: 42, is_prepared: true, is_always_prepared: false }] as any[],
+        preparationLimit: 5
+      })
+
+      vi.spyOn(store, 'toggleSpellPreparation').mockImplementation(async (id, current) => {
+        if (!current) store.preparedSpellIds.add(id)
+        else store.preparedSpellIds.delete(id)
+      })
+
+      await store.toggleSpellPreparation(42, true)
+
+      expect(store.preparedSpellIds.has(42)).toBe(false)
+    })
+  })
+
+  // ===========================================================================
   // RESET
   // ===========================================================================
 
