@@ -208,12 +208,12 @@ describe('SpellCard', () => {
       expect(wrapper.text()).not.toContain('Casting Time')
     })
 
-    it('expands when clicked', async () => {
+    it('expands when expand toggle is clicked', async () => {
       const wrapper = await mountSuspended(SpellCard, {
         props: { spell: mockLeveledSpell }
       })
 
-      await wrapper.find('[data-testid="spell-card"]').trigger('click')
+      await wrapper.find('[data-testid="expand-toggle"]').trigger('click')
 
       expect(wrapper.text()).toContain('Casting Time')
       expect(wrapper.text()).toContain('1 action')
@@ -224,7 +224,7 @@ describe('SpellCard', () => {
         props: { spell: mockLeveledSpell }
       })
 
-      await wrapper.find('[data-testid="spell-card"]').trigger('click')
+      await wrapper.find('[data-testid="expand-toggle"]').trigger('click')
 
       expect(wrapper.text()).toContain('Range')
       expect(wrapper.text()).toContain('150 feet')
@@ -235,7 +235,7 @@ describe('SpellCard', () => {
         props: { spell: mockLeveledSpell }
       })
 
-      await wrapper.find('[data-testid="spell-card"]').trigger('click')
+      await wrapper.find('[data-testid="expand-toggle"]').trigger('click')
 
       expect(wrapper.text()).toContain('Components')
       expect(wrapper.text()).toContain('V, S, M')
@@ -246,7 +246,7 @@ describe('SpellCard', () => {
         props: { spell: mockLeveledSpell }
       })
 
-      await wrapper.find('[data-testid="spell-card"]').trigger('click')
+      await wrapper.find('[data-testid="expand-toggle"]').trigger('click')
 
       expect(wrapper.text()).toContain('Duration')
       expect(wrapper.text()).toContain('Instantaneous')
@@ -257,9 +257,9 @@ describe('SpellCard', () => {
         props: { spell: mockLeveledSpell }
       })
 
-      const card = wrapper.find('[data-testid="spell-card"]')
-      await card.trigger('click') // Expand
-      await card.trigger('click') // Collapse
+      const toggle = wrapper.find('[data-testid="expand-toggle"]')
+      await toggle.trigger('click') // Expand
+      await toggle.trigger('click') // Collapse
 
       expect(wrapper.text()).not.toContain('Casting Time')
     })
