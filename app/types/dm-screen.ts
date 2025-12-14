@@ -1,0 +1,130 @@
+/**
+ * DM Screen API Types
+ *
+ * Types for the party stats endpoint used by the DM Screen feature.
+ * Based on GET /api/v1/parties/{id}/stats response.
+ */
+
+export interface CharacterHitPoints {
+  current: number
+  max: number
+  temp: number
+}
+
+export interface DmScreenSpeeds {
+  walk: number
+  fly: number | null
+  swim: number | null
+  climb: number | null
+}
+
+export interface CharacterDeathSaves {
+  successes: number
+  failures: number
+}
+
+export interface CharacterConcentration {
+  active: boolean
+  spell: string | null
+}
+
+export interface CharacterCombat {
+  initiative_modifier: number
+  speeds: DmScreenSpeeds
+  death_saves: CharacterDeathSaves
+  concentration: CharacterConcentration
+}
+
+export interface CharacterSenses {
+  passive_perception: number
+  passive_investigation: number
+  passive_insight: number
+  darkvision: number | null
+}
+
+export interface CharacterCapabilities {
+  languages: string[]
+  size: string
+  tool_proficiencies: string[]
+}
+
+export interface CharacterArmor {
+  name: string
+  type: string
+  stealth_disadvantage: boolean
+}
+
+export interface CharacterWeapon {
+  name: string
+  damage: string
+  range: string | null
+}
+
+export interface DmScreenEquipment {
+  armor: CharacterArmor | null
+  weapons: CharacterWeapon[]
+  shield: boolean
+}
+
+export interface CharacterSavingThrows {
+  STR: number
+  DEX: number
+  CON: number
+  INT: number
+  WIS: number
+  CHA: number
+}
+
+export interface DmScreenCondition {
+  name: string
+  slug: string
+  level: number | null
+}
+
+export interface DmScreenSpellSlotLevel {
+  current: number
+  max: number
+}
+
+export type DmScreenSpellSlots = Record<string, DmScreenSpellSlotLevel>
+
+export interface DmScreenCharacter {
+  id: number
+  public_id: string
+  name: string
+  level: number
+  class_name: string
+  hit_points: CharacterHitPoints
+  armor_class: number
+  proficiency_bonus: number
+  combat: CharacterCombat
+  senses: CharacterSenses
+  capabilities: CharacterCapabilities
+  equipment: DmScreenEquipment
+  saving_throws: CharacterSavingThrows
+  conditions: DmScreenCondition[]
+  spell_slots: DmScreenSpellSlots
+}
+
+export interface DmScreenPartySummary {
+  all_languages: string[]
+  darkvision_count: number
+  no_darkvision: string[]
+  has_healer: boolean
+  healers: string[]
+  has_detect_magic: boolean
+  has_dispel_magic: boolean
+  has_counterspell: boolean
+}
+
+export interface DmScreenPartyInfo {
+  id: number
+  name: string
+  description: string | null
+}
+
+export interface DmScreenPartyStats {
+  party: DmScreenPartyInfo
+  characters: DmScreenCharacter[]
+  party_summary: DmScreenPartySummary
+}

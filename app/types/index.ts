@@ -38,6 +38,9 @@ export * from './languageChoices'
 // Party types
 export * from './party'
 
+// DM Screen types
+export * from './dm-screen'
+
 // API Response types
 export interface ApiListResponse<T = unknown> {
   data: T[]
