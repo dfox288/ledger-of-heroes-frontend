@@ -9,9 +9,10 @@ interface Props {
 const props = defineProps<Props>()
 
 function ordinal(n: number): string {
-  const suffixes = ['th', 'st', 'nd', 'rd']
+  const suffixes: Record<number, string> = { 1: 'st', 2: 'nd', 3: 'rd' }
   const v = n % 100
-  return n + (suffixes[(v - 20) % 10] || suffixes[v] || suffixes[0])
+  const suffix = (v >= 11 && v <= 13) ? 'th' : (suffixes[n % 10] ?? 'th')
+  return n + suffix
 }
 
 const validSlots = computed(() => {

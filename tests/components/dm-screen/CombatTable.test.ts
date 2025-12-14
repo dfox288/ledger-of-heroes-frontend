@@ -47,7 +47,7 @@ const mockCharacters: DmScreenCharacter[] = [
     equipment: { armor: null, weapons: [], shield: true },
     saving_throws: { STR: 0, DEX: 1, CON: 2, INT: 0, WIS: 5, CHA: 2 },
     conditions: [],
-    spell_slots: { '1': { current: 4, max: 4 } }
+    spell_slots: { 1: { current: 4, max: 4 } }
   }
 ]
 

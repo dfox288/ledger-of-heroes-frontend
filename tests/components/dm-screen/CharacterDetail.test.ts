@@ -41,9 +41,9 @@ const mockCharacter: DmScreenCharacter = {
   saving_throws: { STR: 0, DEX: 2, CON: 1, INT: 6, WIS: 4, CHA: -1 },
   conditions: [{ name: 'Blessed', slug: 'blessed', level: null }],
   spell_slots: {
-    '1': { current: 4, max: 4 },
-    '2': { current: 2, max: 3 },
-    '3': { current: 1, max: 2 }
+    1: { current: 4, max: 4 },
+    2: { current: 2, max: 3 },
+    3: { current: 1, max: 2 }
   }
 }
 

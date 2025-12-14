@@ -21,8 +21,8 @@ function formatModifier(mod: number): string {
 
 const isHighAc = computed(() => props.character.armor_class >= 17)
 const hasDeathSaves = computed(() =>
-  props.character.combat.death_saves.successes > 0 ||
-  props.character.combat.death_saves.failures > 0
+  props.character.combat.death_saves.successes > 0
+  || props.character.combat.death_saves.failures > 0
 )
 const isConcentrating = computed(() => props.character.combat.concentration.active)
 const hasConditions = computed(() => props.character.conditions.length > 0)

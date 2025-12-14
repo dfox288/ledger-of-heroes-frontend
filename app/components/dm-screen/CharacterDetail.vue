@@ -20,7 +20,7 @@ const hasSpellSlots = computed(() =>
 
 const speeds = computed(() => {
   const s = props.character.combat.speeds
-  const result: { label: string; value: number }[] = []
+  const result: { label: string, value: number }[] = []
   if (s.walk) result.push({ label: 'Walk', value: s.walk })
   if (s.fly) result.push({ label: 'Fly', value: s.fly })
   if (s.swim) result.push({ label: 'Swim', value: s.swim })
@@ -42,11 +42,15 @@ const savingThrowEntries = computed(() => {
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
       <!-- Combat Section -->
       <div>
-        <h4 class="text-xs font-medium text-neutral-500 uppercase mb-2">Combat</h4>
+        <h4 class="text-xs font-medium text-neutral-500 uppercase mb-2">
+          Combat
+        </h4>
 
         <!-- Speeds -->
         <div class="mb-3">
-          <div class="text-xs text-neutral-400 mb-1">Speeds</div>
+          <div class="text-xs text-neutral-400 mb-1">
+            Speeds
+          </div>
           <div class="flex flex-wrap gap-2">
             <span
               v-for="speed in speeds"
@@ -63,7 +67,9 @@ const savingThrowEntries = computed(() => {
           v-if="character.combat.concentration.active"
           class="mb-3"
         >
-          <div class="text-xs text-neutral-400 mb-1">Concentration</div>
+          <div class="text-xs text-neutral-400 mb-1">
+            Concentration
+          </div>
           <UBadge
             color="spell"
             variant="subtle"
@@ -75,7 +81,9 @@ const savingThrowEntries = computed(() => {
 
         <!-- Saving Throws -->
         <div>
-          <div class="text-xs text-neutral-400 mb-1">Saving Throws</div>
+          <div class="text-xs text-neutral-400 mb-1">
+            Saving Throws
+          </div>
           <div class="grid grid-cols-3 gap-1 text-sm">
             <div
               v-for="st in savingThrowEntries"
@@ -91,14 +99,18 @@ const savingThrowEntries = computed(() => {
 
       <!-- Equipment Section -->
       <div>
-        <h4 class="text-xs font-medium text-neutral-500 uppercase mb-2">Equipment</h4>
+        <h4 class="text-xs font-medium text-neutral-500 uppercase mb-2">
+          Equipment
+        </h4>
 
         <!-- Armor -->
         <div
           v-if="character.equipment.armor"
           class="mb-2"
         >
-          <div class="text-xs text-neutral-400 mb-1">Armor</div>
+          <div class="text-xs text-neutral-400 mb-1">
+            Armor
+          </div>
           <div class="text-sm">
             {{ character.equipment.armor.name }}
             <span class="text-neutral-500">({{ character.equipment.armor.type }})</span>
@@ -127,7 +139,9 @@ const savingThrowEntries = computed(() => {
 
         <!-- Weapons -->
         <div v-if="character.equipment.weapons.length > 0">
-          <div class="text-xs text-neutral-400 mb-1">Weapons</div>
+          <div class="text-xs text-neutral-400 mb-1">
+            Weapons
+          </div>
           <div class="space-y-1">
             <div
               v-for="weapon in character.equipment.weapons"
@@ -149,7 +163,9 @@ const savingThrowEntries = computed(() => {
 
       <!-- Capabilities Section -->
       <div>
-        <h4 class="text-xs font-medium text-neutral-500 uppercase mb-2">Capabilities</h4>
+        <h4 class="text-xs font-medium text-neutral-500 uppercase mb-2">
+          Capabilities
+        </h4>
 
         <!-- Size -->
         <div class="mb-2 text-sm">
@@ -158,7 +174,9 @@ const savingThrowEntries = computed(() => {
 
         <!-- Languages -->
         <div class="mb-2">
-          <div class="text-xs text-neutral-400 mb-1">Languages</div>
+          <div class="text-xs text-neutral-400 mb-1">
+            Languages
+          </div>
           <div class="flex flex-wrap gap-1">
             <UBadge
               v-for="lang in character.capabilities.languages"
@@ -174,7 +192,9 @@ const savingThrowEntries = computed(() => {
 
         <!-- Tool Proficiencies -->
         <div v-if="character.capabilities.tool_proficiencies.length > 0">
-          <div class="text-xs text-neutral-400 mb-1">Tools</div>
+          <div class="text-xs text-neutral-400 mb-1">
+            Tools
+          </div>
           <div class="flex flex-wrap gap-1">
             <UBadge
               v-for="tool in character.capabilities.tool_proficiencies"
@@ -196,13 +216,17 @@ const savingThrowEntries = computed(() => {
           v-if="hasSpellSlots"
           class="mb-4"
         >
-          <h4 class="text-xs font-medium text-neutral-500 uppercase mb-2">Spell Slots</h4>
+          <h4 class="text-xs font-medium text-neutral-500 uppercase mb-2">
+            Spell Slots
+          </h4>
           <DmScreenSpellSlotsCompact :slots="character.spell_slots" />
         </div>
 
         <!-- Conditions -->
         <div>
-          <h4 class="text-xs font-medium text-neutral-500 uppercase mb-2">Conditions</h4>
+          <h4 class="text-xs font-medium text-neutral-500 uppercase mb-2">
+            Conditions
+          </h4>
           <div
             v-if="character.conditions.length > 0"
             class="flex flex-wrap gap-1"

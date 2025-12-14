@@ -17,7 +17,7 @@ const emit = defineEmits<{
 
 const isCollapsed = computed({
   get: () => props.collapsed,
-  set: (val) => emit('update:collapsed', val)
+  set: val => emit('update:collapsed', val)
 })
 
 const displayLanguages = computed(() => props.summary.all_languages.slice(0, 3))
@@ -46,7 +46,9 @@ const moreLanguages = computed(() => Math.max(0, props.summary.all_languages.len
     >
       <!-- Languages -->
       <div>
-        <h4 class="text-xs font-medium text-neutral-500 uppercase mb-1">Languages</h4>
+        <h4 class="text-xs font-medium text-neutral-500 uppercase mb-1">
+          Languages
+        </h4>
         <div class="flex flex-wrap gap-1">
           <UBadge
             v-for="lang in displayLanguages"
@@ -70,7 +72,9 @@ const moreLanguages = computed(() => Math.max(0, props.summary.all_languages.len
 
       <!-- Darkvision -->
       <div>
-        <h4 class="text-xs font-medium text-neutral-500 uppercase mb-1">Darkvision</h4>
+        <h4 class="text-xs font-medium text-neutral-500 uppercase mb-1">
+          Darkvision
+        </h4>
         <div class="flex items-center gap-2">
           <span class="text-lg font-semibold">{{ summary.darkvision_count }}</span>
           <span class="text-sm text-neutral-500">have it</span>
@@ -85,7 +89,9 @@ const moreLanguages = computed(() => Math.max(0, props.summary.all_languages.len
 
       <!-- Healers -->
       <div>
-        <h4 class="text-xs font-medium text-neutral-500 uppercase mb-1">Healers</h4>
+        <h4 class="text-xs font-medium text-neutral-500 uppercase mb-1">
+          Healers
+        </h4>
         <template v-if="summary.has_healer">
           <div
             v-for="healer in summary.healers"
@@ -105,7 +111,9 @@ const moreLanguages = computed(() => Math.max(0, props.summary.all_languages.len
 
       <!-- Utility Spells -->
       <div>
-        <h4 class="text-xs font-medium text-neutral-500 uppercase mb-1">Utility</h4>
+        <h4 class="text-xs font-medium text-neutral-500 uppercase mb-1">
+          Utility
+        </h4>
         <div class="space-y-0.5 text-sm">
           <div
             data-testid="utility-detect-magic"

@@ -8,8 +8,8 @@ describe('DmScreenSpellSlotsCompact', () => {
     const wrapper = await mountSuspended(SpellSlotsCompact, {
       props: {
         slots: {
-          '1': { current: 3, max: 4 },
-          '2': { current: 2, max: 3 }
+          1: { current: 3, max: 4 },
+          2: { current: 2, max: 3 }
         }
       }
     })
@@ -20,7 +20,7 @@ describe('DmScreenSpellSlotsCompact', () => {
   it('shows filled and empty slot indicators', async () => {
     const wrapper = await mountSuspended(SpellSlotsCompact, {
       props: {
-        slots: { '1': { current: 2, max: 4 } }
+        slots: { 1: { current: 2, max: 4 } }
       }
     })
     const filled = wrapper.findAll('[data-testid^="slot-filled"]')
@@ -40,8 +40,8 @@ describe('DmScreenSpellSlotsCompact', () => {
     const wrapper = await mountSuspended(SpellSlotsCompact, {
       props: {
         slots: {
-          '1': { current: 0, max: 0 },
-          '2': { current: 2, max: 3 }
+          1: { current: 0, max: 0 },
+          2: { current: 2, max: 3 }
         }
       }
     })
@@ -53,9 +53,9 @@ describe('DmScreenSpellSlotsCompact', () => {
     const wrapper = await mountSuspended(SpellSlotsCompact, {
       props: {
         slots: {
-          '1': { current: 1, max: 1 },
-          '2': { current: 1, max: 1 },
-          '3': { current: 1, max: 1 }
+          1: { current: 1, max: 1 },
+          2: { current: 1, max: 1 },
+          3: { current: 1, max: 1 }
         }
       }
     })
