@@ -14,6 +14,8 @@
 
 import type { Character, CharacterSpell } from '~/types/character'
 import { useCharacterPlayStateStore } from '~/stores/characterPlayState'
+import { formatSpellLevel } from '~/composables/useSpellFormatters'
+import { formatModifier } from '~/composables/useCharacterStats'
 
 const route = useRoute()
 const publicId = computed(() => route.params.publicId as string)
@@ -117,22 +119,6 @@ const sortedLevels = computed(() =>
   Object.keys(spellsByLevel.value).map(Number).sort((a, b) => a - b)
 )
 
-/**
- * Format spell level as ordinal
- */
-function formatLevelOrdinal(level: number): string {
-  const suffixes = ['th', 'st', 'nd', 'rd']
-  const v = level % 100
-  const suffix = (v - 20 >= 0 && v - 20 < 10 && suffixes[v - 20]) || suffixes[v] || 'th'
-  return `${level}${suffix}`
-}
-
-/**
- * Format modifier with sign
- */
-function formatModifier(value: number): string {
-  return value >= 0 ? `+${value}` : `${value}`
-}
 
 // Initialize play state store when character and stats load
 watch([character, statsData], ([char, s]) => {
@@ -289,7 +275,7 @@ useSeoMeta({
             class="mt-8"
           >
             <h3 class="text-lg font-semibold text-gray-700 dark:text-gray-300 mb-3">
-              {{ formatLevelOrdinal(level) }} Level
+              {{ formatSpellLevel(level) }} Level
             </h3>
             <div class="space-y-2">
               <CharacterSheetSpellCard

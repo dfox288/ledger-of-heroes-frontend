@@ -11,6 +11,7 @@
  */
 
 import type { CharacterSpell } from '~/types/character'
+import { formatSpellLevel } from '~/composables/useSpellFormatters'
 
 const props = defineProps<{
   spell: CharacterSpell
@@ -23,17 +24,6 @@ const isExpanded = ref(false)
  */
 function toggle() {
   isExpanded.value = !isExpanded.value
-}
-
-/**
- * Format spell level as ordinal or "Cantrip"
- */
-function formatLevel(level: number): string {
-  if (level === 0) return 'Cantrip'
-  const suffixes = ['th', 'st', 'nd', 'rd']
-  const v = level % 100
-  const suffix = (v - 20 >= 0 && v - 20 < 10 && suffixes[v - 20]) || suffixes[v] || 'th'
-  return `${level}${suffix}`
 }
 
 /**
@@ -125,7 +115,7 @@ const spellData = computed(() => props.spell.spell)
 
         <!-- Level/School -->
         <span class="text-sm text-gray-500 dark:text-gray-400">
-          {{ formatLevel(spellData.level) }} {{ spellData.school }}
+          {{ formatSpellLevel(spellData.level) }} {{ spellData.school }}
         </span>
 
         <!-- Expand/collapse icon -->
