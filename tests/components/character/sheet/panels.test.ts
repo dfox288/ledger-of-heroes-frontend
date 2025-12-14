@@ -10,9 +10,36 @@ import NotesPanel from '~/components/character/sheet/NotesPanel.vue'
 
 describe('CharacterSheetFeaturesPanel', () => {
   const mockFeatures = [
-    { id: 1, source: 'class', feature: { name: 'Second Wind', description: 'Heal as bonus action' } },
-    { id: 2, source: 'race', feature: { name: 'Darkvision', description: 'See in darkness' } },
-    { id: 3, source: 'background', feature: { name: 'Military Rank', description: 'Command soldiers' } }
+    {
+      id: 1,
+      source: 'class',
+      level_acquired: 1,
+      feature_type: 'class_feature',
+      has_limited_uses: false,
+      uses_remaining: null,
+      max_uses: null,
+      feature: { id: 1, name: 'Second Wind', description: 'Heal as bonus action', level: '1', is_optional: 'false', category: 'class_feature' }
+    },
+    {
+      id: 2,
+      source: 'race',
+      level_acquired: 1,
+      feature_type: 'racial_trait',
+      has_limited_uses: false,
+      uses_remaining: null,
+      max_uses: null,
+      feature: { id: 2, name: 'Darkvision', description: 'See in darkness', level: '1', is_optional: 'false', category: 'racial_trait' }
+    },
+    {
+      id: 3,
+      source: 'background',
+      level_acquired: 1,
+      feature_type: 'background_feature',
+      has_limited_uses: false,
+      uses_remaining: null,
+      max_uses: null,
+      feature: { id: 3, name: 'Military Rank', description: 'Command soldiers', level: '1', is_optional: 'false', category: 'background_feature' }
+    }
   ]
 
   it('displays features grouped by source', async () => {
@@ -33,8 +60,26 @@ describe('CharacterSheetFeaturesPanel', () => {
 
   it('displays subclass features under Subclass Features heading', async () => {
     const subclassFeatures = [
-      { id: 1, source: 'subclass', feature: { name: 'Divine Domain: Life Domain', description: 'Life domain focus' } },
-      { id: 2, source: 'subclass', feature: { name: 'Disciple of Life', description: 'Healing spells are more effective' } }
+      {
+        id: 1,
+        source: 'subclass',
+        level_acquired: 3,
+        feature_type: 'subclass_feature',
+        has_limited_uses: false,
+        uses_remaining: null,
+        max_uses: null,
+        feature: { id: 1, name: 'Divine Domain: Life Domain', description: 'Life domain focus', level: '3', is_optional: 'false', category: 'subclass_feature' }
+      },
+      {
+        id: 2,
+        source: 'subclass',
+        level_acquired: 3,
+        feature_type: 'subclass_feature',
+        has_limited_uses: false,
+        uses_remaining: null,
+        max_uses: null,
+        feature: { id: 2, name: 'Disciple of Life', description: 'Healing spells are more effective', level: '3', is_optional: 'false', category: 'subclass_feature' }
+      }
     ]
     const wrapper = await mountSuspended(FeaturesPanel, {
       props: { features: subclassFeatures }
@@ -46,13 +91,158 @@ describe('CharacterSheetFeaturesPanel', () => {
 
   it('displays feat features under Feats heading', async () => {
     const featFeatures = [
-      { id: 1, source: 'feat', feature: { name: 'Actor', description: 'Skilled at mimicry' } }
+      {
+        id: 1,
+        source: 'feat',
+        level_acquired: 4,
+        feature_type: 'feat',
+        has_limited_uses: false,
+        uses_remaining: null,
+        max_uses: null,
+        feature: { id: 1, name: 'Actor', description: 'Skilled at mimicry', level: '4', is_optional: 'true', category: 'feat' }
+      }
     ]
     const wrapper = await mountSuspended(FeaturesPanel, {
       props: { features: featFeatures }
     })
     expect(wrapper.text()).toContain('Actor')
     expect(wrapper.text()).toContain('Feats')
+  })
+
+  // Accordion behavior tests
+  it('starts with all features collapsed', async () => {
+    const wrapper = await mountSuspended(FeaturesPanel, {
+      props: { features: mockFeatures }
+    })
+    // Descriptions should not be visible initially
+    expect(wrapper.text()).not.toContain('Heal as bonus action')
+    expect(wrapper.text()).not.toContain('See in darkness')
+  })
+
+  it('expands feature when clicked', async () => {
+    const wrapper = await mountSuspended(FeaturesPanel, {
+      props: { features: mockFeatures }
+    })
+    // Click the first feature toggle
+    await wrapper.find('[data-testid="feature-toggle-1"]').trigger('click')
+    // Description should now be visible
+    expect(wrapper.text()).toContain('Heal as bonus action')
+  })
+
+  it('collapses expanded feature when clicked again', async () => {
+    const wrapper = await mountSuspended(FeaturesPanel, {
+      props: { features: mockFeatures }
+    })
+    // Expand
+    await wrapper.find('[data-testid="feature-toggle-1"]').trigger('click')
+    expect(wrapper.text()).toContain('Heal as bonus action')
+    // Collapse
+    await wrapper.find('[data-testid="feature-toggle-1"]').trigger('click')
+    expect(wrapper.text()).not.toContain('Heal as bonus action')
+  })
+
+  it('expand all button expands all features', async () => {
+    const wrapper = await mountSuspended(FeaturesPanel, {
+      props: { features: mockFeatures }
+    })
+    await wrapper.find('[data-testid="expand-all-btn"]').trigger('click')
+    expect(wrapper.text()).toContain('Heal as bonus action')
+    expect(wrapper.text()).toContain('See in darkness')
+    expect(wrapper.text()).toContain('Command soldiers')
+  })
+
+  it('collapse all button collapses all features', async () => {
+    const wrapper = await mountSuspended(FeaturesPanel, {
+      props: { features: mockFeatures }
+    })
+    // First expand all
+    await wrapper.find('[data-testid="expand-all-btn"]').trigger('click')
+    expect(wrapper.text()).toContain('Heal as bonus action')
+    // Then collapse all
+    await wrapper.find('[data-testid="collapse-all-btn"]').trigger('click')
+    expect(wrapper.text()).not.toContain('Heal as bonus action')
+  })
+
+  // Search functionality tests
+  it('filters features by search query', async () => {
+    const wrapper = await mountSuspended(FeaturesPanel, {
+      props: { features: mockFeatures }
+    })
+    const searchInput = wrapper.find('[data-testid="feature-search"]')
+    await searchInput.setValue('Dark')
+    // Only Darkvision should be visible
+    expect(wrapper.text()).toContain('Darkvision')
+    expect(wrapper.text()).not.toContain('Second Wind')
+    expect(wrapper.text()).not.toContain('Military Rank')
+  })
+
+  it('shows no results message when search finds nothing', async () => {
+    const wrapper = await mountSuspended(FeaturesPanel, {
+      props: { features: mockFeatures }
+    })
+    const searchInput = wrapper.find('[data-testid="feature-search"]')
+    await searchInput.setValue('nonexistent')
+    expect(wrapper.text()).toContain('No features match')
+  })
+
+  // Level badge test
+  it('shows level badge for class features', async () => {
+    const classFeature = [
+      {
+        id: 1,
+        source: 'class',
+        level_acquired: 5,
+        feature_type: 'class_feature',
+        has_limited_uses: false,
+        uses_remaining: null,
+        max_uses: null,
+        feature: { id: 1, name: 'Extra Attack', description: 'Attack twice', level: '5', is_optional: 'false', category: 'class_feature' }
+      }
+    ]
+    const wrapper = await mountSuspended(FeaturesPanel, {
+      props: { features: classFeature }
+    })
+    expect(wrapper.text()).toContain('Lvl 5')
+  })
+
+  // Limited uses badge test
+  it('shows limited uses badge when feature has limited uses', async () => {
+    const limitedFeature = [
+      {
+        id: 1,
+        source: 'class',
+        level_acquired: 1,
+        feature_type: 'class_feature',
+        has_limited_uses: true,
+        uses_remaining: 2,
+        max_uses: 3,
+        feature: { id: 1, name: 'Action Surge', description: 'Take extra action', level: '2', is_optional: 'false', category: 'class_feature' }
+      }
+    ]
+    const wrapper = await mountSuspended(FeaturesPanel, {
+      props: { features: limitedFeature }
+    })
+    expect(wrapper.text()).toContain('2/3')
+  })
+
+  // Chosen badge test
+  it('shows Chosen badge for optional features', async () => {
+    const optionalFeature = [
+      {
+        id: 1,
+        source: 'feat',
+        level_acquired: 4,
+        feature_type: 'feat',
+        has_limited_uses: false,
+        uses_remaining: null,
+        max_uses: null,
+        feature: { id: 1, name: 'Lucky', description: 'Reroll dice', level: '4', is_optional: 'true', category: 'feat' }
+      }
+    ]
+    const wrapper = await mountSuspended(FeaturesPanel, {
+      props: { features: optionalFeature }
+    })
+    expect(wrapper.text()).toContain('Chosen')
   })
 })
 
