@@ -263,18 +263,8 @@ function increaseHp(event: Event) {
       <!-- Display mode -->
       <div
         v-else
-        class="flex items-center gap-1"
+        class="flex items-center gap-2"
       >
-        <!-- Minus button -->
-        <UButton
-          data-testid="hp-minus-btn"
-          icon="i-heroicons-minus"
-          size="xs"
-          variant="ghost"
-          color="error"
-          :disabled="monster.current_hp <= 0"
-          @click="decreaseHp"
-        />
         <!-- HP bar (clickable to edit) -->
         <button
           data-testid="hp-bar"
@@ -294,16 +284,27 @@ function increaseHp(event: Event) {
             </span>
           </div>
         </button>
-        <!-- Plus button -->
-        <UButton
-          data-testid="hp-plus-btn"
-          icon="i-heroicons-plus"
-          size="xs"
-          variant="ghost"
-          color="success"
-          :disabled="monster.current_hp >= monster.max_hp"
-          @click="increaseHp"
-        />
+        <!-- +/- buttons on right -->
+        <div class="flex items-center gap-0.5">
+          <UButton
+            data-testid="hp-minus-btn"
+            icon="i-heroicons-minus"
+            size="xs"
+            variant="ghost"
+            color="error"
+            :disabled="monster.current_hp <= 0"
+            @click="decreaseHp"
+          />
+          <UButton
+            data-testid="hp-plus-btn"
+            icon="i-heroicons-plus"
+            size="xs"
+            variant="ghost"
+            color="success"
+            :disabled="monster.current_hp >= monster.max_hp"
+            @click="increaseHp"
+          />
+        </div>
       </div>
     </td>
 

@@ -27,7 +27,6 @@ const props = withDefaults(defineProps<Props>(), {
 })
 
 const emit = defineEmits<{
-  rollAll: []
   startCombat: []
   nextTurn: []
   previousTurn: []
@@ -102,10 +101,6 @@ function isCurrentTurn(key: string): boolean {
   return props.combatState.inCombat && props.combatState.currentTurnId === key
 }
 
-// Check if any combatant has initiative set
-const hasAnyInitiative = computed(() => {
-  return Object.keys(props.combatState.initiatives).length > 0
-})
 
 // Check if there are any combatants (characters or monsters)
 const hasCombatants = computed(() => {
@@ -121,26 +116,16 @@ const hasCombatants = computed(() => {
       class="flex items-center justify-between p-3 border-b border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-800"
     >
       <div class="flex items-center gap-2">
-        <!-- Roll All / Start Combat -->
+        <!-- Start Encounter / Start Combat -->
         <template v-if="!combatState.inCombat">
           <UButton
-            data-testid="roll-all-btn"
-            icon="i-heroicons-cube"
-            size="sm"
-            variant="soft"
-            @click="emit('rollAll')"
-          >
-            Roll Initiative
-          </UButton>
-          <UButton
-            v-if="hasAnyInitiative"
-            data-testid="start-combat-btn"
+            data-testid="start-encounter-btn"
             icon="i-heroicons-play"
             size="sm"
             color="primary"
             @click="emit('startCombat')"
           >
-            Start Combat
+            Start Encounter
           </UButton>
         </template>
 
@@ -190,9 +175,9 @@ const hasCombatants = computed(() => {
           Clear Encounter
         </UButton>
 
-        <!-- Reset -->
+        <!-- Reset (End Encounter) -->
         <UButton
-          v-if="hasAnyInitiative || combatState.inCombat"
+          v-if="combatState.inCombat"
           data-testid="reset-combat-btn"
           icon="i-heroicons-arrow-path"
           size="sm"
@@ -200,7 +185,7 @@ const hasCombatants = computed(() => {
           color="neutral"
           @click="emit('resetCombat')"
         >
-          Reset
+          End Encounter
         </UButton>
       </div>
 

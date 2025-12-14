@@ -38,10 +38,6 @@ const combatState = computed(() => {
 })
 
 // Combat action handlers
-function handleRollAll() {
-  combat.value?.rollAll()
-}
-
 function handleStartCombat() {
   combat.value?.startCombat()
 }
@@ -235,7 +231,6 @@ async function handleRefresh() {
           :characters="stats.characters"
           :monsters="encounterMonsters.monsters.value"
           :combat-state="combatState"
-          @roll-all="handleRollAll"
           @start-combat="handleStartCombat"
           @next-turn="handleNextTurn"
           @previous-turn="handlePreviousTurn"
