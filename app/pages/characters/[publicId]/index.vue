@@ -124,18 +124,12 @@ useSeoMeta({
   description: () => `View ${character.value?.name ?? 'character'} - D&D 5e Character Sheet`
 })
 
-// Tab items for bottom section (Equipment -> /inventory, Notes -> /notes, Features -> /features)
-const tabItems = computed(() => {
-  const items = [
-    { label: 'Proficiencies', slot: 'proficiencies', icon: 'i-heroicons-academic-cap' },
-    { label: 'Languages', slot: 'languages', icon: 'i-heroicons-language' }
-  ]
-  // Only show Spells tab for casters
-  if (stats.value?.spellcasting) {
-    items.splice(1, 0, { label: 'Spells', slot: 'spells', icon: 'i-heroicons-sparkles' })
-  }
-  return items
-})
+// Tab items for bottom section - Proficiencies and Languages only
+// Spells moved to dedicated /spells page
+const tabItems = [
+  { label: 'Proficiencies', slot: 'proficiencies', icon: 'i-heroicons-academic-cap' },
+  { label: 'Languages', slot: 'languages', icon: 'i-heroicons-language' }
+]
 
 // Is this character a spellcaster? (for TabNavigation)
 const isSpellcaster = computed(() => !!stats.value?.spellcasting)
@@ -253,16 +247,6 @@ const isSpellcaster = computed(() => !!stats.value?.spellcasting)
       >
         <template #proficiencies>
           <CharacterSheetProficienciesPanel :proficiencies="proficiencies" />
-        </template>
-
-        <template #spells>
-          <CharacterSheetSpellsPanel
-            v-if="stats.spellcasting && character"
-            :spells="spells"
-            :stats="stats"
-            :character-id="character.id"
-            :editable="canEdit"
-          />
         </template>
 
         <template #languages>

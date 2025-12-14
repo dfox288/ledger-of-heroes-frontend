@@ -86,6 +86,21 @@ const savingThrows = computed(() => {
   }))
 })
 
+// Extract skills from stats and map to CharacterSkill format
+// API returns 'ability' but CharacterSkill expects 'ability_code'
+const skills = computed(() => {
+  if (!stats.value?.skills) return []
+  return stats.value.skills.map((skill, index) => ({
+    id: index,
+    name: skill.name,
+    slug: skill.slug,
+    ability_code: skill.ability as AbilityScoreCode,
+    modifier: skill.modifier ?? 0,
+    proficient: skill.proficient,
+    expertise: skill.expertise
+  }))
+})
+
 // Check if character is at 0 HP (from play state store)
 const isAtZeroHp = computed(() => hitPoints.value.current === 0)
 
@@ -160,18 +175,24 @@ useSeoMeta({
           @refresh="handleConditionsRefresh"
         />
 
-        <!-- Combat Stats Grid -->
-        <div class="mt-6">
-          <CharacterSheetCombatStatsGrid
+        <!-- Combat Stats Row (no currency for battle view) -->
+        <div class="mt-6 grid grid-cols-2 sm:grid-cols-5 gap-3">
+          <CharacterSheetHitPointsManager :editable="canEdit" />
+          <CharacterSheetStatArmorClass
+            :armor-class="stats.armor_class"
             :character="character"
-            :stats="stats"
-            :editable="canEdit"
           />
+          <CharacterSheetStatInitiative :bonus="stats.initiative_bonus" />
+          <CharacterSheetStatSpeed
+            :speed="character.speed"
+            :speeds="character.speeds"
+          />
+          <CharacterSheetStatProficiencyBonus :bonus="character.proficiency_bonus" />
         </div>
 
         <!-- Two Column Layout: Offensive | Defensive -->
         <div class="mt-6 grid md:grid-cols-2 gap-6">
-          <!-- Left Column: Weapons + Saves -->
+          <!-- Left Column: Weapons + Saves/Death Saves -->
           <div class="space-y-6">
             <!-- Weapons Panel -->
             <CharacterSheetWeaponsPanel
@@ -180,13 +201,19 @@ useSeoMeta({
               :ability-modifiers="abilityModifiers"
             />
 
-            <!-- Saving Throws -->
-            <CharacterSheetSavingThrowsList
-              :saving-throws="savingThrows"
-            />
+            <!-- Saving Throws + Death Saves side by side -->
+            <div class="grid grid-cols-2 gap-4">
+              <CharacterSheetSavingThrowsList
+                :saving-throws="savingThrows"
+              />
+              <CharacterSheetDeathSavesManager
+                v-if="showDeathSaves"
+                :editable="canEdit"
+              />
+            </div>
           </div>
 
-          <!-- Right Column: Defenses + Death Saves -->
+          <!-- Right Column: Defenses + Skills -->
           <div class="space-y-6">
             <!-- Defenses Panel -->
             <CharacterSheetDefensesPanel
@@ -197,11 +224,8 @@ useSeoMeta({
               :condition-immunities="stats.condition_immunities ?? []"
             />
 
-            <!-- Death Saves (when at 0 HP or play mode) -->
-            <CharacterSheetDeathSavesManager
-              v-if="showDeathSaves"
-              :editable="canEdit"
-            />
+            <!-- Skills List -->
+            <CharacterSheetSkillsList :skills="skills" />
           </div>
         </div>
       </div>
