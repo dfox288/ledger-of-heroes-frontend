@@ -209,7 +209,7 @@ export interface SkillAdvantage {
  */
 export interface CharacterStats extends Omit<CharacterStatsFromAPI, 'ability_scores' | 'saving_throws' | 'spellcasting'> {
   ability_scores: Record<AbilityScoreCode, { score: number | null, modifier: number | null }>
-  saving_throws: Record<AbilityScoreCode, number | null>
+  saving_throws: Record<AbilityScoreCode, { modifier: number | null, proficient: boolean, total: number | null } | null>
   spellcasting: {
     ability: AbilityScoreCode
     ability_modifier: number

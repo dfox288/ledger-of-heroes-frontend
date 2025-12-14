@@ -22,7 +22,7 @@ const { apiFetch } = useApi()
 
 // Play State Store
 const playStateStore = useCharacterPlayStateStore()
-const { canEdit } = storeToRefs(playStateStore)
+const { canEdit, hitPoints } = storeToRefs(playStateStore)
 
 // Fetch character data
 const { data: characterData, pending: characterPending, refresh: refreshCharacter } = await useAsyncData(
@@ -79,20 +79,18 @@ const abilityModifiers = computed<Record<AbilityScoreCode, number>>(() => {
 // Extract saving throws for SavingThrowsList
 const savingThrows = computed(() => {
   if (!stats.value?.saving_throws) return []
-  return Object.entries(stats.value.saving_throws).map(([ability, modifier]) => ({
+  return Object.entries(stats.value.saving_throws).map(([ability, data]) => ({
     ability: ability as AbilityScoreCode,
-    modifier: modifier ?? 0,
-    proficient: false // CharacterStats type has saving_throws as number | null, no proficient info
+    modifier: data?.total ?? 0,
+    proficient: data?.proficient ?? false
   }))
 })
 
+// Check if character is at 0 HP (from play state store)
+const isAtZeroHp = computed(() => hitPoints.value.current === 0)
+
 // Show death saves when at 0 HP or in play mode
-const showDeathSaves = computed(() => {
-  if (canEdit.value) return true
-  // Also show if character has 0 current HP
-  const currentHp = stats.value?.hit_points?.current ?? null
-  return currentHp === 0
-})
+const showDeathSaves = computed(() => canEdit.value || isAtZeroHp.value)
 
 // Initialize play state store when character and stats load
 watch([character, statsData], ([char, s]) => {
