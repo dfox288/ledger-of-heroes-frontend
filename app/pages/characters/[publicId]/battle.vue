@@ -136,6 +136,16 @@ async function handleConditionsRefresh() {
   await refreshConditions()
 }
 
+// Handle full refresh (character + conditions)
+// Called when PageHeader emits 'updated' (e.g., after adding condition)
+async function handleFullRefresh() {
+  clearNuxtData(`character-${publicId.value}-conditions`)
+  await Promise.all([
+    refreshCharacter(),
+    refreshConditions()
+  ])
+}
+
 useSeoMeta({
   title: () => character.value ? `${character.value.name} - Battle` : 'Battle'
 })
@@ -166,7 +176,7 @@ useSeoMeta({
           :is-spellcaster="isSpellcaster"
           :back-to="`/characters/${publicId}`"
           back-label="Back to Character"
-          @updated="refreshCharacter"
+          @updated="handleFullRefresh"
         />
 
         <!-- Active Conditions -->
