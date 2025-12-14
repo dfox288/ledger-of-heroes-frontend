@@ -81,8 +81,8 @@ const hasPactSlots = computed(() => !!props.pactSlots && props.pactSlots.count >
             <UIcon
               v-for="i in count"
               :key="`slot-${level}-${i}`"
-              name="i-heroicons-circle-stack-solid"
-              class="w-5 h-5 text-spell-500 dark:text-spell-400"
+              name="i-game-icons-crystal-shine"
+              class="w-7 h-7 text-spell-500 dark:text-spell-400"
               :data-testid="`slot-${level}`"
             />
           </div>
@@ -110,8 +110,8 @@ const hasPactSlots = computed(() => !!props.pactSlots && props.pactSlots.count >
           <UIcon
             v-for="i in pactSlots!.count"
             :key="`pact-slot-${i}`"
-            name="i-heroicons-circle-stack-solid"
-            class="w-5 h-5 text-spell-500 dark:text-spell-400"
+            name="i-game-icons-crystal-shine"
+            class="w-7 h-7 text-spell-500 dark:text-spell-400"
             data-testid="pact-slot"
           />
         </div>
