@@ -181,7 +181,7 @@ const isSpellcaster = computed(() => !!stats.value?.spellcasting)
 
       <!-- Active Conditions (from store) - only shows when character has conditions -->
       <CharacterSheetConditionsManager
-        v-if="conditions.length > 0"
+        v-if="conditions?.length > 0"
         :editable="canEdit"
       />
 

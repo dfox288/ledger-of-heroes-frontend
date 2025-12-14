@@ -159,7 +159,7 @@ useSeoMeta({
 
         <!-- Active Conditions (from store) -->
         <CharacterSheetConditionsManager
-          v-if="conditions.length > 0"
+          v-if="conditions?.length > 0"
           :editable="canEdit"
           class="mt-6"
         />
