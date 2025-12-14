@@ -59,6 +59,8 @@ export type CharacterProficiency = components['schemas']['CharacterProficiencyRe
 export type CharacterEquipment = components['schemas']['CharacterEquipmentResource'] & {
   /** Attunement status for magic items (separated from location in expanded slot system) */
   is_attuned?: boolean
+  /** Currency items (gold, silver, etc.) - should be filtered from equipment display */
+  is_currency?: boolean
 }
 
 /**

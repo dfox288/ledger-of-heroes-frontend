@@ -103,7 +103,10 @@ watch(
 )
 
 const character = computed(() => characterData.value?.data ?? null)
-const equipment = computed(() => equipmentData.value?.data ?? [])
+// Filter out currency items - they're shown in the currency display, not inventory
+const equipment = computed(() =>
+  (equipmentData.value?.data ?? []).filter(item => !item.is_currency)
+)
 const stats = computed(() => statsData.value?.data ?? null)
 const isSpellcaster = computed(() => !!stats.value?.spellcasting)
 
