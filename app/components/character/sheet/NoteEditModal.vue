@@ -1,0 +1,251 @@
+<!-- app/components/character/sheet/NoteEditModal.vue -->
+<script setup lang="ts">
+/**
+ * Note Edit/Create Modal
+ *
+ * Dual-mode modal for creating new notes or editing existing ones.
+ * - Create mode: No note prop, category selectable
+ * - Edit mode: Note prop provided, category locked
+ *
+ * Categories requiring title: backstory, custom
+ * Categories not requiring title: personality_trait, ideal, bond, flaw
+ */
+import type { CharacterNote } from '~/types/character'
+
+/** Note category options */
+const CATEGORIES = [
+  { value: 'personality_trait', label: 'Personality Trait', requiresTitle: false },
+  { value: 'ideal', label: 'Ideal', requiresTitle: false },
+  { value: 'bond', label: 'Bond', requiresTitle: false },
+  { value: 'flaw', label: 'Flaw', requiresTitle: false },
+  { value: 'backstory', label: 'Backstory', requiresTitle: true },
+  { value: 'custom', label: 'Custom Note', requiresTitle: true }
+]
+
+export interface NotePayload {
+  category?: string
+  title?: string
+  content: string
+}
+
+const props = defineProps<{
+  open: boolean
+  note?: CharacterNote
+  loading?: boolean
+  error?: string | null
+}>()
+
+const emit = defineEmits<{
+  'update:open': [value: boolean]
+  'save': [payload: NotePayload]
+}>()
+
+/** Local state */
+const localCategory = ref('custom')
+const localTitle = ref('')
+const localContent = ref('')
+
+/** Computed: Whether we're in edit mode */
+const isEditMode = computed(() => !!props.note)
+
+/** Computed: Modal title */
+const modalTitle = computed(() => isEditMode.value ? 'Edit Note' : 'Add Note')
+
+/** Computed: Whether current category requires a title */
+const requiresTitle = computed(() => {
+  const cat = CATEGORIES.find(c => c.value === localCategory.value)
+  return cat?.requiresTitle ?? false
+})
+
+/** Computed: Whether save is allowed */
+const canSave = computed(() => {
+  if (props.loading) return false
+  if (localContent.value.trim().length === 0) return false
+  if (requiresTitle.value && localTitle.value.trim().length === 0) return false
+  return true
+})
+
+/** Handle cancel */
+function handleCancel() {
+  emit('update:open', false)
+}
+
+/** Handle save */
+function handleSave() {
+  if (!canSave.value) return
+
+  const payload: NotePayload = {
+    content: localContent.value.trim()
+  }
+
+  // Include title only if it has content
+  if (localTitle.value.trim().length > 0) {
+    payload.title = localTitle.value.trim()
+  }
+
+  // Include category only in create mode
+  if (!isEditMode.value) {
+    payload.category = localCategory.value
+  }
+
+  emit('save', payload)
+}
+
+/** Handle keydown for Enter submission (only in single-line fields) */
+function handleKeydown(event: KeyboardEvent) {
+  // Don't submit on Enter in textarea
+  if ((event.target as HTMLElement).tagName === 'TEXTAREA') return
+  if (event.key === 'Enter' && canSave.value) {
+    handleSave()
+  }
+}
+
+/** Initialize state from note */
+function initializeState() {
+  if (props.note) {
+    // Edit mode - populate from note
+    localCategory.value = props.note.category
+    localTitle.value = props.note.title ?? ''
+    localContent.value = props.note.content
+  } else {
+    // Create mode - reset to defaults
+    localCategory.value = 'custom'
+    localTitle.value = ''
+    localContent.value = ''
+  }
+}
+
+/** Reset state when modal opens */
+watch(() => props.open, (isOpen) => {
+  if (isOpen) {
+    initializeState()
+  }
+}, { immediate: true })
+</script>
+
+<template>
+  <UModal
+    :open="open"
+    @update:open="emit('update:open', $event)"
+    @keydown="handleKeydown"
+  >
+    <template #header>
+      <div class="flex items-center gap-2">
+        <UIcon
+          :name="isEditMode ? 'i-heroicons-pencil-square' : 'i-heroicons-plus-circle'"
+          class="w-5 h-5 text-primary-500"
+        />
+        <h3 class="text-lg font-semibold text-gray-900 dark:text-white">
+          {{ modalTitle }}
+        </h3>
+      </div>
+    </template>
+
+    <template #body>
+      <div class="space-y-4">
+        <!-- Category Select (only in create mode) -->
+        <div v-if="!isEditMode">
+          <label
+            for="note-category"
+            class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+          >
+            Category
+          </label>
+          <USelectMenu
+            id="note-category"
+            v-model="localCategory"
+            data-testid="category-select"
+            :items="CATEGORIES"
+            value-key="value"
+            :disabled="loading"
+            class="w-full"
+          />
+        </div>
+
+        <!-- Category Display (in edit mode) -->
+        <div v-else>
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+            Category
+          </label>
+          <p class="text-gray-600 dark:text-gray-400">
+            {{ note?.category_label }}
+          </p>
+        </div>
+
+        <!-- Title Input (shown when required or has content) -->
+        <div v-if="requiresTitle || localTitle.length > 0 || isEditMode">
+          <label
+            for="note-title"
+            class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+          >
+            Title
+            <span
+              v-if="requiresTitle"
+              class="text-error-500"
+            >*</span>
+          </label>
+          <UInput
+            id="note-title"
+            v-model="localTitle"
+            data-testid="title-input"
+            type="text"
+            placeholder="Note title"
+            :disabled="loading"
+            class="w-full"
+          />
+        </div>
+
+        <!-- Content Textarea -->
+        <div>
+          <label
+            for="note-content"
+            class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+          >
+            Content
+            <span class="text-error-500">*</span>
+          </label>
+          <UTextarea
+            id="note-content"
+            v-model="localContent"
+            data-testid="content-textarea"
+            :rows="6"
+            placeholder="Write your note..."
+            :disabled="loading"
+            class="w-full"
+          />
+        </div>
+
+        <!-- API Error -->
+        <UAlert
+          v-if="error"
+          color="error"
+          icon="i-heroicons-exclamation-triangle"
+          :title="error"
+        />
+      </div>
+    </template>
+
+    <template #footer>
+      <div class="flex justify-end gap-3">
+        <UButton
+          data-testid="cancel-btn"
+          color="neutral"
+          variant="ghost"
+          :disabled="loading"
+          @click="handleCancel"
+        >
+          Cancel
+        </UButton>
+        <UButton
+          data-testid="save-btn"
+          color="primary"
+          :disabled="!canSave"
+          :loading="loading"
+          @click="handleSave"
+        >
+          {{ isEditMode ? 'Save Changes' : 'Add Note' }}
+        </UButton>
+      </div>
+    </template>
+  </UModal>
+</template>

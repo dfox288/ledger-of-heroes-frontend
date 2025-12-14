@@ -251,7 +251,11 @@ const isSpellcaster = computed(() => !!stats.value?.spellcasting)
         </template>
 
         <template #notes>
-          <CharacterSheetNotesPanel :notes="notes" />
+          <CharacterSheetNotesManager
+            :notes="notes"
+            :character-id="character.id"
+            @refresh="refresh"
+          />
         </template>
       </UTabs>
     </div>

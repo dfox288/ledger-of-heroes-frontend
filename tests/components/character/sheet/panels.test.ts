@@ -378,4 +378,68 @@ describe('CharacterSheetNotesPanel', () => {
     expect(wrapper.text()).toContain('Met the party at the tavern')
     expect(wrapper.text()).toContain('Explored the dungeon')
   })
+
+  // =========================================================================
+  // Action Button Tests
+  // =========================================================================
+
+  it('shows Add Note button by default', async () => {
+    const wrapper = await mountSuspended(NotesPanel, {
+      props: { notes: mockNotesGrouped }
+    })
+    expect(wrapper.find('[data-testid="add-note-btn"]').exists()).toBe(true)
+  })
+
+  it('hides Add Note button when readonly', async () => {
+    const wrapper = await mountSuspended(NotesPanel, {
+      props: { notes: mockNotesGrouped, readonly: true }
+    })
+    expect(wrapper.find('[data-testid="add-note-btn"]').exists()).toBe(false)
+  })
+
+  it('emits add event when Add Note button is clicked', async () => {
+    const wrapper = await mountSuspended(NotesPanel, {
+      props: { notes: mockNotesGrouped }
+    })
+    await wrapper.find('[data-testid="add-note-btn"]').trigger('click')
+    expect(wrapper.emitted('add')).toBeTruthy()
+  })
+
+  it('shows edit and delete buttons for each note', async () => {
+    const wrapper = await mountSuspended(NotesPanel, {
+      props: { notes: mockNotesGrouped }
+    })
+    // Note ID 1 from backstory
+    expect(wrapper.find('[data-testid="edit-note-1"]').exists()).toBe(true)
+    expect(wrapper.find('[data-testid="delete-note-1"]').exists()).toBe(true)
+    // Note ID 2 from session_notes
+    expect(wrapper.find('[data-testid="edit-note-2"]').exists()).toBe(true)
+    expect(wrapper.find('[data-testid="delete-note-2"]').exists()).toBe(true)
+  })
+
+  it('hides edit and delete buttons when readonly', async () => {
+    const wrapper = await mountSuspended(NotesPanel, {
+      props: { notes: mockNotesGrouped, readonly: true }
+    })
+    expect(wrapper.find('[data-testid="edit-note-1"]').exists()).toBe(false)
+    expect(wrapper.find('[data-testid="delete-note-1"]').exists()).toBe(false)
+  })
+
+  it('emits edit event with note when edit button is clicked', async () => {
+    const wrapper = await mountSuspended(NotesPanel, {
+      props: { notes: mockNotesGrouped }
+    })
+    await wrapper.find('[data-testid="edit-note-1"]').trigger('click')
+    expect(wrapper.emitted('edit')).toBeTruthy()
+    expect(wrapper.emitted('edit')![0][0]).toEqual(mockNotesGrouped.backstory[0])
+  })
+
+  it('emits delete event with note when delete button is clicked', async () => {
+    const wrapper = await mountSuspended(NotesPanel, {
+      props: { notes: mockNotesGrouped }
+    })
+    await wrapper.find('[data-testid="delete-note-1"]').trigger('click')
+    expect(wrapper.emitted('delete')).toBeTruthy()
+    expect(wrapper.emitted('delete')![0][0]).toEqual(mockNotesGrouped.backstory[0])
+  })
 })
