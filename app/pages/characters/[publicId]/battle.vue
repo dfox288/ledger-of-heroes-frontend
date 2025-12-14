@@ -130,7 +130,9 @@ watch([character, statsData], ([char, s]) => {
 }, { immediate: true })
 
 // Handle conditions refresh
+// Clear cache first to ensure fresh data when using shared cache keys
 async function handleConditionsRefresh() {
+  clearNuxtData(`character-${publicId.value}-conditions`)
   await refreshConditions()
 }
 
