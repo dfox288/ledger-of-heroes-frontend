@@ -35,6 +35,7 @@ const emit = defineEmits<{
   setInitiative: [key: string, value: number]
   addMonster: []
   updateMonsterHp: [instanceId: number, value: number]
+  updateMonsterLabel: [instanceId: number, value: string]
   removeMonster: [instanceId: number]
   clearEncounter: []
 }>()
@@ -240,15 +241,26 @@ const hasCombatants = computed(() => {
           <th class="py-3 px-4 font-medium text-neutral-500 dark:text-neutral-400 text-center">
             Init
           </th>
-          <th class="py-3 px-4 font-medium text-neutral-500 dark:text-neutral-400 text-center">
-            Perc
-          </th>
-          <th class="py-3 px-4 font-medium text-neutral-500 dark:text-neutral-400 text-center">
-            Inv
-          </th>
-          <th class="py-3 px-4 font-medium text-neutral-500 dark:text-neutral-400 text-center">
-            Ins
-          </th>
+          <!-- In combat: show Actions header | Not in combat: show Passives -->
+          <template v-if="combatState.inCombat">
+            <th
+              colspan="3"
+              class="py-3 px-4 font-medium text-neutral-500 dark:text-neutral-400"
+            >
+              Actions / Weapons
+            </th>
+          </template>
+          <template v-else>
+            <th class="py-3 px-4 font-medium text-neutral-500 dark:text-neutral-400 text-center">
+              Perc
+            </th>
+            <th class="py-3 px-4 font-medium text-neutral-500 dark:text-neutral-400 text-center">
+              Inv
+            </th>
+            <th class="py-3 px-4 font-medium text-neutral-500 dark:text-neutral-400 text-center">
+              Ins
+            </th>
+          </template>
         </tr>
       </thead>
       <tbody
@@ -262,6 +274,7 @@ const hasCombatants = computed(() => {
           :expanded="expandedKey === combatant.key"
           :is-current-turn="isCurrentTurn(combatant.key)"
           :initiative="combatant.init"
+          :in-combat="combatState.inCombat"
           @toggle="toggleExpand(combatant.key)"
           @update:initiative="(value) => emit('setInitiative', combatant.key, value)"
         />
@@ -275,6 +288,7 @@ const hasCombatants = computed(() => {
           @toggle="toggleExpand(combatant.key)"
           @update:initiative="(value) => emit('setInitiative', combatant.key, value)"
           @update:hp="(value) => emit('updateMonsterHp', (combatant.data as EncounterMonster).id, value)"
+          @update:label="(value) => emit('updateMonsterLabel', (combatant.data as EncounterMonster).id, value)"
           @remove="emit('removeMonster', (combatant.data as EncounterMonster).id)"
         />
         <!-- Expanded Detail -->

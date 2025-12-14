@@ -33,6 +33,14 @@ const isEditingHp = ref(false)
 const hpValue = ref('')
 const hpInput = ref<HTMLInputElement | null>(null)
 
+// Label editing state
+const isEditingLabel = ref(false)
+const labelValue = ref('')
+const labelInput = ref<HTMLInputElement | null>(null)
+
+// Delete confirmation state
+const showDeleteConfirm = ref(false)
+
 const initiativeDisplay = computed(() => {
   if (props.initiative !== null) return props.initiative.toString()
   return '—'
@@ -49,6 +57,9 @@ const hpColor = computed(() => {
   if (hpPercent.value > 25) return 'bg-yellow-500'
   return 'bg-red-500'
 })
+
+// Check if monster is dead (0 HP)
+const isDead = computed(() => props.monster.current_hp <= 0)
 
 function startEditInit(event: Event) {
   event.stopPropagation()
@@ -113,7 +124,49 @@ function handleHpKeydown(event: KeyboardEvent) {
 
 function handleRemove(event: Event) {
   event.stopPropagation()
+  showDeleteConfirm.value = true
+}
+
+function confirmRemove(event: Event) {
+  event.stopPropagation()
   emit('remove')
+  showDeleteConfirm.value = false
+}
+
+function cancelRemove(event: Event) {
+  event.stopPropagation()
+  showDeleteConfirm.value = false
+}
+
+// Label editing functions
+function startEditLabel(event: Event) {
+  event.stopPropagation()
+  isEditingLabel.value = true
+  labelValue.value = props.monster.label
+  nextTick(() => {
+    labelInput.value?.focus()
+    labelInput.value?.select()
+  })
+}
+
+function saveLabel() {
+  const value = labelValue.value.trim()
+  if (value && value !== props.monster.label) {
+    emit('update:label', value)
+  }
+  isEditingLabel.value = false
+}
+
+function cancelEditLabel() {
+  isEditingLabel.value = false
+}
+
+function handleLabelKeydown(event: KeyboardEvent) {
+  if (event.key === 'Enter') {
+    saveLabel()
+  } else if (event.key === 'Escape') {
+    cancelEditLabel()
+  }
 }
 
 // Quick HP adjustment functions
@@ -137,14 +190,16 @@ function increaseHp(event: Event) {
     data-testid="monster-row"
     class="cursor-pointer transition-colors border-l-4 border-l-red-500"
     :class="{
-      'bg-neutral-50 dark:bg-neutral-800': expanded && !isCurrentTurn,
-      'bg-red-50 dark:bg-red-950 !border-l-red-600': isCurrentTurn,
-      'hover:bg-neutral-50 dark:hover:bg-neutral-800': !isCurrentTurn
+      'bg-red-50/50 dark:bg-red-950/30': !expanded && !isCurrentTurn && !isDead,
+      'bg-red-50 dark:bg-red-900/40': expanded && !isCurrentTurn && !isDead,
+      'bg-red-100 dark:bg-red-950 !border-l-red-600': isCurrentTurn && !isDead,
+      'hover:bg-red-100/70 dark:hover:bg-red-900/50': !isCurrentTurn && !isDead,
+      'opacity-50 bg-neutral-100 dark:bg-neutral-800/50': isDead
     }"
     @click="emit('toggle')"
   >
     <!-- Label + CR -->
-    <td class="py-3 px-4">
+    <td class="py-3 px-4" @click.stop>
       <div class="flex items-center gap-2">
         <span
           v-if="isCurrentTurn"
@@ -152,8 +207,27 @@ function increaseHp(event: Event) {
           data-testid="turn-indicator"
         >▶</span>
         <div>
-          <div class="font-medium text-neutral-900 dark:text-white flex items-center gap-2">
-            {{ monster.label }}
+          <!-- Editable label -->
+          <div class="flex items-center gap-2">
+            <input
+              v-if="isEditingLabel"
+              ref="labelInput"
+              v-model="labelValue"
+              data-testid="label-input"
+              type="text"
+              class="px-2 py-1 font-medium text-sm rounded border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-800 focus:outline-none focus:ring-2 focus:ring-red-500"
+              @blur="saveLabel"
+              @keydown="handleLabelKeydown"
+            >
+            <button
+              v-else
+              data-testid="label-display"
+              class="font-medium text-neutral-900 dark:text-white hover:text-red-600 dark:hover:text-red-400 transition-colors"
+              :class="{ 'line-through': isDead }"
+              @click="startEditLabel"
+            >
+              {{ monster.label }}
+            </button>
             <UBadge color="monster" variant="subtle" size="md">
               CR {{ monster.monster.challenge_rating }}
             </UBadge>
@@ -279,7 +353,18 @@ function increaseHp(event: Event) {
         :key="action.name"
         class="truncate"
       >
-        {{ action.name }}: +{{ action.attack_bonus }} ({{ action.damage }})
+        <template v-if="action.attack_bonus !== null && action.damage">
+          {{ action.name }}: +{{ action.attack_bonus }} ({{ action.damage }})
+        </template>
+        <template v-else-if="action.attack_bonus !== null">
+          {{ action.name }}: +{{ action.attack_bonus }}
+        </template>
+        <template v-else-if="action.damage">
+          {{ action.name }}: {{ action.damage }}
+        </template>
+        <template v-else>
+          {{ action.name }}
+        </template>
       </div>
       <div
         v-if="monster.monster.actions.length > 2"
@@ -294,7 +379,31 @@ function increaseHp(event: Event) {
       class="py-3 px-4 text-center"
       @click.stop
     >
+      <!-- Confirmation state -->
+      <div
+        v-if="showDeleteConfirm"
+        class="flex items-center gap-1"
+      >
+        <UButton
+          data-testid="confirm-remove-btn"
+          icon="i-heroicons-check"
+          color="error"
+          variant="solid"
+          size="xs"
+          @click="confirmRemove"
+        />
+        <UButton
+          data-testid="cancel-remove-btn"
+          icon="i-heroicons-x-mark"
+          color="neutral"
+          variant="ghost"
+          size="xs"
+          @click="cancelRemove"
+        />
+      </div>
+      <!-- Default state -->
       <UButton
+        v-else
         data-testid="remove-btn"
         icon="i-heroicons-trash"
         color="error"

@@ -7,12 +7,14 @@ interface Props {
   expanded?: boolean
   isCurrentTurn?: boolean
   initiative?: number | null
+  inCombat?: boolean
 }
 
 const props = withDefaults(defineProps<Props>(), {
   expanded: false,
   isCurrentTurn: false,
-  initiative: null
+  initiative: null,
+  inCombat: false
 })
 
 const emit = defineEmits<{
@@ -193,19 +195,53 @@ const modifierHint = computed(() => {
       </button>
     </td>
 
-    <!-- Passive Perception -->
-    <td class="py-3 px-4 text-center">
-      {{ character.senses.passive_perception }}
-    </td>
+    <!-- In Combat: Show Weapons | Not in Combat: Show Passives -->
+    <template v-if="inCombat">
+      <!-- Weapons (spans 3 columns) -->
+      <td
+        colspan="3"
+        class="py-3 px-4 text-sm text-neutral-600 dark:text-neutral-400"
+      >
+        <div
+          v-for="weapon in character.equipment.weapons.slice(0, 2)"
+          :key="weapon.name"
+          class="truncate"
+        >
+          {{ weapon.name }}: {{ weapon.damage }}
+          <span
+            v-if="weapon.range"
+            class="text-neutral-400"
+          >({{ weapon.range }})</span>
+        </div>
+        <div
+          v-if="character.equipment.weapons.length > 2"
+          class="text-xs text-neutral-400"
+        >
+          +{{ character.equipment.weapons.length - 2 }} more
+        </div>
+        <div
+          v-if="character.equipment.weapons.length === 0"
+          class="text-neutral-400 italic"
+        >
+          No weapons
+        </div>
+      </td>
+    </template>
+    <template v-else>
+      <!-- Passive Perception -->
+      <td class="py-3 px-4 text-center">
+        {{ character.senses.passive_perception }}
+      </td>
 
-    <!-- Passive Investigation -->
-    <td class="py-3 px-4 text-center">
-      {{ character.senses.passive_investigation }}
-    </td>
+      <!-- Passive Investigation -->
+      <td class="py-3 px-4 text-center">
+        {{ character.senses.passive_investigation }}
+      </td>
 
-    <!-- Passive Insight -->
-    <td class="py-3 px-4 text-center">
-      {{ character.senses.passive_insight }}
-    </td>
+      <!-- Passive Insight -->
+      <td class="py-3 px-4 text-center">
+        {{ character.senses.passive_insight }}
+      </td>
+    </template>
   </tr>
 </template>

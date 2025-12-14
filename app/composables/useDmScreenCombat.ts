@@ -1,11 +1,19 @@
 // app/composables/useDmScreenCombat.ts
-import type { DmScreenCharacter } from '~/types/dm-screen'
+import type { Ref } from 'vue'
+import type { DmScreenCharacter, EncounterMonster } from '~/types/dm-screen'
 
 interface CombatState {
   initiatives: Record<string, number> // combatant key (char_N or monster_N) -> rolled initiative value
   currentTurnId: string | null // combatant key of active turn
   round: number // current combat round
   inCombat: boolean // whether combat is active
+}
+
+interface Combatant {
+  type: 'character' | 'monster'
+  key: string
+  init: number
+  dexMod: number // For tiebreaker
 }
 
 const DEFAULT_STATE: CombatState = {
@@ -47,7 +55,11 @@ function rollD20(): number {
   return Math.floor(Math.random() * 20) + 1
 }
 
-export function useDmScreenCombat(partyId: string, characters: DmScreenCharacter[]) {
+export function useDmScreenCombat(
+  partyId: string,
+  characters: DmScreenCharacter[],
+  monstersRef: Ref<EncounterMonster[]>
+) {
   // Initialize state from localStorage or defaults
   const savedState = loadFromStorage(partyId)
   const state = ref<CombatState>(savedState ?? { ...DEFAULT_STATE })
@@ -72,15 +84,45 @@ export function useDmScreenCombat(partyId: string, characters: DmScreenCharacter
   }
 
   /**
-   * Roll initiative for all characters (d20 + modifier)
-   * Uses char_N keys for characters
+   * Roll initiative for all combatants (d20 + modifier)
+   * Uses char_N keys for characters, monster_N for monsters
    */
   function rollAll(): void {
+    // Roll for characters
     for (const character of characters) {
       const roll = rollD20()
       const modifier = character.combat.initiative_modifier
       const key = `char_${character.id}`
       state.value.initiatives[key] = roll + modifier
+    }
+    // Roll for monsters (monsters don't have a DEX modifier in our data, so just d20)
+    // In the future we could add dex_modifier to EncounterMonsterData
+    for (const monster of monstersRef.value) {
+      const roll = rollD20()
+      const key = `monster_${monster.id}`
+      // Only roll if not already set (allow manual entry to persist)
+      if (state.value.initiatives[key] === undefined) {
+        state.value.initiatives[key] = roll
+      }
+    }
+  }
+
+  /**
+   * Roll initiative for all combatants, overwriting existing values
+   */
+  function rollAllForce(): void {
+    // Roll for characters
+    for (const character of characters) {
+      const roll = rollD20()
+      const modifier = character.combat.initiative_modifier
+      const key = `char_${character.id}`
+      state.value.initiatives[key] = roll + modifier
+    }
+    // Roll for monsters
+    for (const monster of monstersRef.value) {
+      const roll = rollD20()
+      const key = `monster_${monster.id}`
+      state.value.initiatives[key] = roll
     }
   }
 
@@ -119,11 +161,46 @@ export function useDmScreenCombat(partyId: string, characters: DmScreenCharacter
   /**
    * Get the initiative order (combatant keys sorted by initiative)
    * Returns string keys like 'char_1', 'monster_42'
+   * Includes both characters and monsters, sorted by initiative descending
    */
   const initiativeOrder = computed(() => {
-    return sortedCharacters.value
-      .filter(c => state.value.initiatives[`char_${c.id}`] !== undefined)
-      .map(c => `char_${c.id}`)
+    const combatants: Combatant[] = []
+
+    // Add characters with initiative
+    for (const character of characters) {
+      const key = `char_${character.id}`
+      const init = state.value.initiatives[key]
+      if (init !== undefined) {
+        combatants.push({
+          type: 'character',
+          key,
+          init,
+          dexMod: character.combat.initiative_modifier
+        })
+      }
+    }
+
+    // Add monsters with initiative
+    for (const monster of monstersRef.value) {
+      const key = `monster_${monster.id}`
+      const init = state.value.initiatives[key]
+      if (init !== undefined) {
+        combatants.push({
+          type: 'monster',
+          key,
+          init,
+          dexMod: 0 // Monsters don't expose DEX mod currently
+        })
+      }
+    }
+
+    // Sort by initiative descending, tiebreaker: DEX modifier
+    combatants.sort((a, b) => {
+      if (b.init !== a.init) return b.init - a.init
+      return b.dexMod - a.dexMod
+    })
+
+    return combatants.map(c => c.key)
   })
 
   /**
@@ -138,7 +215,7 @@ export function useDmScreenCombat(partyId: string, characters: DmScreenCharacter
   }
 
   /**
-   * Advance to next character's turn
+   * Advance to next combatant's turn
    */
   function nextTurn(): void {
     if (!state.value.inCombat || initiativeOrder.value.length === 0) return
@@ -147,7 +224,7 @@ export function useDmScreenCombat(partyId: string, characters: DmScreenCharacter
     const currentIndex = order.indexOf(state.value.currentTurnId!)
 
     if (currentIndex === -1 || currentIndex === order.length - 1) {
-      // Wrap to first character, increment round
+      // Wrap to first combatant, increment round
       state.value.currentTurnId = order[0] ?? null
       state.value.round++
     } else {
@@ -156,7 +233,7 @@ export function useDmScreenCombat(partyId: string, characters: DmScreenCharacter
   }
 
   /**
-   * Go back to previous character's turn
+   * Go back to previous combatant's turn
    */
   function previousTurn(): void {
     if (!state.value.inCombat || initiativeOrder.value.length === 0) return
@@ -165,7 +242,7 @@ export function useDmScreenCombat(partyId: string, characters: DmScreenCharacter
     const currentIndex = order.indexOf(state.value.currentTurnId!)
 
     if (currentIndex === -1 || currentIndex === 0) {
-      // Wrap to last character, decrement round (but not below 1)
+      // Wrap to last combatant, decrement round (but not below 1)
       state.value.currentTurnId = order[order.length - 1] ?? null
       if (state.value.round > 1) {
         state.value.round--

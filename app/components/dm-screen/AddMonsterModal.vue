@@ -105,6 +105,7 @@ watch(() => props.open, (isOpen) => {
           icon="i-heroicons-magnifying-glass"
           :loading="searching"
           autofocus
+          class="w-full"
         />
 
         <!-- Selected Monster -->

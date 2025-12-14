@@ -26,7 +26,7 @@ const combat = ref<ReturnType<typeof useDmScreenCombat> | null>(null)
 
 watchEffect(() => {
   if (stats.value?.characters && !combat.value) {
-    combat.value = useDmScreenCombat(partyId.value, stats.value.characters)
+    combat.value = useDmScreenCombat(partyId.value, stats.value.characters, encounterMonsters.monsters)
   }
 })
 
@@ -86,6 +86,10 @@ async function handleUpdateMonsterHp(instanceId: number, hp: number) {
 
 async function handleRemoveMonster(instanceId: number) {
   await encounterMonsters.removeMonster(instanceId)
+}
+
+async function handleUpdateMonsterLabel(instanceId: number, label: string) {
+  await encounterMonsters.updateMonsterLabel(instanceId, label)
 }
 
 async function handleClearEncounter() {
@@ -239,6 +243,7 @@ async function handleRefresh() {
           @set-initiative="handleSetInitiative"
           @add-monster="showAddMonsterModal = true"
           @update-monster-hp="handleUpdateMonsterHp"
+          @update-monster-label="handleUpdateMonsterLabel"
           @remove-monster="handleRemoveMonster"
           @clear-encounter="handleClearEncounter"
         />
