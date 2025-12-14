@@ -141,7 +141,7 @@ function canAttune(equipment: CharacterEquipment): boolean {
   return requiresAttunement(equipment) && !isAttuned(equipment)
 }
 
-// Check if item is equippable (has equipment_slot from backend)
+// Check if item is equippable (has equipment_slot from backend or known equippable type)
 function isEquippable(equipment: CharacterEquipment): boolean {
   const equipmentSlot = getEquipmentSlot(equipment)
 
@@ -156,6 +156,11 @@ function isEquippable(equipment: CharacterEquipment): boolean {
     || itemType.includes('ranged')
     || itemType.includes('armor')
     || itemType.includes('shield')
+    || itemType.includes('ring')
+    || itemType.includes('wondrous')
+    || itemType.includes('staff')
+    || itemType.includes('rod')
+    || itemType.includes('wand')
   )
 }
 
