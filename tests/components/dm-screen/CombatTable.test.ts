@@ -4,6 +4,14 @@ import { mountSuspended } from '@nuxt/test-utils/runtime'
 import CombatTable from '~/components/dm-screen/CombatTable.vue'
 import type { DmScreenCharacter } from '~/types/dm-screen'
 
+// Default combat state for tests
+const mockCombatState = {
+  initiatives: {} as Record<number, number>,
+  currentTurnId: null as number | null,
+  round: 1,
+  inCombat: false
+}
+
 const mockCharacters: DmScreenCharacter[] = [
   {
     id: 1,
@@ -54,7 +62,7 @@ const mockCharacters: DmScreenCharacter[] = [
 describe('DmScreenCombatTable', () => {
   it('displays table headers', async () => {
     const wrapper = await mountSuspended(CombatTable, {
-      props: { characters: mockCharacters }
+      props: { characters: mockCharacters, combatState: mockCombatState }
     })
     expect(wrapper.text()).toContain('Name')
     expect(wrapper.text()).toContain('HP')
@@ -65,7 +73,7 @@ describe('DmScreenCombatTable', () => {
 
   it('renders a row for each character', async () => {
     const wrapper = await mountSuspended(CombatTable, {
-      props: { characters: mockCharacters }
+      props: { characters: mockCharacters, combatState: mockCombatState }
     })
     expect(wrapper.text()).toContain('Aldric')
     expect(wrapper.text()).toContain('Mira')
@@ -73,7 +81,7 @@ describe('DmScreenCombatTable', () => {
 
   it('expands character detail on row click', async () => {
     const wrapper = await mountSuspended(CombatTable, {
-      props: { characters: mockCharacters }
+      props: { characters: mockCharacters, combatState: mockCombatState }
     })
     const firstRow = wrapper.find('[data-testid="combat-row"]')
     await firstRow.trigger('click')
@@ -82,7 +90,7 @@ describe('DmScreenCombatTable', () => {
 
   it('collapses expanded row on second click', async () => {
     const wrapper = await mountSuspended(CombatTable, {
-      props: { characters: mockCharacters }
+      props: { characters: mockCharacters, combatState: mockCombatState }
     })
     const firstRow = wrapper.find('[data-testid="combat-row"]')
     await firstRow.trigger('click')
@@ -92,7 +100,7 @@ describe('DmScreenCombatTable', () => {
 
   it('only expands one character at a time', async () => {
     const wrapper = await mountSuspended(CombatTable, {
-      props: { characters: mockCharacters }
+      props: { characters: mockCharacters, combatState: mockCombatState }
     })
     const rows = wrapper.findAll('[data-testid="combat-row"]')
     await rows[0].trigger('click')
@@ -103,7 +111,7 @@ describe('DmScreenCombatTable', () => {
 
   it('shows empty state when no characters', async () => {
     const wrapper = await mountSuspended(CombatTable, {
-      props: { characters: [] }
+      props: { characters: [], combatState: mockCombatState }
     })
     expect(wrapper.text()).toMatch(/no character|empty/i)
   })

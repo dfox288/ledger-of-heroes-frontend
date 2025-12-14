@@ -2,10 +2,10 @@
 import type { DmScreenCharacter } from '~/types/dm-screen'
 
 interface CombatState {
-  initiatives: Record<number, number>  // characterId -> rolled initiative value
-  currentTurnId: number | null         // characterId of active turn
-  round: number                        // current combat round
-  inCombat: boolean                    // whether combat is active
+  initiatives: Record<number, number> // characterId -> rolled initiative value
+  currentTurnId: number | null // characterId of active turn
+  round: number // current combat round
+  inCombat: boolean // whether combat is active
 }
 
 const DEFAULT_STATE: CombatState = {
@@ -124,7 +124,7 @@ export function useDmScreenCombat(partyId: string, characters: DmScreenCharacter
     if (initiativeOrder.value.length === 0) return
 
     state.value.inCombat = true
-    state.value.currentTurnId = initiativeOrder.value[0]
+    state.value.currentTurnId = initiativeOrder.value[0] ?? null
     state.value.round = 1
   }
 
@@ -139,10 +139,10 @@ export function useDmScreenCombat(partyId: string, characters: DmScreenCharacter
 
     if (currentIndex === -1 || currentIndex === order.length - 1) {
       // Wrap to first character, increment round
-      state.value.currentTurnId = order[0]
+      state.value.currentTurnId = order[0] ?? null
       state.value.round++
     } else {
-      state.value.currentTurnId = order[currentIndex + 1]
+      state.value.currentTurnId = order[currentIndex + 1] ?? null
     }
   }
 
@@ -157,12 +157,12 @@ export function useDmScreenCombat(partyId: string, characters: DmScreenCharacter
 
     if (currentIndex === -1 || currentIndex === 0) {
       // Wrap to last character, decrement round (but not below 1)
-      state.value.currentTurnId = order[order.length - 1]
+      state.value.currentTurnId = order[order.length - 1] ?? null
       if (state.value.round > 1) {
         state.value.round--
       }
     } else {
-      state.value.currentTurnId = order[currentIndex - 1]
+      state.value.currentTurnId = order[currentIndex - 1] ?? null
     }
   }
 

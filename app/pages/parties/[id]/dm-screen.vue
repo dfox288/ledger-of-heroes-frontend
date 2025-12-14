@@ -1,6 +1,7 @@
 <!-- app/pages/parties/[id]/dm-screen.vue -->
 <script setup lang="ts">
 import type { DmScreenPartyStats } from '~/types/dm-screen'
+import { useDmScreenCombat } from '~/composables/useDmScreenCombat'
 import { logger } from '~/utils/logger'
 
 const route = useRoute()
@@ -15,6 +16,47 @@ const { data: statsResponse, pending, error, refresh } = await useAsyncData(
 )
 
 const stats = computed(() => statsResponse.value?.data)
+
+// Combat state management - initialized once when stats are available
+const combat = ref<ReturnType<typeof useDmScreenCombat> | null>(null)
+
+watchEffect(() => {
+  if (stats.value?.characters && !combat.value) {
+    combat.value = useDmScreenCombat(partyId.value, stats.value.characters)
+  }
+})
+
+// Expose combat state for template binding
+const combatState = computed(() => {
+  if (!combat.value) return null
+  // Use toValue to handle both Ref and raw value (Vue type inference quirk)
+  return toValue(combat.value.state)
+})
+
+// Combat action handlers
+function handleRollAll() {
+  combat.value?.rollAll()
+}
+
+function handleStartCombat() {
+  combat.value?.startCombat()
+}
+
+function handleNextTurn() {
+  combat.value?.nextTurn()
+}
+
+function handlePreviousTurn() {
+  combat.value?.previousTurn()
+}
+
+function handleResetCombat() {
+  combat.value?.resetCombat()
+}
+
+function handleSetInitiative(characterId: number, value: number) {
+  combat.value?.setInitiative(characterId, value)
+}
 
 // SEO
 useSeoMeta({
@@ -145,8 +187,20 @@ async function handleRefresh() {
       </div>
 
       <!-- Combat Table -->
-      <div class="bg-white dark:bg-neutral-900 rounded-lg border border-neutral-200 dark:border-neutral-700">
-        <DmScreenCombatTable :characters="stats.characters" />
+      <div
+        v-if="combatState"
+        class="bg-white dark:bg-neutral-900 rounded-lg border border-neutral-200 dark:border-neutral-700"
+      >
+        <DmScreenCombatTable
+          :characters="stats.characters"
+          :combat-state="combatState"
+          @roll-all="handleRollAll"
+          @start-combat="handleStartCombat"
+          @next-turn="handleNextTurn"
+          @previous-turn="handlePreviousTurn"
+          @reset-combat="handleResetCombat"
+          @set-initiative="handleSetInitiative"
+        />
       </div>
     </template>
   </div>
