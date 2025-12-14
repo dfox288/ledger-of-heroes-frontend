@@ -478,3 +478,22 @@ export interface LevelUpStep {
   visible: () => boolean
   shouldSkip?: () => boolean
 }
+
+/**
+ * Weapon data from character stats endpoint
+ * Used in Battle Tab for attack/damage display
+ */
+export interface CharacterWeapon {
+  /** Weapon name (e.g., "Longbow", "Shortsword") */
+  name: string
+  /** Damage dice (e.g., "1d8", "2d6") */
+  damage_dice: string
+  /** Flat attack bonus from magic/features */
+  attack_bonus: number
+  /** Flat damage bonus from magic/features */
+  damage_bonus: number
+  /** Ability used for attack (STR or DEX typically) */
+  ability_used: AbilityScoreCode
+  /** Whether character is proficient with this weapon */
+  is_proficient: boolean
+}

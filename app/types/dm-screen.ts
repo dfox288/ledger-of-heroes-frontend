@@ -54,7 +54,7 @@ export interface CharacterArmor {
   stealth_disadvantage: boolean
 }
 
-export interface CharacterWeapon {
+export interface DmScreenWeapon {
   name: string
   damage: string
   range: string | null
@@ -62,7 +62,7 @@ export interface CharacterWeapon {
 
 export interface DmScreenEquipment {
   armor: CharacterArmor | null
-  weapons: CharacterWeapon[]
+  weapons: DmScreenWeapon[]
   shield: boolean
 }
 
