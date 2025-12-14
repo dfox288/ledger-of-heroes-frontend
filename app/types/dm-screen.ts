@@ -128,3 +128,50 @@ export interface DmScreenPartyStats {
   characters: DmScreenCharacter[]
   party_summary: DmScreenPartySummary
 }
+
+// ============================================================================
+// Encounter Monster Types
+// ============================================================================
+
+// Monster action for quick combat reference
+export interface EncounterMonsterAction {
+  name: string
+  attack_bonus: number | null
+  damage: string | null
+  reach: string | null
+  range: string | null
+}
+
+// Nested monster data from compendium
+export interface EncounterMonsterData {
+  name: string
+  slug: string
+  armor_class: number
+  hit_points: {
+    average: number
+    formula: string
+  }
+  speed: {
+    walk: number | null
+    fly: number | null
+    swim: number | null
+    climb: number | null
+  }
+  challenge_rating: string
+  actions: EncounterMonsterAction[]
+}
+
+// Monster instance in an encounter
+export interface EncounterMonster {
+  id: number
+  monster_id: number
+  label: string
+  current_hp: number
+  max_hp: number
+  monster: EncounterMonsterData
+}
+
+// Combatant union type for initiative tracking
+export type Combatant =
+  | { type: 'character'; key: string; data: DmScreenCharacter }
+  | { type: 'monster'; key: string; data: EncounterMonster }
