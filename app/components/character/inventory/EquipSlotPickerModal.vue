@@ -54,7 +54,10 @@ function handleEquip() {
   >
     <template #header>
       <div class="flex items-center gap-2">
-        <UIcon name="i-heroicons-hand-raised" class="w-5 h-5" />
+        <UIcon
+          name="i-heroicons-hand-raised"
+          class="w-5 h-5"
+        />
         <span>Equip: {{ itemName }}</span>
       </div>
     </template>

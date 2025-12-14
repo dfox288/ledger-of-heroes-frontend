@@ -36,7 +36,7 @@ export const partyHandlers = [
 
   // Create party
   http.post('/api/parties', async ({ request }) => {
-    const body = await request.json() as { name: string; description?: string }
+    const body = await request.json() as { name: string, description?: string }
     return HttpResponse.json({
       data: {
         id: 99,
@@ -50,7 +50,7 @@ export const partyHandlers = [
 
   // Update party
   http.put('/api/parties/:id', async ({ request }) => {
-    const body = await request.json() as { name: string; description?: string }
+    const body = await request.json() as { name: string, description?: string }
     return HttpResponse.json({
       data: {
         id: 1,

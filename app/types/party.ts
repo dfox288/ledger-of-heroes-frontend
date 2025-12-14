@@ -11,7 +11,7 @@ export interface PartyCharacter {
   level: number
   portrait: { thumb: string } | null
   /** Other parties this character belongs to */
-  parties?: { id: number; name: string }[]
+  parties?: { id: number, name: string }[]
 }
 
 /**

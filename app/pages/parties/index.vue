@@ -50,7 +50,7 @@ function openEditModal(party: PartyListItem) {
 }
 
 /** Handle create/update save */
-async function handleSave(payload: { name: string; description: string | null }) {
+async function handleSave(payload: { name: string, description: string | null }) {
   isSaving.value = true
   saveError.value = null
 
@@ -77,7 +77,7 @@ async function handleSave(payload: { name: string; description: string | null })
     showCreateModal.value = false
     await refresh()
   } catch (err: unknown) {
-    const apiError = err as { statusCode?: number; data?: { message?: string } }
+    const apiError = err as { statusCode?: number, data?: { message?: string } }
     saveError.value = apiError.data?.message || 'Failed to save party'
     logger.error('Save party failed:', err)
   } finally {
@@ -135,8 +135,14 @@ async function handleDelete() {
     </div>
 
     <!-- Loading State -->
-    <div v-if="pending" class="flex justify-center py-12">
-      <UIcon name="i-heroicons-arrow-path" class="w-8 h-8 animate-spin text-gray-400" />
+    <div
+      v-if="pending"
+      class="flex justify-center py-12"
+    >
+      <UIcon
+        name="i-heroicons-arrow-path"
+        class="w-8 h-8 animate-spin text-gray-400"
+      />
     </div>
 
     <!-- Error State -->
@@ -148,7 +154,11 @@ async function handleDelete() {
       class="mb-6"
     >
       <template #actions>
-        <UButton variant="soft" color="error" @click="refresh">
+        <UButton
+          variant="soft"
+          color="error"
+          @click="() => refresh()"
+        >
           Retry
         </UButton>
       </template>

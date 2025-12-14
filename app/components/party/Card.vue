@@ -48,7 +48,10 @@ const characterLabel = computed(() =>
                 :class="{ 'text-error-500': item.color === 'error' }"
                 @click.prevent.stop="item.label === 'Edit Party' ? $emit('edit') : $emit('delete')"
               >
-                <UIcon :name="item.icon" class="w-4 h-4" />
+                <UIcon
+                  :name="item.icon"
+                  class="w-4 h-4"
+                />
                 {{ item.label }}
               </span>
             </template>
@@ -67,7 +70,10 @@ const characterLabel = computed(() =>
 
         <!-- Character Count -->
         <div class="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
-          <UIcon name="i-heroicons-user-group" class="w-4 h-4" />
+          <UIcon
+            name="i-heroicons-user-group"
+            class="w-4 h-4"
+          />
           <span>{{ party.character_count }} {{ characterLabel }}</span>
         </div>
       </div>

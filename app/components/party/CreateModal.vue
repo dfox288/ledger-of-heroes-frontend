@@ -11,7 +11,7 @@ const props = defineProps<{
 
 const emit = defineEmits<{
   'update:open': [value: boolean]
-  'save': [payload: { name: string; description: string | null }]
+  'save': [payload: { name: string, description: string | null }]
 }>()
 
 /** Local state */

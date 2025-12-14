@@ -19,7 +19,7 @@ const props = defineProps<{
 }>()
 
 const emit = defineEmits<{
-  'refresh': []
+  refresh: []
 }>()
 
 const store = useCharacterPlayStateStore()

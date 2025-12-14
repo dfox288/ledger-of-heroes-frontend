@@ -26,11 +26,11 @@ const filteredCharacters = computed(() => {
 
   return props.characters
     .filter(c => !existingSet.has(c.id))
-    .filter(c => {
+    .filter((c) => {
       if (!searchQuery.value.trim()) return true
       const query = searchQuery.value.toLowerCase()
-      return c.name.toLowerCase().includes(query) ||
-             c.class_name.toLowerCase().includes(query)
+      return c.name.toLowerCase().includes(query)
+        || c.class_name.toLowerCase().includes(query)
     })
 })
 
@@ -98,7 +98,10 @@ watch(() => props.open, (isOpen) => {
           icon="i-heroicons-magnifying-glass"
           :disabled="loading"
         >
-          <template v-if="searchQuery" #trailing>
+          <template
+            v-if="searchQuery"
+            #trailing
+          >
             <UButton
               color="neutral"
               variant="link"
@@ -172,7 +175,10 @@ watch(() => props.open, (isOpen) => {
           v-else
           class="text-center py-8 text-gray-500 dark:text-gray-400"
         >
-          <UIcon name="i-heroicons-user-group" class="w-12 h-12 mx-auto mb-2 opacity-50" />
+          <UIcon
+            name="i-heroicons-user-group"
+            class="w-12 h-12 mx-auto mb-2 opacity-50"
+          />
           <p>No characters available</p>
           <p class="text-sm">
             {{ searchQuery ? 'Try a different search' : 'Create characters first' }}

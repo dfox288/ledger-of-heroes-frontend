@@ -54,7 +54,7 @@ function openEditModal() {
 }
 
 /** Handle party update */
-async function handleSave(payload: { name: string; description: string | null }) {
+async function handleSave(payload: { name: string, description: string | null }) {
   if (!party.value) return
 
   isSaving.value = true
@@ -110,7 +110,7 @@ async function openAddModal() {
       name: c.name,
       class_name: c.class?.name || 'Unknown',
       level: c.level,
-      portrait: c.portrait ? { thumb: c.portrait.thumb || null } : null,
+      portrait: c.portrait?.thumb ? { thumb: c.portrait.thumb } : null,
       parties: []
     }))
   } catch (err) {
@@ -198,13 +198,22 @@ const existingCharacterIds = computed(() =>
       to="/parties"
       class="inline-flex items-center gap-1 text-sm text-gray-600 dark:text-gray-400 hover:text-primary-500 mb-6"
     >
-      <UIcon name="i-heroicons-arrow-left" class="w-4 h-4" />
+      <UIcon
+        name="i-heroicons-arrow-left"
+        class="w-4 h-4"
+      />
       Back to Parties
     </NuxtLink>
 
     <!-- Loading State -->
-    <div v-if="pending" class="flex justify-center py-12">
-      <UIcon name="i-heroicons-arrow-path" class="w-8 h-8 animate-spin text-gray-400" />
+    <div
+      v-if="pending"
+      class="flex justify-center py-12"
+    >
+      <UIcon
+        name="i-heroicons-arrow-path"
+        class="w-8 h-8 animate-spin text-gray-400"
+      />
     </div>
 
     <!-- Error State -->
@@ -216,7 +225,11 @@ const existingCharacterIds = computed(() =>
       class="mb-6"
     >
       <template #actions>
-        <UButton variant="soft" color="error" @click="refresh">
+        <UButton
+          variant="soft"
+          color="error"
+          @click="() => refresh()"
+        >
           Retry
         </UButton>
       </template>
@@ -261,7 +274,10 @@ const existingCharacterIds = computed(() =>
                 class="flex items-center gap-2 text-error-500"
                 @click="showDeleteConfirm = true"
               >
-                <UIcon :name="item.icon" class="w-4 h-4" />
+                <UIcon
+                  :name="item.icon"
+                  class="w-4 h-4"
+                />
                 {{ item.label }}
               </span>
             </template>
@@ -293,7 +309,7 @@ const existingCharacterIds = computed(() =>
     <!-- Edit Modal -->
     <PartyCreateModal
       v-model:open="showEditModal"
-      :party="party"
+      :party="party ?? null"
       :loading="isSaving"
       :error="saveError"
       @save="handleSave"
