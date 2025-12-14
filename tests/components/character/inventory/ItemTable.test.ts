@@ -387,4 +387,95 @@ describe('ItemTable', () => {
       expect(row.classes()).not.toContain('border-primary')
     })
   })
+
+  describe('attunement (issue #588)', () => {
+    const mockAttunedBackpackItem: CharacterEquipment = {
+      id: 10,
+      item: { name: 'Staff of Power', item_type: 'Weapon', requires_attunement: true },
+      item_slug: 'dmg:staff-of-power',
+      is_dangling: 'false',
+      custom_name: null,
+      custom_description: null,
+      quantity: 1,
+      equipped: false,
+      location: 'backpack',
+      is_attuned: true
+    }
+
+    const mockUnattunedBackpackItem: CharacterEquipment = {
+      id: 11,
+      item: { name: 'Cloak of Displacement', item_type: 'Wondrous Item', requires_attunement: true },
+      item_slug: 'dmg:cloak-of-displacement',
+      is_dangling: 'false',
+      custom_name: null,
+      custom_description: null,
+      quantity: 1,
+      equipped: false,
+      location: 'backpack',
+      is_attuned: false
+    }
+
+    it('shows attunement badge on attuned items in backpack', async () => {
+      const wrapper = await mountSuspended(ItemTable, {
+        props: { items: [mockAttunedBackpackItem], editable: false }
+      })
+
+      expect(wrapper.find('[data-testid="attuned-badge-10"]').exists()).toBe(true)
+    })
+
+    it('shows attunement badge on attuned equipped items', async () => {
+      const wrapper = await mountSuspended(ItemTable, {
+        props: { items: [mockMagicRing], editable: false }
+      })
+
+      expect(wrapper.find('[data-testid="attuned-badge-5"]').exists()).toBe(true)
+    })
+
+    it('does not show attunement badge on non-attuned items', async () => {
+      const wrapper = await mountSuspended(ItemTable, {
+        props: { items: [mockUnattunedBackpackItem], editable: false }
+      })
+
+      expect(wrapper.find('[data-testid="attuned-badge-11"]').exists()).toBe(false)
+    })
+
+    it('shows "Attune" button for unattuned items that require attunement', async () => {
+      const wrapper = await mountSuspended(ItemTable, {
+        props: { items: [mockUnattunedBackpackItem], editable: true }
+      })
+
+      expect(wrapper.find('[data-testid="action-attune"]').exists()).toBe(true)
+    })
+
+    it('shows "Break Attunement" in menu for attuned items', async () => {
+      const wrapper = await mountSuspended(ItemTable, {
+        props: { items: [mockAttunedBackpackItem], editable: true }
+      })
+
+      // The overflow menu should contain break attunement option
+      const menuBtn = wrapper.find('[data-testid="action-menu"]')
+      expect(menuBtn.exists()).toBe(true)
+    })
+
+    it('emits attune event when Attune button clicked', async () => {
+      const wrapper = await mountSuspended(ItemTable, {
+        props: { items: [mockUnattunedBackpackItem], editable: true }
+      })
+
+      const btn = wrapper.find('[data-testid="action-attune"]')
+      await btn.trigger('click')
+
+      expect(wrapper.emitted('attune')).toBeTruthy()
+      expect(wrapper.emitted('attune')![0]).toEqual([11])
+    })
+
+    it('shows "Unattune" instead of "Unequip" for attuned equipped items', async () => {
+      const wrapper = await mountSuspended(ItemTable, {
+        props: { items: [mockMagicRing], editable: true }
+      })
+
+      const unequipBtn = wrapper.find('[data-testid="action-unequip"]')
+      expect(unequipBtn.text()).toContain('Unattune')
+    })
+  })
 })

@@ -113,7 +113,8 @@ const {
   dropItem,
   sellItem,
   purchaseItem,
-  updateQuantity
+  updateQuantity,
+  setAttunement
 } = useInventoryActions(publicId)
 
 // Item action handlers
@@ -164,6 +165,38 @@ async function handleUnequip(itemId: number) {
   } catch (error) {
     logger.error('Failed to unequip item:', error)
     toast.add({ title: 'Failed to unequip item', color: 'error' })
+  }
+}
+
+// Attunement handlers (issue #588)
+async function handleAttune(itemId: number) {
+  try {
+    await setAttunement(itemId, true)
+    toast.add({ title: 'Item attuned!', color: 'success' })
+    await refreshEquipment()
+  } catch (error: unknown) {
+    const err = error as { statusCode?: number, data?: { message?: string } }
+    if (err.statusCode === 422) {
+      toast.add({
+        title: 'Cannot attune',
+        description: err.data?.message || 'Maximum attunement slots reached',
+        color: 'error'
+      })
+    } else {
+      logger.error('Failed to attune item:', error)
+      toast.add({ title: 'Failed to attune item', color: 'error' })
+    }
+  }
+}
+
+async function handleBreakAttune(itemId: number) {
+  try {
+    await setAttunement(itemId, false)
+    toast.add({ title: 'Attunement broken', color: 'success' })
+    await refreshEquipment()
+  } catch (error) {
+    logger.error('Failed to break attunement:', error)
+    toast.add({ title: 'Failed to break attunement', color: 'error' })
   }
 }
 
@@ -483,6 +516,8 @@ useSeoMeta({
             @sell="handleSell"
             @drop="handleDrop"
             @edit-qty="handleEditQty"
+            @attune="handleAttune"
+            @break-attune="handleBreakAttune"
           />
         </div>
 

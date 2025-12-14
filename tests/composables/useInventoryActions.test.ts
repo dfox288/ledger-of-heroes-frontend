@@ -282,4 +282,46 @@ describe('useInventoryActions', () => {
       )
     })
   })
+
+  describe('setAttunement', () => {
+    it('attunes an item with is_attuned: true', async () => {
+      mockApiFetch.mockResolvedValueOnce({ data: { id: 1, is_attuned: true } })
+
+      const { setAttunement } = useInventoryActions('test-char-123')
+      await setAttunement(1, true)
+
+      expect(mockApiFetch).toHaveBeenCalledWith(
+        '/characters/test-char-123/equipment/1',
+        {
+          method: 'PATCH',
+          body: { is_attuned: true }
+        }
+      )
+    })
+
+    it('breaks attunement with is_attuned: false', async () => {
+      mockApiFetch.mockResolvedValueOnce({ data: { id: 1, is_attuned: false } })
+
+      const { setAttunement } = useInventoryActions('test-char-123')
+      await setAttunement(1, false)
+
+      expect(mockApiFetch).toHaveBeenCalledWith(
+        '/characters/test-char-123/equipment/1',
+        {
+          method: 'PATCH',
+          body: { is_attuned: false }
+        }
+      )
+    })
+
+    it('returns updated equipment data', async () => {
+      const mockResponse = { data: { id: 1, is_attuned: true, location: 'backpack' } }
+      mockApiFetch.mockResolvedValueOnce(mockResponse)
+
+      const { setAttunement } = useInventoryActions('test-char-123')
+      const result = await setAttunement(1, true)
+
+      expect(result).toEqual(mockResponse)
+    })
+  })
 })

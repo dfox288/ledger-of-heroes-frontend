@@ -184,6 +184,25 @@ export function useInventoryActions(publicId: string | Ref<string>) {
     return result
   }
 
+  /**
+   * Set or clear attunement on an item
+   * Used for:
+   * - Attuning items in backpack without equipping
+   * - Breaking attunement on any item
+   *
+   * @param equipmentId - The character_equipment record ID
+   * @param attuned - Whether to attune (true) or break attunement (false)
+   */
+  async function setAttunement(equipmentId: number, attuned: boolean): Promise<EquipmentResponse> {
+    return await apiFetch<EquipmentResponse>(
+      `/characters/${resolvedId.value}/equipment/${equipmentId}`,
+      {
+        method: 'PATCH',
+        body: { is_attuned: attuned }
+      }
+    )
+  }
+
   return {
     equipItem,
     unequipItem,
@@ -191,6 +210,7 @@ export function useInventoryActions(publicId: string | Ref<string>) {
     dropItem,
     sellItem,
     updateQuantity,
-    purchaseItem
+    purchaseItem,
+    setAttunement
   }
 }

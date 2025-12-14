@@ -41,6 +41,8 @@ const emit = defineEmits<{
   'drop': [itemId: number]
   'edit-qty': [itemId: number]
   'equip-with-picker': [itemId: number, validSlots: EquipmentSlot[], suggestedSlot: EquipmentSlot | null]
+  'attune': [itemId: number]
+  'break-attune': [itemId: number]
 }>()
 
 // Group display order
@@ -116,6 +118,16 @@ function getItemGroup(equipment: CharacterEquipment): ItemGroup {
 // Check if item requires attunement
 function requiresAttunement(equipment: CharacterEquipment): boolean {
   return (equipment.item as { requires_attunement?: boolean } | null)?.requires_attunement === true
+}
+
+// Check if item is currently attuned
+function isAttuned(equipment: CharacterEquipment): boolean {
+  return equipment.is_attuned === true
+}
+
+// Check if item can be attuned (requires attunement but not currently attuned)
+function canAttune(equipment: CharacterEquipment): boolean {
+  return requiresAttunement(equipment) && !isAttuned(equipment)
 }
 
 // Check if item is equippable
@@ -240,7 +252,19 @@ const visibleGroups = computed(() => {
 
 // Overflow menu items for an item
 function getMenuItems(item: CharacterEquipment) {
-  return [[
+  const items = []
+
+  // Break attunement option for attuned items
+  if (isAttuned(item)) {
+    items.push({
+      label: 'Break Attunement',
+      icon: 'i-heroicons-x-circle',
+      onSelect: () => emit('break-attune', item.id)
+    })
+  }
+
+  // Standard menu items
+  items.push(
     {
       label: 'Edit Qty',
       icon: 'i-heroicons-pencil-square',
@@ -256,7 +280,9 @@ function getMenuItems(item: CharacterEquipment) {
       icon: 'i-heroicons-trash',
       onSelect: () => emit('drop', item.id)
     }
-  ]]
+  )
+
+  return [items]
 }
 
 // Handle equip with smart slot selection
@@ -392,6 +418,17 @@ function handleEquip(item: CharacterEquipment) {
               class="w-16"
             />
 
+            <!-- Attunement badge -->
+            <UBadge
+              v-if="isAttuned(item)"
+              :data-testid="`attuned-badge-${item.id}`"
+              color="spell"
+              variant="subtle"
+              size="sm"
+            >
+              Attuned
+            </UBadge>
+
             <!-- Actions (only in edit mode) -->
             <div
               v-if="editable"
@@ -434,6 +471,18 @@ function handleEquip(item: CharacterEquipment) {
                 @click="handleEquip(item)"
               >
                 {{ getEquipLabel(item) }}
+              </UButton>
+
+              <!-- Attune button for backpack items that require attunement -->
+              <UButton
+                v-if="canAttune(item) && !item.equipped"
+                data-testid="action-attune"
+                size="xs"
+                variant="ghost"
+                color="spell"
+                @click="emit('attune', item.id)"
+              >
+                Attune
               </UButton>
 
               <!-- Quantity buttons -->
