@@ -2,10 +2,14 @@
 <script setup lang="ts">
 import type { DmScreenPartyStats } from '~/types/dm-screen'
 import { useDmScreenCombat } from '~/composables/useDmScreenCombat'
+import { useEncounterMonsters } from '~/composables/useEncounterMonsters'
 import { logger } from '~/utils/logger'
 
 const route = useRoute()
 const partyId = computed(() => route.params.id as string)
+
+// Encounter monsters management
+const encounterMonsters = useEncounterMonsters(partyId.value)
 
 const { apiFetch } = useApi()
 
@@ -54,8 +58,34 @@ function handleResetCombat() {
   combat.value?.resetCombat()
 }
 
-function handleSetInitiative(characterId: number, value: number) {
-  combat.value?.setInitiative(characterId, value)
+function handleSetInitiative(key: string, value: number) {
+  combat.value?.setInitiative(key, value)
+}
+
+// Monster handlers
+const showAddMonsterModal = ref(false)
+const addingMonster = ref(false)
+
+async function handleAddMonster(monsterId: number, quantity: number) {
+  addingMonster.value = true
+  try {
+    await encounterMonsters.addMonster(monsterId, quantity)
+  } finally {
+    addingMonster.value = false
+    showAddMonsterModal.value = false
+  }
+}
+
+async function handleUpdateMonsterHp(instanceId: number, hp: number) {
+  // Optimistic update
+  const monster = encounterMonsters.monsters.value.find(m => m.id === instanceId)
+  if (monster) monster.current_hp = hp
+  // Sync to backend (debounced in component, but we handle immediate here)
+  await encounterMonsters.updateMonsterHp(instanceId, hp)
+}
+
+async function handleRemoveMonster(instanceId: number) {
+  await encounterMonsters.removeMonster(instanceId)
 }
 
 // SEO
@@ -69,7 +99,7 @@ const STORAGE_KEY = 'dm-screen-summary-collapsed'
 
 const summaryCollapsed = ref(false)
 
-onMounted(() => {
+onMounted(async () => {
   if (import.meta.client) {
     try {
       const stored = localStorage.getItem(STORAGE_KEY)
@@ -80,6 +110,8 @@ onMounted(() => {
       // localStorage unavailable (private browsing, storage full)
     }
   }
+  // Fetch encounter monsters
+  await encounterMonsters.fetchMonsters()
 })
 
 watch(summaryCollapsed, (val) => {
@@ -193,6 +225,7 @@ async function handleRefresh() {
       >
         <DmScreenCombatTable
           :characters="stats.characters"
+          :monsters="encounterMonsters.monsters.value"
           :combat-state="combatState"
           @roll-all="handleRollAll"
           @start-combat="handleStartCombat"
@@ -200,8 +233,18 @@ async function handleRefresh() {
           @previous-turn="handlePreviousTurn"
           @reset-combat="handleResetCombat"
           @set-initiative="handleSetInitiative"
+          @add-monster="showAddMonsterModal = true"
+          @update-monster-hp="handleUpdateMonsterHp"
+          @remove-monster="handleRemoveMonster"
         />
       </div>
     </template>
+
+    <!-- Add Monster Modal -->
+    <DmScreenAddMonsterModal
+      v-model:open="showAddMonsterModal"
+      :loading="addingMonster"
+      @add="handleAddMonster"
+    />
   </div>
 </template>
