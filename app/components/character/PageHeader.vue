@@ -29,7 +29,9 @@
 import type { Character } from '~/types/character'
 import type { Condition } from '~/types'
 import type { EditPayload } from '~/components/character/sheet/EditModal.vue'
+import { storeToRefs } from 'pinia'
 import { logger } from '~/utils/logger'
+import { useCharacterPlayStateStore } from '~/stores/characterPlayState'
 
 const props = withDefaults(defineProps<{
   character: Character
@@ -51,34 +53,35 @@ const emit = defineEmits<{
 
 const { apiFetch } = useApi()
 const toast = useToast()
+const playStateStore = useCharacterPlayStateStore()
 
 // ============================================================================
-// Play Mode (self-contained with localStorage)
+// Play Mode (via store)
 // ============================================================================
 
-const isPlayMode = ref(false)
-// Use global key to sync with index.vue until it's refactored to use PageHeader
-const playModeKey = 'character-play-mode'
+// Use storeToRefs for reactive binding to template
+const { isPlayMode } = storeToRefs(playStateStore)
 
+// Load play mode from localStorage on mount (if character is complete)
 onMounted(() => {
-  const saved = localStorage.getItem(playModeKey)
-  if (saved === 'true' && props.character.is_complete) {
-    isPlayMode.value = true
+  if (props.character.is_complete) {
+    playStateStore.loadPlayMode()
   }
-})
-
-watch(isPlayMode, (newValue) => {
-  localStorage.setItem(playModeKey, String(newValue))
 })
 
 // Disable play mode for draft characters
 watch(() => props.character.is_complete, (isComplete) => {
   if (!isComplete && isPlayMode.value) {
-    isPlayMode.value = false
+    playStateStore.setPlayMode(false)
   }
 }, { immediate: true })
 
-/** Expose play mode for parent components that need it */
+/** Toggle handler for the switch */
+function handlePlayModeToggle(enabled: boolean) {
+  playStateStore.setPlayMode(enabled)
+}
+
+/** Expose play mode for parent components that need it (backwards compat) */
 defineExpose({ isPlayMode })
 
 // ============================================================================
@@ -95,7 +98,7 @@ watch(() => props.character.has_inspiration, (hasInspiration) => {
 }, { immediate: true })
 
 const canToggleInspiration = computed(() => {
-  return isPlayMode.value && !props.character.is_dead
+  return isPlayMode.value && !playStateStore.isDead
 })
 
 async function handleToggleInspiration() {
@@ -166,7 +169,7 @@ async function handleExport() {
 const isReviving = ref(false)
 
 async function handleRevive() {
-  if (isReviving.value || !props.character.is_dead) return
+  if (isReviving.value || !playStateStore.isDead) return
   isReviving.value = true
 
   try {
@@ -174,6 +177,13 @@ async function handleRevive() {
       method: 'POST',
       body: { hit_points: 1, clear_exhaustion: true }
     })
+
+    // Update store immediately for reactive UI
+    playStateStore.isDead = false
+    playStateStore.hitPoints.current = 1
+    playStateStore.deathSaves.successes = 0
+    playStateStore.deathSaves.failures = 0
+
     toast.add({
       title: 'Character revived!',
       description: `${props.character.name} has been brought back with 1 HP`,
@@ -367,11 +377,11 @@ const portraitAriaLabel = computed(() => {
 const actionMenuItems = computed(() => {
   const items: Array<Array<{ label: string, icon: string, to?: string, onSelect?: () => void }>> = []
 
-  // Play mode actions
+  // Play mode actions (use store.isDead for reactivity)
   if (props.character.is_complete && isPlayMode.value) {
     const playModeActions: Array<{ label: string, icon: string, onSelect: () => void }> = []
 
-    if (props.character.is_dead) {
+    if (playStateStore.isDead) {
       playModeActions.push({
         label: 'Revive Character',
         icon: 'i-heroicons-sparkles',
@@ -447,8 +457,9 @@ const actionMenuItems = computed(() => {
       >
         <span class="text-sm text-gray-500 dark:text-gray-400">Play Mode</span>
         <USwitch
-          v-model="isPlayMode"
+          :model-value="isPlayMode"
           data-testid="play-mode-toggle"
+          @update:model-value="handlePlayModeToggle"
         />
       </div>
     </div>

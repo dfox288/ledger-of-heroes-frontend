@@ -81,6 +81,9 @@ export const useCharacterPlayStateStore = defineStore('characterPlayState', () =
   /** Character being managed */
   const characterId = ref<number | null>(null)
 
+  /** Whether play mode is active (enables interactive features) */
+  const isPlayMode = ref(false)
+
   /** Whether character is dead (disables all interactions) */
   const isDead = ref(false)
 
@@ -112,6 +115,39 @@ export const useCharacterPlayStateStore = defineStore('characterPlayState', () =
   const isUpdatingDeathSaves = ref(false)
 
   // ===========================================================================
+  // COMPUTED
+  // ===========================================================================
+
+  /** Can the user interact with the character? (play mode ON and not dead) */
+  const canEdit = computed(() => isPlayMode.value && !isDead.value)
+
+  // ===========================================================================
+  // PLAY MODE
+  // ===========================================================================
+
+  const playModeKey = 'character-play-mode'
+
+  /**
+   * Set play mode state
+   *
+   * Persists to localStorage for session continuity
+   */
+  function setPlayMode(enabled: boolean) {
+    isPlayMode.value = enabled
+    localStorage.setItem(playModeKey, String(enabled))
+  }
+
+  /**
+   * Load play mode from localStorage
+   *
+   * Call this when the character page loads
+   */
+  function loadPlayMode() {
+    const saved = localStorage.getItem(playModeKey)
+    isPlayMode.value = saved === 'true'
+  }
+
+  // ===========================================================================
   // INITIALIZATION
   // ===========================================================================
 
@@ -123,6 +159,7 @@ export const useCharacterPlayStateStore = defineStore('characterPlayState', () =
   function initialize(data: CharacterPlayData) {
     characterId.value = data.characterId
     isDead.value = data.isDead
+    loadPlayMode()
 
     // Set hit points (handle null/undefined)
     hitPoints.current = data.hitPoints.current ?? 0
@@ -360,6 +397,7 @@ export const useCharacterPlayStateStore = defineStore('characterPlayState', () =
    */
   function $reset() {
     characterId.value = null
+    isPlayMode.value = false
     isDead.value = false
 
     hitPoints.current = 0
@@ -387,6 +425,7 @@ export const useCharacterPlayStateStore = defineStore('characterPlayState', () =
   return {
     // State
     characterId,
+    isPlayMode,
     isDead,
     hitPoints,
     deathSaves,
@@ -395,8 +434,13 @@ export const useCharacterPlayStateStore = defineStore('characterPlayState', () =
     isUpdatingCurrency,
     isUpdatingDeathSaves,
 
+    // Computed
+    canEdit,
+
     // Actions
     initialize,
+    setPlayMode,
+    loadPlayMode,
     updateHp,
     setTempHp,
     clearTempHp,

@@ -13,6 +13,7 @@
  *
  * @see Issue #584 - Character sheet component refactor
  */
+import { storeToRefs } from 'pinia'
 import { useCharacterPlayStateStore } from '~/stores/characterPlayState'
 
 const route = useRoute()
@@ -75,19 +76,14 @@ onUnmounted(() => {
 })
 
 // ============================================================================
-// Play Mode (from PageHeader)
+// Play Mode (from store)
 // ============================================================================
 
-// Reference to PageHeader to access isPlayMode (PageHeader owns play mode state)
-const pageHeaderRef = ref<{ isPlayMode: boolean } | null>(null)
-const isPlayMode = computed(() => pageHeaderRef.value?.isPlayMode ?? false)
-
 /**
- * Effective edit mode - play mode is enabled AND character is alive
- * Dead characters can't interact with anything (must revive first)
- * Uses store.isDead for reactivity when death state changes mid-session
+ * canEdit is now computed in the store (isPlayMode && !isDead)
+ * This removes the need for the ref pattern to access PageHeader's isPlayMode
  */
-const canEdit = computed(() => isPlayMode.value && !playStateStore.isDead)
+const { canEdit } = storeToRefs(playStateStore)
 
 // Validation - check for dangling references when sourcebooks are removed
 const characterId = computed(() => character.value?.id ?? null)
@@ -157,7 +153,6 @@ const isSpellcaster = computed(() => !!stats.value?.spellcasting)
     >
       <!-- Unified Page Header (back button, play mode, portrait, actions, tabs) -->
       <CharacterPageHeader
-        ref="pageHeaderRef"
         :character="character"
         :is-spellcaster="isSpellcaster"
         @updated="refresh"
