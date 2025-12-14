@@ -99,16 +99,15 @@ useSeoMeta({
   description: () => `View ${character.value?.name ?? 'character'} - D&D 5e Character Sheet`
 })
 
-// Tab items for bottom section (Equipment moved to /inventory, Notes to /notes)
+// Tab items for bottom section (Equipment -> /inventory, Notes -> /notes, Features -> /features)
 const tabItems = computed(() => {
   const items = [
-    { label: 'Features', slot: 'features', icon: 'i-heroicons-star' },
     { label: 'Proficiencies', slot: 'proficiencies', icon: 'i-heroicons-academic-cap' },
     { label: 'Languages', slot: 'languages', icon: 'i-heroicons-language' }
   ]
   // Only show Spells tab for casters
   if (stats.value?.spellcasting) {
-    items.splice(2, 0, { label: 'Spells', slot: 'spells', icon: 'i-heroicons-sparkles' })
+    items.splice(1, 0, { label: 'Spells', slot: 'spells', icon: 'i-heroicons-sparkles' })
   }
   return items
 })
@@ -227,10 +226,6 @@ const isSpellcaster = computed(() => !!stats.value?.spellcasting)
         :items="tabItems"
         class="mt-8"
       >
-        <template #features>
-          <CharacterSheetFeaturesPanel :features="features" />
-        </template>
-
         <template #proficiencies>
           <CharacterSheetProficienciesPanel :proficiencies="proficiencies" />
         </template>
