@@ -101,9 +101,15 @@ function getItemType(equipment: CharacterEquipment): string | null {
 }
 
 // Get equipment_slot from backend (Issue #589)
+// Check both item relation and top-level for flexibility
 function getEquipmentSlot(equipment: CharacterEquipment): string | null {
+  // Check nested in item relation first
   const item = equipment.item as { equipment_slot?: string | null } | null
-  return item?.equipment_slot ?? null
+  if (item?.equipment_slot) return item.equipment_slot
+
+  // Also check top-level (in case API returns it there)
+  const topLevel = equipment as { equipment_slot?: string | null }
+  return topLevel.equipment_slot ?? null
 }
 
 // Get the group for an item (backend provides group field directly)

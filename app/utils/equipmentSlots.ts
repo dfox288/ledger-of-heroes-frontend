@@ -48,7 +48,14 @@ const BACKEND_SLOT_MAPPING: Record<string, EquipmentSlot[]> = {
   FEET: ['feet'],
   MAIN_HAND: ['main_hand'],
   OFF_HAND: ['off_hand'],
-  WEAPON: ['main_hand', 'off_hand']
+  SHIELD: ['off_hand'],
+  WEAPON: ['main_hand', 'off_hand'],
+  // Aliases for flexibility
+  GLOVES: ['hands'],
+  BOOTS: ['feet'],
+  HELMET: ['head'],
+  AMULET: ['neck'],
+  CAPE: ['cloak']
 }
 
 // Item type to valid slots mapping (legacy fallback)
