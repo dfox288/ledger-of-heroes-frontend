@@ -275,6 +275,15 @@ const existingCharacterIds = computed(() =>
           >
             Edit
           </UButton>
+          <UButton
+            data-testid="dm-screen-link"
+            :to="`/parties/${partyId}/dm-screen`"
+            icon="i-heroicons-presentation-chart-bar"
+            variant="soft"
+            color="primary"
+          >
+            DM Screen
+          </UButton>
           <UDropdownMenu
             :items="[[
               { label: 'Delete Party', icon: 'i-heroicons-trash', color: 'error' }
