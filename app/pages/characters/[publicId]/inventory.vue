@@ -6,30 +6,29 @@
  * Full inventory UI with grouped item table, equipment status sidebar,
  * add loot/shop modals, and optional encumbrance tracking.
  *
- * Uses CharacterPageHeader for unified header with play mode, inspiration, etc.
- * Uses characterPlayState store for currency and play mode state.
+ * Uses useCharacterSubPage for shared data fetching and play state initialization.
  *
  * @see Design: docs/frontend/plans/2025-12-13-inventory-redesign.md
  * @see Issue #584 - Character sheet component refactor
+ * @see Issue #621 - Consolidated data fetching
  */
 
-import type { Character, CharacterEquipment } from '~/types/character'
+import type { CharacterEquipment } from '~/types/character'
 import type { EquipmentLocation } from '~/composables/useInventoryActions'
 import type { EquipmentSlot } from '~/utils/equipmentSlots'
 import { storeToRefs } from 'pinia'
 import { logger } from '~/utils/logger'
-import { useCharacterPlayStateStore } from '~/stores/characterPlayState'
 
 const route = useRoute()
 const publicId = computed(() => route.params.publicId as string)
 const toast = useToast()
 const { apiFetch } = useApi()
 
-// ============================================================================
-// Play State Store
-// ============================================================================
+// Shared character data + play state initialization
+const { character, stats, isSpellcaster, loading, refreshCharacter, playStateStore, addPendingState } =
+  useCharacterSubPage(publicId)
 
-const playStateStore = useCharacterPlayStateStore()
+// Get reactive state from store
 const { canEdit } = storeToRefs(playStateStore)
 
 // Modal state
@@ -57,89 +56,19 @@ const isEquipping = ref(false)
 // Search state
 const searchQuery = ref('')
 
-// Fetch full character data (needed for PageHeader)
-const { data: characterData, pending: characterPending, refresh: refreshCharacter } = await useAsyncData(
-  `inventory-character-${publicId.value}`,
-  () => apiFetch<{ data: Character }>(`/characters/${publicId.value}`)
-)
-
-// Fetch equipment data
+// Fetch equipment data (page-specific)
 const { data: equipmentData, pending: equipmentPending, refresh: refreshEquipment } = await useAsyncData(
-  `inventory-equipment-${publicId.value}`,
+  `character-${publicId.value}-equipment`,
   () => apiFetch<{ data: CharacterEquipment[] }>(`/characters/${publicId.value}/equipment`)
 )
 
-// Fetch stats for carrying capacity, spellcaster check, and HP (for store init)
-interface StatsResponse {
-  carrying_capacity?: number
-  push_drag_lift?: number
-  spellcasting?: unknown
-  hit_points?: { current: number | null, max: number | null, temporary?: number | null }
-}
-const { data: statsData, pending: statsPending } = await useAsyncData(
-  `inventory-stats-${publicId.value}`,
-  () => apiFetch<{ data: StatsResponse }>(
-    `/characters/${publicId.value}/stats`
-  )
-)
+// Register pending state so it's included in loading
+addPendingState(equipmentPending)
 
-// Track initial load vs refresh - only show skeleton on initial load
-const hasLoadedOnce = ref(false)
-const loading = computed(() => {
-  // After initial load, never show loading skeleton (prevents flash on refresh)
-  if (hasLoadedOnce.value) return false
-  return characterPending.value || equipmentPending.value || statsPending.value
-})
-
-// Mark as loaded once all data is available
-watch(
-  () => !characterPending.value && !equipmentPending.value && !statsPending.value,
-  (allLoaded) => {
-    if (allLoaded && !hasLoadedOnce.value) {
-      hasLoadedOnce.value = true
-    }
-  },
-  { immediate: true }
-)
-
-const character = computed(() => characterData.value?.data ?? null)
 // Filter out currency items - they're shown in the currency display, not inventory
 const equipment = computed(() =>
   (equipmentData.value?.data ?? []).filter(item => !item.is_currency)
 )
-const stats = computed(() => statsData.value?.data ?? null)
-const isSpellcaster = computed(() => !!stats.value?.spellcasting)
-
-// ============================================================================
-// Store Initialization
-// ============================================================================
-
-/**
- * Initialize play state store when character and stats load
- * Store manages HP, death saves, and currency state for play mode
- */
-watch([character, statsData], ([char, s]) => {
-  if (char && s?.data) {
-    playStateStore.initialize({
-      characterId: char.id,
-      isDead: char.is_dead ?? false,
-      hitPoints: {
-        current: s.data.hit_points?.current ?? null,
-        max: s.data.hit_points?.max ?? null,
-        temporary: s.data.hit_points?.temporary ?? null
-      },
-      deathSaves: {
-        successes: char.death_save_successes ?? 0,
-        failures: char.death_save_failures ?? 0
-      },
-      currency: char.currency ?? { pp: 0, gp: 0, ep: 0, sp: 0, cp: 0 }
-    })
-  }
-}, { immediate: true })
-
-// Note: We intentionally don't reset the store on unmount
-// The store persists play mode between character sub-pages (overview/inventory/notes)
-// Each page's initialize() will update the store with fresh data when mounting
 
 // Item count for header
 const itemCount = computed(() => equipment.value.length)

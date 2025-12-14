@@ -6,57 +6,31 @@
  * Combat-focused view showing weapons, combat stats, defenses, and saving throws.
  * Designed for quick reference during battle encounters.
  *
- * Uses CharacterPageHeader for unified header with play mode, inspiration, etc.
- * Uses characterPlayState store for play mode state persistence.
+ * Uses useCharacterSubPage for shared data fetching and play state initialization.
  *
  * @see Issue #554 - Battle Tab implementation
+ * @see Issue #621 - Consolidated data fetching
  */
 
-import type { Character, CharacterStats, AbilityScoreCode } from '~/types/character'
+import type { AbilityScoreCode } from '~/types/character'
 import { storeToRefs } from 'pinia'
-import { useCharacterPlayStateStore } from '~/stores/characterPlayState'
 
 const route = useRoute()
 const publicId = computed(() => route.params.publicId as string)
-const { apiFetch } = useApi()
 
-// Play State Store (includes conditions)
-const playStateStore = useCharacterPlayStateStore()
+// Shared character data + play state initialization
+const { character, stats, isSpellcaster, loading, refreshCharacter, playStateStore } =
+  useCharacterSubPage(publicId)
+
+// Get reactive state from store
 const { canEdit, hitPoints, conditions } = storeToRefs(playStateStore)
 
-// Fetch character data
-// Use same cache keys as useCharacterSheet to share data across pages
-const { data: characterData, pending: characterPending, refresh: refreshCharacter } = await useAsyncData(
-  `character-${publicId.value}`,
-  () => apiFetch<{ data: Character }>(`/characters/${publicId.value}`)
-)
-
-// Fetch stats data (includes weapons, saves, defenses)
-const { data: statsData, pending: statsPending } = await useAsyncData(
-  `character-${publicId.value}-stats`,
-  () => apiFetch<{ data: CharacterStats }>(`/characters/${publicId.value}/stats`)
-)
-
-// Track initial load vs refresh
-const hasLoadedOnce = ref(false)
-const loading = computed(() => {
-  if (hasLoadedOnce.value) return false
-  return characterPending.value || statsPending.value
-})
-
-watch(
-  () => !characterPending.value && !statsPending.value,
-  (allLoaded) => {
-    if (allLoaded && !hasLoadedOnce.value) {
-      hasLoadedOnce.value = true
-    }
-  },
-  { immediate: true }
-)
-
-const character = computed(() => characterData.value?.data ?? null)
-const stats = computed(() => statsData.value?.data ?? null)
-const isSpellcaster = computed(() => !!stats.value?.spellcasting)
+// Fetch conditions into store when character loads
+watch(character, async (char) => {
+  if (char) {
+    await playStateStore.fetchConditions()
+  }
+}, { immediate: true })
 
 // Extract ability modifiers for WeaponsPanel
 const abilityModifiers = computed<Record<AbilityScoreCode, number>>(() => {
@@ -81,7 +55,6 @@ const savingThrows = computed(() => {
 })
 
 // Extract skills from stats and map to CharacterSkill format
-// API returns 'ability' but CharacterSkill expects 'ability_code'
 const skills = computed(() => {
   if (!stats.value?.skills) return []
   return stats.value.skills.map((skill, index) => ({
@@ -100,29 +73,6 @@ const isAtZeroHp = computed(() => hitPoints.value.current === 0)
 
 // Show death saves when at 0 HP or in play mode
 const showDeathSaves = computed(() => canEdit.value || isAtZeroHp.value)
-
-// Initialize play state store when character and stats load
-// Also fetch conditions from store
-watch([character, statsData], async ([char, s]) => {
-  if (char && s?.data) {
-    playStateStore.initialize({
-      characterId: char.id,
-      isDead: char.is_dead ?? false,
-      hitPoints: {
-        current: s.data.hit_points?.current ?? null,
-        max: s.data.hit_points?.max ?? null,
-        temporary: s.data.hit_points?.temporary ?? null
-      },
-      deathSaves: {
-        successes: char.death_save_successes ?? 0,
-        failures: char.death_save_failures ?? 0
-      },
-      currency: char.currency ?? { pp: 0, gp: 0, ep: 0, sp: 0, cp: 0 }
-    })
-    // Fetch conditions into store
-    await playStateStore.fetchConditions()
-  }
-}, { immediate: true })
 
 useSeoMeta({
   title: () => character.value ? `${character.value.name} - Battle` : 'Battle'

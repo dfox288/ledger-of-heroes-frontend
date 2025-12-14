@@ -7,13 +7,13 @@
  * Shows spellcasting stats, spell slots, and all known spells
  * grouped by level with expandable cards.
  *
- * Uses CharacterPageHeader for unified header with play mode, inspiration, etc.
+ * Uses useCharacterSubPage for shared data fetching and play state initialization.
  *
  * @see Issue #556 - Spells Tab implementation
+ * @see Issue #621 - Consolidated data fetching
  */
 
-import type { Character, CharacterSpell } from '~/types/character'
-import { useCharacterPlayStateStore } from '~/stores/characterPlayState'
+import type { CharacterSpell } from '~/types/character'
 import { formatSpellLevel } from '~/composables/useSpellFormatters'
 import { formatModifier } from '~/composables/useCharacterStats'
 
@@ -21,40 +21,17 @@ const route = useRoute()
 const publicId = computed(() => route.params.publicId as string)
 const { apiFetch } = useApi()
 
-// Play State Store
-const playStateStore = useCharacterPlayStateStore()
+// Shared character data + play state initialization
+const { character, stats, isSpellcaster, loading, refreshCharacter, addPendingState } =
+  useCharacterSubPage(publicId)
 
-// Fetch character data (needed for PageHeader)
-const { data: characterData, pending: characterPending, refresh: refreshCharacter } = await useAsyncData(
-  `spells-character-${publicId.value}`,
-  () => apiFetch<{ data: Character }>(`/characters/${publicId.value}`)
-)
-
-// Fetch spells data
+// Fetch spells data (page-specific)
 const { data: spellsData, pending: spellsPending } = await useAsyncData(
-  `spells-data-${publicId.value}`,
+  `character-${publicId.value}-spells`,
   () => apiFetch<{ data: CharacterSpell[] }>(`/characters/${publicId.value}/spells`)
 )
 
-// Fetch stats for spellcasting info
-interface StatsResponse {
-  spellcasting?: {
-    ability: string
-    ability_modifier: number
-    spell_save_dc: number
-    spell_attack_bonus: number
-  } | null
-  spell_slots?: Record<string, number>
-  prepared_spell_count?: number
-  preparation_limit?: number | null
-  hit_points?: { current: number | null, max: number | null, temporary?: number | null }
-}
-const { data: statsData, pending: statsPending } = await useAsyncData(
-  `spells-stats-${publicId.value}`,
-  () => apiFetch<{ data: StatsResponse }>(`/characters/${publicId.value}/stats`)
-)
-
-// Fetch spell slots for detailed tracking
+// Fetch spell slots for detailed tracking (page-specific)
 interface SpellSlotsResponse {
   slots: Record<string, { total: number, spent: number, available: number }>
   pact_magic: { level: number, count: number } | null
@@ -62,31 +39,15 @@ interface SpellSlotsResponse {
   prepared_count: number
 }
 const { data: slotsData, pending: slotsPending } = await useAsyncData(
-  `spells-slots-${publicId.value}`,
+  `character-${publicId.value}-spell-slots`,
   () => apiFetch<{ data: SpellSlotsResponse }>(`/characters/${publicId.value}/spell-slots`)
 )
 
-// Track initial load vs refresh
-const hasLoadedOnce = ref(false)
-const loading = computed(() => {
-  if (hasLoadedOnce.value) return false
-  return characterPending.value || spellsPending.value || statsPending.value || slotsPending.value
-})
+// Register pending states so they're included in loading
+addPendingState(spellsPending)
+addPendingState(slotsPending)
 
-watch(
-  () => !characterPending.value && !spellsPending.value && !statsPending.value && !slotsPending.value,
-  (allLoaded) => {
-    if (allLoaded && !hasLoadedOnce.value) {
-      hasLoadedOnce.value = true
-    }
-  },
-  { immediate: true }
-)
-
-const character = computed(() => characterData.value?.data ?? null)
-const stats = computed(() => statsData.value?.data ?? null)
 const spellSlots = computed(() => slotsData.value?.data ?? null)
-const isSpellcaster = computed(() => !!stats.value?.spellcasting)
 
 // Filter and group spells
 const validSpells = computed(() =>
@@ -118,26 +79,6 @@ const spellsByLevel = computed(() => {
 const sortedLevels = computed(() =>
   Object.keys(spellsByLevel.value).map(Number).sort((a, b) => a - b)
 )
-
-// Initialize play state store when character and stats load
-watch([character, statsData], ([char, s]) => {
-  if (char && s?.data) {
-    playStateStore.initialize({
-      characterId: char.id,
-      isDead: char.is_dead ?? false,
-      hitPoints: {
-        current: s.data.hit_points?.current ?? null,
-        max: s.data.hit_points?.max ?? null,
-        temporary: s.data.hit_points?.temporary ?? null
-      },
-      deathSaves: {
-        successes: char.death_save_successes ?? 0,
-        failures: char.death_save_failures ?? 0
-      },
-      currency: char.currency ?? { pp: 0, gp: 0, ep: 0, sp: 0, cp: 0 }
-    })
-  }
-}, { immediate: true })
 
 useSeoMeta({
   title: () => character.value ? `${character.value.name} - Spells` : 'Spells'
