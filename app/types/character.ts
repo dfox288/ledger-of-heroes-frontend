@@ -209,7 +209,7 @@ export interface SkillAdvantage {
  */
 export interface CharacterStats extends Omit<CharacterStatsFromAPI, 'ability_scores' | 'saving_throws' | 'spellcasting'> {
   ability_scores: Record<AbilityScoreCode, { score: number | null, modifier: number | null }>
-  saving_throws: Record<AbilityScoreCode, number | null>
+  saving_throws: Record<AbilityScoreCode, { modifier: number | null, proficient: boolean, total: number | null } | null>
   spellcasting: {
     ability: AbilityScoreCode
     ability_modifier: number
@@ -221,6 +221,7 @@ export interface CharacterStats extends Omit<CharacterStatsFromAPI, 'ability_sco
   damage_vulnerabilities: DamageDefense[]
   condition_advantages: ConditionAdvantage[]
   condition_immunities: ConditionImmunity[]
+  weapons?: CharacterWeapon[]
 }
 
 // =============================================================================
@@ -477,4 +478,23 @@ export interface LevelUpStep {
   icon: string
   visible: () => boolean
   shouldSkip?: () => boolean
+}
+
+/**
+ * Weapon data from character stats endpoint
+ * Used in Battle Tab for attack/damage display
+ */
+export interface CharacterWeapon {
+  /** Weapon name (e.g., "Longbow", "Shortsword") */
+  name: string
+  /** Damage dice (e.g., "1d8", "2d6") */
+  damage_dice: string
+  /** Flat attack bonus from magic/features */
+  attack_bonus: number
+  /** Flat damage bonus from magic/features */
+  damage_bonus: number
+  /** Ability used for attack (STR or DEX typically) */
+  ability_used: AbilityScoreCode
+  /** Whether character is proficient with this weapon */
+  is_proficient: boolean
 }

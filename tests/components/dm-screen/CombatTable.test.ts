@@ -167,9 +167,9 @@ describe('DmScreenCombatTable', () => {
       const combatStateWithInit = {
         ...mockCombatState,
         initiatives: {
-          'char_1': 10,
-          'char_2': 20,
-          'monster_1': 15
+          char_1: 10,
+          char_2: 20,
+          monster_1: 15
         }
       }
       const wrapper = await mountSuspended(CombatTable, {

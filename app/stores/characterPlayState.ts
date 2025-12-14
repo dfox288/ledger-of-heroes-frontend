@@ -6,6 +6,8 @@
  * - Hit points (current, max, temporary)
  * - Death saves (successes, failures)
  * - Currency (pp, gp, ep, sp, cp)
+ * - Spell slots and preparation
+ * - Active conditions
  *
  * Used by manager components (CurrencyManager, HitPointsManager, DeathSavesManager)
  * to provide self-contained, reusable character sheet interactions.
@@ -13,7 +15,8 @@
  * @see Issue #584 - Character sheet component refactor
  */
 import { defineStore } from 'pinia'
-import type { CharacterCurrency } from '~/types/character'
+import type { CharacterCurrency, CharacterCondition } from '~/types/character'
+import { logger } from '~/utils/logger'
 
 // =============================================================================
 // TYPES
@@ -118,12 +121,16 @@ export const useCharacterPlayStateStore = defineStore('characterPlayState', () =
   /** Preparation limit for prepared casters (null for known casters) */
   const preparationLimit = ref<number | null>(null)
 
+  /** Active conditions (status effects) */
+  const conditions = ref<CharacterCondition[]>([])
+
   /** Loading flags to prevent race conditions */
   const isUpdatingHp = ref(false)
   const isUpdatingCurrency = ref(false)
   const isUpdatingDeathSaves = ref(false)
   const isUpdatingSpellSlot = ref(false)
   const isUpdatingSpellPreparation = ref(false)
+  const isUpdatingConditions = ref(false)
 
   // ===========================================================================
   // COMPUTED
@@ -635,6 +642,121 @@ export const useCharacterPlayStateStore = defineStore('characterPlayState', () =
   }
 
   // ===========================================================================
+  // CONDITIONS ACTIONS
+  // ===========================================================================
+
+  /**
+   * Fetch conditions from API
+   *
+   * Call this when initializing the store or when conditions need refresh
+   */
+  async function fetchConditions(): Promise<void> {
+    if (!characterId.value) return
+
+    try {
+      const response = await apiFetch<{ data: CharacterCondition[] }>(
+        `/characters/${characterId.value}/conditions`
+      )
+      conditions.value = response.data
+    } catch (err) {
+      logger.error('Failed to fetch conditions:', err)
+      conditions.value = []
+    }
+  }
+
+  /**
+   * Add a condition to the character
+   */
+  async function addCondition(payload: {
+    condition: string
+    source: string
+    duration: string
+    level?: number
+  }): Promise<boolean> {
+    if (!characterId.value || isUpdatingConditions.value) return false
+
+    isUpdatingConditions.value = true
+
+    try {
+      await apiFetch(`/characters/${characterId.value}/conditions`, {
+        method: 'POST',
+        body: payload
+      })
+      // Refresh conditions from server to get full data
+      await fetchConditions()
+      return true
+    } catch (err) {
+      logger.error('Failed to add condition:', err)
+      return false
+    } finally {
+      isUpdatingConditions.value = false
+    }
+  }
+
+  /**
+   * Remove a condition from the character
+   */
+  async function removeCondition(conditionSlug: string): Promise<boolean> {
+    if (!characterId.value || isUpdatingConditions.value) return false
+
+    isUpdatingConditions.value = true
+    const oldConditions = [...conditions.value]
+
+    // Optimistic update
+    conditions.value = conditions.value.filter(c => c.condition_slug !== conditionSlug)
+
+    try {
+      await apiFetch(`/characters/${characterId.value}/conditions/${conditionSlug}`, {
+        method: 'DELETE'
+      })
+      return true
+    } catch (err) {
+      // Rollback on error
+      conditions.value = oldConditions
+      logger.error('Failed to remove condition:', err)
+      return false
+    } finally {
+      isUpdatingConditions.value = false
+    }
+  }
+
+  /**
+   * Update exhaustion level
+   *
+   * POSTs updated level to backend (upsert behavior)
+   */
+  async function updateExhaustionLevel(payload: {
+    slug: string
+    level: number
+    source: string | null
+    duration: string | null
+  }): Promise<boolean> {
+    if (!characterId.value || isUpdatingConditions.value) return false
+
+    isUpdatingConditions.value = true
+
+    try {
+      await apiFetch(`/characters/${characterId.value}/conditions`, {
+        method: 'POST',
+        body: {
+          condition: payload.slug,
+          level: payload.level,
+          source: payload.source ?? '',
+          duration: payload.duration ?? ''
+        }
+      })
+      // Refresh to get updated data
+      await fetchConditions()
+      return true
+    } catch (err) {
+      logger.error('Failed to update exhaustion level:', err)
+      return false
+    } finally {
+      isUpdatingConditions.value = false
+    }
+  }
+
+  // ===========================================================================
   // RESET
   // ===========================================================================
 
@@ -651,6 +773,7 @@ export const useCharacterPlayStateStore = defineStore('characterPlayState', () =
     isUpdatingDeathSaves.value = false
     isUpdatingSpellSlot.value = false
     isUpdatingSpellPreparation.value = false
+    isUpdatingConditions.value = false
 
     // Reset identity/mode
     characterId.value = null
@@ -677,6 +800,9 @@ export const useCharacterPlayStateStore = defineStore('characterPlayState', () =
     spellSlots.value.clear()
     preparedSpellIds.value.clear()
     preparationLimit.value = null
+
+    // Reset conditions
+    conditions.value = []
   }
 
   // ===========================================================================
@@ -694,11 +820,13 @@ export const useCharacterPlayStateStore = defineStore('characterPlayState', () =
     spellSlots,
     preparedSpellIds,
     preparationLimit,
+    conditions,
     isUpdatingHp,
     isUpdatingCurrency,
     isUpdatingDeathSaves,
     isUpdatingSpellSlot,
     isUpdatingSpellPreparation,
+    isUpdatingConditions,
 
     // Computed
     canEdit,
@@ -726,6 +854,10 @@ export const useCharacterPlayStateStore = defineStore('characterPlayState', () =
     resetSpellSlots,
     initializeSpellPreparation,
     toggleSpellPreparation,
+    fetchConditions,
+    addCondition,
+    removeCondition,
+    updateExhaustionLevel,
     $reset
   }
 })

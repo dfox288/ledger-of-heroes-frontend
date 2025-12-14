@@ -135,22 +135,17 @@ export function useCharacterStats(characterId: Ref<number | null>) {
 
   /**
    * All saving throws with display formatting
-   * Note: Proficiency detection is based on comparing save bonus to ability modifier
+   * Now uses proficient flag directly from API
    */
   const savingThrows = computed<SavingThrowDisplay[] | null>(() => {
-    if (!stats.value?.saving_throws || !stats.value?.ability_scores) return null
+    if (!stats.value?.saving_throws) return null
 
     const codes: AbilityScoreCode[] = ['STR', 'DEX', 'CON', 'INT', 'WIS', 'CHA']
-    const profBonus = stats.value.proficiency_bonus
 
     return codes.map((code) => {
-      const bonus = stats.value!.saving_throws[code]
-      const abilityMod = stats.value!.ability_scores[code].modifier
-      // Proficient if save bonus > ability modifier (includes prof bonus)
-      // Handle null values - default to not proficient if either is null
-      const isProficient = bonus !== null && abilityMod !== null
-        ? bonus >= abilityMod + profBonus
-        : false
+      const saveData = stats.value!.saving_throws[code]
+      const bonus = saveData?.total ?? null
+      const isProficient = saveData?.proficient ?? false
 
       return {
         code,

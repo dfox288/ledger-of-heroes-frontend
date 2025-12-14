@@ -101,7 +101,6 @@ function isCurrentTurn(key: string): boolean {
   return props.combatState.inCombat && props.combatState.currentTurnId === key
 }
 
-
 // Check if there are any combatants (characters or monsters)
 const hasCombatants = computed(() => {
   return props.characters.length > 0 || props.monsters.length > 0

@@ -54,7 +54,7 @@ export interface CharacterArmor {
   stealth_disadvantage: boolean
 }
 
-export interface CharacterWeapon {
+export interface DmScreenWeapon {
   name: string
   damage: string
   range: string | null
@@ -62,7 +62,7 @@ export interface CharacterWeapon {
 
 export interface DmScreenEquipment {
   armor: CharacterArmor | null
-  weapons: CharacterWeapon[]
+  weapons: DmScreenWeapon[]
   shield: boolean
 }
 
@@ -174,6 +174,6 @@ export interface EncounterMonster {
 }
 
 // Combatant union type for initiative tracking
-export type Combatant =
-  | { type: 'character'; key: string; data: DmScreenCharacter }
-  | { type: 'monster'; key: string; data: EncounterMonster }
+export type Combatant
+  = | { type: 'character', key: string, data: DmScreenCharacter }
+    | { type: 'monster', key: string, data: EncounterMonster }

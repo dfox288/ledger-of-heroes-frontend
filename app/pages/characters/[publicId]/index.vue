@@ -27,7 +27,7 @@ const {
   equipment,
   spells,
   languages,
-  conditions,
+  // conditions now come from store
   skills,
   skillAdvantages,
   savingThrows,
@@ -48,9 +48,9 @@ const playStateStore = useCharacterPlayStateStore()
 
 /**
  * Initialize play state store when character, stats, and spells load
- * Store manages HP, death saves, currency, and spellcasting state for play mode
+ * Store manages HP, death saves, currency, spellcasting, and conditions state for play mode
  */
-watch([character, stats, spells], ([char, s, sp]) => {
+watch([character, stats, spells], async ([char, s, sp]) => {
   if (char && s) {
     playStateStore.initialize({
       characterId: char.id,
@@ -91,6 +91,9 @@ watch([character, stats, spells], ([char, s, sp]) => {
         preparationLimit: s.preparation_limit ?? null
       })
     }
+
+    // Fetch conditions into store
+    await playStateStore.fetchConditions()
   }
 }, { immediate: true })
 
@@ -104,9 +107,9 @@ watch([character, stats, spells], ([char, s, sp]) => {
 
 /**
  * canEdit is now computed in the store (isPlayMode && !isDead)
- * This removes the need for the ref pattern to access PageHeader's isPlayMode
+ * conditions are also managed by the store for reactivity across pages
  */
-const { canEdit } = storeToRefs(playStateStore)
+const { canEdit, conditions } = storeToRefs(playStateStore)
 
 // Validation - check for dangling references when sourcebooks are removed
 const characterId = computed(() => character.value?.id ?? null)
@@ -124,18 +127,12 @@ useSeoMeta({
   description: () => `View ${character.value?.name ?? 'character'} - D&D 5e Character Sheet`
 })
 
-// Tab items for bottom section (Equipment -> /inventory, Notes -> /notes, Features -> /features)
-const tabItems = computed(() => {
-  const items = [
-    { label: 'Proficiencies', slot: 'proficiencies', icon: 'i-heroicons-academic-cap' },
-    { label: 'Languages', slot: 'languages', icon: 'i-heroicons-language' }
-  ]
-  // Only show Spells tab for casters
-  if (stats.value?.spellcasting) {
-    items.splice(1, 0, { label: 'Spells', slot: 'spells', icon: 'i-heroicons-sparkles' })
-  }
-  return items
-})
+// Tab items for bottom section - Proficiencies and Languages only
+// Spells moved to dedicated /spells page
+const tabItems = [
+  { label: 'Proficiencies', slot: 'proficiencies', icon: 'i-heroicons-academic-cap' },
+  { label: 'Languages', slot: 'languages', icon: 'i-heroicons-language' }
+]
 
 // Is this character a spellcaster? (for TabNavigation)
 const isSpellcaster = computed(() => !!stats.value?.spellcasting)
@@ -182,14 +179,13 @@ const isSpellcaster = computed(() => !!stats.value?.spellcasting)
       <!-- Validation Warning - shows when sourcebook content was removed -->
       <CharacterSheetValidationWarning :validation-result="validationResult" />
 
-      <!-- Active Conditions - only shows when character has conditions -->
-      <CharacterSheetConditionsManager
-        v-if="conditions.length > 0 && character"
-        :conditions="conditions"
-        :character-id="character.id"
-        :editable="canEdit"
-        @refresh="refresh"
-      />
+      <!-- Active Conditions (from store, client-only to avoid hydration mismatch) -->
+      <ClientOnly>
+        <CharacterSheetConditionsManager
+          v-if="conditions?.length > 0"
+          :editable="canEdit"
+        />
+      </ClientOnly>
 
       <!-- Main Grid: Abilities sidebar + Stats/Skills -->
       <div class="grid lg:grid-cols-[200px_1fr] gap-6">
@@ -253,16 +249,6 @@ const isSpellcaster = computed(() => !!stats.value?.spellcasting)
       >
         <template #proficiencies>
           <CharacterSheetProficienciesPanel :proficiencies="proficiencies" />
-        </template>
-
-        <template #spells>
-          <CharacterSheetSpellsPanel
-            v-if="stats.spellcasting && character"
-            :spells="spells"
-            :stats="stats"
-            :character-id="character.id"
-            :editable="canEdit"
-          />
         </template>
 
         <template #languages>

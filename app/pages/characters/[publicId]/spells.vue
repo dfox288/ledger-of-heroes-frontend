@@ -119,7 +119,6 @@ const sortedLevels = computed(() =>
   Object.keys(spellsByLevel.value).map(Number).sort((a, b) => a - b)
 )
 
-
 // Initialize play state store when character and stats load
 watch([character, statsData], ([char, s]) => {
   if (char && s?.data) {

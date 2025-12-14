@@ -27,6 +27,7 @@ const route = useRoute()
 const tabs = computed(() => {
   const baseTabs = [
     { key: 'overview', label: 'Overview', to: `/characters/${props.publicId}` },
+    { key: 'battle', label: 'Battle', to: `/characters/${props.publicId}/battle` },
     { key: 'inventory', label: 'Inventory', to: `/characters/${props.publicId}/inventory` }
   ]
 
