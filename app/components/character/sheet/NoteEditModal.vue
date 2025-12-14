@@ -12,6 +12,9 @@
  */
 import type { CharacterNote } from '~/types/character'
 
+/** Constant for custom category selection value */
+const CUSTOM_CATEGORY_VALUE = '__custom__' as const
+
 /**
  * Predefined note categories - common D&D note types
  * Users can also create custom categories via the "Custom..." option
@@ -35,7 +38,7 @@ const CATEGORIES = [
   { value: 'lore', label: 'Lore', requiresTitle: true },
   { value: 'item', label: 'Item', requiresTitle: true },
   // Custom - shows text input for user-defined category
-  { value: '__custom__', label: 'Custom...', requiresTitle: true }
+  { value: CUSTOM_CATEGORY_VALUE, label: 'Custom...', requiresTitle: true }
 ]
 
 /** Convert string to snake_case for custom categories */
@@ -78,7 +81,7 @@ const isEditMode = computed(() => !!props.note)
 const modalTitle = computed(() => isEditMode.value ? 'Edit Note' : 'Add Note')
 
 /** Computed: Whether custom category input is shown */
-const isCustomCategory = computed(() => localCategory.value === '__custom__')
+const isCustomCategory = computed(() => localCategory.value === CUSTOM_CATEGORY_VALUE)
 
 /** Computed: Whether current category requires a title */
 const requiresTitle = computed(() => {
@@ -105,8 +108,9 @@ const canSave = computed(() => {
   return true
 })
 
-/** Handle cancel */
+/** Handle cancel - reset transient state */
 function handleCancel() {
+  customCategoryName.value = ''
   emit('update:open', false)
 }
 
@@ -131,8 +135,13 @@ function handleSave() {
   emit('save', payload)
 }
 
-/** Handle keydown for Enter submission (only in single-line fields) */
+/** Handle keydown for Enter submission and Escape cancel */
 function handleKeydown(event: KeyboardEvent) {
+  // Escape key cancels the modal
+  if (event.key === 'Escape') {
+    handleCancel()
+    return
+  }
   // Don't submit on Enter in textarea
   if ((event.target as HTMLElement).tagName === 'TEXTAREA') return
   if (event.key === 'Enter' && canSave.value) {
@@ -150,7 +159,7 @@ function initializeState() {
       localCategory.value = props.note.category
       customCategoryName.value = ''
     } else {
-      localCategory.value = '__custom__'
+      localCategory.value = CUSTOM_CATEGORY_VALUE
       customCategoryName.value = props.note.category_label ?? props.note.category
     }
     localTitle.value = props.note.title ?? ''

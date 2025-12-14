@@ -10,7 +10,7 @@ import type { CharacterNote } from '~/types/character'
 
 defineProps<{
   open: boolean
-  note: CharacterNote
+  note: CharacterNote | null
   loading?: boolean
 }>()
 
@@ -52,7 +52,10 @@ function handleConfirm() {
         </p>
 
         <!-- Note preview -->
-        <div class="p-3 bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
+        <div
+          v-if="note"
+          class="p-3 bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700"
+        >
           <p
             v-if="note.title"
             class="font-medium text-gray-900 dark:text-white mb-1"

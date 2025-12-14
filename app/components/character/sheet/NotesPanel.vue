@@ -10,7 +10,7 @@ import type { CharacterNote } from '~/types/character'
  *
  * Emits events for add/edit/delete actions to be handled by parent (NotesManager).
  */
-defineProps<{
+const props = defineProps<{
   notes: Record<string, CharacterNote[]>
   /** Whether to show action buttons (edit/delete) */
   readonly?: boolean
@@ -21,6 +21,13 @@ const emit = defineEmits<{
   edit: [note: CharacterNote]
   delete: [note: CharacterNote]
 }>()
+
+/** Filter out empty categories (can occur during optimistic updates) */
+const notesWithContent = computed(() =>
+  Object.fromEntries(
+    Object.entries(props.notes).filter(([_, notes]) => notes.length > 0)
+  )
+)
 </script>
 
 <template>
@@ -45,7 +52,7 @@ const emit = defineEmits<{
 
     <!-- Empty state -->
     <div
-      v-if="Object.keys(notes).length === 0"
+      v-if="Object.keys(notesWithContent).length === 0"
       class="text-center text-gray-500 dark:text-gray-400 py-8"
     >
       <UIcon
@@ -68,7 +75,7 @@ const emit = defineEmits<{
     >
       <!-- Each category gets its own section -->
       <div
-        v-for="(categoryNotes, categoryKey) in notes"
+        v-for="(categoryNotes, categoryKey) in notesWithContent"
         :key="categoryKey"
         class="space-y-3"
       >
