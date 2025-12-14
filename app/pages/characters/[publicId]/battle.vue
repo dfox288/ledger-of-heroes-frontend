@@ -25,20 +25,22 @@ const playStateStore = useCharacterPlayStateStore()
 const { canEdit, hitPoints } = storeToRefs(playStateStore)
 
 // Fetch character data
+// Use same cache keys as useCharacterSheet to share data across pages
 const { data: characterData, pending: characterPending, refresh: refreshCharacter } = await useAsyncData(
-  `battle-character-${publicId.value}`,
+  `character-${publicId.value}`,
   () => apiFetch<{ data: Character }>(`/characters/${publicId.value}`)
 )
 
 // Fetch stats data (includes weapons, saves, defenses)
 const { data: statsData, pending: statsPending } = await useAsyncData(
-  `battle-stats-${publicId.value}`,
+  `character-${publicId.value}-stats`,
   () => apiFetch<{ data: CharacterStats }>(`/characters/${publicId.value}/stats`)
 )
 
 // Fetch conditions
+// Shared cache key ensures condition changes sync between battle/overview pages
 const { data: conditionsData, pending: conditionsPending, refresh: refreshConditions } = await useAsyncData(
-  `battle-conditions-${publicId.value}`,
+  `character-${publicId.value}-conditions`,
   () => apiFetch<{ data: CharacterCondition[] }>(`/characters/${publicId.value}/conditions`)
 )
 
