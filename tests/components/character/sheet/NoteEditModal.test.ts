@@ -1,5 +1,5 @@
 // tests/components/character/sheet/NoteEditModal.test.ts
-import { describe, it, expect, beforeEach } from 'vitest'
+import { describe, it, expect } from 'vitest'
 import { mount } from '@vue/test-utils'
 import NoteEditModal from '~/components/character/sheet/NoteEditModal.vue'
 import type { CharacterNote } from '~/types/character'
@@ -11,10 +11,22 @@ import type { CharacterNote } from '~/types/character'
 
 const mockNote: CharacterNote = {
   id: 1,
-  category: 'custom',
-  category_label: 'Custom Note',
+  category: 'session',
+  category_label: 'Session',
   title: 'Session Notes',
   content: 'We met the dragon and survived!',
+  sort_order: 0,
+  created_at: '2025-01-01T00:00:00Z',
+  updated_at: '2025-01-01T00:00:00Z'
+}
+
+/** Note with a custom category (not in predefined list) */
+const mockCustomCategoryNote: CharacterNote = {
+  id: 3,
+  category: 'party_members',
+  category_label: 'Party Members',
+  title: 'The Adventurers',
+  content: 'List of party members...',
   sort_order: 0,
   created_at: '2025-01-01T00:00:00Z',
   updated_at: '2025-01-01T00:00:00Z'
@@ -100,7 +112,7 @@ describe('NoteEditModal', () => {
   // =========================================================================
 
   describe('state management', () => {
-    it('initializes with empty state in create mode', () => {
+    it('initializes with session category in create mode', () => {
       const wrapper = mount(NoteEditModal, {
         props: { open: true }
       })
@@ -108,13 +120,15 @@ describe('NoteEditModal', () => {
         localCategory: string
         localTitle: string
         localContent: string
+        customCategoryName: string
       }
-      expect(vm.localCategory).toBe('custom')
+      expect(vm.localCategory).toBe('session')
       expect(vm.localTitle).toBe('')
       expect(vm.localContent).toBe('')
+      expect(vm.customCategoryName).toBe('')
     })
 
-    it('initializes with note data in edit mode', () => {
+    it('initializes with note data in edit mode (predefined category)', () => {
       const wrapper = mount(NoteEditModal, {
         props: { open: true, note: mockNote }
       })
@@ -122,10 +136,28 @@ describe('NoteEditModal', () => {
         localCategory: string
         localTitle: string
         localContent: string
+        customCategoryName: string
       }
-      expect(vm.localCategory).toBe('custom')
+      expect(vm.localCategory).toBe('session')
       expect(vm.localTitle).toBe('Session Notes')
       expect(vm.localContent).toBe('We met the dragon and survived!')
+      expect(vm.customCategoryName).toBe('')
+    })
+
+    it('initializes with __custom__ for non-predefined category in edit mode', () => {
+      const wrapper = mount(NoteEditModal, {
+        props: { open: true, note: mockCustomCategoryNote }
+      })
+      const vm = wrapper.vm as unknown as {
+        localCategory: string
+        localTitle: string
+        localContent: string
+        customCategoryName: string
+      }
+      expect(vm.localCategory).toBe('__custom__')
+      expect(vm.customCategoryName).toBe('Party Members')
+      expect(vm.localTitle).toBe('The Adventurers')
+      expect(vm.localContent).toBe('List of party members...')
     })
 
     it('handles note without title in edit mode', () => {
@@ -148,7 +180,7 @@ describe('NoteEditModal', () => {
   // =========================================================================
 
   describe('validation', () => {
-    it('requires title for custom category', () => {
+    it('requires title for __custom__ category', () => {
       const wrapper = mount(NoteEditModal, {
         props: { open: true }
       })
@@ -156,14 +188,54 @@ describe('NoteEditModal', () => {
         localCategory: string
         localTitle: string
         localContent: string
+        customCategoryName: string
         requiresTitle: boolean
         canSave: boolean
       }
-      vm.localCategory = 'custom'
+      vm.localCategory = '__custom__'
+      vm.customCategoryName = 'My Custom Category'
       vm.localTitle = ''
       vm.localContent = 'Some content'
       expect(vm.requiresTitle).toBe(true)
       expect(vm.canSave).toBe(false)
+    })
+
+    it('requires custom category name when __custom__ is selected', () => {
+      const wrapper = mount(NoteEditModal, {
+        props: { open: true }
+      })
+      const vm = wrapper.vm as unknown as {
+        localCategory: string
+        localTitle: string
+        localContent: string
+        customCategoryName: string
+        canSave: boolean
+      }
+      vm.localCategory = '__custom__'
+      vm.customCategoryName = '' // Empty category name
+      vm.localTitle = 'My Title'
+      vm.localContent = 'Some content'
+      expect(vm.canSave).toBe(false)
+    })
+
+    it('allows save with valid custom category', () => {
+      const wrapper = mount(NoteEditModal, {
+        props: { open: true }
+      })
+      const vm = wrapper.vm as unknown as {
+        localCategory: string
+        localTitle: string
+        localContent: string
+        customCategoryName: string
+        effectiveCategory: string
+        canSave: boolean
+      }
+      vm.localCategory = '__custom__'
+      vm.customCategoryName = 'Party Members'
+      vm.localTitle = 'My Title'
+      vm.localContent = 'Some content'
+      expect(vm.effectiveCategory).toBe('party_members')
+      expect(vm.canSave).toBe(true)
     })
 
     it('requires title for backstory category', () => {
@@ -213,7 +285,7 @@ describe('NoteEditModal', () => {
       expect(vm.canSave).toBe(false)
     })
 
-    it('allows save when all requirements met', () => {
+    it('allows save when all requirements met (predefined category)', () => {
       const wrapper = mount(NoteEditModal, {
         props: { open: true }
       })
@@ -223,7 +295,7 @@ describe('NoteEditModal', () => {
         localContent: string
         canSave: boolean
       }
-      vm.localCategory = 'custom'
+      vm.localCategory = 'session'
       vm.localTitle = 'My Title'
       vm.localContent = 'My content'
       expect(vm.canSave).toBe(true)
@@ -239,7 +311,7 @@ describe('NoteEditModal', () => {
         localContent: string
         canSave: boolean
       }
-      vm.localCategory = 'custom'
+      vm.localCategory = 'session'
       vm.localTitle = 'My Title'
       vm.localContent = 'My content'
       expect(vm.canSave).toBe(false)
@@ -263,7 +335,7 @@ describe('NoteEditModal', () => {
       expect(wrapper.emitted('update:open')![0]).toEqual([false])
     })
 
-    it('emits save with payload when save is called in create mode', async () => {
+    it('emits save with payload when save is called in create mode (predefined)', async () => {
       const wrapper = mount(NoteEditModal, {
         props: { open: true }
       })
@@ -274,14 +346,40 @@ describe('NoteEditModal', () => {
         localContent: string
         handleSave: () => void
       }
-      vm.localCategory = 'custom'
+      vm.localCategory = 'session'
       vm.localTitle = 'Test Title'
       vm.localContent = 'Test content'
       vm.handleSave()
 
       expect(wrapper.emitted('save')).toBeTruthy()
       expect(wrapper.emitted('save')![0]).toEqual([{
-        category: 'custom',
+        category: 'session',
+        title: 'Test Title',
+        content: 'Test content'
+      }])
+    })
+
+    it('emits save with snake_case category when using custom category', async () => {
+      const wrapper = mount(NoteEditModal, {
+        props: { open: true }
+      })
+
+      const vm = wrapper.vm as unknown as {
+        localCategory: string
+        localTitle: string
+        localContent: string
+        customCategoryName: string
+        handleSave: () => void
+      }
+      vm.localCategory = '__custom__'
+      vm.customCategoryName = 'Party Members'
+      vm.localTitle = 'Test Title'
+      vm.localContent = 'Test content'
+      vm.handleSave()
+
+      expect(wrapper.emitted('save')).toBeTruthy()
+      expect(wrapper.emitted('save')![0]).toEqual([{
+        category: 'party_members',
         title: 'Test Title',
         content: 'Test content'
       }])

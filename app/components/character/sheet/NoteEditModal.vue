@@ -12,15 +12,40 @@
  */
 import type { CharacterNote } from '~/types/character'
 
-/** Note category options */
+/**
+ * Predefined note categories - common D&D note types
+ * Users can also create custom categories via the "Custom..." option
+ */
 const CATEGORIES = [
+  // Character traits (from background)
   { value: 'personality_trait', label: 'Personality Trait', requiresTitle: false },
   { value: 'ideal', label: 'Ideal', requiresTitle: false },
   { value: 'bond', label: 'Bond', requiresTitle: false },
   { value: 'flaw', label: 'Flaw', requiresTitle: false },
+  // Character background
   { value: 'backstory', label: 'Backstory', requiresTitle: true },
-  { value: 'custom', label: 'Custom Note', requiresTitle: true }
+  { value: 'appearance', label: 'Appearance', requiresTitle: false },
+  // Campaign & session tracking
+  { value: 'campaign', label: 'Campaign', requiresTitle: true },
+  { value: 'session', label: 'Session', requiresTitle: true },
+  { value: 'quest', label: 'Quest', requiresTitle: true },
+  // World building
+  { value: 'npc', label: 'NPC', requiresTitle: true },
+  { value: 'location', label: 'Location', requiresTitle: true },
+  { value: 'lore', label: 'Lore', requiresTitle: true },
+  { value: 'item', label: 'Item', requiresTitle: true },
+  // Custom - shows text input for user-defined category
+  { value: '__custom__', label: 'Custom...', requiresTitle: true }
 ]
+
+/** Convert string to snake_case for custom categories */
+function toSnakeCase(str: string): string {
+  return str
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9\s]/g, '') // Remove special chars
+    .replace(/\s+/g, '_') // Spaces to underscores
+}
 
 export interface NotePayload {
   category?: string
@@ -41,9 +66,10 @@ const emit = defineEmits<{
 }>()
 
 /** Local state */
-const localCategory = ref('custom')
+const localCategory = ref('session')
 const localTitle = ref('')
 const localContent = ref('')
+const customCategoryName = ref('')
 
 /** Computed: Whether we're in edit mode */
 const isEditMode = computed(() => !!props.note)
@@ -51,10 +77,22 @@ const isEditMode = computed(() => !!props.note)
 /** Computed: Modal title */
 const modalTitle = computed(() => isEditMode.value ? 'Edit Note' : 'Add Note')
 
+/** Computed: Whether custom category input is shown */
+const isCustomCategory = computed(() => localCategory.value === '__custom__')
+
 /** Computed: Whether current category requires a title */
 const requiresTitle = computed(() => {
+  if (isCustomCategory.value) return true
   const cat = CATEGORIES.find(c => c.value === localCategory.value)
   return cat?.requiresTitle ?? false
+})
+
+/** Computed: The actual category value to send to API */
+const effectiveCategory = computed(() => {
+  if (isCustomCategory.value) {
+    return toSnakeCase(customCategoryName.value)
+  }
+  return localCategory.value
 })
 
 /** Computed: Whether save is allowed */
@@ -62,6 +100,8 @@ const canSave = computed(() => {
   if (props.loading) return false
   if (localContent.value.trim().length === 0) return false
   if (requiresTitle.value && localTitle.value.trim().length === 0) return false
+  // Custom category requires a valid category name
+  if (isCustomCategory.value && toSnakeCase(customCategoryName.value).length === 0) return false
   return true
 })
 
@@ -83,9 +123,9 @@ function handleSave() {
     payload.title = localTitle.value.trim()
   }
 
-  // Include category only in create mode
+  // Include category only in create mode (use effectiveCategory for custom support)
   if (!isEditMode.value) {
-    payload.category = localCategory.value
+    payload.category = effectiveCategory.value
   }
 
   emit('save', payload)
@@ -104,14 +144,23 @@ function handleKeydown(event: KeyboardEvent) {
 function initializeState() {
   if (props.note) {
     // Edit mode - populate from note
-    localCategory.value = props.note.category
+    // Check if category is in predefined list, otherwise treat as custom
+    const isPredefined = CATEGORIES.some(c => c.value === props.note!.category)
+    if (isPredefined) {
+      localCategory.value = props.note.category
+      customCategoryName.value = ''
+    } else {
+      localCategory.value = '__custom__'
+      customCategoryName.value = props.note.category_label ?? props.note.category
+    }
     localTitle.value = props.note.title ?? ''
     localContent.value = props.note.content
   } else {
-    // Create mode - reset to defaults
-    localCategory.value = 'custom'
+    // Create mode - reset to defaults (session is a good default)
+    localCategory.value = 'session'
     localTitle.value = ''
     localContent.value = ''
+    customCategoryName.value = ''
   }
 }
 
@@ -162,8 +211,31 @@ watch(() => props.open, (isOpen) => {
           />
         </div>
 
+        <!-- Custom Category Name Input (when "Custom..." is selected) -->
+        <div v-if="!isEditMode && isCustomCategory">
+          <label
+            for="custom-category-name"
+            class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+          >
+            Category Name
+            <span class="text-error-500">*</span>
+          </label>
+          <UInput
+            id="custom-category-name"
+            v-model="customCategoryName"
+            data-testid="custom-category-input"
+            type="text"
+            placeholder="e.g., Party Members, Important Dates"
+            :disabled="loading"
+            class="w-full"
+          />
+          <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">
+            Will be saved as: {{ effectiveCategory || '...' }}
+          </p>
+        </div>
+
         <!-- Category Display (in edit mode) -->
-        <div v-else>
+        <div v-else-if="isEditMode">
           <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
             Category
           </label>
