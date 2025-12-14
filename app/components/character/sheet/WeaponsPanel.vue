@@ -8,21 +8,15 @@ const props = defineProps<{
   abilityModifiers: Record<AbilityScoreCode, number>
 }>()
 
-// Track which weapons are expanded
-const expandedWeapons = ref<Set<number>>(new Set())
+// Track which weapons are expanded (using Record for native Vue reactivity)
+const expandedWeapons = ref<Record<number, boolean>>({})
 
 function toggleExpand(index: number) {
-  if (expandedWeapons.value.has(index)) {
-    expandedWeapons.value.delete(index)
-  } else {
-    expandedWeapons.value.add(index)
-  }
-  // Trigger reactivity
-  expandedWeapons.value = new Set(expandedWeapons.value)
+  expandedWeapons.value[index] = !expandedWeapons.value[index]
 }
 
 function isExpanded(index: number): boolean {
-  return expandedWeapons.value.has(index)
+  return !!expandedWeapons.value[index]
 }
 
 /**
@@ -63,12 +57,13 @@ function formatModifier(value: number): string {
 
 /**
  * Calculate unarmed strike damage (1 + STR modifier)
+ * Follows same formatting as weapon damage (formatDamage)
  */
 const unarmedDamage = computed(() => {
   const strMod = props.abilityModifiers.STR ?? 0
-  const total = 1 + strMod
-  if (total <= 0) return '1' // Minimum 1 damage
-  return `1+${strMod}`
+  if (strMod === 0) return '1'
+  if (strMod > 0) return `1+${strMod}`
+  return `1${strMod}` // Negative mod already includes minus sign (e.g., "1-2")
 })
 
 /**
