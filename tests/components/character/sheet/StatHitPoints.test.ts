@@ -75,29 +75,32 @@ describe('StatHitPoints', () => {
       expect(wrapper.text()).toContain('STABLE')
     })
 
-    it('shows DEAD when 3 failures even if backend says isDead: false', async () => {
-      // Defensive behavior: show DEAD if local data indicates death
-      // even if backend hasn't computed is_dead yet (see issue #590)
+    it('trusts backend isDead: false even with 3 failures', async () => {
+      // Backend is authoritative (issue #591) - we trust is_dead field
       const wrapper = await mountSuspended(StatHitPoints, {
         props: {
           hitPoints: zeroHp,
-          isDead: false, // Backend bug: should be true
+          isDead: false, // Backend says not dead
           deathSaveFailures: 3
         }
       })
-      // Should show DEAD based on local death save data
-      expect(wrapper.text()).toContain('DEAD')
+      // Should show DYING (not DEAD) - trusting backend
+      expect(wrapper.text()).toContain('DYING')
+      expect(wrapper.text()).not.toContain('DEAD')
     })
 
-    it('falls back to death save calculation when isDead is null', async () => {
+    it('shows DYING when isDead is null (backend authoritative)', async () => {
+      // When backend has not set is_dead, show DYING state (issue #591)
       const wrapper = await mountSuspended(StatHitPoints, {
         props: {
           hitPoints: zeroHp,
-          isDead: null, // Explicitly null to indicate "not set"
+          isDead: null,
           deathSaveFailures: 3
         }
       })
-      expect(wrapper.text()).toContain('DEAD')
+      // No defensive fallback - show DYING until backend confirms death
+      expect(wrapper.text()).toContain('DYING')
+      expect(wrapper.text()).not.toContain('DEAD')
     })
 
     it('applies error styling when dying', async () => {

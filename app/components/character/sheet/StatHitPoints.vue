@@ -6,7 +6,7 @@
  * Displays HP with death state awareness (dying, dead, stabilized).
  * Emits click events for parent to open HP/Temp HP modals.
  *
- * @see Issue #544 - is_dead flag support
+ * @see Issue #591 - Backend now authoritative for is_dead
  */
 
 interface HitPoints {
@@ -41,26 +41,12 @@ const isAtZeroHp = computed(() => {
 /**
  * Check if character is dead
  *
- * Shows DEAD if:
- * - Backend explicitly says is_dead: true, OR
- * - Local data shows 3+ death save failures at 0 HP
+ * Backend is authoritative - we trust is_dead field as single source of truth.
+ * The backend automatically computes is_dead when death_save_failures >= 3.
  *
- * This defensive approach ensures correct display even if backend
- * hasn't yet computed is_dead (e.g., death save just recorded).
+ * @see Issue #591 - Backend now authoritative for is_dead
  */
-const isDead = computed(() => {
-  // Backend says dead - trust it
-  if (props.isDead === true) {
-    return true
-  }
-  // Check local death save data (defensive - don't rely solely on backend)
-  const failures = props.deathSaveFailures ?? 0
-  if (isAtZeroHp.value && failures >= 3) {
-    return true
-  }
-  // Not dead
-  return false
-})
+const isDead = computed(() => props.isDead === true)
 
 /**
  * Check if character is stabilized (3 successful death saves)
