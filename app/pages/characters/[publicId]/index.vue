@@ -27,7 +27,6 @@ const {
   equipment,
   spells,
   languages,
-  notes,
   conditions,
   skills,
   skillAdvantages,
@@ -101,13 +100,12 @@ useSeoMeta({
   description: () => `View ${character.value?.name ?? 'character'} - D&D 5e Character Sheet`
 })
 
-// Tab items for bottom section (Equipment moved to dedicated /inventory page)
+// Tab items for bottom section (Equipment moved to /inventory, Notes to /notes)
 const tabItems = computed(() => {
   const items = [
     { label: 'Features', slot: 'features', icon: 'i-heroicons-star' },
     { label: 'Proficiencies', slot: 'proficiencies', icon: 'i-heroicons-academic-cap' },
-    { label: 'Languages', slot: 'languages', icon: 'i-heroicons-language' },
-    { label: 'Notes', slot: 'notes', icon: 'i-heroicons-document-text' }
+    { label: 'Languages', slot: 'languages', icon: 'i-heroicons-language' }
   ]
   // Only show Spells tab for casters
   if (stats.value?.spellcasting) {
@@ -248,14 +246,6 @@ const isSpellcaster = computed(() => !!stats.value?.spellcasting)
 
         <template #languages>
           <CharacterSheetLanguagesPanel :languages="languages" />
-        </template>
-
-        <template #notes>
-          <CharacterSheetNotesManager
-            :notes="notes"
-            :character-id="character.id"
-            @refresh="refresh"
-          />
         </template>
       </UTabs>
     </div>

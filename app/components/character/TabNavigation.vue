@@ -7,7 +7,7 @@
  * - Overview (main character sheet)
  * - Inventory (item management)
  * - Spells (if spellcaster)
- * - Future: Battle, Notes, Features
+ * - Notes
  *
  * @see Design: docs/frontend/plans/2025-12-13-inventory-tab-design-v2.md
  */
@@ -33,7 +33,8 @@ const tabs = computed(() => {
     baseTabs.push({ key: 'spells', label: 'Spells', to: `/characters/${props.publicId}/spells` })
   }
 
-  // Future tabs: battle, notes, features
+  baseTabs.push({ key: 'notes', label: 'Notes', to: `/characters/${props.publicId}/notes` })
+
   return baseTabs
 })
 
