@@ -221,6 +221,7 @@ export interface CharacterStats extends Omit<CharacterStatsFromAPI, 'ability_sco
   damage_vulnerabilities: DamageDefense[]
   condition_advantages: ConditionAdvantage[]
   condition_immunities: ConditionImmunity[]
+  weapons?: CharacterWeapon[]
 }
 
 // =============================================================================
