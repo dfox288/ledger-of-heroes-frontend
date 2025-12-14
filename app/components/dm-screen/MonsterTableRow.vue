@@ -271,17 +271,17 @@ function increaseHp(event: Event) {
           class="flex-1 text-left"
           @click="startEditHp"
         >
-          <div class="flex items-center gap-2">
-            <div class="flex-1 h-4 bg-neutral-200 dark:bg-neutral-700 rounded overflow-hidden">
-              <div
-                class="h-full transition-all"
-                :class="hpColor"
-                :style="{ width: `${hpPercent}%` }"
-              />
-            </div>
-            <span class="text-sm font-mono w-14 text-right">
-              {{ monster.current_hp }}/{{ monster.max_hp }}
-            </span>
+          <!-- Bar -->
+          <div class="h-4 bg-neutral-200 dark:bg-neutral-700 rounded overflow-hidden">
+            <div
+              class="h-full transition-all"
+              :class="hpColor"
+              :style="{ width: `${hpPercent}%` }"
+            />
+          </div>
+          <!-- HP text below bar -->
+          <div class="text-xs font-mono text-center text-neutral-500 mt-0.5">
+            {{ monster.current_hp }}/{{ monster.max_hp }}
           </div>
         </button>
         <!-- +/- buttons on right -->
