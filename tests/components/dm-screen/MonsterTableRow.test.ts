@@ -1,0 +1,125 @@
+// tests/components/dm-screen/MonsterTableRow.test.ts
+import { describe, it, expect } from 'vitest'
+import { mountSuspended } from '@nuxt/test-utils/runtime'
+import MonsterTableRow from '~/components/dm-screen/MonsterTableRow.vue'
+import type { EncounterMonster } from '~/types/dm-screen'
+
+const mockMonster: EncounterMonster = {
+  id: 1,
+  monster_id: 42,
+  label: 'Goblin 1',
+  current_hp: 5,
+  max_hp: 7,
+  monster: {
+    name: 'Goblin',
+    slug: 'mm:goblin',
+    armor_class: 15,
+    hit_points: { average: 7, formula: '2d6' },
+    speed: { walk: 30, fly: null, swim: null, climb: null },
+    challenge_rating: '1/4',
+    actions: [
+      { name: 'Scimitar', attack_bonus: 4, damage: '1d6+2 slashing', reach: '5 ft.', range: null },
+      { name: 'Shortbow', attack_bonus: 4, damage: '1d6+2 piercing', reach: null, range: '80/320 ft.' }
+    ]
+  }
+}
+
+describe('DmScreenMonsterTableRow', () => {
+  it('displays monster label', async () => {
+    const wrapper = await mountSuspended(MonsterTableRow, {
+      props: { monster: mockMonster }
+    })
+    expect(wrapper.text()).toContain('Goblin 1')
+  })
+
+  it('displays monster name', async () => {
+    const wrapper = await mountSuspended(MonsterTableRow, {
+      props: { monster: mockMonster }
+    })
+    expect(wrapper.text()).toContain('Goblin')
+  })
+
+  it('displays challenge rating', async () => {
+    const wrapper = await mountSuspended(MonsterTableRow, {
+      props: { monster: mockMonster }
+    })
+    expect(wrapper.text()).toContain('CR 1/4')
+  })
+
+  it('displays HP', async () => {
+    const wrapper = await mountSuspended(MonsterTableRow, {
+      props: { monster: mockMonster }
+    })
+    expect(wrapper.text()).toContain('5')
+    expect(wrapper.text()).toContain('7')
+  })
+
+  it('displays HP bar', async () => {
+    const wrapper = await mountSuspended(MonsterTableRow, {
+      props: { monster: mockMonster }
+    })
+    expect(wrapper.find('[data-testid="hp-bar"]').exists()).toBe(true)
+  })
+
+  it('displays AC', async () => {
+    const wrapper = await mountSuspended(MonsterTableRow, {
+      props: { monster: mockMonster }
+    })
+    expect(wrapper.text()).toContain('15')
+  })
+
+  it('has red/monster visual styling', async () => {
+    const wrapper = await mountSuspended(MonsterTableRow, {
+      props: { monster: mockMonster }
+    })
+    const row = wrapper.find('[data-testid="monster-row"]')
+    expect(row.exists()).toBe(true)
+    // Check for red border styling
+    expect(row.classes().some(c => c.includes('red') || c.includes('border-l'))).toBe(true)
+  })
+
+  it('displays actions (condensed)', async () => {
+    const wrapper = await mountSuspended(MonsterTableRow, {
+      props: { monster: mockMonster }
+    })
+    expect(wrapper.text()).toContain('Scimitar')
+    expect(wrapper.text()).toContain('+4')
+  })
+
+  it('emits toggle event when row clicked', async () => {
+    const wrapper = await mountSuspended(MonsterTableRow, {
+      props: { monster: mockMonster }
+    })
+    await wrapper.find('[data-testid="monster-row"]').trigger('click')
+    expect(wrapper.emitted('toggle')).toBeTruthy()
+  })
+
+  it('emits remove event when trash clicked', async () => {
+    const wrapper = await mountSuspended(MonsterTableRow, {
+      props: { monster: mockMonster }
+    })
+    await wrapper.find('[data-testid="remove-btn"]').trigger('click')
+    expect(wrapper.emitted('remove')).toBeTruthy()
+  })
+
+  it('shows current turn indicator when active', async () => {
+    const wrapper = await mountSuspended(MonsterTableRow, {
+      props: { monster: mockMonster, isCurrentTurn: true }
+    })
+    expect(wrapper.text()).toContain('▶')
+  })
+
+  it('displays initiative when set', async () => {
+    const wrapper = await mountSuspended(MonsterTableRow, {
+      props: { monster: mockMonster, initiative: 15 }
+    })
+    expect(wrapper.text()).toContain('15')
+  })
+
+  it('shows dash when initiative not set', async () => {
+    const wrapper = await mountSuspended(MonsterTableRow, {
+      props: { monster: mockMonster, initiative: null }
+    })
+    expect(wrapper.text()).toContain('—')
+  })
+})
