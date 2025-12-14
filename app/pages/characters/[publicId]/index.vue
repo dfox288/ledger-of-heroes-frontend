@@ -179,11 +179,13 @@ const isSpellcaster = computed(() => !!stats.value?.spellcasting)
       <!-- Validation Warning - shows when sourcebook content was removed -->
       <CharacterSheetValidationWarning :validation-result="validationResult" />
 
-      <!-- Active Conditions (from store) - only shows when character has conditions -->
-      <CharacterSheetConditionsManager
-        v-if="conditions?.length > 0"
-        :editable="canEdit"
-      />
+      <!-- Active Conditions (from store, client-only to avoid hydration mismatch) -->
+      <ClientOnly>
+        <CharacterSheetConditionsManager
+          v-if="conditions?.length > 0"
+          :editable="canEdit"
+        />
+      </ClientOnly>
 
       <!-- Main Grid: Abilities sidebar + Stats/Skills -->
       <div class="grid lg:grid-cols-[200px_1fr] gap-6">

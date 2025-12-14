@@ -157,12 +157,14 @@ useSeoMeta({
           @updated="refreshCharacter"
         />
 
-        <!-- Active Conditions (from store) -->
-        <CharacterSheetConditionsManager
-          v-if="conditions?.length > 0"
-          :editable="canEdit"
-          class="mt-6"
-        />
+        <!-- Active Conditions (from store, client-only to avoid hydration mismatch) -->
+        <ClientOnly>
+          <CharacterSheetConditionsManager
+            v-if="conditions?.length > 0"
+            :editable="canEdit"
+            class="mt-6"
+          />
+        </ClientOnly>
 
         <!-- Combat Stats Row (no currency for battle view) -->
         <div class="mt-6 grid grid-cols-2 sm:grid-cols-5 gap-3">
