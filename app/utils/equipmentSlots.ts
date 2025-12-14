@@ -27,8 +27,8 @@ export const SLOT_LABELS: Record<EquipmentSlot, string> = {
   clothes: 'Clothes',
   belt: 'Belt',
   hands: 'Hands',
-  ring_1: 'Ring',
-  ring_2: 'Ring',
+  ring_1: 'Ring 1',
+  ring_2: 'Ring 2',
   feet: 'Feet',
   main_hand: 'Main Hand',
   off_hand: 'Off Hand'

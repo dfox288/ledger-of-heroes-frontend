@@ -110,14 +110,19 @@ const slotConfigs: SlotConfig[] = [
           />
 
           <!-- Slot label -->
-          <span class="slot-label">
+          <UBadge
+            color="neutral"
+            variant="subtle"
+            size="md"
+            class="mb-1"
+          >
             {{ SLOT_LABELS[config.slot] }}
-          </span>
+          </UBadge>
 
           <!-- Equipped item or empty state -->
           <button
             v-if="getEquippedItem(config.slot)"
-            class="text-sm font-medium text-gray-900 dark:text-white hover:text-primary truncate max-w-full transition-colors"
+            class="text-sm font-medium text-gray-900 dark:text-white hover:text-primary w-full text-center leading-tight transition-colors"
             @click="handleItemClick(getEquippedItem(config.slot))"
           >
             {{ getItemName(getEquippedItem(config.slot)!) }}
@@ -143,7 +148,7 @@ const slotConfigs: SlotConfig[] = [
 <style scoped>
 .paperdoll-grid {
   display: grid;
-  grid-template-columns: 1fr 1.5fr 1fr;
+  grid-template-columns: 1fr 1fr 1fr;
   grid-template-areas:
     ".     head   ."
     ".     neck   ."
@@ -209,6 +214,7 @@ const slotConfigs: SlotConfig[] = [
   justify-content: center;
   padding: 8px 6px;
   min-height: 56px;
+  min-width: 0; /* Respect grid column width */
   background: rgba(var(--color-gray-100), 1);
   border: 1px solid rgba(var(--color-gray-200), 1);
   border-radius: 6px;
@@ -256,18 +262,6 @@ const slotConfigs: SlotConfig[] = [
   color: rgba(var(--color-gray-500), 1);
 }
 
-.slot-label {
-  font-size: 9px;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  color: rgba(var(--color-gray-400), 1);
-  margin-bottom: 2px;
-}
-
-:root.dark .slot-label {
-  color: rgba(var(--color-gray-500), 1);
-}
 
 .slot-empty {
   font-size: 10px;

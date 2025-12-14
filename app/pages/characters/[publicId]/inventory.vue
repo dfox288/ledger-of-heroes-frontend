@@ -236,15 +236,26 @@ async function handleAttune(itemId: number) {
     toast.add({ title: 'Item attuned!', color: 'success' })
     await refreshEquipment()
   } catch (error: unknown) {
-    const err = error as { statusCode?: number, data?: { message?: string } }
-    if (err.statusCode === 422) {
+    // FetchError from ofetch - access data property directly
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const err = error as any
+    logger.error('Attunement error:', err)
+
+    // Extract message - Nitro wraps backend response in data.data
+    // err.data = Nitro error response, err.data.data = backend response body
+    const message = err?.data?.data?.message
+      || err?.data?.message
+      || 'Maximum attunement slots reached'
+
+    const statusCode = err?.statusCode || err?.status || 0
+
+    if (statusCode === 422 || err?.statusMessage === 'Unprocessable Content') {
       toast.add({
         title: 'Cannot attune',
-        description: err.data?.message || 'Maximum attunement slots reached',
+        description: message,
         color: 'error'
       })
     } else {
-      logger.error('Failed to attune item:', error)
       toast.add({ title: 'Failed to attune item', color: 'error' })
     }
   }
