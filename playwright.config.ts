@@ -30,7 +30,8 @@ export default defineConfig({
   // Shared settings for all the projects below
   use: {
     // Base URL to use in actions like `await page.goto('/')`
-    baseURL: 'http://localhost:3000',
+    // Port 4000 is the default Docker mapping (4000:3000)
+    baseURL: process.env.PLAYWRIGHT_BASE_URL || 'http://localhost:4000',
 
     // Collect trace when retrying the failed test
     trace: 'on-first-retry',
@@ -70,9 +71,9 @@ export default defineConfig({
   // If not, you'll need to start it manually:
   // docker compose up -d
   webServer: {
-    command: 'echo "Dev server should be running at http://localhost:3000"',
-    url: 'http://localhost:3000',
+    command: 'echo "Dev server should be running"',
+    url: process.env.PLAYWRIGHT_BASE_URL || 'http://localhost:4000',
     reuseExistingServer: true,
-    timeout: 5 * 1000
+    timeout: 10 * 1000
   }
 })
