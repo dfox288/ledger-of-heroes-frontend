@@ -1,4 +1,4 @@
-import { describe, it, expect, vi } from 'vitest'
+import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { mountSuspended } from '@nuxt/test-utils/runtime'
 import CharacterDetailPage from '~/pages/characters/[publicId]/index.vue'
 

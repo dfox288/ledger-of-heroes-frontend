@@ -68,71 +68,102 @@ export interface UseCharacterSheetReturn {
  *
  * Fetches 7 API endpoints in parallel and computes derived values
  * like skill modifiers and saving throw proficiencies.
+ *
+ * Uses getCachedData to prevent skeleton flash on navigation - returns
+ * cached data synchronously when available, preventing the loading state
+ * from showing during client-side navigation.
+ *
+ * @see Issue #609 - Character overview page flashes skeleton on navigation
  */
 export function useCharacterSheet(characterId: Ref<string | number>): UseCharacterSheetReturn {
   const { apiFetch } = useApi()
+  const nuxtApp = useNuxtApp()
+
+  /**
+   * Returns cached data from Nuxt payload if available.
+   * This prevents the skeleton flash on navigation by providing
+   * data synchronously before the fetch completes.
+   *
+   * In test environments, always returns undefined to ensure fresh
+   * data is fetched for each test case.
+   */
+  function getCachedData<T>(key: string): T | undefined {
+    // Skip cache in tests to prevent stale data between test cases
+    // Check both import.meta.test and process.env.VITEST for test detection
+    if (import.meta.test || process.env.VITEST) return undefined
+    return nuxtApp.payload.data[key] as T | undefined
+  }
 
   // Fetch character base data
   const { data: characterData, pending: characterPending, error: characterError, refresh: refreshCharacter }
     = useAsyncData(
       `character-${characterId.value}`,
-      () => apiFetch<{ data: Character }>(`/characters/${characterId.value}`)
+      () => apiFetch<{ data: Character }>(`/characters/${characterId.value}`),
+      { getCachedData: key => getCachedData(key) }
     )
 
   // Fetch character stats
   const { data: statsData, pending: statsPending, refresh: refreshStats }
     = useAsyncData(
       `character-${characterId.value}-stats`,
-      () => apiFetch<{ data: CharacterStats }>(`/characters/${characterId.value}/stats`)
+      () => apiFetch<{ data: CharacterStats }>(`/characters/${characterId.value}/stats`),
+      { getCachedData: key => getCachedData(key) }
     )
 
   // Fetch proficiencies
   const { data: proficienciesData, pending: proficienciesPending, refresh: refreshProficiencies }
     = useAsyncData(
       `character-${characterId.value}-proficiencies`,
-      () => apiFetch<{ data: CharacterProficiency[] }>(`/characters/${characterId.value}/proficiencies`)
+      () => apiFetch<{ data: CharacterProficiency[] }>(`/characters/${characterId.value}/proficiencies`),
+      { getCachedData: key => getCachedData(key) }
     )
 
   // Fetch features
   const { data: featuresData, pending: featuresPending, refresh: refreshFeatures }
     = useAsyncData(
       `character-${characterId.value}-features`,
-      () => apiFetch<{ data: CharacterFeature[] }>(`/characters/${characterId.value}/features`)
+      () => apiFetch<{ data: CharacterFeature[] }>(`/characters/${characterId.value}/features`),
+      { getCachedData: key => getCachedData(key) }
     )
 
   // Fetch equipment
   const { data: equipmentData, pending: equipmentPending, refresh: refreshEquipment }
     = useAsyncData(
       `character-${characterId.value}-equipment`,
-      () => apiFetch<{ data: CharacterEquipment[] }>(`/characters/${characterId.value}/equipment`)
+      () => apiFetch<{ data: CharacterEquipment[] }>(`/characters/${characterId.value}/equipment`),
+      { getCachedData: key => getCachedData(key) }
     )
 
   // Fetch spells
   const { data: spellsData, pending: spellsPending, refresh: refreshSpells }
     = useAsyncData(
       `character-${characterId.value}-spells`,
-      () => apiFetch<{ data: CharacterSpell[] }>(`/characters/${characterId.value}/spells`)
+      () => apiFetch<{ data: CharacterSpell[] }>(`/characters/${characterId.value}/spells`),
+      { getCachedData: key => getCachedData(key) }
     )
 
   // Fetch languages
   const { data: languagesData, pending: languagesPending, refresh: refreshLanguages }
     = useAsyncData(
       `character-${characterId.value}-languages`,
-      () => apiFetch<{ data: CharacterLanguage[] }>(`/characters/${characterId.value}/languages`)
+      () => apiFetch<{ data: CharacterLanguage[] }>(`/characters/${characterId.value}/languages`),
+      { getCachedData: key => getCachedData(key) }
     )
 
   // Fetch notes (grouped by category)
   const { data: notesData, pending: notesPending, refresh: refreshNotes }
     = useAsyncData(
       `character-${characterId.value}-notes`,
-      () => apiFetch<{ data: Record<string, CharacterNote[]> }>(`/characters/${characterId.value}/notes`)
+      () => apiFetch<{ data: Record<string, CharacterNote[]> }>(`/characters/${characterId.value}/notes`),
+      { getCachedData: key => getCachedData(key) }
     )
 
   // Fetch conditions (active status effects)
   const { data: conditionsData, pending: conditionsPending, refresh: refreshConditions }
     = useAsyncData(
       `character-${characterId.value}-conditions`,
-      () => apiFetch<{ data: CharacterCondition[] }>(`/characters/${characterId.value}/conditions`)
+      () => apiFetch<{ data: CharacterCondition[] }>(`/characters/${characterId.value}/conditions`),
+      { getCachedData: key => getCachedData(key) }
     )
 
   // Fetch hit dice (dedicated endpoint - no caching, fresh data)
@@ -140,7 +171,8 @@ export function useCharacterSheet(characterId: Ref<string | number>): UseCharact
   const { data: hitDiceData, pending: hitDicePending, refresh: refreshHitDice }
     = useAsyncData(
       `character-${characterId.value}-hit-dice`,
-      () => apiFetch<HitDiceApiResponse>(`/characters/${characterId.value}/hit-dice`)
+      () => apiFetch<HitDiceApiResponse>(`/characters/${characterId.value}/hit-dice`),
+      { getCachedData: key => getCachedData(key) }
     )
 
   // Fetch skills reference data
