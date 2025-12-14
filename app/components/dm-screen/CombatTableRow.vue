@@ -200,7 +200,7 @@ const modifierHint = computed(() => {
       <!-- Weapons (spans 3 columns) -->
       <td
         colspan="3"
-        class="py-3 px-4 text-sm text-neutral-600 dark:text-neutral-400"
+        class="py-3 px-4 text-sm text-neutral-600 dark:text-neutral-400 text-left"
       >
         <div
           v-for="weapon in character.equipment.weapons.slice(0, 2)"
@@ -221,7 +221,7 @@ const modifierHint = computed(() => {
         </div>
         <div
           v-if="character.equipment.weapons.length === 0"
-          class="text-neutral-400 italic"
+          class="text-neutral-400 italic text-left"
         >
           No weapons
         </div>
