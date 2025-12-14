@@ -86,7 +86,8 @@ export function useCharacterSubPage(publicId: Ref<string>): UseCharacterSubPageR
    */
   function getCachedData<T>(key: string): T | undefined {
     if (import.meta.test || process.env.VITEST) return undefined
-    return nuxtApp.payload.data[key] as T | undefined
+    const cached = nuxtApp.payload.data[key]
+    return (cached ?? undefined) as T | undefined
   }
 
   // Check if core data is already cached
@@ -141,6 +142,9 @@ export function useCharacterSubPage(publicId: Ref<string>): UseCharacterSubPageR
   /**
    * Register an additional pending state to include in loading computation.
    * Call this after setting up page-specific useAsyncData calls.
+   *
+   * IMPORTANT: Must be called synchronously during component setup,
+   * before hasLoadedOnce becomes true, for the loading state to reflect it.
    */
   function addPendingState(pending: Ref<boolean>) {
     additionalPendingStates.push(pending)

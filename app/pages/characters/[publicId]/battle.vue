@@ -25,10 +25,12 @@ const { character, stats, isSpellcaster, loading, refreshCharacter, playStateSto
 // Get reactive state from store
 const { canEdit, hitPoints, conditions } = storeToRefs(playStateStore)
 
-// Fetch conditions into store when character loads
+// Fetch conditions into store when character loads (only once)
+const conditionsLoaded = ref(false)
 watch(character, async (char) => {
-  if (char) {
+  if (char && !conditionsLoaded.value) {
     await playStateStore.fetchConditions()
+    conditionsLoaded.value = true
   }
 }, { immediate: true })
 
