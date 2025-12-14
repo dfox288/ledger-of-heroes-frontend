@@ -29,16 +29,24 @@ const summaryCollapsed = ref(false)
 
 onMounted(() => {
   if (import.meta.client) {
-    const stored = localStorage.getItem(STORAGE_KEY)
-    if (stored !== null) {
-      summaryCollapsed.value = stored === 'true'
+    try {
+      const stored = localStorage.getItem(STORAGE_KEY)
+      if (stored !== null) {
+        summaryCollapsed.value = stored === 'true'
+      }
+    } catch {
+      // localStorage unavailable (private browsing, storage full)
     }
   }
 })
 
 watch(summaryCollapsed, (val) => {
   if (import.meta.client) {
-    localStorage.setItem(STORAGE_KEY, String(val))
+    try {
+      localStorage.setItem(STORAGE_KEY, String(val))
+    } catch {
+      // localStorage unavailable
+    }
   }
 })
 
