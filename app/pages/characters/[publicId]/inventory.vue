@@ -7,29 +7,34 @@
  * add loot/shop modals, and optional encumbrance tracking.
  *
  * Uses CharacterPageHeader for unified header with play mode, inspiration, etc.
+ * Uses characterPlayState store for currency and play mode state.
  *
  * @see Design: docs/frontend/plans/2025-12-13-inventory-redesign.md
+ * @see Issue #584 - Character sheet component refactor
  */
 
 import type { Character, CharacterEquipment } from '~/types/character'
-import type { CurrencyDelta } from '~/components/character/sheet/CurrencyEditModal.vue'
 import type { EquipmentLocation } from '~/composables/useInventoryActions'
 import type { EquipmentSlot } from '~/utils/equipmentSlots'
+import { storeToRefs } from 'pinia'
 import { logger } from '~/utils/logger'
+import { useCharacterPlayStateStore } from '~/stores/characterPlayState'
 
 const route = useRoute()
 const publicId = computed(() => route.params.publicId as string)
 const toast = useToast()
 const { apiFetch } = useApi()
 
-// Reference to PageHeader to access isPlayMode
-const pageHeaderRef = ref<{ isPlayMode: boolean } | null>(null)
-const isPlayMode = computed(() => pageHeaderRef.value?.isPlayMode ?? false)
+// ============================================================================
+// Play State Store
+// ============================================================================
+
+const playStateStore = useCharacterPlayStateStore()
+const { canEdit } = storeToRefs(playStateStore)
 
 // Modal state
 const isAddLootOpen = ref(false)
 const isShopOpen = ref(false)
-const isCurrencyModalOpen = ref(false)
 const isItemDetailOpen = ref(false)
 const isSellModalOpen = ref(false)
 const isEditQtyModalOpen = ref(false)
@@ -38,8 +43,6 @@ const isAddingItem = ref(false)
 const isPurchasing = ref(false)
 const isSelling = ref(false)
 const isUpdatingQty = ref(false)
-const isCurrencyLoading = ref(false)
-const currencyError = ref<string | null>(null)
 
 // Slot picker modal state
 const isSlotPickerOpen = ref(false)
@@ -63,20 +66,57 @@ const { data: equipmentData, pending: equipmentPending, refresh: refreshEquipmen
   () => apiFetch<{ data: CharacterEquipment[] }>(`/characters/${publicId.value}/equipment`)
 )
 
-// Fetch stats for carrying capacity and spellcaster check
+// Fetch stats for carrying capacity, spellcaster check, and HP (for store init)
+interface StatsResponse {
+  carrying_capacity?: number
+  push_drag_lift?: number
+  spellcasting?: unknown
+  hit_points?: { current: number | null, max: number | null, temporary?: number | null }
+}
 const { data: statsData, pending: statsPending } = await useAsyncData(
   `inventory-stats-${publicId.value}`,
-  () => apiFetch<{ data: { carrying_capacity?: number, push_drag_lift?: number, spellcasting?: unknown } }>(
+  () => apiFetch<{ data: StatsResponse }>(
     `/characters/${publicId.value}/stats`
   )
 )
 
 const loading = computed(() => characterPending.value || equipmentPending.value || statsPending.value)
 const character = computed(() => characterData.value?.data ?? null)
-const currency = computed(() => character.value?.currency ?? null)
 const equipment = computed(() => equipmentData.value?.data ?? [])
 const stats = computed(() => statsData.value?.data ?? null)
 const isSpellcaster = computed(() => !!stats.value?.spellcasting)
+
+// ============================================================================
+// Store Initialization
+// ============================================================================
+
+/**
+ * Initialize play state store when character and stats load
+ * Store manages HP, death saves, and currency state for play mode
+ */
+watch([character, statsData], ([char, s]) => {
+  if (char && s?.data) {
+    playStateStore.initialize({
+      characterId: char.id,
+      isDead: char.is_dead ?? false,
+      hitPoints: {
+        current: s.data.hit_points?.current ?? null,
+        max: s.data.hit_points?.max ?? null,
+        temporary: s.data.hit_points?.temporary ?? null
+      },
+      deathSaves: {
+        successes: char.death_save_successes ?? 0,
+        failures: char.death_save_failures ?? 0
+      },
+      currency: char.currency ?? { pp: 0, gp: 0, ep: 0, sp: 0, cp: 0 }
+    })
+  }
+}, { immediate: true })
+
+// Reset store when leaving the page
+onUnmounted(() => {
+  playStateStore.$reset()
+})
 
 // Item count for header
 const itemCount = computed(() => equipment.value.length)
@@ -323,40 +363,6 @@ async function handlePurchase(payload: PurchasePayload) {
   }
 }
 
-// Currency edit handler
-async function handleCurrencyUpdate(payload: CurrencyDelta) {
-  isCurrencyLoading.value = true
-  currencyError.value = null
-  try {
-    await apiFetch(`/characters/${publicId.value}/currency`, {
-      method: 'PATCH',
-      body: payload
-    })
-    toast.add({ title: 'Currency updated!', color: 'success' })
-    isCurrencyModalOpen.value = false
-    await refreshCharacter()
-  } catch (error: unknown) {
-    const err = error as { statusCode?: number, data?: { message?: string } }
-    if (err.statusCode === 422) {
-      currencyError.value = err.data?.message || 'Insufficient funds'
-    } else {
-      logger.error('Failed to update currency:', error)
-      currencyError.value = 'Failed to update currency'
-    }
-  } finally {
-    isCurrencyLoading.value = false
-  }
-}
-
-function handleCurrencyClick() {
-  if (!isPlayMode.value) return
-  isCurrencyModalOpen.value = true
-}
-
-function handleClearCurrencyError() {
-  currencyError.value = null
-}
-
 // Sell modal handler
 interface SellPayload {
   equipment_id: number
@@ -374,13 +380,9 @@ async function handleSellConfirm(payload: SellPayload) {
     if (payload.quantity >= item.quantity) {
       await sellItem(payload.equipment_id, payload.total_price_cp)
     } else {
-      // Partial sell: reduce quantity and add currency
+      // Partial sell: reduce quantity and add currency via store
       await updateQuantity(payload.equipment_id, item.quantity - payload.quantity)
-      // Add currency from sale
-      await apiFetch(`/characters/${publicId.value}/currency`, {
-        method: 'PATCH',
-        body: { cp: `+${payload.total_price_cp}` }
-      })
+      await playStateStore.updateCurrency({ cp: `+${payload.total_price_cp}` })
     }
 
     toast.add({
@@ -391,7 +393,11 @@ async function handleSellConfirm(payload: SellPayload) {
 
     isSellModalOpen.value = false
     selectedItem.value = null
-    await Promise.all([refreshEquipment(), refreshCharacter()])
+    await refreshEquipment()
+    // Full sell path updates currency via sellItem, need to refresh character to sync store
+    if (payload.quantity >= item.quantity) {
+      await refreshCharacter()
+    }
   } catch (error) {
     logger.error('Failed to sell item:', error)
     toast.add({ title: 'Failed to sell item', color: 'error' })
@@ -446,7 +452,6 @@ useSeoMeta({
     <template v-else-if="character">
       <!-- Unified Page Header (back button, play mode, portrait, tabs) -->
       <CharacterPageHeader
-        ref="pageHeaderRef"
         :character="character"
         :is-spellcaster="isSpellcaster"
         :back-to="`/characters/${publicId}`"
@@ -457,7 +462,7 @@ useSeoMeta({
       <!-- Inventory Content -->
       <div
         data-testid="inventory-layout"
-        class="grid lg:grid-cols-[2fr_1fr] gap-6 mt-6"
+        class="grid lg:grid-cols-2 gap-6 mt-6"
       >
         <!-- Left Column: Item Table -->
         <div class="space-y-4">
@@ -470,7 +475,7 @@ useSeoMeta({
               </span>
             </h2>
             <div
-              v-if="isPlayMode"
+              v-if="canEdit"
               class="flex gap-2"
             >
               <UButton
@@ -505,7 +510,7 @@ useSeoMeta({
           <CharacterInventoryItemTable
             data-testid="item-table"
             :items="equipment"
-            :editable="isPlayMode"
+            :editable="canEdit"
             :search-query="searchQuery"
             @item-click="handleItemClick"
             @equip="handleEquip"
@@ -523,12 +528,8 @@ useSeoMeta({
 
         <!-- Right Column: Sidebar (sticky on desktop) -->
         <div class="space-y-4 lg:sticky lg:top-4 lg:self-start">
-          <!-- Currency Display (moved to top) -->
-          <CharacterSheetStatCurrency
-            :currency="currency"
-            :editable="isPlayMode"
-            @click="handleCurrencyClick"
-          />
+          <!-- Currency Manager (self-contained with modal) -->
+          <CharacterSheetCurrencyManager :editable="canEdit" />
 
           <!-- Equipment Status -->
           <CharacterInventoryEquipmentStatus
@@ -564,28 +565,16 @@ useSeoMeta({
     <!-- Shop Modal -->
     <CharacterInventoryShopModal
       v-model:open="isShopOpen"
-      :currency="currency"
+      :currency="playStateStore.currency"
       :loading="isPurchasing"
       @purchase="handlePurchase"
-    />
-
-    <!-- Currency Edit Modal -->
-    <CharacterSheetCurrencyEditModal
-      data-testid="currency-edit-modal"
-      :open="isCurrencyModalOpen"
-      :currency="currency"
-      :loading="isCurrencyLoading"
-      :error="currencyError"
-      @update:open="isCurrencyModalOpen = $event"
-      @apply="handleCurrencyUpdate"
-      @clear-error="handleClearCurrencyError"
     />
 
     <!-- Sell Modal -->
     <CharacterInventorySellModal
       :open="isSellModalOpen"
       :item="selectedItem"
-      :currency="currency"
+      :currency="playStateStore.currency"
       :loading="isSelling"
       @update:open="isSellModalOpen = $event"
       @sell="handleSellConfirm"

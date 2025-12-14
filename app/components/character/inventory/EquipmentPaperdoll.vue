@@ -3,12 +3,20 @@
 /**
  * Equipment Paperdoll
  *
- * Visual display of all 12 equipment slots arranged around a character silhouette.
+ * Visual display of all 12 equipment slots arranged around a humanoid silhouette.
  * Click equipped item → scroll to it in item table.
+ *
+ * Layout designed to resemble a human figure:
+ * - Head/neck at top
+ * - Arms (weapons) to sides
+ * - Torso (armor/cloak/clothes) in center
+ * - Rings at hand level
+ * - Belt at waist
+ * - Gloves and feet at bottom
  */
 
 import type { CharacterEquipment } from '~/types/character'
-import { ALL_SLOTS, SLOT_LABELS, type EquipmentSlot } from '~/utils/equipmentSlots'
+import { SLOT_LABELS, type EquipmentSlot } from '~/utils/equipmentSlots'
 
 interface Props {
   equipment: CharacterEquipment[]
@@ -47,21 +55,27 @@ const isTwoHanded = computed(() => {
   return item?.properties?.includes('Two-Handed') ?? false
 })
 
-// Slot positions for grid layout (row, col)
-const slotPositions: Record<EquipmentSlot, { row: number, col: number }> = {
-  head: { row: 1, col: 2 },
-  neck: { row: 2, col: 2 },
-  main_hand: { row: 3, col: 1 },
-  armor: { row: 3, col: 2 },
-  off_hand: { row: 3, col: 3 },
-  cloak: { row: 4, col: 2 },
-  clothes: { row: 5, col: 2 },
-  hands: { row: 6, col: 1 },
-  belt: { row: 6, col: 2 },
-  ring_1: { row: 6, col: 3 },
-  feet: { row: 7, col: 2 },
-  ring_2: { row: 7, col: 3 }
+// Slot metadata for humanoid layout
+interface SlotConfig {
+  slot: EquipmentSlot
+  gridArea: string
+  icon: string
 }
+
+const slotConfigs: SlotConfig[] = [
+  { slot: 'head', gridArea: 'head', icon: 'i-heroicons-user-circle' },
+  { slot: 'neck', gridArea: 'neck', icon: 'i-heroicons-sparkles' },
+  { slot: 'cloak', gridArea: 'cloak', icon: 'i-heroicons-cloud' },
+  { slot: 'armor', gridArea: 'armor', icon: 'i-heroicons-shield-check' },
+  { slot: 'main_hand', gridArea: 'main', icon: 'i-heroicons-hand-raised' },
+  { slot: 'off_hand', gridArea: 'off', icon: 'i-heroicons-hand-raised' },
+  { slot: 'clothes', gridArea: 'clothes', icon: 'i-heroicons-user' },
+  { slot: 'ring_1', gridArea: 'ring1', icon: 'i-heroicons-star' },
+  { slot: 'ring_2', gridArea: 'ring2', icon: 'i-heroicons-star' },
+  { slot: 'belt', gridArea: 'belt', icon: 'i-heroicons-minus' },
+  { slot: 'hands', gridArea: 'hands', icon: 'i-heroicons-hand-thumb-up' },
+  { slot: 'feet', gridArea: 'feet', icon: 'i-heroicons-arrow-down-circle' }
+]
 </script>
 
 <template>
@@ -70,47 +84,209 @@ const slotPositions: Record<EquipmentSlot, { row: number, col: number }> = {
       Equipment
     </h3>
 
-    <!-- Paperdoll Grid -->
-    <div class="grid grid-cols-3 gap-2">
+    <!-- Humanoid Paperdoll Grid -->
+    <div class="paperdoll-grid relative">
+      <!-- Body silhouette background -->
+      <div class="body-silhouette" />
+
+      <!-- Equipment Slots -->
       <template
-        v-for="slot in ALL_SLOTS"
-        :key="slot"
+        v-for="config in slotConfigs"
+        :key="config.slot"
       >
         <div
-          :data-testid="`slot-${slot}`"
-          :style="{
-            gridRow: slotPositions[slot].row,
-            gridColumn: slotPositions[slot].col
-          }"
-          class="bg-gray-100 dark:bg-gray-700 rounded p-2 min-h-[60px] flex flex-col justify-center"
+          :data-testid="`slot-${config.slot}`"
+          :class="[
+            'slot',
+            `slot-${config.gridArea}`,
+            { 'has-item': getEquippedItem(config.slot) }
+          ]"
         >
+          <!-- Slot icon (shows when empty) -->
+          <UIcon
+            v-if="!getEquippedItem(config.slot)"
+            :name="config.icon"
+            class="slot-icon"
+          />
+
           <!-- Slot label -->
-          <span class="text-[10px] font-medium text-gray-400 dark:text-gray-500 uppercase tracking-wider">
-            {{ SLOT_LABELS[slot] }}
+          <span class="slot-label">
+            {{ SLOT_LABELS[config.slot] }}
           </span>
 
-          <!-- Equipped item or empty -->
+          <!-- Equipped item or empty state -->
           <button
-            v-if="getEquippedItem(slot)"
-            class="text-xs font-medium text-gray-900 dark:text-white hover:text-primary transition-colors text-left truncate"
-            @click="handleItemClick(getEquippedItem(slot))"
+            v-if="getEquippedItem(config.slot)"
+            class="text-sm font-medium text-gray-900 dark:text-white hover:text-primary truncate max-w-full transition-colors"
+            @click="handleItemClick(getEquippedItem(config.slot))"
           >
-            {{ getItemName(getEquippedItem(slot)!) }}
+            {{ getItemName(getEquippedItem(config.slot)!) }}
           </button>
           <span
-            v-else-if="slot === 'off_hand' && isTwoHanded"
-            class="text-xs text-gray-400 dark:text-gray-500 italic"
+            v-else-if="config.slot === 'off_hand' && isTwoHanded"
+            class="slot-empty"
           >
-            (two-handed)
+            (2H)
           </span>
           <span
             v-else
-            class="text-xs text-gray-400 dark:text-gray-500 italic"
+            class="slot-empty"
           >
-            Empty
+            —
           </span>
         </div>
       </template>
     </div>
   </div>
 </template>
+
+<style scoped>
+.paperdoll-grid {
+  display: grid;
+  grid-template-columns: 1fr 1.5fr 1fr;
+  grid-template-areas:
+    ".     head   ."
+    ".     neck   ."
+    "main  armor  off"
+    "hands cloak  ring1"
+    ".     clothes ring2"
+    ".     belt   ."
+    ".     feet   .";
+  gap: 6px;
+  padding: 8px;
+}
+
+/* Humanoid body silhouette */
+.body-silhouette {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* Create body shape with pseudo-elements */
+.body-silhouette::before {
+  content: '';
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  top: 40px;
+  width: 60%;
+  height: calc(100% - 80px);
+  background: linear-gradient(
+    180deg,
+    transparent 0%,
+    rgba(var(--color-primary-500), 0.03) 15%,
+    rgba(var(--color-primary-500), 0.05) 50%,
+    rgba(var(--color-primary-500), 0.03) 85%,
+    transparent 100%
+  );
+  border-radius: 30% 30% 20% 20%;
+  clip-path: polygon(
+    30% 0%,
+    70% 0%,
+    75% 15%,
+    90% 20%,
+    90% 35%,
+    75% 40%,
+    80% 100%,
+    50% 100%,
+    20% 100%,
+    25% 40%,
+    10% 35%,
+    10% 20%,
+    25% 15%
+  );
+}
+
+/* Individual slot styling */
+.slot {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 8px 6px;
+  min-height: 56px;
+  background: rgba(var(--color-gray-100), 1);
+  border: 1px solid rgba(var(--color-gray-200), 1);
+  border-radius: 6px;
+  transition: all 0.15s ease;
+}
+
+:root.dark .slot {
+  background: rgba(var(--color-gray-700), 1);
+  border-color: rgba(var(--color-gray-600), 1);
+}
+
+.slot.has-item {
+  background: rgba(var(--color-primary-50), 1);
+  border-color: rgba(var(--color-primary-200), 1);
+}
+
+:root.dark .slot.has-item {
+  background: rgba(var(--color-primary-950), 0.5);
+  border-color: rgba(var(--color-primary-700), 0.5);
+}
+
+/* Grid area assignments */
+.slot-head { grid-area: head; }
+.slot-neck { grid-area: neck; }
+.slot-main { grid-area: main; }
+.slot-armor { grid-area: armor; }
+.slot-off { grid-area: off; }
+.slot-cloak { grid-area: cloak; }
+.slot-clothes { grid-area: clothes; }
+.slot-ring1 { grid-area: ring1; }
+.slot-ring2 { grid-area: ring2; }
+.slot-belt { grid-area: belt; }
+.slot-hands { grid-area: hands; }
+.slot-feet { grid-area: feet; }
+
+/* Slot content styling */
+.slot-icon {
+  width: 16px;
+  height: 16px;
+  color: rgba(var(--color-gray-400), 1);
+  margin-bottom: 2px;
+}
+
+:root.dark .slot-icon {
+  color: rgba(var(--color-gray-500), 1);
+}
+
+.slot-label {
+  font-size: 9px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: rgba(var(--color-gray-400), 1);
+  margin-bottom: 2px;
+}
+
+:root.dark .slot-label {
+  color: rgba(var(--color-gray-500), 1);
+}
+
+.slot-empty {
+  font-size: 10px;
+  color: rgba(var(--color-gray-400), 1);
+  font-style: italic;
+}
+
+:root.dark .slot-empty {
+  color: rgba(var(--color-gray-500), 1);
+}
+
+/* Make weapon slots slightly larger for emphasis */
+.slot-main,
+.slot-off {
+  min-height: 56px;
+}
+
+/* Make armor slot prominent */
+.slot-armor {
+  min-height: 56px;
+}
+</style>

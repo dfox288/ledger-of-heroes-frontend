@@ -60,13 +60,14 @@ describe('EquipmentPaperdoll', () => {
     expect(wrapper.find('[data-testid="slot-off_hand"]').exists()).toBe(true)
   })
 
-  it('shows "Empty" for unoccupied slots', async () => {
+  it('shows empty indicator for unoccupied slots', async () => {
     const wrapper = await mountSuspended(EquipmentPaperdoll, {
       props: { equipment: [] }
     })
 
     const headSlot = wrapper.find('[data-testid="slot-head"]')
-    expect(headSlot.text()).toContain('Empty')
+    // Empty slots show "—" (em dash) as visual indicator
+    expect(headSlot.text()).toContain('—')
   })
 
   it('shows item name in occupied slot', async () => {
