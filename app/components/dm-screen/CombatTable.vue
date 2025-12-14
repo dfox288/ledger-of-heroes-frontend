@@ -36,7 +36,11 @@ const emit = defineEmits<{
   addMonster: []
   updateMonsterHp: [instanceId: number, value: number]
   removeMonster: [instanceId: number]
+  clearEncounter: []
 }>()
+
+// Check if there are monsters in the encounter
+const hasMonsters = computed(() => props.monsters.length > 0)
 
 const expandedKey = ref<string | null>(null)
 
@@ -172,6 +176,19 @@ const hasCombatants = computed(() => {
           Add Monster
         </UButton>
 
+        <!-- Clear Encounter -->
+        <UButton
+          v-if="hasMonsters"
+          data-testid="clear-encounter-btn"
+          icon="i-heroicons-trash"
+          size="sm"
+          variant="ghost"
+          color="error"
+          @click="emit('clearEncounter')"
+        >
+          Clear Encounter
+        </UButton>
+
         <!-- Reset -->
         <UButton
           v-if="hasAnyInitiative || combatState.inCombat"
@@ -270,18 +287,10 @@ const hasCombatants = computed(() => {
               v-if="combatant.type === 'character'"
               :character="(combatant.data as DmScreenCharacter)"
             />
-            <!-- Monster detail placeholder - Phase 3 -->
-            <div
+            <DmScreenMonsterDetail
               v-else
-              class="p-4 bg-red-50 dark:bg-red-900/20 text-sm"
-            >
-              <p class="font-medium text-red-700 dark:text-red-300">
-                {{ (combatant.data as EncounterMonster).monster.name }}
-              </p>
-              <p class="text-neutral-600 dark:text-neutral-400">
-                Full stat block coming in Phase 3
-              </p>
-            </div>
+              :monster="(combatant.data as EncounterMonster)"
+            />
           </td>
         </tr>
       </tbody>

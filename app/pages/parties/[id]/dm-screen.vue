@@ -88,6 +88,10 @@ async function handleRemoveMonster(instanceId: number) {
   await encounterMonsters.removeMonster(instanceId)
 }
 
+async function handleClearEncounter() {
+  await encounterMonsters.clearEncounter()
+}
+
 // SEO
 useSeoMeta({
   title: () => stats.value ? `DM Screen - ${stats.value.party.name}` : 'DM Screen',
@@ -236,6 +240,7 @@ async function handleRefresh() {
           @add-monster="showAddMonsterModal = true"
           @update-monster-hp="handleUpdateMonsterHp"
           @remove-monster="handleRemoveMonster"
+          @clear-encounter="handleClearEncounter"
         />
       </div>
     </template>

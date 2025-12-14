@@ -196,5 +196,39 @@ describe('DmScreenCombatTable', () => {
       expect(wrapper.emitted('removeMonster')).toBeTruthy()
       expect(wrapper.emitted('removeMonster')?.[0]).toEqual([1])
     })
+
+    it('shows Clear Encounter button when monsters present', async () => {
+      const wrapper = await mountSuspended(CombatTable, {
+        props: {
+          characters: mockCharacters,
+          monsters: [mockMonster],
+          combatState: mockCombatState
+        }
+      })
+      expect(wrapper.find('[data-testid="clear-encounter-btn"]').exists()).toBe(true)
+    })
+
+    it('hides Clear Encounter button when no monsters', async () => {
+      const wrapper = await mountSuspended(CombatTable, {
+        props: {
+          characters: mockCharacters,
+          monsters: [],
+          combatState: mockCombatState
+        }
+      })
+      expect(wrapper.find('[data-testid="clear-encounter-btn"]').exists()).toBe(false)
+    })
+
+    it('emits clearEncounter when Clear Encounter clicked', async () => {
+      const wrapper = await mountSuspended(CombatTable, {
+        props: {
+          characters: mockCharacters,
+          monsters: [mockMonster],
+          combatState: mockCombatState
+        }
+      })
+      await wrapper.find('[data-testid="clear-encounter-btn"]').trigger('click')
+      expect(wrapper.emitted('clearEncounter')).toBeTruthy()
+    })
   })
 })
