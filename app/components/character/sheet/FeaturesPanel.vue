@@ -34,8 +34,8 @@ const SOURCE_CONFIG: Record<string, { label: string, color: BadgeColor, order: n
 /** Search query */
 const searchQuery = ref('')
 
-/** Expanded feature IDs */
-const expandedIds = ref<Set<number>>(new Set())
+/** Expanded feature IDs - using array for proper Vue reactivity */
+const expandedIds = ref<number[]>([])
 
 /** Filter features by search query */
 const filteredFeatures = computed(() => {
@@ -46,8 +46,8 @@ const filteredFeatures = computed(() => {
 
   const query = searchQuery.value.toLowerCase()
   return featuresList.filter(f =>
-    f.feature?.name?.toLowerCase().includes(query) ||
-    f.feature?.description?.toLowerCase().includes(query)
+    f.feature?.name?.toLowerCase().includes(query)
+    || f.feature?.description?.toLowerCase().includes(query)
   )
 })
 
@@ -88,34 +88,38 @@ const filteredCount = computed(() => filteredFeatures.value.length)
 
 /** Check if a feature is expanded */
 function isExpanded(featureId: number): boolean {
-  return expandedIds.value.has(featureId)
+  return expandedIds.value.includes(featureId)
 }
 
 /** Toggle a single feature */
 function toggleFeature(featureId: number) {
-  if (expandedIds.value.has(featureId)) {
-    expandedIds.value.delete(featureId)
+  const index = expandedIds.value.indexOf(featureId)
+  if (index >= 0) {
+    expandedIds.value.splice(index, 1)
   } else {
-    expandedIds.value.add(featureId)
+    expandedIds.value.push(featureId)
   }
 }
 
 /** Expand all features */
 function expandAll() {
-  for (const feature of filteredFeatures.value) {
-    expandedIds.value.add(feature.id)
-  }
+  expandedIds.value = filteredFeatures.value.map(f => f.id)
 }
 
 /** Collapse all features */
 function collapseAll() {
-  expandedIds.value.clear()
+  expandedIds.value = []
 }
 
 /** Check if all are expanded */
 const allExpanded = computed(() => {
   if (filteredFeatures.value.length === 0) return false
-  return filteredFeatures.value.every(f => expandedIds.value.has(f.id))
+  return filteredFeatures.value.every(f => expandedIds.value.includes(f.id))
+})
+
+/** Clear expansion state when search changes */
+watch(searchQuery, () => {
+  expandedIds.value = []
 })
 
 /** Format limited uses display */
