@@ -22,15 +22,17 @@ const colorClass = computed(() => {
 </script>
 
 <template>
-  <div class="flex items-center gap-2">
-    <div class="flex-1 h-4 bg-neutral-200 dark:bg-neutral-700 rounded overflow-hidden">
+  <div>
+    <!-- Bar -->
+    <div class="h-4 bg-neutral-200 dark:bg-neutral-700 rounded overflow-hidden">
       <div
         data-testid="hp-bar-fill"
         :class="['h-full transition-all duration-300', colorClass]"
         :style="{ width: `${percentage}%` }"
       />
     </div>
-    <div class="text-sm font-medium whitespace-nowrap min-w-[60px] text-right">
+    <!-- HP text below bar -->
+    <div class="text-xs font-mono text-center text-neutral-500 mt-0.5">
       {{ current }}/{{ max }}
       <span
         v-if="temp > 0"
