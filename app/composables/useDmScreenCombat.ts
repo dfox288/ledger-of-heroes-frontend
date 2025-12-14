@@ -2,8 +2,8 @@
 import type { DmScreenCharacter } from '~/types/dm-screen'
 
 interface CombatState {
-  initiatives: Record<number, number> // characterId -> rolled initiative value
-  currentTurnId: number | null // characterId of active turn
+  initiatives: Record<string, number> // combatant key (char_N or monster_N) -> rolled initiative value
+  currentTurnId: string | null // combatant key of active turn
   round: number // current combat round
   inCombat: boolean // whether combat is active
 }
@@ -58,40 +58,44 @@ export function useDmScreenCombat(partyId: string, characters: DmScreenCharacter
   }, { deep: true })
 
   /**
-   * Set initiative value for a character
+   * Set initiative value for a combatant by key (char_N or monster_N)
    */
-  function setInitiative(characterId: number, value: number): void {
-    state.value.initiatives[characterId] = value
+  function setInitiative(key: string, value: number): void {
+    state.value.initiatives[key] = value
   }
 
   /**
-   * Get initiative value for a character
+   * Get initiative value for a combatant by key
    */
-  function getInitiative(characterId: number): number | null {
-    return state.value.initiatives[characterId] ?? null
+  function getInitiative(key: string): number | null {
+    return state.value.initiatives[key] ?? null
   }
 
   /**
    * Roll initiative for all characters (d20 + modifier)
+   * Uses char_N keys for characters
    */
   function rollAll(): void {
     for (const character of characters) {
       const roll = rollD20()
       const modifier = character.combat.initiative_modifier
-      state.value.initiatives[character.id] = roll + modifier
+      const key = `char_${character.id}`
+      state.value.initiatives[key] = roll + modifier
     }
   }
 
   /**
    * Get characters sorted by initiative (highest first)
    * Characters without initiative go to the end in original order
+   * Uses char_N keys internally
    */
   const sortedCharacters = computed(() => {
     const withInit: DmScreenCharacter[] = []
     const withoutInit: DmScreenCharacter[] = []
 
     for (const character of characters) {
-      if (state.value.initiatives[character.id] !== undefined) {
+      const key = `char_${character.id}`
+      if (state.value.initiatives[key] !== undefined) {
         withInit.push(character)
       } else {
         withoutInit.push(character)
@@ -100,8 +104,10 @@ export function useDmScreenCombat(partyId: string, characters: DmScreenCharacter
 
     // Sort by initiative descending, tiebreaker: DEX modifier (D&D rules)
     withInit.sort((a, b) => {
-      const initA = state.value.initiatives[a.id] ?? 0
-      const initB = state.value.initiatives[b.id] ?? 0
+      const keyA = `char_${a.id}`
+      const keyB = `char_${b.id}`
+      const initA = state.value.initiatives[keyA] ?? 0
+      const initB = state.value.initiatives[keyB] ?? 0
       if (initB !== initA) return initB - initA
       // Tiebreaker: higher DEX modifier goes first
       return b.combat.initiative_modifier - a.combat.initiative_modifier
@@ -111,12 +117,13 @@ export function useDmScreenCombat(partyId: string, characters: DmScreenCharacter
   })
 
   /**
-   * Get the initiative order (character IDs sorted by initiative)
+   * Get the initiative order (combatant keys sorted by initiative)
+   * Returns string keys like 'char_1', 'monster_42'
    */
   const initiativeOrder = computed(() => {
     return sortedCharacters.value
-      .filter(c => state.value.initiatives[c.id] !== undefined)
-      .map(c => c.id)
+      .filter(c => state.value.initiatives[`char_${c.id}`] !== undefined)
+      .map(c => `char_${c.id}`)
   })
 
   /**
@@ -169,10 +176,10 @@ export function useDmScreenCombat(partyId: string, characters: DmScreenCharacter
   }
 
   /**
-   * Check if it's a character's turn
+   * Check if it's a combatant's turn by key
    */
-  function isCurrentTurn(characterId: number): boolean {
-    return state.value.inCombat && state.value.currentTurnId === characterId
+  function isCurrentTurn(key: string): boolean {
+    return state.value.inCombat && state.value.currentTurnId === key
   }
 
   /**

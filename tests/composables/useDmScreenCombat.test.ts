@@ -120,8 +120,8 @@ describe('useDmScreenCombat', () => {
     it('loads state from localStorage if available', () => {
       const partyId = getPartyId()
       const savedState = {
-        initiatives: { 1: 18, 2: 15 },
-        currentTurnId: 1,
+        initiatives: { char_1: 18, char_2: 15 },
+        currentTurnId: 'char_1',
         round: 3,
         inCombat: true
       }
@@ -130,52 +130,60 @@ describe('useDmScreenCombat', () => {
 
       const { state } = useDmScreenCombat(partyId, mockCharacters)
 
-      expect(state.value.initiatives).toEqual({ 1: 18, 2: 15 })
-      expect(state.value.currentTurnId).toBe(1)
+      expect(state.value.initiatives).toEqual({ char_1: 18, char_2: 15 })
+      expect(state.value.currentTurnId).toBe('char_1')
       expect(state.value.round).toBe(3)
       expect(state.value.inCombat).toBe(true)
     })
   })
 
   describe('setInitiative', () => {
-    it('sets initiative for a character', () => {
+    it('sets initiative for a combatant by string key', () => {
       const { state, setInitiative } = useDmScreenCombat(getPartyId(), mockCharacters)
 
-      setInitiative(1, 18)
+      setInitiative('char_1', 18)
 
-      expect(state.value.initiatives[1]).toBe(18)
+      expect(state.value.initiatives['char_1']).toBe(18)
     })
 
     it('overwrites existing initiative', () => {
       const { state, setInitiative } = useDmScreenCombat(getPartyId(), mockCharacters)
 
-      setInitiative(1, 18)
-      setInitiative(1, 22)
+      setInitiative('char_1', 18)
+      setInitiative('char_1', 22)
 
-      expect(state.value.initiatives[1]).toBe(22)
+      expect(state.value.initiatives['char_1']).toBe(22)
+    })
+
+    it('supports monster keys', () => {
+      const { state, setInitiative } = useDmScreenCombat(getPartyId(), mockCharacters)
+
+      setInitiative('monster_42', 15)
+
+      expect(state.value.initiatives['monster_42']).toBe(15)
     })
 
     // TODO: Fix test isolation - mock calls persist between tests
     it.skip('persists to localStorage', () => {
       const { setInitiative } = useDmScreenCombat(getPartyId(), mockCharacters)
 
-      setInitiative(1, 18)
+      setInitiative('char_1', 18)
 
       expect(localStorageMock.setItem).toHaveBeenCalled()
       const savedData = JSON.parse(localStorageMock.setItem.mock.calls[0][1])
-      expect(savedData.initiatives[1]).toBe(18)
+      expect(savedData.initiatives['char_1']).toBe(18)
     })
   })
 
   describe('rollAll', () => {
-    it('generates initiative for all characters', () => {
+    it('generates initiative for all characters with char_ prefix keys', () => {
       const { state, rollAll } = useDmScreenCombat(getPartyId(), mockCharacters)
 
       rollAll()
 
-      expect(state.value.initiatives[1]).toBeDefined()
-      expect(state.value.initiatives[2]).toBeDefined()
-      expect(state.value.initiatives[3]).toBeDefined()
+      expect(state.value.initiatives['char_1']).toBeDefined()
+      expect(state.value.initiatives['char_2']).toBeDefined()
+      expect(state.value.initiatives['char_3']).toBeDefined()
     })
 
     it('uses d20 + modifier (results in range 1+mod to 20+mod)', () => {
@@ -185,82 +193,82 @@ describe('useDmScreenCombat', () => {
       for (let i = 0; i < 50; i++) {
         rollAll()
         // Aldric has +3 modifier, so range is 4-23
-        expect(state.value.initiatives[1]).toBeGreaterThanOrEqual(4)
-        expect(state.value.initiatives[1]).toBeLessThanOrEqual(23)
+        expect(state.value.initiatives['char_1']).toBeGreaterThanOrEqual(4)
+        expect(state.value.initiatives['char_1']).toBeLessThanOrEqual(23)
       }
     })
   })
 
   describe('startCombat', () => {
-    it('sets inCombat to true and sets first turn', () => {
+    it('sets inCombat to true and sets first turn using string key', () => {
       const { state, setInitiative, startCombat } = useDmScreenCombat(getPartyId(), mockCharacters)
 
-      setInitiative(1, 18)
-      setInitiative(2, 15)
-      setInitiative(3, 22)
+      setInitiative('char_1', 18)
+      setInitiative('char_2', 15)
+      setInitiative('char_3', 22)
       startCombat()
 
       expect(state.value.inCombat).toBe(true)
-      // Highest initiative (22 = character 3) should be first
-      expect(state.value.currentTurnId).toBe(3)
+      // Highest initiative (22 = char_3) should be first
+      expect(state.value.currentTurnId).toBe('char_3')
     })
   })
 
   describe('nextTurn', () => {
-    it('advances to next character in initiative order', () => {
+    it('advances to next combatant in initiative order using string keys', () => {
       const { state, setInitiative, startCombat, nextTurn } = useDmScreenCombat(getPartyId(), mockCharacters)
 
-      setInitiative(1, 18) // Aldric - 2nd
-      setInitiative(2, 15) // Mira - 3rd
-      setInitiative(3, 22) // Zephyr - 1st
+      setInitiative('char_1', 18) // Aldric - 2nd
+      setInitiative('char_2', 15) // Mira - 3rd
+      setInitiative('char_3', 22) // Zephyr - 1st
       startCombat()
 
-      expect(state.value.currentTurnId).toBe(3) // Zephyr first
+      expect(state.value.currentTurnId).toBe('char_3') // Zephyr first
       nextTurn()
-      expect(state.value.currentTurnId).toBe(1) // Aldric second
+      expect(state.value.currentTurnId).toBe('char_1') // Aldric second
       nextTurn()
-      expect(state.value.currentTurnId).toBe(2) // Mira third
+      expect(state.value.currentTurnId).toBe('char_2') // Mira third
     })
 
-    it('increments round when cycling back to first character', () => {
+    it('increments round when cycling back to first combatant', () => {
       const { state, setInitiative, startCombat, nextTurn } = useDmScreenCombat(getPartyId(), mockCharacters)
 
-      setInitiative(1, 18)
-      setInitiative(2, 15)
-      setInitiative(3, 22)
+      setInitiative('char_1', 18)
+      setInitiative('char_2', 15)
+      setInitiative('char_3', 22)
       startCombat()
 
       expect(state.value.round).toBe(1)
-      nextTurn() // 3 -> 1
-      nextTurn() // 1 -> 2
-      nextTurn() // 2 -> 3 (new round)
+      nextTurn() // char_3 -> char_1
+      nextTurn() // char_1 -> char_2
+      nextTurn() // char_2 -> char_3 (new round)
 
       expect(state.value.round).toBe(2)
-      expect(state.value.currentTurnId).toBe(3) // Back to first
+      expect(state.value.currentTurnId).toBe('char_3') // Back to first
     })
   })
 
   describe('previousTurn', () => {
-    it('goes back to previous character', () => {
+    it('goes back to previous combatant', () => {
       const { state, setInitiative, startCombat, nextTurn, previousTurn } = useDmScreenCombat(getPartyId(), mockCharacters)
 
-      setInitiative(1, 18)
-      setInitiative(2, 15)
-      setInitiative(3, 22)
+      setInitiative('char_1', 18)
+      setInitiative('char_2', 15)
+      setInitiative('char_3', 22)
       startCombat()
-      nextTurn() // 3 -> 1
+      nextTurn() // char_3 -> char_1
 
       previousTurn()
 
-      expect(state.value.currentTurnId).toBe(3)
+      expect(state.value.currentTurnId).toBe('char_3')
     })
 
-    it('decrements round when going back from first character', () => {
+    it('decrements round when going back from first combatant', () => {
       const { state, setInitiative, startCombat, nextTurn, previousTurn } = useDmScreenCombat(getPartyId(), mockCharacters)
 
-      setInitiative(1, 18)
-      setInitiative(2, 15)
-      setInitiative(3, 22)
+      setInitiative('char_1', 18)
+      setInitiative('char_2', 15)
+      setInitiative('char_3', 22)
       startCombat()
       nextTurn()
       nextTurn()
@@ -270,15 +278,15 @@ describe('useDmScreenCombat', () => {
       previousTurn() // Back to round 1
 
       expect(state.value.round).toBe(1)
-      expect(state.value.currentTurnId).toBe(2) // Last in order
+      expect(state.value.currentTurnId).toBe('char_2') // Last in order
     })
 
     it('does not go below round 1', () => {
       const { state, setInitiative, startCombat, previousTurn } = useDmScreenCombat(getPartyId(), mockCharacters)
 
-      setInitiative(1, 18)
-      setInitiative(2, 15)
-      setInitiative(3, 22)
+      setInitiative('char_1', 18)
+      setInitiative('char_2', 15)
+      setInitiative('char_3', 22)
       startCombat()
 
       previousTurn()
@@ -292,8 +300,8 @@ describe('useDmScreenCombat', () => {
     it.skip('clears all initiative values and combat state', () => {
       const { state, setInitiative, startCombat, nextTurn, resetCombat } = useDmScreenCombat(getPartyId(), mockCharacters)
 
-      setInitiative(1, 18)
-      setInitiative(2, 15)
+      setInitiative('char_1', 18)
+      setInitiative('char_2', 15)
       startCombat()
       nextTurn()
 
@@ -310,9 +318,9 @@ describe('useDmScreenCombat', () => {
     it('returns characters sorted by initiative descending', () => {
       const { setInitiative, sortedCharacters } = useDmScreenCombat(getPartyId(), mockCharacters)
 
-      setInitiative(1, 18) // Aldric
-      setInitiative(2, 15) // Mira
-      setInitiative(3, 22) // Zephyr
+      setInitiative('char_1', 18) // Aldric
+      setInitiative('char_2', 15) // Mira
+      setInitiative('char_3', 22) // Zephyr
 
       const sorted = sortedCharacters.value
       expect(sorted[0].id).toBe(3) // Zephyr (22)
@@ -324,7 +332,7 @@ describe('useDmScreenCombat', () => {
     it.skip('characters without initiative go to end', () => {
       const { setInitiative, sortedCharacters } = useDmScreenCombat(getPartyId(), mockCharacters)
 
-      setInitiative(1, 18) // Only Aldric has initiative
+      setInitiative('char_1', 18) // Only Aldric has initiative
 
       const sorted = sortedCharacters.value
       expect(sorted[0].id).toBe(1) // Aldric (has initiative)
@@ -341,34 +349,42 @@ describe('useDmScreenCombat', () => {
   })
 
   describe('getInitiative', () => {
-    it('returns initiative value for character', () => {
+    it('returns initiative value for combatant by string key', () => {
       const { setInitiative, getInitiative } = useDmScreenCombat(getPartyId(), mockCharacters)
 
-      setInitiative(1, 18)
+      setInitiative('char_1', 18)
 
-      expect(getInitiative(1)).toBe(18)
+      expect(getInitiative('char_1')).toBe(18)
+    })
+
+    it('returns initiative for monster keys', () => {
+      const { setInitiative, getInitiative } = useDmScreenCombat(getPartyId(), mockCharacters)
+
+      setInitiative('monster_42', 15)
+
+      expect(getInitiative('monster_42')).toBe(15)
     })
 
     // TODO: Fix test isolation - Vue refs persist between tests in some cases
-    it.skip('returns null for character without initiative', () => {
+    it.skip('returns null for combatant without initiative', () => {
       const { getInitiative } = useDmScreenCombat(getPartyId(), mockCharacters)
 
-      expect(getInitiative(1)).toBeNull()
+      expect(getInitiative('char_1')).toBeNull()
     })
   })
 
   describe('isCurrentTurn', () => {
-    it('returns true for character whose turn it is', () => {
+    it('returns true for combatant whose turn it is using string key', () => {
       const { setInitiative, startCombat, isCurrentTurn } = useDmScreenCombat(getPartyId(), mockCharacters)
 
-      setInitiative(1, 18)
-      setInitiative(2, 15)
-      setInitiative(3, 22)
+      setInitiative('char_1', 18)
+      setInitiative('char_2', 15)
+      setInitiative('char_3', 22)
       startCombat()
 
-      expect(isCurrentTurn(3)).toBe(true) // Zephyr has highest
-      expect(isCurrentTurn(1)).toBe(false)
-      expect(isCurrentTurn(2)).toBe(false)
+      expect(isCurrentTurn('char_3')).toBe(true) // Zephyr has highest
+      expect(isCurrentTurn('char_1')).toBe(false)
+      expect(isCurrentTurn('char_2')).toBe(false)
     })
   })
 })
