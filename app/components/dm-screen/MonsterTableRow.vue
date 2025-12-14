@@ -347,7 +347,7 @@ function increaseHp(event: Event) {
     <!-- Actions (condensed) - spans 2 columns to match character Perc/Inv -->
     <td
       colspan="2"
-      class="py-3 px-4 text-sm text-neutral-600 dark:text-neutral-400"
+      class="py-3 px-4 text-sm text-neutral-600 dark:text-neutral-400 text-left"
     >
       <div
         v-for="action in monster.monster.actions.slice(0, 2)"
