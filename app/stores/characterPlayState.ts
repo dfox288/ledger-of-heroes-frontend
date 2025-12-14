@@ -122,6 +122,8 @@ export const useCharacterPlayStateStore = defineStore('characterPlayState', () =
   const isUpdatingHp = ref(false)
   const isUpdatingCurrency = ref(false)
   const isUpdatingDeathSaves = ref(false)
+  const isUpdatingSpellSlot = ref(false)
+  const isUpdatingSpellPreparation = ref(false)
 
   // ===========================================================================
   // COMPUTED
@@ -491,10 +493,12 @@ export const useCharacterPlayStateStore = defineStore('characterPlayState', () =
    * Increments spent count, calls API, reverts on error
    */
   async function useSpellSlot(level: number): Promise<void> {
-    if (!canUseSlot(level) || !characterId.value) return
+    if (!canUseSlot(level) || !characterId.value || isUpdatingSpellSlot.value) return
 
     const slot = spellSlots.value.get(level)
     if (!slot) return
+
+    isUpdatingSpellSlot.value = true
 
     // Optimistic update
     const previousSpent = slot.spent
@@ -511,6 +515,8 @@ export const useCharacterPlayStateStore = defineStore('characterPlayState', () =
       slot.spent = previousSpent
       spellSlots.value.set(level, { ...slot })
       throw error
+    } finally {
+      isUpdatingSpellSlot.value = false
     }
   }
 
@@ -520,10 +526,12 @@ export const useCharacterPlayStateStore = defineStore('characterPlayState', () =
    * Decrements spent count, calls API, reverts on error
    */
   async function restoreSpellSlot(level: number): Promise<void> {
-    if (!canRestoreSlot(level) || !characterId.value) return
+    if (!canRestoreSlot(level) || !characterId.value || isUpdatingSpellSlot.value) return
 
     const slot = spellSlots.value.get(level)
     if (!slot) return
+
+    isUpdatingSpellSlot.value = true
 
     // Optimistic update
     const previousSpent = slot.spent
@@ -540,6 +548,8 @@ export const useCharacterPlayStateStore = defineStore('characterPlayState', () =
       slot.spent = previousSpent
       spellSlots.value.set(level, { ...slot })
       throw error
+    } finally {
+      isUpdatingSpellSlot.value = false
     }
   }
 
@@ -588,7 +598,7 @@ export const useCharacterPlayStateStore = defineStore('characterPlayState', () =
    * Checks preparation limit before preparing a spell
    */
   async function toggleSpellPreparation(characterSpellId: number, currentlyPrepared: boolean): Promise<void> {
-    if (!characterId.value) return
+    if (!characterId.value || isUpdatingSpellPreparation.value) return
 
     const newPreparedState = !currentlyPrepared
 
@@ -596,6 +606,8 @@ export const useCharacterPlayStateStore = defineStore('characterPlayState', () =
     if (newPreparedState && atPreparationLimit.value) {
       throw new Error('Preparation limit reached')
     }
+
+    isUpdatingSpellPreparation.value = true
 
     // Optimistic update
     if (newPreparedState) {
@@ -617,6 +629,8 @@ export const useCharacterPlayStateStore = defineStore('characterPlayState', () =
         preparedSpellIds.value.add(characterSpellId)
       }
       throw error
+    } finally {
+      isUpdatingSpellPreparation.value = false
     }
   }
 
@@ -627,33 +641,42 @@ export const useCharacterPlayStateStore = defineStore('characterPlayState', () =
   /**
    * Reset store to initial state
    *
-   * Call this when leaving the character page
+   * Call this when leaving the character page.
+   * Loading flags reset first to ensure clean state if navigating away mid-request.
    */
   function $reset() {
+    // Reset loading flags first (prevents stale loading state if navigating mid-request)
+    isUpdatingHp.value = false
+    isUpdatingCurrency.value = false
+    isUpdatingDeathSaves.value = false
+    isUpdatingSpellSlot.value = false
+    isUpdatingSpellPreparation.value = false
+
+    // Reset identity/mode
     characterId.value = null
     isPlayMode.value = false
     isDead.value = false
 
+    // Reset HP
     hitPoints.current = 0
     hitPoints.max = 0
     hitPoints.temporary = 0
 
+    // Reset death saves
     deathSaves.successes = 0
     deathSaves.failures = 0
 
+    // Reset currency
     currency.pp = 0
     currency.gp = 0
     currency.ep = 0
     currency.sp = 0
     currency.cp = 0
 
+    // Reset spell state
     spellSlots.value.clear()
     preparedSpellIds.value.clear()
     preparationLimit.value = null
-
-    isUpdatingHp.value = false
-    isUpdatingCurrency.value = false
-    isUpdatingDeathSaves.value = false
   }
 
   // ===========================================================================
@@ -674,6 +697,8 @@ export const useCharacterPlayStateStore = defineStore('characterPlayState', () =
     isUpdatingHp,
     isUpdatingCurrency,
     isUpdatingDeathSaves,
+    isUpdatingSpellSlot,
+    isUpdatingSpellPreparation,
 
     // Computed
     canEdit,

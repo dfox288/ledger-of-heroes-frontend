@@ -18,11 +18,12 @@ export default defineEventHandler(async (event) => {
       { method: 'PATCH', body }
     )
     return data
-  } catch (error: any) {
+  } catch (error: unknown) {
+    const err = error as { statusCode?: number, statusMessage?: string, data?: unknown }
     throw createError({
-      statusCode: error.statusCode || 500,
-      statusMessage: error.statusMessage || 'Failed to update spell preparation',
-      data: error.data
+      statusCode: err.statusCode || 500,
+      statusMessage: err.statusMessage || 'Failed to update spell preparation',
+      data: err.data
     })
   }
 })

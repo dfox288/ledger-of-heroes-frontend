@@ -17,6 +17,11 @@
 import type { CharacterSpell } from '~/types/character'
 import { formatSpellLevel } from '~/composables/useSpellFormatters'
 import { useCharacterPlayStateStore } from '~/stores/characterPlayState'
+import { storeToRefs } from 'pinia'
+
+// Opacity constants for visual states
+const OPACITY_GREYED_OUT = 'opacity-40' // At prep limit and unprepared
+const OPACITY_UNPREPARED = 'opacity-60' // Unprepared but can be prepared
 
 const props = defineProps<{
   spell: CharacterSpell
@@ -26,6 +31,7 @@ const props = defineProps<{
 }>()
 
 const store = useCharacterPlayStateStore()
+const { isUpdatingSpellPreparation } = storeToRefs(store)
 const isExpanded = ref(false)
 
 /**
@@ -51,6 +57,8 @@ const canToggle = computed(() => {
   if (props.spell.is_always_prepared) return false
   // Can't prepare new spells when at limit
   if (!props.spell.is_prepared && props.atPrepLimit) return false
+  // Disable during API call to prevent spam-clicks
+  if (isUpdatingSpellPreparation.value) return false
   return true
 })
 
@@ -95,11 +103,11 @@ function handleExpandClick(event: MouseEvent) {
         ? 'border-spell-300 dark:border-spell-700'
         : 'border-gray-200 dark:border-gray-700',
       isGreyedOut
-        ? 'opacity-40 cursor-not-allowed'
+        ? `${OPACITY_GREYED_OUT} cursor-not-allowed`
         : canToggle
           ? 'cursor-pointer hover:shadow-md'
           : 'cursor-default',
-      !isPrepared && !isGreyedOut && 'opacity-60'
+      !isPrepared && !isGreyedOut && OPACITY_UNPREPARED
     ]"
   >
     <!-- Clickable body area for preparation toggle -->

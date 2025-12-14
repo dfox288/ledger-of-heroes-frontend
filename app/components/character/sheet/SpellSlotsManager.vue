@@ -17,12 +17,18 @@ const props = defineProps<{
 }>()
 
 const store = useCharacterPlayStateStore()
-const { spellSlots } = storeToRefs(store)
+const { spellSlots, isUpdatingSpellSlot } = storeToRefs(store)
 
 /**
  * Convert spell level to ordinal (1st, 2nd, 3rd, etc.)
+ * Note: Level 0 = cantrips, which don't use spell slots.
+ * Backend should never send level 0 in slot data.
  */
 function ordinal(level: number): string {
+  // Cantrips (level 0) don't have slots - this shouldn't happen,
+  // but handle gracefully just in case
+  if (level === 0) return 'Ctrp'
+
   const suffixes = ['th', 'st', 'nd', 'rd']
   const value = level % 100
   const v = value - 20
@@ -31,12 +37,20 @@ function ordinal(level: number): string {
 }
 
 /**
+ * Check if interactions are disabled (not editable or updating)
+ */
+const isDisabled = computed(() => !props.editable || isUpdatingSpellSlot.value)
+
+/**
  * Get sorted list of spell levels that have slots
+ * Filters out level 0 (cantrips) which don't use spell slots
  */
 const sortedLevels = computed(() => {
   const levels: Array<{ level: number, total: number, spent: number, available: number }> = []
 
   for (const [level, slot] of spellSlots.value) {
+    // Skip level 0 (cantrips don't use spell slots)
+    if (level === 0) continue
     if (slot.total > 0) {
       levels.push({
         level,
@@ -54,7 +68,7 @@ const sortedLevels = computed(() => {
  * Handle click on available slot (use it)
  */
 async function handleUseSlot(level: number) {
-  if (!props.editable) return
+  if (isDisabled.value) return
   try {
     await store.useSpellSlot(level)
   } catch {
@@ -66,7 +80,7 @@ async function handleUseSlot(level: number) {
  * Handle click on spent slot (restore it)
  */
 async function handleRestoreSlot(level: number) {
-  if (!props.editable) return
+  if (isDisabled.value) return
   try {
     await store.restoreSpellSlot(level)
   } catch {
@@ -102,10 +116,10 @@ async function handleRestoreSlot(level: number) {
             v-for="i in available"
             :key="`available-${level}-${i}`"
             :data-testid="`slot-${level}-available`"
-            :disabled="!editable"
+            :disabled="isDisabled"
             :class="[
               'w-7 h-7 transition-all',
-              editable ? 'cursor-pointer hover:scale-110' : 'cursor-default'
+              !isDisabled ? 'cursor-pointer hover:scale-110' : 'cursor-default opacity-70'
             ]"
             @click="handleUseSlot(level)"
           >
@@ -120,10 +134,10 @@ async function handleRestoreSlot(level: number) {
             v-for="i in spent"
             :key="`spent-${level}-${i}`"
             :data-testid="`slot-${level}-spent`"
-            :disabled="!editable"
+            :disabled="isDisabled"
             :class="[
               'w-7 h-7 transition-all',
-              editable ? 'cursor-pointer hover:scale-110' : 'cursor-default'
+              !isDisabled ? 'cursor-pointer hover:scale-110' : 'cursor-default opacity-70'
             ]"
             @click="handleRestoreSlot(level)"
           >
