@@ -269,7 +269,7 @@ describe('ItemTable', () => {
     it('hides equip button for Tool items', async () => {
       const thiefTools: CharacterEquipment = {
         id: 20,
-        item: { name: "Thieves' Tools", item_type: 'Tool', weight: '1.00' },
+        item: { name: 'Thieves\' Tools', item_type: 'Tool', weight: '1.00' },
         item_slug: 'phb:thieves-tools',
         is_dangling: 'false',
         custom_name: null,

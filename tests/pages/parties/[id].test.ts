@@ -92,4 +92,24 @@ describe('PartyDetailPage', () => {
 
     expect(wrapper.text()).toContain('Add Character')
   })
+
+  it('has DM Screen link', async () => {
+    apiFetchMock.mockResolvedValue({ data: mockParty })
+
+    const wrapper = await mountSuspended(PartyDetailPage)
+    await flushPromises()
+
+    const dmScreenButton = wrapper.find('[data-testid="dm-screen-link"]')
+    expect(dmScreenButton.exists()).toBe(true)
+    expect(dmScreenButton.text()).toContain('DM Screen')
+
+    // UButton with :to prop renders as a link
+    const link = dmScreenButton.element.tagName === 'A'
+      ? dmScreenButton
+      : dmScreenButton.find('a')
+
+    if (link && link.exists()) {
+      expect(link.attributes('href')).toContain('/parties/1/dm-screen')
+    }
+  })
 })

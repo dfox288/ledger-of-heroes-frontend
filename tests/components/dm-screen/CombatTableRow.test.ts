@@ -1,0 +1,136 @@
+// tests/components/dm-screen/CombatTableRow.test.ts
+import { describe, it, expect } from 'vitest'
+import { mountSuspended } from '@nuxt/test-utils/runtime'
+import CombatTableRow from '~/components/dm-screen/CombatTableRow.vue'
+import type { DmScreenCharacter } from '~/types/dm-screen'
+
+const mockCharacter: DmScreenCharacter = {
+  id: 1,
+  public_id: 'brave-mage-3aBc',
+  name: 'Gandalf',
+  level: 5,
+  class_name: 'Wizard',
+  hit_points: { current: 28, max: 35, temp: 0 },
+  armor_class: 15,
+  proficiency_bonus: 3,
+  combat: {
+    initiative_modifier: 2,
+    speeds: { walk: 30, fly: null, swim: null, climb: null },
+    death_saves: { successes: 0, failures: 0 },
+    concentration: { active: false, spell: null }
+  },
+  senses: {
+    passive_perception: 14,
+    passive_investigation: 12,
+    passive_insight: 14,
+    darkvision: 60
+  },
+  capabilities: {
+    languages: ['Common', 'Elvish'],
+    size: 'Medium',
+    tool_proficiencies: []
+  },
+  equipment: {
+    armor: null,
+    weapons: [],
+    shield: false
+  },
+  saving_throws: { STR: 0, DEX: 2, CON: 1, INT: 4, WIS: 2, CHA: -1 },
+  conditions: [],
+  spell_slots: { 1: { current: 4, max: 4 } }
+}
+
+describe('DmScreenCombatTableRow', () => {
+  it('displays character name and class', async () => {
+    const wrapper = await mountSuspended(CombatTableRow, {
+      props: { character: mockCharacter }
+    })
+    expect(wrapper.text()).toContain('Gandalf')
+    expect(wrapper.text()).toContain('Wizard')
+  })
+
+  it('displays HP bar', async () => {
+    const wrapper = await mountSuspended(CombatTableRow, {
+      props: { character: mockCharacter }
+    })
+    expect(wrapper.find('[data-testid="hp-bar-fill"]').exists()).toBe(true)
+  })
+
+  it('displays armor class', async () => {
+    const wrapper = await mountSuspended(CombatTableRow, {
+      props: { character: mockCharacter }
+    })
+    expect(wrapper.text()).toContain('15')
+  })
+
+  it('highlights high AC (17+)', async () => {
+    const highAcCharacter = { ...mockCharacter, armor_class: 18 }
+    const wrapper = await mountSuspended(CombatTableRow, {
+      props: { character: highAcCharacter }
+    })
+    const acBadge = wrapper.find('[data-testid="ac-badge"]')
+    expect(acBadge.classes().join(' ')).toMatch(/primary|blue|highlight/)
+  })
+
+  it('displays initiative modifier with sign', async () => {
+    const wrapper = await mountSuspended(CombatTableRow, {
+      props: { character: mockCharacter }
+    })
+    expect(wrapper.text()).toContain('+2')
+  })
+
+  it('displays passive scores', async () => {
+    const wrapper = await mountSuspended(CombatTableRow, {
+      props: { character: mockCharacter }
+    })
+    expect(wrapper.text()).toContain('14') // Perception
+    expect(wrapper.text()).toContain('12') // Investigation
+  })
+
+  it('emits toggle event for expansion', async () => {
+    const wrapper = await mountSuspended(CombatTableRow, {
+      props: { character: mockCharacter }
+    })
+    await wrapper.find('[data-testid="combat-row"]').trigger('click')
+    expect(wrapper.emitted('toggle')).toBeTruthy()
+  })
+
+  it('shows death saves when active', async () => {
+    const dyingCharacter = {
+      ...mockCharacter,
+      combat: {
+        ...mockCharacter.combat,
+        death_saves: { successes: 1, failures: 2 }
+      }
+    }
+    const wrapper = await mountSuspended(CombatTableRow, {
+      props: { character: dyingCharacter }
+    })
+    expect(wrapper.find('[data-testid="death-saves-container"]').exists()).toBe(true)
+  })
+
+  it('shows condition badges when present', async () => {
+    const conditionedCharacter = {
+      ...mockCharacter,
+      conditions: [{ name: 'Poisoned', slug: 'poisoned', level: null }]
+    }
+    const wrapper = await mountSuspended(CombatTableRow, {
+      props: { character: conditionedCharacter }
+    })
+    expect(wrapper.text()).toContain('Poisoned')
+  })
+
+  it('shows concentration indicator when active', async () => {
+    const concentratingCharacter = {
+      ...mockCharacter,
+      combat: {
+        ...mockCharacter.combat,
+        concentration: { active: true, spell: 'Haste' }
+      }
+    }
+    const wrapper = await mountSuspended(CombatTableRow, {
+      props: { character: concentratingCharacter }
+    })
+    expect(wrapper.text()).toContain('Haste')
+  })
+})

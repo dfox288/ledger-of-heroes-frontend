@@ -1,4 +1,4 @@
-<!-- app/pages/parties/[id].vue -->
+<!-- app/pages/parties/[id]/index.vue -->
 <script setup lang="ts">
 import type { Party, PartyCharacter, CharacterSummary } from '~/types'
 import { logger } from '~/utils/logger'
@@ -274,6 +274,15 @@ const existingCharacterIds = computed(() =>
             @click="openEditModal"
           >
             Edit
+          </UButton>
+          <UButton
+            data-testid="dm-screen-link"
+            :to="`/parties/${partyId}/dm-screen`"
+            icon="i-heroicons-presentation-chart-bar"
+            variant="soft"
+            color="primary"
+          >
+            DM Screen
           </UButton>
           <UDropdownMenu
             :items="[[
