@@ -1,4 +1,4 @@
-<!-- app/pages/parties/[id].vue -->
+<!-- app/pages/parties/[id]/index.vue -->
 <script setup lang="ts">
 import type { Party, PartyCharacter, CharacterSummary } from '~/types'
 import { logger } from '~/utils/logger'

@@ -16,6 +16,7 @@ function ordinal(n: number): string {
 }
 
 const validSlots = computed(() => {
+  if (!props.slots || typeof props.slots !== 'object') return []
   return Object.entries(props.slots)
     .filter(([, slot]) => slot.max > 0)
     .sort(([a], [b]) => Number(a) - Number(b))

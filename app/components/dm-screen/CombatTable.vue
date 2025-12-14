@@ -50,25 +50,23 @@ function toggleExpand(characterId: number) {
           </th>
         </tr>
       </thead>
-      <tbody>
-        <template
-          v-for="character in characters"
-          :key="character.id"
+      <tbody
+        v-for="character in characters"
+        :key="character.id"
+      >
+        <DmScreenCombatTableRow
+          :character="character"
+          :expanded="expandedCharacterId === character.id"
+          @toggle="toggleExpand(character.id)"
+        />
+        <tr
+          v-if="expandedCharacterId === character.id"
+          data-testid="character-detail"
         >
-          <DmScreenCombatTableRow
-            :character="character"
-            :expanded="expandedCharacterId === character.id"
-            @click="toggleExpand(character.id)"
-          />
-          <tr
-            v-if="expandedCharacterId === character.id"
-            data-testid="character-detail"
-          >
-            <td colspan="7">
-              <DmScreenCharacterDetail :character="character" />
-            </td>
-          </tr>
-        </template>
+          <td colspan="7">
+            <DmScreenCharacterDetail :character="character" />
+          </td>
+        </tr>
       </tbody>
     </table>
 

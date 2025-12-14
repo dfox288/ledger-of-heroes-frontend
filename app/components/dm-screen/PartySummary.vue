@@ -20,8 +20,8 @@ const isCollapsed = computed({
   set: val => emit('update:collapsed', val)
 })
 
-const displayLanguages = computed(() => props.summary.all_languages.slice(0, 3))
-const moreLanguages = computed(() => Math.max(0, props.summary.all_languages.length - 3))
+// Show all languages - they're important for DM planning
+const displayLanguages = computed(() => props.summary.all_languages)
 </script>
 
 <template>
@@ -58,14 +58,6 @@ const moreLanguages = computed(() => Math.max(0, props.summary.all_languages.len
             size="md"
           >
             {{ lang }}
-          </UBadge>
-          <UBadge
-            v-if="moreLanguages > 0"
-            color="neutral"
-            variant="outline"
-            size="md"
-          >
-            +{{ moreLanguages }} more
           </UBadge>
         </div>
       </div>

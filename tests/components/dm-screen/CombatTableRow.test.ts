@@ -87,12 +87,12 @@ describe('DmScreenCombatTableRow', () => {
     expect(wrapper.text()).toContain('12') // Investigation
   })
 
-  it('emits click event for expansion', async () => {
+  it('emits toggle event for expansion', async () => {
     const wrapper = await mountSuspended(CombatTableRow, {
       props: { character: mockCharacter }
     })
     await wrapper.find('[data-testid="combat-row"]').trigger('click')
-    expect(wrapper.emitted('click')).toBeTruthy()
+    expect(wrapper.emitted('toggle')).toBeTruthy()
   })
 
   it('shows death saves when active', async () => {

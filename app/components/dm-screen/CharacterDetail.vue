@@ -14,9 +14,11 @@ function formatModifier(mod: number): string {
   return mod >= 0 ? `+${mod}` : `${mod}`
 }
 
-const hasSpellSlots = computed(() =>
-  Object.values(props.character.spell_slots).some(s => s.max > 0)
-)
+const hasSpellSlots = computed(() => {
+  const slots = props.character.spell_slots
+  if (!slots || typeof slots !== 'object') return false
+  return Object.values(slots).some(s => s.max > 0)
+})
 
 const speeds = computed(() => {
   const s = props.character.combat.speeds

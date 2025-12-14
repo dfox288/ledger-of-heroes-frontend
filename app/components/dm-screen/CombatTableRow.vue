@@ -12,7 +12,7 @@ const props = withDefaults(defineProps<Props>(), {
 })
 
 const emit = defineEmits<{
-  click: []
+  toggle: []
 }>()
 
 function formatModifier(mod: number): string {
@@ -33,7 +33,7 @@ const hasConditions = computed(() => props.character.conditions.length > 0)
     data-testid="combat-row"
     class="hover:bg-neutral-50 dark:hover:bg-neutral-800 cursor-pointer transition-colors"
     :class="{ 'bg-neutral-50 dark:bg-neutral-800': expanded }"
-    @click="emit('click')"
+    @click="emit('toggle')"
   >
     <!-- Name + Class -->
     <td class="py-3 px-4">

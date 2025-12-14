@@ -24,12 +24,16 @@ describe('DmScreenPartySummary', () => {
     expect(wrapper.text()).toContain('Common')
   })
 
-  it('shows "+N more" when many languages', async () => {
+  it('shows all party languages', async () => {
     const wrapper = await mountSuspended(PartySummary, {
       props: { summary: mockSummary }
     })
-    // Default shows 3 languages, rest as "+N more"
-    expect(wrapper.text()).toMatch(/\+\d+ more/)
+    // All languages should be visible for DM planning
+    expect(wrapper.text()).toContain('Common')
+    expect(wrapper.text()).toContain('Elvish')
+    expect(wrapper.text()).toContain('Dwarvish')
+    expect(wrapper.text()).toContain('Undercommon')
+    expect(wrapper.text()).toContain('Draconic')
   })
 
   it('displays darkvision count', async () => {
