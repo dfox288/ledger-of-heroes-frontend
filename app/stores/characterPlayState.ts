@@ -109,6 +109,9 @@ export const useCharacterPlayStateStore = defineStore('characterPlayState', () =
     cp: 0
   })
 
+  /** Spell slots state - tracks total and spent for each level */
+  const spellSlots = ref(new Map<number, { total: number, spent: number, slotType: 'standard' | 'pact_magic' }>())
+
   /** Loading flags to prevent race conditions */
   const isUpdatingHp = ref(false)
   const isUpdatingCurrency = ref(false)
@@ -120,6 +123,39 @@ export const useCharacterPlayStateStore = defineStore('characterPlayState', () =
 
   /** Can the user interact with the character? (play mode ON and not dead) */
   const canEdit = computed(() => isPlayMode.value && !isDead.value)
+
+  // ===========================================================================
+  // SPELL SLOT GETTERS
+  // ===========================================================================
+
+  /**
+   * Get spell slot state for a given level
+   */
+  function getSlotState(level: number): { total: number, spent: number, available: number } {
+    const slot = spellSlots.value.get(level)
+    if (!slot) return { total: 0, spent: 0, available: 0 }
+    return {
+      total: slot.total,
+      spent: slot.spent,
+      available: slot.total - slot.spent
+    }
+  }
+
+  /**
+   * Check if a slot can be used (has available slots)
+   */
+  function canUseSlot(level: number): boolean {
+    const slot = spellSlots.value.get(level)
+    return slot ? slot.spent < slot.total : false
+  }
+
+  /**
+   * Check if a slot can be restored (has spent slots)
+   */
+  function canRestoreSlot(level: number): boolean {
+    const slot = spellSlots.value.get(level)
+    return slot ? slot.spent > 0 : false
+  }
 
   // ===========================================================================
   // PLAY MODE
@@ -396,6 +432,100 @@ export const useCharacterPlayStateStore = defineStore('characterPlayState', () =
   }
 
   // ===========================================================================
+  // SPELL SLOT ACTIONS
+  // ===========================================================================
+
+  /**
+   * Initialize spell slots from character stats
+   *
+   * Call this when character data loads
+   */
+  function initializeSpellSlots(slots: Array<{ level: number, total: number }>) {
+    spellSlots.value.clear()
+    for (const slot of slots) {
+      spellSlots.value.set(slot.level, {
+        total: slot.total,
+        spent: 0,
+        slotType: 'standard'
+      })
+    }
+  }
+
+  /**
+   * Use a spell slot (optimistic update)
+   *
+   * Increments spent count, calls API, reverts on error
+   */
+  async function useSpellSlot(level: number): Promise<void> {
+    if (!canUseSlot(level) || !characterId.value) return
+
+    const slot = spellSlots.value.get(level)
+    if (!slot) return
+
+    // Optimistic update
+    const previousSpent = slot.spent
+    slot.spent += 1
+    spellSlots.value.set(level, { ...slot })
+
+    try {
+      await apiFetch(`/characters/${characterId.value}/spell-slots/${level}`, {
+        method: 'PATCH',
+        body: { action: 'use' }
+      })
+    } catch (error) {
+      // Revert on failure
+      slot.spent = previousSpent
+      spellSlots.value.set(level, { ...slot })
+      throw error
+    }
+  }
+
+  /**
+   * Restore a spell slot (optimistic update)
+   *
+   * Decrements spent count, calls API, reverts on error
+   */
+  async function restoreSpellSlot(level: number): Promise<void> {
+    if (!canRestoreSlot(level) || !characterId.value) return
+
+    const slot = spellSlots.value.get(level)
+    if (!slot) return
+
+    // Optimistic update
+    const previousSpent = slot.spent
+    slot.spent -= 1
+    spellSlots.value.set(level, { ...slot })
+
+    try {
+      await apiFetch(`/characters/${characterId.value}/spell-slots/${level}`, {
+        method: 'PATCH',
+        body: { action: 'restore' }
+      })
+    } catch (error) {
+      // Revert on failure
+      slot.spent = previousSpent
+      spellSlots.value.set(level, { ...slot })
+      throw error
+    }
+  }
+
+  /**
+   * Reset all spell slots to 0 spent
+   *
+   * Called during long rest (backend handles persistence)
+   */
+  async function resetSpellSlots(): Promise<void> {
+    if (!characterId.value) return
+
+    // Reset all slots to 0 spent
+    for (const [level, slot] of spellSlots.value) {
+      spellSlots.value.set(level, { ...slot, spent: 0 })
+    }
+
+    // Note: Long rest endpoint handles this on backend
+  }
+
+  // ===========================================================================
   // RESET
   // ===========================================================================
 
@@ -422,6 +552,8 @@ export const useCharacterPlayStateStore = defineStore('characterPlayState', () =
     currency.sp = 0
     currency.cp = 0
 
+    spellSlots.value.clear()
+
     isUpdatingHp.value = false
     isUpdatingCurrency.value = false
     isUpdatingDeathSaves.value = false
@@ -439,12 +571,18 @@ export const useCharacterPlayStateStore = defineStore('characterPlayState', () =
     hitPoints,
     deathSaves,
     currency,
+    spellSlots,
     isUpdatingHp,
     isUpdatingCurrency,
     isUpdatingDeathSaves,
 
     // Computed
     canEdit,
+
+    // Getters
+    getSlotState,
+    canUseSlot,
+    canRestoreSlot,
 
     // Actions
     initialize,
@@ -455,6 +593,10 @@ export const useCharacterPlayStateStore = defineStore('characterPlayState', () =
     clearTempHp,
     updateCurrency,
     updateDeathSaves,
+    initializeSpellSlots,
+    useSpellSlot,
+    restoreSpellSlot,
+    resetSpellSlots,
     $reset
   }
 })
