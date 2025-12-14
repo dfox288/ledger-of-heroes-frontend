@@ -133,4 +133,55 @@ describe('DmScreenCombatTableRow', () => {
     })
     expect(wrapper.text()).toContain('Haste')
   })
+
+  describe('speed display', () => {
+    it('displays walk speed', async () => {
+      const wrapper = await mountSuspended(CombatTableRow, {
+        props: { character: mockCharacter }
+      })
+      expect(wrapper.text()).toContain('30 ft')
+    })
+
+    it('shows fly indicator when character can fly', async () => {
+      const flyingCharacter = {
+        ...mockCharacter,
+        combat: {
+          ...mockCharacter.combat,
+          speeds: { walk: 30, fly: 60, swim: null, climb: null }
+        }
+      }
+      const wrapper = await mountSuspended(CombatTableRow, {
+        props: { character: flyingCharacter }
+      })
+      expect(wrapper.find('[data-testid="speed-fly"]').exists()).toBe(true)
+    })
+
+    it('shows swim indicator when character can swim', async () => {
+      const swimmingCharacter = {
+        ...mockCharacter,
+        combat: {
+          ...mockCharacter.combat,
+          speeds: { walk: 30, fly: null, swim: 40, climb: null }
+        }
+      }
+      const wrapper = await mountSuspended(CombatTableRow, {
+        props: { character: swimmingCharacter }
+      })
+      expect(wrapper.find('[data-testid="speed-swim"]').exists()).toBe(true)
+    })
+
+    it('shows climb indicator when character can climb', async () => {
+      const climbingCharacter = {
+        ...mockCharacter,
+        combat: {
+          ...mockCharacter.combat,
+          speeds: { walk: 30, fly: null, swim: null, climb: 30 }
+        }
+      }
+      const wrapper = await mountSuspended(CombatTableRow, {
+        props: { character: climbingCharacter }
+      })
+      expect(wrapper.find('[data-testid="speed-climb"]').exists()).toBe(true)
+    })
+  })
 })

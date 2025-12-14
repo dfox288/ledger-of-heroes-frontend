@@ -61,6 +61,12 @@ const hpColor = computed(() => {
 // Check if monster is dead (0 HP)
 const isDead = computed(() => props.monster.current_hp <= 0)
 
+// Speed display
+const speeds = computed(() => props.monster.monster.speed)
+const hasFly = computed(() => speeds.value.fly !== null && speeds.value.fly > 0)
+const hasSwim = computed(() => speeds.value.swim !== null && speeds.value.swim > 0)
+const hasClimb = computed(() => speeds.value.climb !== null && speeds.value.climb > 0)
+
 function startEditInit(event: Event) {
   event.stopPropagation()
   isEditingInit.value = true
@@ -342,6 +348,34 @@ function increaseHp(event: Event) {
       >
         <span class="font-mono font-medium">{{ initiativeDisplay }}</span>
       </button>
+    </td>
+
+    <!-- Speed -->
+    <td class="py-3 px-4 text-center">
+      <div class="flex items-center justify-center gap-1">
+        <span class="font-mono">{{ speeds.walk }} ft</span>
+        <UIcon
+          v-if="hasFly"
+          data-testid="speed-fly"
+          name="i-heroicons-paper-airplane"
+          class="w-3.5 h-3.5 text-sky-500"
+          title="Can fly"
+        />
+        <UIcon
+          v-if="hasSwim"
+          data-testid="speed-swim"
+          name="i-heroicons-beaker"
+          class="w-3.5 h-3.5 text-blue-500"
+          title="Can swim"
+        />
+        <UIcon
+          v-if="hasClimb"
+          data-testid="speed-climb"
+          name="i-heroicons-arrow-trending-up"
+          class="w-3.5 h-3.5 text-amber-500"
+          title="Can climb"
+        />
+      </div>
     </td>
 
     <!-- Actions (condensed) - spans 2 columns to match character Perc/Inv -->

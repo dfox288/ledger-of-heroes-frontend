@@ -226,6 +226,9 @@ const hasCombatants = computed(() => {
           <th class="py-3 px-4 font-medium text-neutral-500 dark:text-neutral-400 text-center">
             Init
           </th>
+          <th class="py-3 px-4 font-medium text-neutral-500 dark:text-neutral-400 text-center">
+            Speed
+          </th>
           <!-- In combat: show Actions header | Not in combat: show Passives -->
           <template v-if="combatState.inCombat">
             <th

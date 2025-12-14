@@ -172,4 +172,55 @@ describe('DmScreenMonsterTableRow', () => {
       expect(wrapper.emitted('update:hp')).toBeFalsy()
     })
   })
+
+  describe('speed display', () => {
+    it('displays walk speed', async () => {
+      const wrapper = await mountSuspended(MonsterTableRow, {
+        props: { monster: mockMonster }
+      })
+      expect(wrapper.text()).toContain('30 ft')
+    })
+
+    it('shows fly indicator when monster can fly', async () => {
+      const flyingMonster = {
+        ...mockMonster,
+        monster: {
+          ...mockMonster.monster,
+          speed: { walk: 30, fly: 60, swim: null, climb: null }
+        }
+      }
+      const wrapper = await mountSuspended(MonsterTableRow, {
+        props: { monster: flyingMonster }
+      })
+      expect(wrapper.find('[data-testid="speed-fly"]').exists()).toBe(true)
+    })
+
+    it('shows swim indicator when monster can swim', async () => {
+      const swimmingMonster = {
+        ...mockMonster,
+        monster: {
+          ...mockMonster.monster,
+          speed: { walk: 30, fly: null, swim: 40, climb: null }
+        }
+      }
+      const wrapper = await mountSuspended(MonsterTableRow, {
+        props: { monster: swimmingMonster }
+      })
+      expect(wrapper.find('[data-testid="speed-swim"]').exists()).toBe(true)
+    })
+
+    it('shows climb indicator when monster can climb', async () => {
+      const climbingMonster = {
+        ...mockMonster,
+        monster: {
+          ...mockMonster.monster,
+          speed: { walk: 30, fly: null, swim: null, climb: 30 }
+        }
+      }
+      const wrapper = await mountSuspended(MonsterTableRow, {
+        props: { monster: climbingMonster }
+      })
+      expect(wrapper.find('[data-testid="speed-climb"]').exists()).toBe(true)
+    })
+  })
 })

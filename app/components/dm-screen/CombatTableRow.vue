@@ -81,6 +81,12 @@ const initiativeDisplay = computed(() => {
 const modifierHint = computed(() => {
   return formatModifier(props.character.combat.initiative_modifier)
 })
+
+// Speed display
+const speeds = computed(() => props.character.combat.speeds)
+const hasFly = computed(() => speeds.value.fly !== null && speeds.value.fly > 0)
+const hasSwim = computed(() => speeds.value.swim !== null && speeds.value.swim > 0)
+const hasClimb = computed(() => speeds.value.climb !== null && speeds.value.climb > 0)
 </script>
 
 <template>
@@ -193,6 +199,34 @@ const modifierHint = computed(() => {
         <span class="font-mono font-medium">{{ initiativeDisplay }}</span>
         <span class="text-xs text-neutral-400">{{ modifierHint }}</span>
       </button>
+    </td>
+
+    <!-- Speed -->
+    <td class="py-3 px-4 text-center">
+      <div class="flex items-center justify-center gap-1">
+        <span class="font-mono">{{ speeds.walk }} ft</span>
+        <UIcon
+          v-if="hasFly"
+          data-testid="speed-fly"
+          name="i-heroicons-paper-airplane"
+          class="w-3.5 h-3.5 text-sky-500"
+          title="Can fly"
+        />
+        <UIcon
+          v-if="hasSwim"
+          data-testid="speed-swim"
+          name="i-heroicons-beaker"
+          class="w-3.5 h-3.5 text-blue-500"
+          title="Can swim"
+        />
+        <UIcon
+          v-if="hasClimb"
+          data-testid="speed-climb"
+          name="i-heroicons-arrow-trending-up"
+          class="w-3.5 h-3.5 text-amber-500"
+          title="Can climb"
+        />
+      </div>
     </td>
 
     <!-- In Combat: Show Weapons | Not in Combat: Show Passives -->
