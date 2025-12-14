@@ -6,7 +6,7 @@ const props = defineProps<{
   party: PartyListItem
 }>()
 
-defineEmits<{
+const emit = defineEmits<{
   edit: []
   delete: []
 }>()
@@ -14,6 +14,12 @@ defineEmits<{
 const characterLabel = computed(() =>
   props.party.character_count === 1 ? 'character' : 'characters'
 )
+
+/** Handle menu action click */
+function handleMenuAction(label: string) {
+  if (label === 'Edit Party') emit('edit')
+  else if (label === 'Delete Party') emit('delete')
+}
 </script>
 
 <template>
@@ -40,13 +46,14 @@ const characterLabel = computed(() =>
               color="neutral"
               variant="ghost"
               size="sm"
+              aria-label="Party actions menu"
               @click.prevent.stop
             />
             <template #item="{ item }">
               <span
                 class="flex items-center gap-2"
                 :class="{ 'text-error-500': item.color === 'error' }"
-                @click.prevent.stop="item.label === 'Edit Party' ? $emit('edit') : $emit('delete')"
+                @click.prevent.stop="handleMenuAction(item.label)"
               >
                 <UIcon
                   :name="item.icon"

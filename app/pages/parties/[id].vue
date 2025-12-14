@@ -95,10 +95,12 @@ async function handleDelete() {
   }
 }
 
+// Loading state for fetching characters
+const isFetchingCharacters = ref(false)
+
 /** Open add character modal */
 async function openAddModal() {
-  isAdding.value = true
-  showAddModal.value = true
+  isFetchingCharacters.value = true
 
   try {
     // Fetch all user's characters
@@ -113,12 +115,13 @@ async function openAddModal() {
       portrait: c.portrait?.thumb ? { thumb: c.portrait.thumb } : null,
       parties: []
     }))
+    // Only open modal after successful fetch
+    showAddModal.value = true
   } catch (err) {
     logger.error('Failed to fetch characters:', err)
     toast.add({ title: 'Failed to load characters', color: 'error' })
-    showAddModal.value = false
   } finally {
-    isAdding.value = false
+    isFetchingCharacters.value = false
   }
 }
 
@@ -128,32 +131,45 @@ async function handleAddCharacters(characterIds: number[]) {
 
   isAdding.value = true
 
-  try {
-    // Add each character
-    for (const id of characterIds) {
-      await apiFetch(`/parties/${party.value.id}/characters`, {
+  // Add characters in parallel and track results
+  const results = await Promise.allSettled(
+    characterIds.map(id =>
+      apiFetch(`/parties/${party.value!.id}/characters`, {
         method: 'POST',
         body: { character_id: id }
       })
-    }
+    )
+  )
 
-    const count = characterIds.length
+  const succeeded = results.filter(r => r.status === 'fulfilled').length
+  const failed = results.filter(r => r.status === 'rejected').length
+
+  if (failed === 0) {
+    // All succeeded
     toast.add({
-      title: `Added ${count} character${count > 1 ? 's' : ''} to party`,
+      title: `Added ${succeeded} character${succeeded > 1 ? 's' : ''} to party`,
       color: 'success'
     })
     showAddModal.value = false
-    await refresh()
-  } catch (err: unknown) {
-    const apiError = err as { data?: { message?: string } }
-    logger.error('Add characters failed:', err)
+  } else if (succeeded === 0) {
+    // All failed
+    logger.error('Add characters failed:', results)
     toast.add({
-      title: apiError.data?.message || 'Failed to add characters',
+      title: 'Failed to add characters',
       color: 'error'
     })
-  } finally {
-    isAdding.value = false
+  } else {
+    // Partial success
+    logger.error('Some characters failed to add:', results)
+    toast.add({
+      title: `Added ${succeeded} of ${characterIds.length} characters (${failed} failed)`,
+      color: 'warning'
+    })
+    showAddModal.value = false
   }
+
+  await refresh()
+  isAdding.value = false
 }
 
 /** Confirm remove character */
@@ -293,6 +309,7 @@ const existingCharacterIds = computed(() =>
           </h2>
           <UButton
             icon="i-heroicons-plus"
+            :loading="isFetchingCharacters"
             @click="openAddModal"
           >
             Add Character

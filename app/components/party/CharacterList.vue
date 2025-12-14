@@ -58,6 +58,7 @@ defineEmits<{
             color="error"
             variant="ghost"
             size="sm"
+            aria-label="Remove character from party"
             @click="$emit('remove', character.id)"
           />
         </div>
