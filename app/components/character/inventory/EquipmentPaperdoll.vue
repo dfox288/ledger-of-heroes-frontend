@@ -102,15 +102,9 @@ const slotConfigs: SlotConfig[] = [
             { 'has-item': getEquippedItem(config.slot) }
           ]"
         >
-          <!-- Slot icon (shows when empty) -->
-          <UIcon
-            v-if="!getEquippedItem(config.slot)"
-            :name="config.icon"
-            class="slot-icon"
-          />
-
-          <!-- Slot label -->
+          <!-- Slot label with icon -->
           <UBadge
+            :icon="config.icon"
             color="neutral"
             variant="subtle"
             size="md"
@@ -161,47 +155,22 @@ const slotConfigs: SlotConfig[] = [
   padding: 8px;
 }
 
-/* Humanoid body silhouette */
+/* Humanoid body silhouette - uses paperdoll.png */
 .body-silhouette {
   position: absolute;
   inset: 0;
   pointer-events: none;
   z-index: 0;
+  background-image: url('/paperdoll.png');
+  background-size: contain;
+  background-position: center;
+  background-repeat: no-repeat;
+  opacity: 0.08;
 }
 
-/* Create body shape with pseudo-elements */
-.body-silhouette::before {
-  content: '';
-  position: absolute;
-  left: 50%;
-  transform: translateX(-50%);
-  top: 40px;
-  width: 60%;
-  height: calc(100% - 80px);
-  background: linear-gradient(
-    180deg,
-    transparent 0%,
-    rgba(var(--color-primary-500), 0.03) 15%,
-    rgba(var(--color-primary-500), 0.05) 50%,
-    rgba(var(--color-primary-500), 0.03) 85%,
-    transparent 100%
-  );
-  border-radius: 30% 30% 20% 20%;
-  clip-path: polygon(
-    30% 0%,
-    70% 0%,
-    75% 15%,
-    90% 20%,
-    90% 35%,
-    75% 40%,
-    80% 100%,
-    50% 100%,
-    20% 100%,
-    25% 40%,
-    10% 35%,
-    10% 20%,
-    25% 15%
-  );
+:root.dark .body-silhouette {
+  opacity: 0.12;
+  filter: invert(1) brightness(1.2);
 }
 
 /* Individual slot styling */
@@ -249,19 +218,6 @@ const slotConfigs: SlotConfig[] = [
 .slot-belt { grid-area: belt; }
 .slot-hands { grid-area: hands; }
 .slot-feet { grid-area: feet; }
-
-/* Slot content styling */
-.slot-icon {
-  width: 16px;
-  height: 16px;
-  color: rgba(var(--color-gray-400), 1);
-  margin-bottom: 2px;
-}
-
-:root.dark .slot-icon {
-  color: rgba(var(--color-gray-500), 1);
-}
-
 
 .slot-empty {
   font-size: 10px;
