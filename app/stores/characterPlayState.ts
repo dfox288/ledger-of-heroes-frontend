@@ -134,7 +134,9 @@ export const useCharacterPlayStateStore = defineStore('characterPlayState', () =
    */
   function setPlayMode(enabled: boolean) {
     isPlayMode.value = enabled
-    localStorage.setItem(playModeKey, String(enabled))
+    if (import.meta.client) {
+      localStorage.setItem(playModeKey, String(enabled))
+    }
   }
 
   /**
@@ -143,8 +145,10 @@ export const useCharacterPlayStateStore = defineStore('characterPlayState', () =
    * Call this when the character page loads
    */
   function loadPlayMode() {
-    const saved = localStorage.getItem(playModeKey)
-    isPlayMode.value = saved === 'true'
+    if (import.meta.client) {
+      const saved = localStorage.getItem(playModeKey)
+      isPlayMode.value = saved === 'true'
+    }
   }
 
   // ===========================================================================
