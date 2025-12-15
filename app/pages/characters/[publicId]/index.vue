@@ -237,6 +237,13 @@ const isSpellcaster = computed(() => !!stats.value?.spellcasting)
             @refresh-short-rest="refreshForShortRest"
             @refresh-long-rest="refreshForLongRest"
           />
+          <CharacterSheetClassResourcesManager
+            v-if="character.counters?.length"
+            :counters="character.counters"
+            :character-id="character.id"
+            :editable="canEdit"
+            :is-dead="character.is_dead"
+          />
         </div>
 
         <!-- Right: Combat Stats + Saves/Skills -->

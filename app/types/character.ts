@@ -129,6 +129,12 @@ export type Character = components['schemas']['CharacterResource'] & {
    * @see Issue #649
    */
   attunement_slots?: AttunementSlots
+
+  /**
+   * Class resource counters (Rage, Ki Points, Bardic Inspiration, etc.)
+   * @see Issue #632
+   */
+  counters?: Counter[]
 }
 
 /**
@@ -285,6 +291,22 @@ export interface AttunementSlots {
   used: number
   /** Maximum attunement slots (typically 3, can be increased by class features) */
   max: number
+}
+
+/**
+ * Class resource counter (Rage, Ki Points, Bardic Inspiration, etc.)
+ * @see Issue #632
+ */
+export interface Counter {
+  id: number
+  slug: string
+  name: string
+  current: number
+  max: number
+  reset_on: 'short_rest' | 'long_rest' | null
+  source: string
+  source_type: string
+  unlimited: boolean
 }
 
 /**
