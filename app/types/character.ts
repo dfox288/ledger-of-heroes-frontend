@@ -288,6 +288,22 @@ export interface AttunementSlots {
 }
 
 /**
+ * Class resource counter (Rage, Ki Points, Bardic Inspiration, etc.)
+ * @see Issue #632
+ */
+export interface Counter {
+  id: number
+  slug: string
+  name: string
+  current: number
+  max: number
+  reset_on: 'short_rest' | 'long_rest' | null
+  source: string
+  source_type: string
+  unlimited: boolean
+}
+
+/**
  * Ability scores for character creation (camelCase for form binding)
  */
 export interface AbilityScores {
