@@ -3,13 +3,22 @@
  */
 import { http, HttpResponse } from 'msw'
 import type { PartyListItem, Party } from '~/types'
-import type { EncounterMonster } from '~/types/dm-screen'
+import type { EncounterMonster, EncounterPreset } from '~/types/dm-screen'
 import {
   mockEncounterMonsters,
   goblinTemplate,
   bugbearTemplate,
   createEncounterMonster
 } from '#tests/msw/fixtures/encounter-monsters'
+
+// Mock encounter presets storage (reset between tests via server.resetHandlers)
+export const mockEncounterPresets: EncounterPreset[] = []
+let presetIdCounter = 1
+
+export function resetPresetState() {
+  mockEncounterPresets.length = 0
+  presetIdCounter = 1
+}
 
 const mockParties: PartyListItem[] = [
   {
@@ -155,5 +164,89 @@ export const partyHandlers = [
   http.delete('/api/parties/:id/monsters', () => {
     mockEncounterMonsters.length = 0
     return HttpResponse.json({ success: true })
+  }),
+
+  // ============================================================================
+  // Encounter Preset Endpoints
+  // ============================================================================
+
+  // List encounter presets
+  http.get('/api/parties/:id/encounter-presets', () => {
+    return HttpResponse.json({ data: mockEncounterPresets })
+  }),
+
+  // Create encounter preset
+  http.post('/api/parties/:id/encounter-presets', async ({ request }) => {
+    const body = await request.json() as { name: string, monsters: Array<{ monster_id: number, quantity: number }> }
+    const now = new Date().toISOString()
+
+    const preset: EncounterPreset = {
+      id: presetIdCounter++,
+      name: body.name,
+      monsters: body.monsters.map(m => ({
+        monster_id: m.monster_id,
+        monster_name: m.monster_id === 42 ? 'Goblin' : 'Bugbear',
+        quantity: m.quantity,
+        challenge_rating: m.monster_id === 42 ? '1/4' : '1'
+      })),
+      created_at: now,
+      updated_at: now
+    }
+
+    mockEncounterPresets.push(preset)
+    return HttpResponse.json({ data: preset }, { status: 201 })
+  }),
+
+  // Rename encounter preset
+  http.patch('/api/parties/:id/encounter-presets/:presetId', async ({ params, request }) => {
+    const presetId = Number(params.presetId)
+    const body = await request.json() as { name: string }
+
+    const preset = mockEncounterPresets.find(p => p.id === presetId)
+    if (!preset) {
+      return HttpResponse.json({ error: 'Preset not found' }, { status: 404 })
+    }
+
+    preset.name = body.name
+    preset.updated_at = new Date().toISOString()
+
+    return HttpResponse.json({ data: preset })
+  }),
+
+  // Delete encounter preset
+  http.delete('/api/parties/:id/encounter-presets/:presetId', ({ params }) => {
+    const presetId = Number(params.presetId)
+    const index = mockEncounterPresets.findIndex(p => p.id === presetId)
+
+    if (index === -1) {
+      return HttpResponse.json({ error: 'Preset not found' }, { status: 404 })
+    }
+
+    mockEncounterPresets.splice(index, 1)
+    return HttpResponse.json({ success: true })
+  }),
+
+  // Load encounter preset (creates monsters in encounter)
+  http.post('/api/parties/:id/encounter-presets/:presetId/load', ({ params }) => {
+    const presetId = Number(params.presetId)
+    const preset = mockEncounterPresets.find(p => p.id === presetId)
+
+    if (!preset) {
+      return HttpResponse.json({ error: 'Preset not found' }, { status: 404 })
+    }
+
+    // Simulate creating encounter monsters from preset
+    const createdMonsters: EncounterMonster[] = []
+    for (const pm of preset.monsters) {
+      const template = pm.monster_id === 42 ? goblinTemplate : bugbearTemplate
+      for (let i = 0; i < pm.quantity; i++) {
+        const label = `${pm.monster_name} ${i + 1}`
+        const monster = createEncounterMonster(pm.monster_id, template, label)
+        createdMonsters.push(monster)
+        mockEncounterMonsters.push(monster)
+      }
+    }
+
+    return HttpResponse.json({ data: createdMonsters })
   })
 ]

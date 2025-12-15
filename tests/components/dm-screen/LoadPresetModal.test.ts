@@ -12,13 +12,14 @@ import type { EncounterPreset } from '~/types/dm-screen'
 
 const mockPresets: EncounterPreset[] = [
   {
-    id: 'preset-1',
+    id: 1,
     name: 'Goblin Patrol',
     monsters: [
-      { monster_id: 1, monster_name: 'Goblin', quantity: 4 },
-      { monster_id: 2, monster_name: 'Hobgoblin', quantity: 1 }
+      { monster_id: 1, monster_name: 'Goblin', quantity: 4, challenge_rating: '1/4' },
+      { monster_id: 2, monster_name: 'Hobgoblin', quantity: 1, challenge_rating: '1/2' }
     ],
-    created_at: Date.now()
+    created_at: '2025-12-15T12:00:00Z',
+    updated_at: '2025-12-15T12:00:00Z'
   }
 ]
 
@@ -72,6 +73,14 @@ describe('DmScreenLoadPresetModal', () => {
       })
 
       expect(wrapper.vm.$options.emits).toContain('delete')
+    })
+
+    it('defines rename emit', async () => {
+      const wrapper = await mountSuspended(LoadPresetModal, {
+        props: { open: true, presets: [] }
+      })
+
+      expect(wrapper.vm.$options.emits).toContain('rename')
     })
   })
 })

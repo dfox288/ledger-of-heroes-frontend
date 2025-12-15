@@ -187,17 +187,19 @@ export type Combatant
  */
 export interface PresetMonster {
   monster_id: number
-  monster_name: string // For display without extra API call
+  monster_name: string
   quantity: number
+  challenge_rating: string
 }
 
 /**
  * Saved encounter preset for quick loading
- * Currently stored in localStorage, will move to backend API (issue #674)
+ * Stored via backend API at /parties/{party}/encounter-presets
  */
 export interface EncounterPreset {
-  id: string
+  id: number
   name: string
   monsters: PresetMonster[]
-  created_at: number // Unix timestamp
+  created_at: string
+  updated_at: string
 }
