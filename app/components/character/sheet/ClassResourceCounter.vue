@@ -45,5 +45,33 @@ defineEmits<{
         data-testid="counter-icon-empty"
       />
     </div>
+
+    <!-- Numeric Mode (max > 6) -->
+    <div
+      v-else
+      class="flex items-center gap-2"
+    >
+      <UButton
+        data-testid="counter-decrement"
+        icon="i-heroicons-minus"
+        color="neutral"
+        variant="soft"
+        size="xs"
+        :disabled="!editable || disabled || counter.current <= 0"
+        @click="$emit('spend', counter.slug)"
+      />
+      <span class="text-sm font-medium text-gray-700 dark:text-gray-300 min-w-12 text-center">
+        {{ counter.current }} / {{ counter.max }}
+      </span>
+      <UButton
+        data-testid="counter-increment"
+        icon="i-heroicons-plus"
+        color="neutral"
+        variant="soft"
+        size="xs"
+        :disabled="!editable || disabled || counter.current >= counter.max"
+        @click="$emit('restore', counter.slug)"
+      />
+    </div>
   </div>
 </template>

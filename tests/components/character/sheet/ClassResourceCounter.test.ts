@@ -62,4 +62,26 @@ describe('ClassResourceCounter', () => {
       expect(empty.length).toBe(4)
     })
   })
+
+  describe('Numeric Mode (max > 6)', () => {
+    it('shows numeric display when max > 6', async () => {
+      const wrapper = await mountSuspended(ClassResourceCounter, {
+        props: { counter: createCounter({ current: 12, max: 15 }) }
+      })
+      // Should NOT show icons
+      const icons = wrapper.findAll('[data-testid^="counter-icon"]')
+      expect(icons.length).toBe(0)
+      // Should show +/- buttons
+      expect(wrapper.find('[data-testid="counter-decrement"]').exists()).toBe(true)
+      expect(wrapper.find('[data-testid="counter-increment"]').exists()).toBe(true)
+    })
+
+    it('shows +/- buttons in numeric mode', async () => {
+      const wrapper = await mountSuspended(ClassResourceCounter, {
+        props: { counter: createCounter({ max: 20 }), editable: true }
+      })
+      expect(wrapper.find('[data-testid="counter-decrement"]').exists()).toBe(true)
+      expect(wrapper.find('[data-testid="counter-increment"]').exists()).toBe(true)
+    })
+  })
 })
