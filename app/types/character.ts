@@ -129,6 +129,12 @@ export type Character = components['schemas']['CharacterResource'] & {
    * @see Issue #649
    */
   attunement_slots?: AttunementSlots
+
+  /**
+   * Class resource counters (Rage, Ki Points, Bardic Inspiration, etc.)
+   * @see Issue #632
+   */
+  counters?: Counter[]
 }
 
 /**

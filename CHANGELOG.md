@@ -11,6 +11,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **Class Resource Counters (#632) (2025-12-16)** - Track and spend class resources on character sheet
+  - New ClassResourceCounter component with two display modes:
+    - Icon mode (max <= 6): Click bolt icons to spend
+    - Numeric mode (max > 6): +/- buttons for larger pools
+  - Reset indicator badges (Short/Long rest)
+  - Keyboard accessible (Tab, Enter, Space)
+  - Optimistic updates with error rollback
+  - New Nitro route: `/api/characters/:id/counters/:slug`
+  - Counter type definition with proper typing
+  - 37 new tests across 4 component test files
+
 - **Minimum Roll Indicators (#652) (2025-12-15)** - Display guaranteed minimum results on character sheet skills
   - "Min: X" badge appears on skills with minimum roll guarantees (Reliable Talent, Silver Tongue)
   - Tooltip explains the mechanic based on source feature
