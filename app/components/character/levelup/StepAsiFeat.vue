@@ -107,54 +107,92 @@ function getAbilityName(code: string): string {
 // SELECTION STATE
 // ════════════════════════════════════════════════════════════════
 
+/** Maximum ability score in D&D 5e */
+const MAX_ABILITY_SCORE = 20
+
+/** Maximum ASI points to allocate */
+const MAX_ASI_POINTS = 2
+
 type SelectionMode = 'none' | 'asi' | 'feat'
 const selectionMode = ref<SelectionMode>('none')
 
-// ASI allocation: Map<code, bonus> (max 2 total points)
-const asiAllocation = ref<Map<string, number>>(new Map())
+// ASI allocation: Record<code, bonus> - using Record for clean reactivity
+const asiAllocation = ref<Record<string, number>>({})
 
 // Selected feat slug
 const selectedFeat = ref<string | null>(null)
 
 // Total ASI points allocated
 const totalAsiPoints = computed(() => {
-  let total = 0
-  for (const value of asiAllocation.value.values()) {
-    total += value
-  }
-  return total
+  return Object.values(asiAllocation.value).reduce((sum, val) => sum + val, 0)
 })
 
 // Can add more ASI points?
-const canAddAsiPoint = computed(() => totalAsiPoints.value < 2)
+const canAddAsiPoint = computed(() => totalAsiPoints.value < MAX_ASI_POINTS)
 
 // Get allocated bonus for an ability
 function getAllocatedBonus(code: string): number {
-  return asiAllocation.value.get(code) ?? 0
+  return asiAllocation.value[code] ?? 0
+}
+
+// Check if ability is at max (20) or would exceed with allocation
+function isAbilityAtMax(code: string): boolean {
+  const ability = abilities.value.find(a => a.code === code)
+  if (!ability) return false
+  return ability.score >= MAX_ABILITY_SCORE
+}
+
+// Check how many more points can be added to an ability (respecting 20 cap)
+function getRemainingCapacity(code: string): number {
+  const ability = abilities.value.find(a => a.code === code)
+  if (!ability) return 0
+  const current = getAllocatedBonus(code)
+  return MAX_ABILITY_SCORE - ability.score - current
+}
+
+// Get tooltip text for ability button
+function getAbilityTooltip(code: string): string {
+  const ability = abilities.value.find(a => a.code === code)
+  if (!ability) return ''
+
+  if (ability.score >= MAX_ABILITY_SCORE) {
+    return `${ability.name} is already at maximum (20)`
+  }
+
+  const allocated = getAllocatedBonus(code)
+  const remaining = getRemainingCapacity(code)
+
+  if (allocated > 0 && remaining === 0) {
+    return `${ability.name} will reach maximum (20)`
+  }
+
+  if (remaining === 1 && allocated === 0) {
+    return `${ability.name} can only receive +1 (would reach 20)`
+  }
+
+  return ''
 }
 
 // Toggle ASI allocation for an ability
 function toggleAsi(code: string) {
-  const current = asiAllocation.value.get(code) ?? 0
+  const current = asiAllocation.value[code] ?? 0
   const ability = abilities.value.find(a => a.code === code)
   if (!ability) return
 
   // Check if adding would exceed 20
-  const wouldExceed = ability.score + current + 1 > 20
+  const wouldExceed = ability.score + current + 1 > MAX_ABILITY_SCORE
 
   if (current === 0 && canAddAsiPoint.value && !wouldExceed) {
     // Add +1
-    asiAllocation.value.set(code, 1)
+    asiAllocation.value = { ...asiAllocation.value, [code]: 1 }
   } else if (current === 1 && canAddAsiPoint.value && !wouldExceed) {
     // Add another +1 (now +2)
-    asiAllocation.value.set(code, 2)
+    asiAllocation.value = { ...asiAllocation.value, [code]: 2 }
   } else if (current > 0) {
     // Remove allocation
-    asiAllocation.value.delete(code)
+    const { [code]: _, ...rest } = asiAllocation.value
+    asiAllocation.value = rest
   }
-
-  // Force reactivity
-  asiAllocation.value = new Map(asiAllocation.value)
 }
 
 // Select ASI mode
@@ -166,7 +204,7 @@ function selectAsi() {
 // Select Feat mode
 function selectFeat() {
   selectionMode.value = 'feat'
-  asiAllocation.value = new Map()
+  asiAllocation.value = {}
 }
 
 // Select a specific feat
@@ -180,7 +218,7 @@ function selectFeatOption(slug: string) {
 
 const canConfirm = computed(() => {
   if (selectionMode.value === 'asi') {
-    return totalAsiPoints.value === 2
+    return totalAsiPoints.value === MAX_ASI_POINTS
   }
   if (selectionMode.value === 'feat') {
     return selectedFeat.value !== null
@@ -206,9 +244,12 @@ async function handleConfirm() {
 
     if (selectionMode.value === 'asi') {
       // Build ability_scores object: { DEX: 2 } or { DEX: 1, CON: 1 }
+      // Filter out any zero values (shouldn't happen, but defensive)
       const abilityScoresPayload: Record<string, number> = {}
-      for (const [code, bonus] of asiAllocation.value.entries()) {
-        abilityScoresPayload[code] = bonus
+      for (const [code, bonus] of Object.entries(asiAllocation.value)) {
+        if (bonus > 0) {
+          abilityScoresPayload[code] = bonus
+        }
       }
       payload = {
         type: 'asi',
@@ -362,16 +403,17 @@ onMounted(() => {
             Allocate Ability Points
           </h4>
           <UBadge
-            :color="totalAsiPoints === 2 ? 'success' : 'warning'"
+            :color="totalAsiPoints === MAX_ASI_POINTS ? 'success' : 'warning'"
             variant="subtle"
             size="md"
           >
-            {{ totalAsiPoints }} / 2 points
+            {{ totalAsiPoints }} / {{ MAX_ASI_POINTS }} points
           </UBadge>
         </div>
 
         <p class="text-sm text-gray-600 dark:text-gray-400">
           Click an ability to add +1. Click again for +2 to the same ability, or distribute +1 to two different abilities.
+          <span class="text-gray-500">Abilities cannot exceed 20.</span>
         </p>
 
         <div class="grid grid-cols-3 md:grid-cols-6 gap-3">
@@ -380,13 +422,14 @@ onMounted(() => {
             :key="ability.code"
             type="button"
             :data-testid="`asi-${ability.code}`"
+            :title="getAbilityTooltip(ability.code)"
             class="relative p-4 rounded-lg border-2 text-center transition-all"
             :class="{
               'border-primary bg-primary/10': getAllocatedBonus(ability.code) > 0,
-              'border-gray-200 dark:border-gray-700 hover:border-primary/50': getAllocatedBonus(ability.code) === 0,
-              'opacity-50 cursor-not-allowed': ability.score >= 20 && getAllocatedBonus(ability.code) === 0
+              'border-gray-200 dark:border-gray-700 hover:border-primary/50': getAllocatedBonus(ability.code) === 0 && !isAbilityAtMax(ability.code),
+              'opacity-50 cursor-not-allowed': isAbilityAtMax(ability.code) && getAllocatedBonus(ability.code) === 0
             }"
-            :disabled="ability.score >= 20 && getAllocatedBonus(ability.code) === 0"
+            :disabled="isAbilityAtMax(ability.code) && getAllocatedBonus(ability.code) === 0"
             @click="toggleAsi(ability.code)"
           >
             <div class="font-bold text-lg">
@@ -400,12 +443,20 @@ onMounted(() => {
               >
                 +{{ getAllocatedBonus(ability.code) }}
               </span>
+              <span
+                v-else-if="isAbilityAtMax(ability.code)"
+                class="text-xs text-warning-500"
+              >
+                (max)
+              </span>
             </div>
             <div
               v-if="getAllocatedBonus(ability.code) > 0"
-              class="text-xs text-primary mt-1"
+              class="text-xs mt-1"
+              :class="ability.score + getAllocatedBonus(ability.code) >= MAX_ABILITY_SCORE ? 'text-warning-500' : 'text-primary'"
             >
               = {{ ability.score + getAllocatedBonus(ability.code) }}
+              <span v-if="ability.score + getAllocatedBonus(ability.code) >= MAX_ABILITY_SCORE">(max)</span>
             </div>
           </button>
         </div>
