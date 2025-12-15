@@ -1,85 +1,117 @@
 // app/composables/useEncounterPresets.ts
-import type { EncounterPreset, PresetMonster } from '~/types/dm-screen'
-
-const STORAGE_KEY = 'dm-encounter-presets'
+import type { EncounterPreset, PresetMonster, EncounterMonster } from '~/types/dm-screen'
 
 /**
  * Composable for managing encounter presets (saved monster groups)
  *
- * Currently uses localStorage for persistence.
- * Will migrate to backend API when issue #674 is implemented.
+ * Presets are party-scoped and stored via backend API.
  */
-export function useEncounterPresets() {
+export function useEncounterPresets(partyId: string) {
+  const { apiFetch } = useApi()
   const presets = ref<EncounterPreset[]>([])
+  const loading = ref(false)
 
   /**
-   * Load presets from localStorage
+   * Fetch all presets for this party from the API
    */
-  function loadPresets(): void {
+  async function fetchPresets(): Promise<void> {
+    loading.value = true
     try {
-      const stored = localStorage.getItem(STORAGE_KEY)
-      if (stored) {
-        presets.value = JSON.parse(stored)
+      const response = await apiFetch<{ data: EncounterPreset[] }>(
+        `/parties/${partyId}/encounter-presets`
+      )
+      presets.value = response.data
+    } finally {
+      loading.value = false
+    }
+  }
+
+  /**
+   * Save current encounter as a new preset
+   */
+  async function savePreset(name: string, monsters: PresetMonster[]): Promise<EncounterPreset> {
+    const response = await apiFetch<{ data: EncounterPreset }>(
+      `/parties/${partyId}/encounter-presets`,
+      {
+        method: 'POST',
+        body: {
+          name,
+          monsters: monsters.map(m => ({
+            monster_id: m.monster_id,
+            quantity: m.quantity
+          }))
+        }
       }
-    } catch {
-      // Handle corrupted data gracefully
-      presets.value = []
-    }
+    )
+
+    // Update local state
+    presets.value.push(response.data)
+
+    return response.data
   }
 
   /**
-   * Persist presets to localStorage
+   * Rename an existing preset
    */
-  function persistPresets(): void {
-    try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(presets.value))
-    } catch {
-      // localStorage full or unavailable
-    }
-  }
+  async function renamePreset(presetId: number, name: string): Promise<EncounterPreset> {
+    const response = await apiFetch<{ data: EncounterPreset }>(
+      `/parties/${partyId}/encounter-presets/${presetId}`,
+      {
+        method: 'PATCH',
+        body: { name }
+      }
+    )
 
-  /**
-   * Generate a unique ID for a new preset
-   */
-  function generateId(): string {
-    return `preset-${Date.now()}-${Math.random().toString(36).slice(2, 11)}`
-  }
-
-  /**
-   * Save current encounter as a preset
-   */
-  function savePreset(name: string, monsters: PresetMonster[]): EncounterPreset {
-    const preset: EncounterPreset = {
-      id: generateId(),
-      name,
-      monsters: [...monsters],
-      created_at: Date.now()
+    // Update local state
+    const index = presets.value.findIndex(p => p.id === presetId)
+    if (index !== -1) {
+      presets.value[index] = response.data
     }
-    presets.value.push(preset)
-    persistPresets()
-    return preset
+
+    return response.data
   }
 
   /**
    * Delete a preset by ID
    */
-  function deletePreset(id: string): void {
-    presets.value = presets.value.filter(p => p.id !== id)
-    persistPresets()
+  async function deletePreset(presetId: number): Promise<void> {
+    await apiFetch(
+      `/parties/${partyId}/encounter-presets/${presetId}`,
+      { method: 'DELETE' }
+    )
+
+    // Update local state
+    presets.value = presets.value.filter(p => p.id !== presetId)
   }
 
   /**
-   * Get a preset by ID
+   * Load a preset into the current encounter
+   * Returns the created EncounterMonster instances
    */
-  function getPresetById(id: string): EncounterPreset | undefined {
-    return presets.value.find(p => p.id === id)
+  async function loadPreset(presetId: number): Promise<EncounterMonster[]> {
+    const response = await apiFetch<{ data: EncounterMonster[] }>(
+      `/parties/${partyId}/encounter-presets/${presetId}/load`,
+      { method: 'POST' }
+    )
+
+    return response.data
+  }
+
+  /**
+   * Get a preset by ID from local state
+   */
+  function getPresetById(presetId: number): EncounterPreset | undefined {
+    return presets.value.find(p => p.id === presetId)
   }
 
   return {
     presets,
-    loadPresets,
+    loading,
+    fetchPresets,
     savePreset,
+    renamePreset,
     deletePreset,
+    loadPreset,
     getPresetById
   }
 }

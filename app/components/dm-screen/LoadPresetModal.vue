@@ -9,23 +9,29 @@ const props = defineProps<{
 
 // Sort presets by date (newest first)
 const sortedPresets = computed(() =>
-  [...props.presets].sort((a, b) => b.created_at - a.created_at)
+  [...props.presets].sort((a, b) =>
+    new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+  )
 )
 
 const emit = defineEmits<{
   'update:open': [value: boolean]
-  'load': [preset: EncounterPreset]
-  'delete': [presetId: string]
+  'load': [presetId: number]
+  'delete': [presetId: number]
+  'rename': [presetId: number, newName: string]
 }>()
 
-const confirmDeleteId = ref<string | null>(null)
+const confirmDeleteId = ref<number | null>(null)
+const editingId = ref<number | null>(null)
+const editingName = ref('')
+const editInput = ref<HTMLInputElement | null>(null)
 
 function handleLoad(preset: EncounterPreset) {
-  emit('load', preset)
+  emit('load', preset.id)
   handleClose()
 }
 
-function handleDelete(presetId: string) {
+function handleDelete(presetId: number) {
   emit('delete', presetId)
   confirmDeleteId.value = null
 }
@@ -33,9 +39,37 @@ function handleDelete(presetId: string) {
 function handleClose() {
   emit('update:open', false)
   confirmDeleteId.value = null
+  editingId.value = null
 }
 
-function formatDate(timestamp: number): string {
+function startEditing(preset: EncounterPreset) {
+  editingId.value = preset.id
+  editingName.value = preset.name
+  nextTick(() => editInput.value?.focus())
+}
+
+function cancelEditing() {
+  editingId.value = null
+  editingName.value = ''
+}
+
+function saveEditing(presetId: number) {
+  const trimmedName = editingName.value.trim()
+  if (trimmedName.length > 0) {
+    emit('rename', presetId, trimmedName)
+  }
+  cancelEditing()
+}
+
+function handleEditKeydown(event: KeyboardEvent, presetId: number) {
+  if (event.key === 'Enter') {
+    saveEditing(presetId)
+  } else if (event.key === 'Escape') {
+    cancelEditing()
+  }
+}
+
+function formatDate(timestamp: string): string {
   const date = new Date(timestamp)
   const now = new Date()
   const oneYearAgo = new Date(now.getFullYear() - 1, now.getMonth(), now.getDate())
@@ -106,6 +140,30 @@ function getMonsterCount(preset: EncounterPreset): number {
             </div>
           </div>
 
+          <!-- Editing Mode -->
+          <div
+            v-else-if="editingId === preset.id"
+            class="flex items-center gap-2"
+          >
+            <input
+              ref="editInput"
+              v-model="editingName"
+              data-testid="rename-input"
+              type="text"
+              class="flex-1 px-2 py-1 text-sm border rounded border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-800 focus:outline-none focus:ring-2 focus:ring-primary-500"
+              :maxlength="50"
+              @keydown="handleEditKeydown($event, preset.id)"
+              @blur="saveEditing(preset.id)"
+            >
+            <UButton
+              data-testid="cancel-rename-btn"
+              size="xs"
+              variant="ghost"
+              icon="i-heroicons-x-mark"
+              @click="cancelEditing"
+            />
+          </div>
+
           <!-- Normal View -->
           <div
             v-else
@@ -115,8 +173,17 @@ function getMonsterCount(preset: EncounterPreset): number {
               class="flex-1 cursor-pointer"
               @click="handleLoad(preset)"
             >
-              <div class="font-medium">
+              <div class="font-medium flex items-center gap-2">
                 {{ preset.name }}
+                <UButton
+                  data-testid="rename-btn"
+                  size="xs"
+                  variant="ghost"
+                  color="neutral"
+                  icon="i-heroicons-pencil"
+                  class="opacity-0 group-hover:opacity-100 hover:opacity-100"
+                  @click.stop="startEditing(preset)"
+                />
               </div>
               <div class="text-sm text-neutral-500">
                 {{ getMonsterCount(preset) }} monster{{ getMonsterCount(preset) !== 1 ? 's' : '' }}

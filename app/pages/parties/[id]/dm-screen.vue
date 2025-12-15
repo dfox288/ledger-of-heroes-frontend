@@ -1,6 +1,6 @@
 <!-- app/pages/parties/[id]/dm-screen.vue -->
 <script setup lang="ts">
-import type { DmScreenPartyStats, EncounterPreset, PresetMonster } from '~/types/dm-screen'
+import type { DmScreenPartyStats, PresetMonster } from '~/types/dm-screen'
 import { useDmScreenCombat } from '~/composables/useDmScreenCombat'
 import { useEncounterMonsters } from '~/composables/useEncounterMonsters'
 import { useEncounterPresets } from '~/composables/useEncounterPresets'
@@ -19,7 +19,7 @@ const toast = useToast()
 const encounterMonsters = useEncounterMonsters(partyId.value)
 
 // Encounter presets (saved monster groups)
-const encounterPresets = useEncounterPresets()
+const encounterPresets = useEncounterPresets(partyId.value)
 
 const { apiFetch } = useApi()
 
@@ -116,7 +116,7 @@ const showLoadPresetModal = ref(false)
 // Convert current encounter monsters to preset format
 const currentMonstersForPreset = computed<PresetMonster[]>(() => {
   // Group monsters by monster_id and count quantities
-  const grouped = new Map<number, { monster_id: number, monster_name: string, quantity: number }>()
+  const grouped = new Map<number, PresetMonster>()
 
   for (const monster of encounterMonsters.monsters.value) {
     const existing = grouped.get(monster.monster_id)
@@ -126,7 +126,8 @@ const currentMonstersForPreset = computed<PresetMonster[]>(() => {
       grouped.set(monster.monster_id, {
         monster_id: monster.monster_id,
         monster_name: monster.monster.name,
-        quantity: 1
+        quantity: 1,
+        challenge_rating: monster.monster.challenge_rating
       })
     }
   }
@@ -135,43 +136,55 @@ const currentMonstersForPreset = computed<PresetMonster[]>(() => {
 })
 
 // Preset handlers
-function handleSavePreset(name: string) {
-  encounterPresets.savePreset(name, currentMonstersForPreset.value)
-  toast.add({ title: 'Preset saved!', color: 'success' })
-}
-
-async function handleLoadPreset(preset: EncounterPreset) {
-  // Add each monster from the preset to the encounter, tracking successes/failures
-  let successCount = 0
-  const failedMonsters: string[] = []
-
-  for (const monster of preset.monsters) {
-    try {
-      await encounterMonsters.addMonster(monster.monster_id, monster.quantity)
-      successCount += monster.quantity
-    } catch (err) {
-      logger.error('Failed to add monster from preset:', err)
-      failedMonsters.push(monster.monster_name)
-    }
-  }
-
-  // Show appropriate toast based on results
-  if (failedMonsters.length === 0) {
-    toast.add({ title: `Loaded "${preset.name}"`, color: 'success' })
-  } else if (successCount === 0) {
-    toast.add({ title: `Failed to load "${preset.name}"`, description: 'Could not add any monsters', color: 'error' })
-  } else {
-    toast.add({
-      title: `Partially loaded "${preset.name}"`,
-      description: `Added ${successCount} monster${successCount !== 1 ? 's' : ''}, failed: ${failedMonsters.join(', ')}`,
-      color: 'warning'
-    })
+async function handleSavePreset(name: string) {
+  try {
+    await encounterPresets.savePreset(name, currentMonstersForPreset.value)
+    toast.add({ title: 'Preset saved!', color: 'success' })
+  } catch (err) {
+    logger.error('Failed to save preset:', err)
+    toast.add({ title: 'Failed to save preset', color: 'error' })
   }
 }
 
-function handleDeletePreset(presetId: string) {
-  encounterPresets.deletePreset(presetId)
-  toast.add({ title: 'Preset deleted', color: 'neutral' })
+async function handleLoadPreset(presetId: number) {
+  const preset = encounterPresets.getPresetById(presetId)
+  const presetName = preset?.name || 'preset'
+
+  try {
+    // Clear existing encounter first (replace behavior)
+    await encounterMonsters.clearEncounter()
+
+    // Load preset via backend API - it creates all monsters in one call
+    const newMonsters = await encounterPresets.loadPreset(presetId)
+
+    // Update local monster state with the new monsters
+    encounterMonsters.monsters.value = newMonsters
+
+    toast.add({ title: `Loaded "${presetName}"`, color: 'success' })
+  } catch (err) {
+    logger.error('Failed to load preset:', err)
+    toast.add({ title: `Failed to load "${presetName}"`, color: 'error' })
+  }
+}
+
+async function handleDeletePreset(presetId: number) {
+  try {
+    await encounterPresets.deletePreset(presetId)
+    toast.add({ title: 'Preset deleted', color: 'neutral' })
+  } catch (err) {
+    logger.error('Failed to delete preset:', err)
+    toast.add({ title: 'Failed to delete preset', color: 'error' })
+  }
+}
+
+async function handleRenamePreset(presetId: number, newName: string) {
+  try {
+    await encounterPresets.renamePreset(presetId, newName)
+    toast.add({ title: 'Preset renamed', color: 'success' })
+  } catch (err) {
+    logger.error('Failed to rename preset:', err)
+    toast.add({ title: 'Failed to rename preset', color: 'error' })
+  }
 }
 
 // SEO
@@ -220,8 +233,8 @@ onMounted(async () => {
   }
   // Fetch encounter monsters
   await encounterMonsters.fetchMonsters()
-  // Load saved presets
-  encounterPresets.loadPresets()
+  // Fetch saved presets from API
+  await encounterPresets.fetchPresets()
 })
 
 onUnmounted(() => {
@@ -383,6 +396,7 @@ async function handleRefresh() {
       :presets="encounterPresets.presets.value"
       @load="handleLoadPreset"
       @delete="handleDeletePreset"
+      @rename="handleRenamePreset"
     />
   </div>
 </template>
