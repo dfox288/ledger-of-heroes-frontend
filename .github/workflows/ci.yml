@@ -47,12 +47,12 @@ jobs:
 
   # ══════════════════════════════════════════════════════════════════════════
   # Unit Tests (Vitest) - Sharded for parallel execution
+  # Runs in parallel with lint (no dependency) for faster feedback
   # ══════════════════════════════════════════════════════════════════════════
   unit-tests:
     name: Unit Tests (Shard ${{ matrix.shard }}/4)
     runs-on: ubuntu-latest
     timeout-minutes: 10
-    needs: lint
     strategy:
       fail-fast: false
       matrix:
@@ -84,12 +84,12 @@ jobs:
 
   # ══════════════════════════════════════════════════════════════════════════
   # E2E Tests (Playwright) - Self-hosted runner with backend access
+  # Runs in parallel with lint (no dependency) for faster feedback
   # ══════════════════════════════════════════════════════════════════════════
   e2e-tests:
     name: E2E Tests
     runs-on: [self-hosted, claude-code]
     timeout-minutes: 30
-    needs: lint
     # Run E2E tests only on main branch or when PR has 'e2e' label
     if: github.ref == 'refs/heads/main' || contains(github.event.pull_request.labels.*.name, 'e2e')
 
