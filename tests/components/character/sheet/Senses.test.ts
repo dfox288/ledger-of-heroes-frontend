@@ -85,11 +85,9 @@ describe('CharacterSheetSenses', () => {
     expect(wrapper.text().trim()).toBe('')
   })
 
-  it('renders nothing when senses is undefined', async () => {
+  it('renders nothing when senses prop is not provided', async () => {
     const wrapper = await mountSuspended(Senses, {
-      props: {
-        senses: undefined as unknown as CharacterSense[]
-      }
+      props: {}
     })
 
     expect(wrapper.text().trim()).toBe('')

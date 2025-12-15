@@ -35,6 +35,7 @@ const attunedItems = computed(() =>
 // Get attunement slot values (fallback to defaults if not provided)
 const attunementUsed = computed(() => props.attunement?.used ?? attunedItems.value.length)
 const attunementMax = computed(() => props.attunement?.max ?? 3)
+// Uses >= to show warning when at capacity OR over-attuned (e.g., 4/3 from data inconsistency)
 const isAtMax = computed(() => attunementUsed.value >= attunementMax.value)
 
 // Helper function
