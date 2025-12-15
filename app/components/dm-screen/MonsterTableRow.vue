@@ -27,7 +27,7 @@ const emit = defineEmits<{
 // validate() runs before onSave(), so no need to re-validate
 const initEdit = useInlineEdit<string>({
   getValue: () => props.initiative?.toString() ?? '',
-  onSave: (value) => emit('update:initiative', parseInt(value, 10)),
+  onSave: value => emit('update:initiative', parseInt(value, 10)),
   validate: (value) => {
     const parsed = parseInt(value, 10)
     return !isNaN(parsed) && parsed >= -10 && parsed <= 50
@@ -50,8 +50,8 @@ const hpEdit = useInlineEdit<string>({
 // Label editing using composable
 const labelEdit = useInlineEdit<string>({
   getValue: () => props.monster.label,
-  onSave: (value) => emit('update:label', value.trim()),
-  validate: (value) => value.trim().length > 0 && value.trim() !== props.monster.label
+  onSave: value => emit('update:label', value.trim()),
+  validate: value => value.trim().length > 0 && value.trim() !== props.monster.label
 })
 
 // Delete confirmation state

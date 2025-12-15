@@ -46,13 +46,17 @@ jobs:
         run: npm run typecheck
 
   # ══════════════════════════════════════════════════════════════════════════
-  # Unit Tests (Vitest)
+  # Unit Tests (Vitest) - Sharded for parallel execution
+  # Runs in parallel with lint (no dependency) for faster feedback
   # ══════════════════════════════════════════════════════════════════════════
   unit-tests:
-    name: Unit Tests
+    name: Unit Tests (Shard ${{ matrix.shard }}/4)
     runs-on: ubuntu-latest
-    timeout-minutes: 15
-    needs: lint
+    timeout-minutes: 10
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [1, 2, 3, 4]
 
     steps:
       - uses: actions/checkout@v4
@@ -66,26 +70,26 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Run unit tests
-        run: npm run test -- --run --reporter=verbose
+      - name: Run unit tests (shard ${{ matrix.shard }}/4)
+        run: npm run test -- --run --reporter=verbose --shard=${{ matrix.shard }}/4
 
       - name: Upload test results
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: vitest-results
+          name: vitest-results-shard-${{ matrix.shard }}
           path: |
             coverage/
           if-no-files-found: ignore
 
   # ══════════════════════════════════════════════════════════════════════════
   # E2E Tests (Playwright) - Self-hosted runner with backend access
+  # Runs in parallel with lint (no dependency) for faster feedback
   # ══════════════════════════════════════════════════════════════════════════
   e2e-tests:
     name: E2E Tests
     runs-on: [self-hosted, claude-code]
     timeout-minutes: 30
-    needs: lint
     # Run E2E tests only on main branch or when PR has 'e2e' label
     if: github.ref == 'refs/heads/main' || contains(github.event.pull_request.labels.*.name, 'e2e')
 
