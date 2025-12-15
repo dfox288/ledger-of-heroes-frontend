@@ -231,7 +231,12 @@ const isSpellcaster = computed(() => !!stats.value?.spellcasting)
             <!-- Saving Throws + Death Saves stacked -->
             <div class="space-y-4">
               <CharacterSheetSavingThrowsList :saving-throws="savingThrows" />
-              <CharacterSheetDeathSavesManager :editable="canEdit" />
+              <CharacterSheetDeathSavesManager
+                :editable="canEdit"
+                :initial-death-saves="{ successes: character.death_save_successes ?? 0, failures: character.death_save_failures ?? 0 }"
+                :initial-is-dead="character.is_dead"
+                :initial-hp-current="stats.hit_points?.current"
+              />
             </div>
             <CharacterSheetSkillsList
               :skills="skills"

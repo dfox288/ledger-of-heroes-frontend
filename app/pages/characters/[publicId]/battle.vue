@@ -156,6 +156,9 @@ useSeoMeta({
               <CharacterSheetDeathSavesManager
                 v-if="showDeathSaves"
                 :editable="canEdit"
+                :initial-death-saves="{ successes: character.death_save_successes ?? 0, failures: character.death_save_failures ?? 0 }"
+                :initial-is-dead="character.is_dead"
+                :initial-hp-current="stats.hit_points?.current"
               />
             </div>
           </div>
