@@ -159,6 +159,18 @@ export interface ConditionImmunity {
 }
 
 /**
+ * Condition disadvantage trait (disadvantage on saves against conditions)
+ */
+export interface ConditionDisadvantage {
+  /** Condition name (e.g., "Stunned", "Paralyzed") */
+  condition: string
+  /** Effect description (e.g., "Disadvantage on saving throws") */
+  effect: string
+  /** Source of the trait (e.g., "Sunlight Sensitivity", "Curse") */
+  source: string
+}
+
+/**
  * Active condition on a character (e.g., Poisoned, Exhaustion level 2)
  */
 export interface CharacterCondition {
@@ -213,6 +225,7 @@ export interface CharacterStats extends Omit<CharacterStatsFromAPI, 'ability_sco
   damage_immunities: DamageDefense[]
   damage_vulnerabilities: DamageDefense[]
   condition_advantages: ConditionAdvantage[]
+  condition_disadvantages: ConditionDisadvantage[]
   condition_immunities: ConditionImmunity[]
   weapons?: CharacterWeapon[]
 }

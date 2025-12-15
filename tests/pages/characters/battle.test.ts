@@ -77,6 +77,7 @@ const mockStats = {
   damage_immunities: [],
   damage_vulnerabilities: [],
   condition_advantages: [],
+  condition_disadvantages: [],
   condition_immunities: [],
   spellcasting: null
 }

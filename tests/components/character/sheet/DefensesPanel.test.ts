@@ -8,6 +8,7 @@ const dwarfDefenses = {
   damageImmunities: [],
   damageVulnerabilities: [],
   conditionAdvantages: [{ condition: 'Poisoned', effect: 'advantage', source: 'Dwarf' }],
+  conditionDisadvantages: [],
   conditionImmunities: []
 }
 
@@ -16,6 +17,7 @@ const elfDefenses = {
   damageImmunities: [],
   damageVulnerabilities: [],
   conditionAdvantages: [{ condition: 'Charmed', effect: 'advantage', source: 'Elf' }],
+  conditionDisadvantages: [],
   conditionImmunities: [{ condition: 'Sleep', effect: 'immunity', source: 'Elf' }]
 }
 
@@ -24,6 +26,7 @@ const emptyDefenses = {
   damageImmunities: [],
   damageVulnerabilities: [],
   conditionAdvantages: [],
+  conditionDisadvantages: [],
   conditionImmunities: []
 }
 
@@ -35,6 +38,7 @@ const mixedDefenses = {
   damageImmunities: [{ type: 'Poison', condition: null, source: 'Monk Feature' }],
   damageVulnerabilities: [{ type: 'Psychic', condition: null, source: 'Cursed' }],
   conditionAdvantages: [{ condition: 'Frightened', effect: 'advantage', source: 'Brave' }],
+  conditionDisadvantages: [{ condition: 'Paralyzed', effect: 'disadvantage', source: 'Curse of Weakness' }],
   conditionImmunities: [{ condition: 'Charmed', effect: 'immunity', source: 'Fey Ancestry' }]
 }
 
@@ -43,6 +47,16 @@ const singleCategoryDefenses = {
   damageImmunities: [],
   damageVulnerabilities: [],
   conditionAdvantages: [],
+  conditionDisadvantages: [],
+  conditionImmunities: []
+}
+
+const disadvantageOnlyDefenses = {
+  damageResistances: [],
+  damageImmunities: [],
+  damageVulnerabilities: [],
+  conditionAdvantages: [],
+  conditionDisadvantages: [{ condition: 'Stunned', effect: 'disadvantage', source: 'Sunlight Sensitivity' }],
   conditionImmunities: []
 }
 
@@ -197,5 +211,55 @@ describe('CharacterSheetDefensesPanel', () => {
     const text = wrapper.text()
     expect(text).toMatch(/Fire.*\(Tiefling\)/)
     expect(text).toMatch(/Cold.*\(Tiefling\)/)
+  })
+
+  // Condition Disadvantages Tests
+  it('displays condition disadvantages with "vs" prefix', async () => {
+    const wrapper = await mountSuspended(DefensesPanel, {
+      props: disadvantageOnlyDefenses
+    })
+    expect(wrapper.text()).toContain('Save Disadvantages')
+    expect(wrapper.text()).toContain('vs Stunned')
+    expect(wrapper.text()).toContain('Sunlight Sensitivity')
+  })
+
+  it('displays disadvantage badges in warning color', async () => {
+    const wrapper = await mountSuspended(DefensesPanel, {
+      props: disadvantageOnlyDefenses
+    })
+    const disadvantageBadges = wrapper.findAll('[data-testid="disadvantage-badge"]')
+    expect(disadvantageBadges.length).toBeGreaterThan(0)
+  })
+
+  it('shows panel when only disadvantages are present', async () => {
+    const wrapper = await mountSuspended(DefensesPanel, {
+      props: disadvantageOnlyDefenses
+    })
+    expect(wrapper.find('[data-testid="defenses-panel"]').exists()).toBe(true)
+  })
+
+  it('displays both advantages and disadvantages in mixed defenses', async () => {
+    const wrapper = await mountSuspended(DefensesPanel, {
+      props: mixedDefenses
+    })
+    // Should show both categories
+    expect(wrapper.text()).toContain('Save Advantages')
+    expect(wrapper.text()).toContain('Save Disadvantages')
+    expect(wrapper.text()).toContain('vs Frightened')
+    expect(wrapper.text()).toContain('vs Paralyzed')
+  })
+
+  it('handles character with multiple defense categories including disadvantages', async () => {
+    const wrapper = await mountSuspended(DefensesPanel, {
+      props: mixedDefenses
+    })
+
+    // Check all categories are present including disadvantages
+    expect(wrapper.text()).toContain('Resistances')
+    expect(wrapper.text()).toContain('Immunities')
+    expect(wrapper.text()).toContain('Vulnerabilities')
+    expect(wrapper.text()).toContain('Save Advantages')
+    expect(wrapper.text()).toContain('Save Disadvantages')
+    expect(wrapper.text()).toContain('Condition Immunities')
   })
 })

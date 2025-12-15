@@ -1,12 +1,13 @@
 <!-- app/components/character/sheet/DefensesPanel.vue -->
 <script setup lang="ts">
-import type { DamageDefense, ConditionAdvantage, ConditionImmunity } from '~/types/character'
+import type { DamageDefense, ConditionAdvantage, ConditionDisadvantage, ConditionImmunity } from '~/types/character'
 
 const props = defineProps<{
   damageResistances: DamageDefense[]
   damageImmunities: DamageDefense[]
   damageVulnerabilities: DamageDefense[]
   conditionAdvantages: ConditionAdvantage[]
+  conditionDisadvantages: ConditionDisadvantage[]
   conditionImmunities: ConditionImmunity[]
 }>()
 
@@ -20,6 +21,7 @@ const hasDefenses = computed(() => {
     || props.damageImmunities.length > 0
     || props.damageVulnerabilities.length > 0
     || props.conditionAdvantages.length > 0
+    || props.conditionDisadvantages.length > 0
     || props.conditionImmunities.length > 0
   )
 })
@@ -34,11 +36,19 @@ function formatDamageDefense(defense: DamageDefense): string {
 }
 
 /**
- * Format condition badge text
+ * Format condition advantage badge text
  * Returns: "vs Condition (Source)"
  */
 function formatConditionAdvantage(advantage: ConditionAdvantage): string {
   return `vs ${advantage.condition} (${advantage.source})`
+}
+
+/**
+ * Format condition disadvantage badge text
+ * Returns: "vs Condition (Source)"
+ */
+function formatConditionDisadvantage(disadvantage: ConditionDisadvantage): string {
+  return `vs ${disadvantage.condition} (${disadvantage.source})`
 }
 
 /**
@@ -140,6 +150,28 @@ function formatConditionImmunity(immunity: ConditionImmunity): string {
           data-testid="advantage-badge"
         >
           {{ formatConditionAdvantage(advantage) }}
+        </UBadge>
+      </div>
+    </div>
+
+    <!-- Save Disadvantages -->
+    <div
+      v-if="conditionDisadvantages.length > 0"
+      class="mb-3 last:mb-0"
+    >
+      <div class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-2">
+        Save Disadvantages
+      </div>
+      <div class="flex flex-wrap gap-2">
+        <UBadge
+          v-for="(disadvantage, index) in conditionDisadvantages"
+          :key="index"
+          color="warning"
+          variant="subtle"
+          size="md"
+          data-testid="disadvantage-badge"
+        >
+          {{ formatConditionDisadvantage(disadvantage) }}
         </UBadge>
       </div>
     </div>

@@ -171,6 +171,7 @@ useSeoMeta({
               :damage-immunities="stats.damage_immunities ?? []"
               :damage-vulnerabilities="stats.damage_vulnerabilities ?? []"
               :condition-advantages="stats.condition_advantages ?? []"
+              :condition-disadvantages="stats.condition_disadvantages ?? []"
               :condition-immunities="stats.condition_immunities ?? []"
             />
 
