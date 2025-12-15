@@ -489,19 +489,23 @@ export const useCharacterPlayStateStore = defineStore('characterPlayState', () =
 
     // Initialize standard slots
     for (const slot of slots) {
+      // Validate spent: must be >= 0 and <= total
+      const validSpent = Math.max(0, Math.min(slot.spent ?? 0, slot.total))
       spellSlots.value.set(slot.level, {
         total: slot.total,
-        spent: slot.spent ?? 0,
+        spent: validSpent,
         slotType: 'standard'
       })
     }
 
     // Initialize pact magic slots (stored with negative key to avoid collision)
+    // Negative keys distinguish pact slots from standard slots at the same spell level
     if (pactMagic && pactMagic.total > 0) {
-      // Use negative level as key to distinguish from standard slots at same level
+      // Validate spent: must be >= 0 and <= total
+      const validSpent = Math.max(0, Math.min(pactMagic.spent ?? 0, pactMagic.total))
       spellSlots.value.set(-pactMagic.level, {
         total: pactMagic.total,
-        spent: pactMagic.spent ?? 0,
+        spent: validSpent,
         slotType: 'pact_magic'
       })
     }

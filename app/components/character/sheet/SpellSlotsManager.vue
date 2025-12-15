@@ -44,12 +44,16 @@ const isDisabled = computed(() => !props.editable || isUpdatingSpellSlot.value)
 /**
  * Get sorted list of standard spell levels that have slots
  * Filters out level 0 (cantrips) and negative keys (pact magic)
+ *
+ * Note: Pact magic slots are stored with negative keys in the store to avoid
+ * collision with standard slots at the same spell level. They are displayed
+ * separately in the Pact Slots section below.
  */
 const sortedLevels = computed(() => {
   const levels: Array<{ level: number, total: number, spent: number, available: number }> = []
 
   for (const [level, slot] of spellSlots.value) {
-    // Skip level 0 (cantrips) and negative keys (pact magic handled separately)
+    // Skip cantrips (0) and pact magic (negative keys handled separately)
     if (level <= 0) continue
     if (slot.total > 0) {
       levels.push({
@@ -145,6 +149,8 @@ async function handleRestoreSlot(storeKey: number) {
               :key="`available-${level}-${i}`"
               :data-testid="`slot-${level}-available`"
               :disabled="isDisabled"
+              :aria-label="`Use ${ordinal(level)} level spell slot`"
+              :title="`Click to use ${ordinal(level)} level slot (${available} available)`"
               :class="[
                 'w-7 h-7 transition-all',
                 !isDisabled ? 'cursor-pointer hover:scale-110' : 'cursor-default opacity-70'
@@ -163,6 +169,8 @@ async function handleRestoreSlot(storeKey: number) {
               :key="`spent-${level}-${i}`"
               :data-testid="`slot-${level}-spent`"
               :disabled="isDisabled"
+              :aria-label="`Restore ${ordinal(level)} level spell slot`"
+              :title="`Click to restore ${ordinal(level)} level slot (${spent} spent)`"
               :class="[
                 'w-7 h-7 transition-all',
                 !isDisabled ? 'cursor-pointer hover:scale-110' : 'cursor-default opacity-70'
@@ -199,6 +207,8 @@ async function handleRestoreSlot(storeKey: number) {
             :key="`pact-available-${i}`"
             data-testid="pact-slot-available"
             :disabled="isDisabled"
+            :aria-label="`Use pact magic slot`"
+            :title="`Click to use pact slot (${pactMagic.available} available)`"
             :class="[
               'w-7 h-7 transition-all',
               !isDisabled ? 'cursor-pointer hover:scale-110' : 'cursor-default opacity-70'
@@ -217,6 +227,8 @@ async function handleRestoreSlot(storeKey: number) {
             :key="`pact-spent-${i}`"
             data-testid="pact-slot-spent"
             :disabled="isDisabled"
+            :aria-label="`Restore pact magic slot`"
+            :title="`Click to restore pact slot (${pactMagic.spent} spent)`"
             :class="[
               'w-7 h-7 transition-all',
               !isDisabled ? 'cursor-pointer hover:scale-110' : 'cursor-default opacity-70'

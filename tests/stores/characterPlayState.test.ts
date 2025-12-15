@@ -663,6 +663,40 @@ describe('characterPlayState store', () => {
       const pactState = store.spellSlots.get(-1)
       expect(pactState).toEqual({ total: 2, spent: 1, slotType: 'pact_magic' })
     })
+
+    it('clamps negative spent values to 0', () => {
+      const store = useCharacterPlayStateStore()
+      store.initializeSpellSlots([
+        { level: 1, total: 4, spent: -5 }
+      ])
+
+      expect(store.getSlotState(1)).toEqual({ total: 4, spent: 0, available: 4 })
+    })
+
+    it('clamps spent values that exceed total', () => {
+      const store = useCharacterPlayStateStore()
+      store.initializeSpellSlots([
+        { level: 1, total: 4, spent: 10 }
+      ])
+
+      expect(store.getSlotState(1)).toEqual({ total: 4, spent: 4, available: 0 })
+    })
+
+    it('does not store pact magic with total 0', () => {
+      const store = useCharacterPlayStateStore()
+      store.initializeSpellSlots([], { level: 2, total: 0, spent: 0 })
+
+      // Pact magic should not be stored
+      expect(store.spellSlots.get(-2)).toBeUndefined()
+    })
+
+    it('validates pact magic spent values', () => {
+      const store = useCharacterPlayStateStore()
+      store.initializeSpellSlots([], { level: 2, total: 2, spent: 5 })
+
+      const pactState = store.spellSlots.get(-2)
+      expect(pactState).toEqual({ total: 2, spent: 2, slotType: 'pact_magic' })
+    })
   })
 
   // ===========================================================================

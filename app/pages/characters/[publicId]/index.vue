@@ -15,6 +15,7 @@
  */
 import { storeToRefs } from 'pinia'
 import { useCharacterPlayStateStore } from '~/stores/characterPlayState'
+import type { SpellSlotsResponse } from '~/types/character'
 
 const route = useRoute()
 const publicId = computed(() => route.params.publicId as string)
@@ -74,11 +75,12 @@ watch([character, stats, spells], async ([char, s, sp]) => {
       let pactMagicData: { level: number, total: number, spent: number } | null = null
 
       // Check for new format (has 'slots' property)
-      const spellSlots = s.spell_slots as Record<string, unknown>
-      if (spellSlots && typeof spellSlots === 'object' && 'slots' in spellSlots) {
+      // Type guard: new format has 'slots' key, old format is just Record<string, number>
+      const rawSlots = s.spell_slots as SpellSlotsResponse | Record<string, number> | number[]
+      if (rawSlots && typeof rawSlots === 'object' && 'slots' in rawSlots) {
         // New format: { slots: { "1": { total, spent, available } }, pact_magic: ... }
-        const slots = spellSlots.slots as Record<string, { total: number, spent: number, available: number }>
-        Object.entries(slots).forEach(([level, data]) => {
+        const newFormat = rawSlots as SpellSlotsResponse
+        Object.entries(newFormat.slots).forEach(([level, data]) => {
           if (data.total > 0) {
             slotData.push({
               level: parseInt(level),
@@ -89,12 +91,11 @@ watch([character, stats, spells], async ([char, s, sp]) => {
         })
 
         // Extract pact magic if present
-        const pactMagic = spellSlots.pact_magic as { level: number, total: number, spent: number, available: number } | null
-        if (pactMagic && pactMagic.total > 0) {
+        if (newFormat.pact_magic && newFormat.pact_magic.total > 0) {
           pactMagicData = {
-            level: pactMagic.level,
-            total: pactMagic.total,
-            spent: pactMagic.spent
+            level: newFormat.pact_magic.level,
+            total: newFormat.pact_magic.total,
+            spent: newFormat.pact_magic.spent
           }
         }
       } else if (Array.isArray(s.spell_slots)) {
