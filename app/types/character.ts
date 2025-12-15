@@ -23,9 +23,21 @@ export type CharacterAlignment = NonNullable<components['schemas']['CharacterSto
 
 /**
  * Character feature from API
+ *
+ * Extended with feat-specific fields not yet in generated types:
+ * - prerequisite: Feat prerequisites (e.g., "Proficiency with heavy armor")
+ *
  * @see CharacterFeatureResource in OpenAPI spec
+ * @see Issue #619 - Features endpoint enrichment
  */
-export type CharacterFeature = components['schemas']['CharacterFeatureResource']
+export type CharacterFeature = Omit<components['schemas']['CharacterFeatureResource'], 'feature'> & {
+  feature: components['schemas']['CharacterFeatureResource']['feature'] & {
+    /** Feat prerequisite (e.g., "Str 13", "Proficiency with heavy armor") */
+    prerequisite?: string | null
+    /** Feat slug for linking to compendium */
+    slug?: string
+  } | null
+}
 
 /**
  * Character note from API

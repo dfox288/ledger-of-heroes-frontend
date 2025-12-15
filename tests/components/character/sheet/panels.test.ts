@@ -244,6 +244,65 @@ describe('CharacterSheetFeaturesPanel', () => {
     })
     expect(wrapper.text()).toContain('Chosen')
   })
+
+  it('shows prerequisite for feats that have one', async () => {
+    const featWithPrerequisite = [
+      {
+        id: 1,
+        source: 'feat',
+        level_acquired: 4,
+        feature_type: 'feat',
+        has_limited_uses: false,
+        uses_remaining: null,
+        max_uses: null,
+        feature: {
+          id: 1,
+          name: 'Heavy Armor Master',
+          description: 'While wearing heavy armor...',
+          level: '4',
+          is_optional: 'true',
+          category: 'feat',
+          prerequisite: 'Proficiency with heavy armor'
+        }
+      }
+    ]
+    const wrapper = await mountSuspended(FeaturesPanel, {
+      props: { features: featWithPrerequisite }
+    })
+    // Expand the feature to see description and prerequisite
+    await wrapper.find('[data-testid="feature-toggle-1"]').trigger('click')
+    expect(wrapper.text()).toContain('Prerequisite')
+    expect(wrapper.text()).toContain('Proficiency with heavy armor')
+  })
+
+  it('does not show prerequisite when feature has none', async () => {
+    const featWithoutPrerequisite = [
+      {
+        id: 1,
+        source: 'feat',
+        level_acquired: 4,
+        feature_type: 'feat',
+        has_limited_uses: false,
+        uses_remaining: null,
+        max_uses: null,
+        feature: {
+          id: 1,
+          name: 'Sentinel',
+          description: 'You have mastered techniques...',
+          level: '4',
+          is_optional: 'true',
+          category: 'feat',
+          prerequisite: null
+        }
+      }
+    ]
+    const wrapper = await mountSuspended(FeaturesPanel, {
+      props: { features: featWithoutPrerequisite }
+    })
+    // Expand the feature
+    await wrapper.find('[data-testid="feature-toggle-1"]').trigger('click')
+    expect(wrapper.text()).not.toContain('Prerequisite')
+  })
 })
 
 describe('CharacterSheetProficienciesPanel', () => {
