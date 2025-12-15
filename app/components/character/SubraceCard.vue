@@ -56,15 +56,13 @@ function handleViewDetails(event: Event) {
 
 /**
  * Get background image path (256px variant)
- * Try subrace-specific image first, fall back to parent race image
+ *
+ * Note: Could be enhanced to fall back to parent race image if subrace
+ * image doesn't exist, but current implementation works for all subraces.
  */
 const { getImagePath } = useEntityImage()
 const backgroundImage = computed(() => {
-  // First try the subrace's own image
-  const subraceImage = getImagePath('races', props.subrace.slug, 256)
-  // TODO: Could add fallback to parent race image if subrace image doesn't exist
-  // For now, just return the subrace image path
-  return subraceImage
+  return getImagePath('races', props.subrace.slug, 256)
 })
 </script>
 

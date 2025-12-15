@@ -70,17 +70,10 @@ export type CharacterEquipment = components['schemas']['CharacterEquipmentResour
 export type CharacterSpellFromAPI = components['schemas']['CharacterSpellResource']
 
 /**
- * Extended CharacterSpell with compatibility aliases
- *
- * The API uses is_prepared/is_always_prepared, but some components
- * still use prepared/always_prepared. This type supports both.
+ * Character spell data from API
+ * @see CharacterSpellResource in OpenAPI spec
  */
-export interface CharacterSpell extends CharacterSpellFromAPI {
-  /** @deprecated Use is_prepared instead */
-  prepared?: boolean
-  /** @deprecated Use is_always_prepared instead */
-  always_prepared?: boolean
-}
+export type CharacterSpell = CharacterSpellFromAPI
 
 /**
  * Full character data from API with public_id

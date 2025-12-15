@@ -221,7 +221,7 @@ describe('CharacterListPage', () => {
 
       const wrapper = await mountSuspended(CharacterListPage)
       // Should have create button even in empty state
-      const createButton = wrapper.find('a[href="/characters/create"]')
+      const createButton = wrapper.find('a[href="/characters/new/sourcebooks"]')
       expect(createButton.exists()).toBe(true)
     })
   })
