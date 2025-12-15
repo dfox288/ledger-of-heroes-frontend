@@ -15,6 +15,12 @@ const emit = defineEmits<{
 
 const isInteractive = computed(() => props.editable && !props.disabled)
 
+const resetLabel = computed(() => {
+  if (props.counter.reset_on === 'short_rest') return 'Short'
+  if (props.counter.reset_on === 'long_rest') return 'Long'
+  return null
+})
+
 function handleIconClick() {
   if (!isInteractive.value) return
   if (props.counter.current <= 0) return
@@ -28,9 +34,21 @@ function handleIconClick() {
       <span class="text-gray-700 dark:text-gray-300 font-medium">
         {{ counter.name }}
       </span>
-      <span class="text-gray-500 dark:text-gray-400">
-        {{ counter.current }}/{{ counter.max }}
-      </span>
+      <div class="flex items-center gap-2">
+        <UBadge
+          v-if="resetLabel"
+          data-testid="reset-badge"
+          color="neutral"
+          variant="subtle"
+          size="xs"
+        >
+          <UIcon name="i-heroicons-arrow-path" class="w-3 h-3 mr-0.5" />
+          {{ resetLabel }}
+        </UBadge>
+        <span class="text-gray-500 dark:text-gray-400">
+          {{ counter.current }}/{{ counter.max }}
+        </span>
+      </div>
     </div>
 
     <!-- Icon Mode (max <= 6) -->

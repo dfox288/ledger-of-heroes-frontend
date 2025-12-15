@@ -123,4 +123,27 @@ describe('ClassResourceCounter', () => {
       expect(filled.length).toBe(0)
     })
   })
+
+  describe('Reset Badge', () => {
+    it('shows "Long" badge for long_rest reset', async () => {
+      const wrapper = await mountSuspended(ClassResourceCounter, {
+        props: { counter: createCounter({ reset_on: 'long_rest' }) }
+      })
+      expect(wrapper.text()).toContain('Long')
+    })
+
+    it('shows "Short" badge for short_rest reset', async () => {
+      const wrapper = await mountSuspended(ClassResourceCounter, {
+        props: { counter: createCounter({ reset_on: 'short_rest' }) }
+      })
+      expect(wrapper.text()).toContain('Short')
+    })
+
+    it('shows no badge when reset_on is null', async () => {
+      const wrapper = await mountSuspended(ClassResourceCounter, {
+        props: { counter: createCounter({ reset_on: null }) }
+      })
+      expect(wrapper.find('[data-testid="reset-badge"]').exists()).toBe(false)
+    })
+  })
 })
