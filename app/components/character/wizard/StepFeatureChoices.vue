@@ -204,13 +204,15 @@ async function handleContinue() {
             @click="handleOptionToggle(choice, option.id)"
           >
             <div class="flex items-center gap-3">
+              <!-- Selection indicator -->
               <UIcon
-                :name="isOptionSelected(choice.id, option.id) ? 'i-heroicons-check-circle-solid' : 'i-heroicons-circle'"
-                class="w-6 h-6 flex-shrink-0"
-                :class="{
-                  'text-primary': isOptionSelected(choice.id, option.id),
-                  'text-gray-400': !isOptionSelected(choice.id, option.id)
-                }"
+                v-if="isOptionSelected(choice.id, option.id)"
+                name="i-heroicons-check-circle-solid"
+                class="w-6 h-6 flex-shrink-0 text-primary"
+              />
+              <span
+                v-else
+                class="w-6 h-6 flex-shrink-0 rounded-full border-2 border-gray-400"
               />
               <div>
                 <p class="font-semibold">
@@ -287,13 +289,15 @@ async function handleContinue() {
             @click="handleOptionToggle(choice, option.id)"
           >
             <div class="flex items-center gap-2">
+              <!-- Selection indicator -->
               <UIcon
-                :name="isOptionSelected(choice.id, option.id) ? 'i-heroicons-check-circle-solid' : 'i-heroicons-circle'"
-                class="w-5 h-5 flex-shrink-0"
-                :class="{
-                  'text-primary': isOptionSelected(choice.id, option.id),
-                  'text-gray-400': !isOptionSelected(choice.id, option.id)
-                }"
+                v-if="isOptionSelected(choice.id, option.id)"
+                name="i-heroicons-check-circle-solid"
+                class="w-5 h-5 flex-shrink-0 text-primary"
+              />
+              <span
+                v-else
+                class="w-5 h-5 flex-shrink-0 rounded-full border-2 border-gray-400"
               />
               <span class="font-medium">{{ option.name }}</span>
             </div>
@@ -362,13 +366,15 @@ async function handleContinue() {
             @click="handleOptionToggle(choice, option.id)"
           >
             <div class="flex items-center gap-3">
+              <!-- Selection indicator -->
               <UIcon
-                :name="isOptionSelected(choice.id, option.id) ? 'i-heroicons-check-circle-solid' : 'i-heroicons-circle'"
-                class="w-6 h-6 flex-shrink-0"
-                :class="{
-                  'text-primary': isOptionSelected(choice.id, option.id),
-                  'text-gray-400': !isOptionSelected(choice.id, option.id)
-                }"
+                v-if="isOptionSelected(choice.id, option.id)"
+                name="i-heroicons-check-circle-solid"
+                class="w-6 h-6 flex-shrink-0 text-primary"
+              />
+              <span
+                v-else
+                class="w-6 h-6 flex-shrink-0 rounded-full border-2 border-gray-400"
               />
               <div>
                 <p class="font-semibold">
