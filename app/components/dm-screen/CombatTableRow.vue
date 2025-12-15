@@ -23,17 +23,13 @@ const emit = defineEmits<{
 }>()
 
 // Initiative editing using composable
+// validate() runs before onSave(), so no need to re-validate
 const initEdit = useInlineEdit<string>({
   getValue: () => props.initiative?.toString() ?? '',
-  onSave: (value) => {
-    const parsed = parseInt(value, 10)
-    // D&D initiative range: -10 (very low DEX) to 50 (high DEX + bonuses)
-    if (!isNaN(parsed) && parsed >= -10 && parsed <= 50) {
-      emit('update:initiative', parsed)
-    }
-  },
+  onSave: (value) => emit('update:initiative', parseInt(value, 10)),
   validate: (value) => {
     const parsed = parseInt(value, 10)
+    // D&D initiative range: -10 (very low DEX) to 50 (high DEX + bonuses)
     return !isNaN(parsed) && parsed >= -10 && parsed <= 50
   }
 })

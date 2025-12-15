@@ -33,8 +33,9 @@ export function useInlineEdit<T = string>(options: UseInlineEditOptions<T>) {
     const isValid = options.validate ? options.validate(value) : true
     if (isValid) {
       options.onSave(value)
+      isEditing.value = false
     }
-    isEditing.value = false
+    // Stay in edit mode if validation fails for better UX
   }
 
   function cancel() {

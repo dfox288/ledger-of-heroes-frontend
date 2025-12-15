@@ -24,14 +24,10 @@ const emit = defineEmits<{
 }>()
 
 // Initiative editing using composable
+// validate() runs before onSave(), so no need to re-validate
 const initEdit = useInlineEdit<string>({
   getValue: () => props.initiative?.toString() ?? '',
-  onSave: (value) => {
-    const parsed = parseInt(value, 10)
-    if (!isNaN(parsed) && parsed >= -10 && parsed <= 50) {
-      emit('update:initiative', parsed)
-    }
-  },
+  onSave: (value) => emit('update:initiative', parseInt(value, 10)),
   validate: (value) => {
     const parsed = parseInt(value, 10)
     return !isNaN(parsed) && parsed >= -10 && parsed <= 50
@@ -43,9 +39,7 @@ const hpEdit = useInlineEdit<string>({
   getValue: () => props.monster.current_hp.toString(),
   onSave: (value) => {
     const parsed = parseInt(value, 10)
-    if (!isNaN(parsed)) {
-      emit('update:hp', Math.max(0, Math.min(props.monster.max_hp, parsed)))
-    }
+    emit('update:hp', Math.max(0, Math.min(props.monster.max_hp, parsed)))
   },
   validate: (value) => {
     const parsed = parseInt(value, 10)
@@ -56,13 +50,8 @@ const hpEdit = useInlineEdit<string>({
 // Label editing using composable
 const labelEdit = useInlineEdit<string>({
   getValue: () => props.monster.label,
-  onSave: (value) => {
-    const trimmed = value.trim()
-    if (trimmed && trimmed !== props.monster.label) {
-      emit('update:label', trimmed)
-    }
-  },
-  validate: (value) => value.trim().length > 0
+  onSave: (value) => emit('update:label', value.trim()),
+  validate: (value) => value.trim().length > 0 && value.trim() !== props.monster.label
 })
 
 // Delete confirmation state

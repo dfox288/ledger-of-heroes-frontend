@@ -115,7 +115,7 @@ import { server } from '../msw/server'
 import { mountSuspended } from '@nuxt/test-utils/runtime'
 import { describe, it, expect, beforeEach } from 'vitest'
 import SpellCard from '~/components/spell/Card.vue'
-import { mockSpell } from '#tests/helpers/mockFactories'
+import { createMockSpell } from '#tests/helpers/mockFactories'
 
 describe('SpellCard', () => {
   it('displays spell name and level', async () => {

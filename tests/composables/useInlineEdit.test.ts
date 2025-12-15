@@ -90,6 +90,20 @@ describe('useInlineEdit', () => {
       expect(onSave).not.toHaveBeenCalled()
     })
 
+    it('stays in edit mode if validation fails', () => {
+      const { isEditing, editValue, startEdit, save } = useInlineEdit({
+        getValue: () => '',
+        onSave: vi.fn(),
+        validate: (value) => value.length > 0
+      })
+
+      startEdit()
+      editValue.value = ''
+      save()
+
+      expect(isEditing.value).toBe(true) // Stays open for correction
+    })
+
     it('calls onSave if validation passes', () => {
       const onSave = vi.fn()
       const { editValue, startEdit, save } = useInlineEdit({
