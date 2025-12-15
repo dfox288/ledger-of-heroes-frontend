@@ -1,13 +1,15 @@
 <!-- app/components/dm-screen/PartySummary.vue -->
 <script setup lang="ts">
-import type { DmScreenPartySummary } from '~/types/dm-screen'
+import type { DmScreenPartySummary, DmScreenCharacter } from '~/types/dm-screen'
 
 interface Props {
   summary: DmScreenPartySummary
+  characters?: DmScreenCharacter[]
   collapsed?: boolean
 }
 
 const props = withDefaults(defineProps<Props>(), {
+  characters: () => [],
   collapsed: false
 })
 
@@ -22,6 +24,39 @@ const isCollapsed = computed({
 
 // Show all languages - they're important for DM planning
 const displayLanguages = computed(() => props.summary.all_languages)
+
+// Check if we have characters to calculate stats from
+const hasCharacters = computed(() => props.characters.length > 0)
+
+// Average Party Level (APL)
+const averagePartyLevel = computed(() => {
+  if (!hasCharacters.value) return 0
+  const totalLevels = props.characters.reduce((sum, c) => sum + c.level, 0)
+  return Math.round(totalLevels / props.characters.length)
+})
+
+// Total Party HP
+const totalHp = computed(() => {
+  if (!hasCharacters.value) return { current: 0, max: 0 }
+  return props.characters.reduce(
+    (acc, c) => ({
+      current: acc.current + c.hit_points.current,
+      max: acc.max + c.hit_points.max
+    }),
+    { current: 0, max: 0 }
+  )
+})
+
+const hpPercentage = computed(() => {
+  if (totalHp.value.max === 0) return 0
+  return Math.round((totalHp.value.current / totalHp.value.max) * 100)
+})
+
+const hpColorClass = computed(() => {
+  if (hpPercentage.value > 50) return 'text-emerald-600 dark:text-emerald-400'
+  if (hpPercentage.value > 25) return 'text-amber-600 dark:text-amber-400'
+  return 'text-rose-600 dark:text-rose-400'
+})
 </script>
 
 <template>
@@ -42,8 +77,43 @@ const displayLanguages = computed(() => props.summary.all_languages)
     <!-- Content -->
     <div
       v-show="!isCollapsed"
-      class="p-4 pt-0 grid grid-cols-2 md:grid-cols-4 gap-4"
+      class="p-4 pt-0 grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4"
     >
+      <!-- APL -->
+      <div v-if="hasCharacters">
+        <h4 class="text-xs font-medium text-neutral-500 uppercase mb-1">
+          APL
+        </h4>
+        <div class="flex items-center gap-2">
+          <span
+            data-testid="apl-value"
+            class="text-2xl font-bold text-neutral-900 dark:text-white"
+          >{{ averagePartyLevel }}</span>
+        </div>
+      </div>
+
+      <!-- Party HP -->
+      <div
+        v-if="hasCharacters"
+        data-testid="party-hp"
+      >
+        <h4 class="text-xs font-medium text-neutral-500 uppercase mb-1">
+          Party HP
+        </h4>
+        <div class="flex items-center gap-2">
+          <span class="text-lg font-semibold text-neutral-900 dark:text-white">
+            {{ totalHp.current }}/{{ totalHp.max }}
+          </span>
+          <span
+            data-testid="party-hp-percentage"
+            class="text-sm font-medium"
+            :class="hpColorClass"
+          >
+            ({{ hpPercentage }}%)
+          </span>
+        </div>
+      </div>
+
       <!-- Languages -->
       <div>
         <h4 class="text-xs font-medium text-neutral-500 uppercase mb-1">
