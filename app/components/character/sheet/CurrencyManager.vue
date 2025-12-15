@@ -7,17 +7,37 @@
  * Wraps StatCurrency display + CurrencyEditModal.
  * Reads from and writes to characterPlayState store.
  *
+ * Accepts optional initial currency props for SSR hydration - the store
+ * may not be initialized during server render, causing hydration mismatch.
+ *
  * @see Issue #584 - Character sheet component refactor
+ * @see Issue #623 - Hydration fixes
  */
 import type { CurrencyDelta } from './CurrencyEditModal.vue'
+import type { CharacterCurrency } from '~/types/character'
 import { useCharacterPlayStateStore } from '~/stores/characterPlayState'
 
 const props = defineProps<{
   editable?: boolean
+  /** Initial currency for SSR (optional, falls back to store) */
+  initialCurrency?: CharacterCurrency
 }>()
 
 const store = useCharacterPlayStateStore()
 const toast = useToast()
+
+/**
+ * Currency for display - uses store if initialized, falls back to props for SSR
+ */
+const displayCurrency = computed(() => {
+  if (store.characterId !== null) {
+    return store.currency
+  }
+  if (props.initialCurrency) {
+    return props.initialCurrency
+  }
+  return store.currency
+})
 
 // Modal state
 const modalOpen = ref(false)
@@ -77,9 +97,9 @@ watch(modalOpen, (isOpen) => {
 
 <template>
   <div>
-    <!-- Currency Display -->
+    <!-- Currency Display (uses display computed for SSR compatibility) -->
     <CharacterSheetStatCurrency
-      :currency="store.currency"
+      :currency="displayCurrency"
       :editable="editable"
       @click="openModal"
     />
@@ -87,7 +107,7 @@ watch(modalOpen, (isOpen) => {
     <!-- Edit Modal -->
     <CharacterSheetCurrencyEditModal
       v-model:open="modalOpen"
-      :currency="store.currency"
+      :currency="displayCurrency"
       :loading="store.isUpdatingCurrency"
       :error="error"
       @apply="handleUpdate"

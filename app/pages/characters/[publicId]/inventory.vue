@@ -506,7 +506,10 @@ useSeoMeta({
         <!-- Right Column: Sidebar (sticky on desktop) -->
         <div class="space-y-4 lg:sticky lg:top-4 lg:self-start">
           <!-- Currency Manager (self-contained with modal) -->
-          <CharacterSheetCurrencyManager :editable="canEdit" />
+          <CharacterSheetCurrencyManager
+            :editable="canEdit"
+            :initial-currency="character?.currency"
+          />
 
           <!-- Equipment Status -->
           <CharacterInventoryEquipmentStatus

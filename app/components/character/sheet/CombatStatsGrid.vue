@@ -46,6 +46,9 @@ defineProps<{
       :bonus="character.proficiency_bonus"
     />
 
-    <CharacterSheetCurrencyManager :editable="editable" />
+    <CharacterSheetCurrencyManager
+      :editable="editable"
+      :initial-currency="character.currency"
+    />
   </div>
 </template>
