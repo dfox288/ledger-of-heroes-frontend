@@ -15,6 +15,7 @@
  */
 import { storeToRefs } from 'pinia'
 import { useCharacterPlayStateStore } from '~/stores/characterPlayState'
+import type { SpellSlotsResponse } from '~/types/character'
 
 const route = useRoute()
 const publicId = computed(() => route.params.publicId as string)
@@ -67,23 +68,53 @@ watch([character, stats, spells], async ([char, s, sp]) => {
 
     // Initialize spellcasting state if character is a spellcaster
     if (s.spellcasting && sp) {
-      // Convert spell_slots array/object to level-based array
-      const slotData: Array<{ level: number, total: number }> = []
-      if (Array.isArray(s.spell_slots)) {
+      // Parse spell_slots from API - supports new format with spent tracking
+      // New format: { slots: { "1": { total, spent, available } }, pact_magic: ... }
+      // Old format: { "1": 4, "2": 3 } or [4, 3, ...] (backwards compatibility)
+      const slotData: Array<{ level: number, total: number, spent?: number }> = []
+      let pactMagicData: { level: number, total: number, spent: number } | null = null
+
+      // Check for new format (has 'slots' property)
+      // Type guard: new format has 'slots' key, old format is just Record<string, number>
+      const rawSlots = s.spell_slots as SpellSlotsResponse | Record<string, number> | number[]
+      if (rawSlots && typeof rawSlots === 'object' && 'slots' in rawSlots) {
+        // New format: { slots: { "1": { total, spent, available } }, pact_magic: ... }
+        const newFormat = rawSlots as SpellSlotsResponse
+        Object.entries(newFormat.slots).forEach(([level, data]) => {
+          if (data.total > 0) {
+            slotData.push({
+              level: parseInt(level),
+              total: data.total,
+              spent: data.spent
+            })
+          }
+        })
+
+        // Extract pact magic if present
+        if (newFormat.pact_magic && newFormat.pact_magic.total > 0) {
+          pactMagicData = {
+            level: newFormat.pact_magic.level,
+            total: newFormat.pact_magic.total,
+            spent: newFormat.pact_magic.spent
+          }
+        }
+      } else if (Array.isArray(s.spell_slots)) {
+        // Legacy array format: [4, 3, ...] where index 0 = 1st level
         s.spell_slots.forEach((total: number, index: number) => {
           if (total > 0) {
             slotData.push({ level: index + 1, total })
           }
         })
       } else if (s.spell_slots && typeof s.spell_slots === 'object') {
+        // Legacy object format: { "1": 4, "2": 3 }
         Object.entries(s.spell_slots as Record<string, number>).forEach(([level, total]) => {
-          if (total > 0) {
+          if (typeof total === 'number' && total > 0) {
             slotData.push({ level: parseInt(level), total })
           }
         })
       }
 
-      playStateStore.initializeSpellSlots(slotData)
+      playStateStore.initializeSpellSlots(slotData, pactMagicData)
       playStateStore.initializeSpellPreparation({
         spells: sp,
         preparationLimit: s.preparation_limit ?? null
