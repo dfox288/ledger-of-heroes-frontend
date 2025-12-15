@@ -78,10 +78,10 @@ const hpColor = computed(() => {
 const isDead = computed(() => props.monster.current_hp <= 0)
 
 // Speed display
-const speeds = computed(() => props.monster.monster.speed)
-const hasFly = computed(() => speeds.value.fly !== null && speeds.value.fly > 0)
-const hasSwim = computed(() => speeds.value.swim !== null && speeds.value.swim > 0)
-const hasClimb = computed(() => speeds.value.climb !== null && speeds.value.climb > 0)
+const speeds = computed(() => props.monster.monster.speed ?? { walk: 30, fly: null, swim: null, climb: null })
+const hasFly = computed(() => speeds.value?.fly !== null && (speeds.value?.fly ?? 0) > 0)
+const hasSwim = computed(() => speeds.value?.swim !== null && (speeds.value?.swim ?? 0) > 0)
+const hasClimb = computed(() => speeds.value?.climb !== null && (speeds.value?.climb ?? 0) > 0)
 
 function handleRemove(event: Event) {
   event.stopPropagation()
@@ -289,7 +289,7 @@ function increaseHp(event: Event) {
     <!-- Speed -->
     <td class="py-3 px-4 text-center">
       <div class="flex items-center justify-center gap-1">
-        <span class="font-mono">{{ speeds.walk }} ft</span>
+        <span class="font-mono">{{ speeds.walk ?? 30 }} ft</span>
         <UIcon
           v-if="hasFly"
           data-testid="speed-fly"
