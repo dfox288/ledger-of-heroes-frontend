@@ -53,7 +53,8 @@ const {
   isLastStep,
   nextStep,
   previousStep,
-  progressPercent
+  progressPercent,
+  getStepUrl
 } = useLevelUpWizard({
   publicId,
   currentStep: stepName
@@ -113,11 +114,12 @@ useSeoMeta({
 
 <template>
   <div class="h-screen flex bg-gray-50 dark:bg-gray-900">
-    <!-- Sidebar -->
-    <CharacterLevelupLevelUpSidebar
+    <!-- Sidebar - uses unified WizardSidebar component (#625) -->
+    <CharacterWizardWizardSidebar
+      title="Level Up"
       :active-steps="activeSteps"
       :current-step="stepName"
-      :public-id="publicId"
+      :get-step-url="getStepUrl"
       class="w-64 flex-shrink-0 hidden lg:block"
     />
 

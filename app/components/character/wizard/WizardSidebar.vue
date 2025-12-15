@@ -1,36 +1,59 @@
 <!-- app/components/character/wizard/WizardSidebar.vue -->
 <script setup lang="ts">
-import { useCharacterWizard, type UseCharacterWizardOptions } from '~/composables/useCharacterWizard'
+/**
+ * Unified Wizard Sidebar
+ *
+ * Shared sidebar component for both character creation and level-up wizards.
+ * Displays progress bar, step list with status indicators.
+ *
+ * @see Issue #625 - Wizard consolidation
+ */
 
-const props = defineProps<UseCharacterWizardOptions>()
+interface WizardStep {
+  name: string
+  label: string
+  icon: string
+}
 
-const {
-  activeSteps,
-  currentStepIndex,
-  progressPercent,
-  getStepUrl
-} = useCharacterWizard(props)
+interface Props {
+  /** Sidebar title (e.g., "Character Builder" or "Level Up") */
+  title: string
+  /** List of visible steps to display */
+  activeSteps: WizardStep[]
+  /** Current step name (from URL) */
+  currentStep: string
+  /** Function to build URL for a step */
+  getStepUrl: (stepName: string) => string
+}
+
+const props = defineProps<Props>()
+
+const currentStepIndex = computed(() =>
+  props.activeSteps.findIndex(s => s.name === props.currentStep)
+)
+
+const progressPercent = computed(() => {
+  if (props.activeSteps.length <= 1) return 100
+  const index = Math.max(0, currentStepIndex.value)
+  return Math.round((index / (props.activeSteps.length - 1)) * 100)
+})
 
 function getStepStatus(stepIndex: number): 'completed' | 'current' | 'future' {
   if (stepIndex < currentStepIndex.value) return 'completed'
   if (stepIndex === currentStepIndex.value) return 'current'
   return 'future'
 }
-
-function handleStepClick(stepName: string, stepIndex: number) {
-  // Only allow navigating to completed steps
-  if (stepIndex < currentStepIndex.value) {
-    navigateTo(getStepUrl(stepName))
-  }
-}
 </script>
 
 <template>
-  <aside class="bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 flex flex-col h-full">
+  <aside
+    data-testid="wizard-sidebar"
+    class="bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 flex flex-col h-full"
+  >
     <!-- Header -->
     <div class="p-4 border-b border-gray-200 dark:border-gray-700">
       <h2 class="text-lg font-semibold text-gray-900 dark:text-white">
-        Character Builder
+        {{ title }}
       </h2>
       <div class="mt-2">
         <div
@@ -55,17 +78,15 @@ function handleStepClick(stepName: string, stepIndex: number) {
           v-for="(step, index) in activeSteps"
           :key="step.name"
         >
-          <button
-            type="button"
+          <NuxtLink
+            :to="getStepStatus(index) === 'future' ? undefined : getStepUrl(step.name)"
             :data-testid="`step-item-${step.name}`"
             class="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-left transition-colors"
             :class="{
               'bg-primary-50 dark:bg-primary-900/20 text-primary-700 dark:text-primary-300': getStepStatus(index) === 'current',
-              'text-gray-900 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer': getStepStatus(index) === 'completed',
-              'text-gray-400 dark:text-gray-500 cursor-not-allowed': getStepStatus(index) === 'future'
+              'text-gray-900 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700': getStepStatus(index) === 'completed',
+              'text-gray-400 dark:text-gray-500 cursor-not-allowed pointer-events-none': getStepStatus(index) === 'future'
             }"
-            :disabled="getStepStatus(index) === 'future'"
-            @click="handleStepClick(step.name, index)"
           >
             <!-- Step indicator -->
             <span
@@ -93,7 +114,7 @@ function handleStepClick(stepName: string, stepIndex: number) {
               />
               <span class="truncate">{{ step.label }}</span>
             </span>
-          </button>
+          </NuxtLink>
         </li>
       </ul>
     </nav>
