@@ -56,7 +56,7 @@ function getItemName(equipment: CharacterEquipment): string {
 
     <!-- Attuned Section -->
     <div class="bg-gray-50 dark:bg-gray-800 rounded-lg p-4">
-      <h3 class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-3 flex items-center justify-between">
+      <h3 class="w-full text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-3 flex items-center justify-between">
         <span>Attuned</span>
         <span
           data-testid="attunement-counter"
