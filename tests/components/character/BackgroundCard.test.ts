@@ -2,8 +2,8 @@
 import { describe, it, expect } from 'vitest'
 import { mountSuspended } from '@nuxt/test-utils/runtime'
 import BackgroundCard from '~/components/character/BackgroundCard.vue'
-import { testPickerCardBehavior } from '../../helpers/pickerCardBehavior'
-import { createMockBackground } from '../../helpers/mockFactories'
+import { testPickerCardBehavior } from '#tests/helpers/pickerCardBehavior'
+import { createMockBackground } from '#tests/helpers/mockFactories'
 
 const mockBackground = createMockBackground({
   name: 'Soldier',

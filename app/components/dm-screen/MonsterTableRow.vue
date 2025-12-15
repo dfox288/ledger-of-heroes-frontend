@@ -23,20 +23,36 @@ const emit = defineEmits<{
   'remove': []
 }>()
 
-// Initiative editing state
-const isEditingInit = ref(false)
-const editValue = ref('')
-const initInput = ref<HTMLInputElement | null>(null)
+// Initiative editing using composable
+// validate() runs before onSave(), so no need to re-validate
+const initEdit = useInlineEdit<string>({
+  getValue: () => props.initiative?.toString() ?? '',
+  onSave: (value) => emit('update:initiative', parseInt(value, 10)),
+  validate: (value) => {
+    const parsed = parseInt(value, 10)
+    return !isNaN(parsed) && parsed >= -10 && parsed <= 50
+  }
+})
 
-// HP editing state
-const isEditingHp = ref(false)
-const hpValue = ref('')
-const hpInput = ref<HTMLInputElement | null>(null)
+// HP editing using composable
+const hpEdit = useInlineEdit<string>({
+  getValue: () => props.monster.current_hp.toString(),
+  onSave: (value) => {
+    const parsed = parseInt(value, 10)
+    emit('update:hp', Math.max(0, Math.min(props.monster.max_hp, parsed)))
+  },
+  validate: (value) => {
+    const parsed = parseInt(value, 10)
+    return !isNaN(parsed) && parsed >= 0 && parsed <= props.monster.max_hp
+  }
+})
 
-// Label editing state
-const isEditingLabel = ref(false)
-const labelValue = ref('')
-const labelInput = ref<HTMLInputElement | null>(null)
+// Label editing using composable
+const labelEdit = useInlineEdit<string>({
+  getValue: () => props.monster.label,
+  onSave: (value) => emit('update:label', value.trim()),
+  validate: (value) => value.trim().length > 0 && value.trim() !== props.monster.label
+})
 
 // Delete confirmation state
 const showDeleteConfirm = ref(false)
@@ -67,67 +83,6 @@ const hasFly = computed(() => speeds.value.fly !== null && speeds.value.fly > 0)
 const hasSwim = computed(() => speeds.value.swim !== null && speeds.value.swim > 0)
 const hasClimb = computed(() => speeds.value.climb !== null && speeds.value.climb > 0)
 
-function startEditInit(event: Event) {
-  event.stopPropagation()
-  isEditingInit.value = true
-  editValue.value = props.initiative?.toString() ?? ''
-  nextTick(() => {
-    initInput.value?.focus()
-    initInput.value?.select()
-  })
-}
-
-function saveInit() {
-  const value = parseInt(editValue.value, 10)
-  if (!isNaN(value) && value >= -10 && value <= 50) {
-    emit('update:initiative', value)
-  }
-  isEditingInit.value = false
-}
-
-function cancelEditInit() {
-  isEditingInit.value = false
-}
-
-function handleInitKeydown(event: KeyboardEvent) {
-  if (event.key === 'Enter') {
-    saveInit()
-  } else if (event.key === 'Escape') {
-    cancelEditInit()
-  }
-}
-
-function startEditHp(event: Event) {
-  event.stopPropagation()
-  isEditingHp.value = true
-  hpValue.value = props.monster.current_hp.toString()
-  nextTick(() => {
-    hpInput.value?.focus()
-    hpInput.value?.select()
-  })
-}
-
-function saveHp() {
-  const value = parseInt(hpValue.value, 10)
-  // Clamp HP to 0-max range (monsters don't have temp HP)
-  if (!isNaN(value) && value >= 0 && value <= props.monster.max_hp) {
-    emit('update:hp', value)
-  }
-  isEditingHp.value = false
-}
-
-function cancelEditHp() {
-  isEditingHp.value = false
-}
-
-function handleHpKeydown(event: KeyboardEvent) {
-  if (event.key === 'Enter') {
-    saveHp()
-  } else if (event.key === 'Escape') {
-    cancelEditHp()
-  }
-}
-
 function handleRemove(event: Event) {
   event.stopPropagation()
   showDeleteConfirm.value = true
@@ -142,37 +97,6 @@ function confirmRemove(event: Event) {
 function cancelRemove(event: Event) {
   event.stopPropagation()
   showDeleteConfirm.value = false
-}
-
-// Label editing functions
-function startEditLabel(event: Event) {
-  event.stopPropagation()
-  isEditingLabel.value = true
-  labelValue.value = props.monster.label
-  nextTick(() => {
-    labelInput.value?.focus()
-    labelInput.value?.select()
-  })
-}
-
-function saveLabel() {
-  const value = labelValue.value.trim()
-  if (value && value !== props.monster.label) {
-    emit('update:label', value)
-  }
-  isEditingLabel.value = false
-}
-
-function cancelEditLabel() {
-  isEditingLabel.value = false
-}
-
-function handleLabelKeydown(event: KeyboardEvent) {
-  if (event.key === 'Enter') {
-    saveLabel()
-  } else if (event.key === 'Escape') {
-    cancelEditLabel()
-  }
 }
 
 // Quick HP adjustment functions
@@ -219,21 +143,21 @@ function increaseHp(event: Event) {
           <!-- Editable label -->
           <div class="flex items-center gap-2">
             <input
-              v-if="isEditingLabel"
-              ref="labelInput"
-              v-model="labelValue"
+              v-if="labelEdit.isEditing.value"
+              :ref="el => labelEdit.inputRef.value = el as HTMLInputElement"
+              v-model="labelEdit.editValue.value"
               data-testid="label-input"
               type="text"
               class="px-2 py-1 font-medium text-sm rounded border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-800 focus:outline-none focus:ring-2 focus:ring-red-500"
-              @blur="saveLabel"
-              @keydown="handleLabelKeydown"
+              @blur="labelEdit.save"
+              @keydown="labelEdit.handleKeydown"
             >
             <button
               v-else
               data-testid="label-display"
               class="font-medium text-neutral-900 dark:text-white hover:text-red-600 dark:hover:text-red-400 transition-colors"
               :class="{ 'line-through': isDead }"
-              @click="startEditLabel"
+              @click="labelEdit.startEdit"
             >
               {{ monster.label }}
             </button>
@@ -259,17 +183,17 @@ function increaseHp(event: Event) {
     >
       <!-- Edit mode -->
       <div
-        v-if="isEditingHp"
+        v-if="hpEdit.isEditing.value"
         class="flex items-center gap-2"
       >
         <input
-          ref="hpInput"
-          v-model="hpValue"
+          :ref="el => hpEdit.inputRef.value = el as HTMLInputElement"
+          v-model="hpEdit.editValue.value"
           data-testid="hp-input"
           type="number"
           class="w-16 px-2 py-1 text-center font-mono text-sm rounded border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-800 focus:outline-none focus:ring-2 focus:ring-red-500"
-          @blur="saveHp"
-          @keydown="handleHpKeydown"
+          @blur="hpEdit.save"
+          @keydown="hpEdit.handleKeydown"
         >
         <span class="text-neutral-500">/ {{ monster.max_hp }}</span>
       </div>
@@ -282,7 +206,7 @@ function increaseHp(event: Event) {
         <button
           data-testid="hp-bar"
           class="flex-1 text-left"
-          @click="startEditHp"
+          @click="hpEdit.startEdit"
         >
           <!-- Bar -->
           <div class="h-4 bg-neutral-200 dark:bg-neutral-700 rounded overflow-hidden">
@@ -340,14 +264,14 @@ function increaseHp(event: Event) {
     >
       <!-- Edit mode -->
       <input
-        v-if="isEditingInit"
-        ref="initInput"
-        v-model="editValue"
+        v-if="initEdit.isEditing.value"
+        :ref="el => initEdit.inputRef.value = el as HTMLInputElement"
+        v-model="initEdit.editValue.value"
         data-testid="init-input"
         type="number"
         class="w-16 px-2 py-1 text-center font-mono text-sm rounded border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-800 focus:outline-none focus:ring-2 focus:ring-red-500"
-        @blur="saveInit"
-        @keydown="handleInitKeydown"
+        @blur="initEdit.save"
+        @keydown="initEdit.handleKeydown"
       >
       <!-- Display mode -->
       <button
@@ -356,7 +280,7 @@ function increaseHp(event: Event) {
         class="inline-flex flex-col items-center px-2 py-1 rounded hover:bg-neutral-100 dark:hover:bg-neutral-700 transition-colors"
         :class="{ 'bg-neutral-100 dark:bg-neutral-700': initiative !== null }"
         :aria-label="`Edit initiative for ${monster.label}`"
-        @click="startEditInit"
+        @click="initEdit.startEdit"
       >
         <span class="font-mono font-medium">{{ initiativeDisplay }}</span>
       </button>

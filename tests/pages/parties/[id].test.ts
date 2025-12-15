@@ -3,7 +3,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { mountSuspended, mockNuxtImport } from '@nuxt/test-utils/runtime'
 import { flushPromises } from '@vue/test-utils'
 import { setActivePinia, createPinia } from 'pinia'
-import PartyDetailPage from '~/pages/parties/[id].vue'
+import PartyDetailPage from '~/pages/parties/[id]/index.vue'
 import type { Party, PartyCharacter } from '~/types'
 
 const mockCharacters: PartyCharacter[] = [

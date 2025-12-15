@@ -17,7 +17,7 @@ import type { EntitySource } from '~/types/api/common'
  *
  * Usage:
  * ```typescript
- * import { createMockSpell, createMockItem } from '../../helpers/mockFactories'
+ * import { createMockSpell, createMockItem } from '#tests/helpers/mockFactories'
  *
  * // Use defaults
  * const spell = createMockSpell()

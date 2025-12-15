@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest'
 import { mountSuspended } from '@nuxt/test-utils/runtime'
 import ItemQuickInfo from '~/components/item/ItemQuickInfo.vue'
-import { createMockSource } from '../../helpers/mockFactories'
+import { createMockSource } from '#tests/helpers/mockFactories'
 import type { EntitySource } from '~/types'
 
 describe('ItemQuickInfo', () => {

@@ -11,7 +11,7 @@ import { setActivePinia, createPinia } from 'pinia'
 import { ref } from 'vue'
 import StepReview from '~/components/character/wizard/StepReview.vue'
 import { useCharacterWizardStore } from '~/stores/characterWizard'
-import { characterSheetStubs } from '../../../helpers/characterSheetStubs'
+import { characterSheetStubs } from '#tests/helpers/characterSheetStubs'
 
 // =============================================================================
 // MOCK DATA (module-level for vi.mock hoisting)

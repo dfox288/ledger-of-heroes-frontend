@@ -2,8 +2,8 @@
 import { describe, it, expect } from 'vitest'
 import { mountSuspended } from '@nuxt/test-utils/runtime'
 import ClassCard from '~/components/character/ClassCard.vue'
-import { testPickerCardBehavior } from '../../helpers/pickerCardBehavior'
-import { createMockClass } from '../../helpers/mockFactories'
+import { testPickerCardBehavior } from '#tests/helpers/pickerCardBehavior'
+import { createMockClass } from '#tests/helpers/mockFactories'
 
 const mockClass = createMockClass({
   name: 'Wizard',

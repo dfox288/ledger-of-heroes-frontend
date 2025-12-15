@@ -1,6 +1,12 @@
 import { defineVitestConfig } from '@nuxt/test-utils/config'
+import { resolve } from 'node:path'
 
 export default defineVitestConfig({
+  resolve: {
+    alias: {
+      '#tests': resolve(__dirname, './tests')
+    }
+  },
   test: {
     environment: 'nuxt',
     globals: true,

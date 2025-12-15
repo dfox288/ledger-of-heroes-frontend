@@ -1,9 +1,9 @@
 import { describe, it, expect } from 'vitest'
 import { mountSuspended } from '@nuxt/test-utils/runtime'
 import BackgroundCard from '~/components/background/BackgroundCard.vue'
-import { createMockBackground } from '../../helpers/mockFactories'
-import { testMissingDescriptionFallback } from '../../helpers/descriptionBehavior'
-import { testEntityCardBasics } from '../../helpers/cardBehavior'
+import { createMockBackground } from '#tests/helpers/mockFactories'
+import { testMissingDescriptionFallback } from '#tests/helpers/descriptionBehavior'
+import { testEntityCardBasics } from '#tests/helpers/cardBehavior'
 
 describe('BackgroundCard', () => {
   const mockBackground = createMockBackground()

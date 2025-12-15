@@ -4,7 +4,7 @@ import { mountSuspended, mockNuxtImport } from '@nuxt/test-utils/runtime'
 import { setActivePinia, createPinia } from 'pinia'
 import { flushPromises } from '@vue/test-utils'
 import BattlePage from '~/pages/characters/[publicId]/battle.vue'
-import { server, http, HttpResponse } from '../../msw/server'
+import { server, http, HttpResponse } from '#tests/msw/server'
 
 // Mock route params
 mockNuxtImport('useRoute', () => () => ({

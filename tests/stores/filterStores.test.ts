@@ -12,7 +12,7 @@
  * GitHub Issue: #322
  */
 import { describe } from 'vitest'
-import { usePiniaSetup } from '../helpers/storeSetup'
+import { usePiniaSetup } from '#tests/helpers/storeSetup'
 import {
   testInitialState,
   testHasActiveFilters,
@@ -25,7 +25,7 @@ import {
   type ClearAllTestConfig,
   type UrlQueryTestCase,
   type ToUrlQueryTestCase
-} from '../helpers/filterStoreBehavior'
+} from '#tests/helpers/filterStoreBehavior'
 
 // Store imports
 import { useSpellFiltersStore } from '~/stores/spellFilters'

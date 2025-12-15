@@ -9,7 +9,7 @@
 import { describe, it, expect, beforeEach } from 'vitest'
 import { setActivePinia, createPinia } from 'pinia'
 import { useCharacterLevelUpStore } from '~/stores/characterLevelUp'
-import { halflingRogueL4, highElfWizardL2, humanFighterL3 } from '../msw/fixtures/characters'
+import { halflingRogueL4, highElfWizardL2, humanFighterL3 } from '#tests/msw/fixtures/characters'
 
 // ════════════════════════════════════════════════════════════════
 // HELPER: Resume Step Detection

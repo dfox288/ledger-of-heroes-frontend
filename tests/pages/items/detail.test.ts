@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { mountSuspended } from '@nuxt/test-utils/runtime'
-import { createMockItem } from '../../helpers/mockFactories'
+import { createMockItem } from '#tests/helpers/mockFactories'
 
 // Mock the useItemDetail composable
 vi.mock('~/composables/useItemDetail', () => ({

@@ -1,10 +1,10 @@
 import { describe, it, expect } from 'vitest'
 import { mountSuspended } from '@nuxt/test-utils/runtime'
 import SpellCard from '~/components/spell/SpellCard.vue'
-import { createMockSpell } from '../../helpers/mockFactories'
-import { testBadgeVisibility } from '../../helpers/badgeVisibilityBehavior'
-import { testDescriptionTruncation } from '../../helpers/descriptionBehavior'
-import { testEntityCardBasics } from '../../helpers/cardBehavior'
+import { createMockSpell } from '#tests/helpers/mockFactories'
+import { testBadgeVisibility } from '#tests/helpers/badgeVisibilityBehavior'
+import { testDescriptionTruncation } from '#tests/helpers/descriptionBehavior'
+import { testEntityCardBasics } from '#tests/helpers/cardBehavior'
 
 describe('SpellCard', () => {
   const mockSpell = createMockSpell()

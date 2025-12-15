@@ -2,8 +2,8 @@
 import { describe, it, expect } from 'vitest'
 import { mountSuspended } from '@nuxt/test-utils/runtime'
 import RaceCard from '~/components/character/RaceCard.vue'
-import { testPickerCardBehavior } from '../../helpers/pickerCardBehavior'
-import { createMockRace } from '../../helpers/mockFactories'
+import { testPickerCardBehavior } from '#tests/helpers/pickerCardBehavior'
+import { createMockRace } from '#tests/helpers/mockFactories'
 
 const mockRace = createMockRace({
   name: 'Dwarf',

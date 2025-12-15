@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest'
 import { mountSuspended } from '@nuxt/test-utils/runtime'
 import SpellSourceFooter from '~/components/spell/SpellSourceFooter.vue'
-import { mockSource } from '../../helpers/mockFactories'
+import { mockSource } from '#tests/helpers/mockFactories'
 import type { EntitySource } from '~/types'
 
 describe('SpellSourceFooter', () => {

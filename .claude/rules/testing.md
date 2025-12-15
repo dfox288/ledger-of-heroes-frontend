@@ -83,6 +83,30 @@ describe('SpellFilters', () => {
 
 ---
 
+## Test Import Alias
+
+Use the `#tests` alias for all test imports. This is configured in `vitest.config.ts`:
+
+```typescript
+// CORRECT - Use #tests alias
+import { mockSpell } from '#tests/fixtures/spells'
+import { setupWizardStore } from '#tests/helpers/wizardTestSetup'
+import { server, http, HttpResponse } from '#tests/msw/server'
+
+// WRONG - Relative imports
+import { mockSpell } from '../../fixtures/spells'
+import { server } from '../msw/server'
+```
+
+**Directory structure:**
+- `#tests/helpers/` - Test utilities and setup functions
+- `#tests/fixtures/` - Static fixture data (spells, equipment, etc.)
+- `#tests/msw/fixtures/` - Character and party fixtures for MSW
+- `#tests/msw/handlers/` - MSW request handlers
+- `#tests/msw/server` - MSW server setup
+
+---
+
 ## Unit Testing (Vitest)
 
 ### Basic Component Test
@@ -91,7 +115,7 @@ describe('SpellFilters', () => {
 import { mountSuspended } from '@nuxt/test-utils/runtime'
 import { describe, it, expect, beforeEach } from 'vitest'
 import SpellCard from '~/components/spell/Card.vue'
-import { mockSpell } from '@/tests/fixtures/spells'
+import { createMockSpell } from '#tests/helpers/mockFactories'
 
 describe('SpellCard', () => {
   it('displays spell name and level', async () => {

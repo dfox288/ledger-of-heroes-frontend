@@ -11,7 +11,7 @@ import {
   mockProficiencies,
   mockChoiceGroup1,
   mockMultipleChoiceGroups
-} from '../../../fixtures/equipment'
+} from '#tests/fixtures/equipment'
 
 type Equipment = components['schemas']['EntityItemResource']
 

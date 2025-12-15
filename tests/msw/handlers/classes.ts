@@ -5,7 +5,7 @@
  */
 
 import { http, HttpResponse } from 'msw'
-import { baseClasses, getClassBySlug } from '../fixtures/classes'
+import { baseClasses, getClassBySlug } from '#tests/msw/fixtures/classes'
 
 const API_BASE = '/api'
 

@@ -9,7 +9,7 @@ import {
   goblinTemplate,
   bugbearTemplate,
   createEncounterMonster
-} from '../fixtures/encounter-monsters'
+} from '#tests/msw/fixtures/encounter-monsters'
 
 const mockParties: PartyListItem[] = [
   {

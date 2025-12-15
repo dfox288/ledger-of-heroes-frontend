@@ -22,44 +22,20 @@ const emit = defineEmits<{
   'update:initiative': [value: number]
 }>()
 
-// Initiative editing state
-const isEditingInit = ref(false)
-const editValue = ref('')
-const initInput = ref<HTMLInputElement | null>(null)
+// Initiative editing using composable
+// validate() runs before onSave(), so no need to re-validate
+const initEdit = useInlineEdit<string>({
+  getValue: () => props.initiative?.toString() ?? '',
+  onSave: (value) => emit('update:initiative', parseInt(value, 10)),
+  validate: (value) => {
+    const parsed = parseInt(value, 10)
+    // D&D initiative range: -10 (very low DEX) to 50 (high DEX + bonuses)
+    return !isNaN(parsed) && parsed >= -10 && parsed <= 50
+  }
+})
 
 function formatModifier(mod: number): string {
   return mod >= 0 ? `+${mod}` : `${mod}`
-}
-
-function startEditInit(event: Event) {
-  event.stopPropagation() // Don't trigger row toggle
-  isEditingInit.value = true
-  editValue.value = props.initiative?.toString() ?? ''
-  nextTick(() => {
-    initInput.value?.focus()
-    initInput.value?.select()
-  })
-}
-
-function saveInit() {
-  const value = parseInt(editValue.value, 10)
-  // D&D initiative range: -10 (very low DEX) to 50 (high DEX + bonuses)
-  if (!isNaN(value) && value >= -10 && value <= 50) {
-    emit('update:initiative', value)
-  }
-  isEditingInit.value = false
-}
-
-function cancelEdit() {
-  isEditingInit.value = false
-}
-
-function handleInitKeydown(event: KeyboardEvent) {
-  if (event.key === 'Enter') {
-    saveInit()
-  } else if (event.key === 'Escape') {
-    cancelEdit()
-  }
 }
 
 const isHighAc = computed(() => props.character.armor_class >= 17)
@@ -178,14 +154,14 @@ const hasClimb = computed(() => speeds.value.climb !== null && speeds.value.clim
     >
       <!-- Edit mode -->
       <input
-        v-if="isEditingInit"
-        ref="initInput"
-        v-model="editValue"
+        v-if="initEdit.isEditing.value"
+        :ref="el => initEdit.inputRef.value = el as HTMLInputElement"
+        v-model="initEdit.editValue.value"
         data-testid="init-input"
         type="number"
         class="w-16 px-2 py-1 text-center font-mono text-sm rounded border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-800 focus:outline-none focus:ring-2 focus:ring-primary-500"
-        @blur="saveInit"
-        @keydown="handleInitKeydown"
+        @blur="initEdit.save"
+        @keydown="initEdit.handleKeydown"
       >
       <!-- Display mode -->
       <button
@@ -194,7 +170,7 @@ const hasClimb = computed(() => speeds.value.climb !== null && speeds.value.clim
         class="inline-flex flex-col items-center px-2 py-1 rounded hover:bg-neutral-100 dark:hover:bg-neutral-700 transition-colors"
         :class="{ 'bg-neutral-100 dark:bg-neutral-700': initiative !== null }"
         :aria-label="`Edit initiative for ${character.name}`"
-        @click="startEditInit"
+        @click="initEdit.startEdit"
       >
         <span class="font-mono font-medium">{{ initiativeDisplay }}</span>
         <span class="text-xs text-neutral-400">{{ modifierHint }}</span>

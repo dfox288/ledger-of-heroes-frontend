@@ -1,9 +1,9 @@
 import { describe, it, expect } from 'vitest'
 import { mountSuspended } from '@nuxt/test-utils/runtime'
 import MonsterCard from '~/components/monster/MonsterCard.vue'
-import { createMockMonster } from '../../helpers/mockFactories'
-import { testDescriptionTruncation } from '../../helpers/descriptionBehavior'
-import { testEntityCardBasics } from '../../helpers/cardBehavior'
+import { createMockMonster } from '#tests/helpers/mockFactories'
+import { testDescriptionTruncation } from '#tests/helpers/descriptionBehavior'
+import { testEntityCardBasics } from '#tests/helpers/cardBehavior'
 
 describe('MonsterCard', () => {
   const mockMonster = createMockMonster()

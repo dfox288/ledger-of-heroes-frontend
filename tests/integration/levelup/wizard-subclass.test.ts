@@ -11,9 +11,9 @@
  */
 
 import { describe, it, expect } from 'vitest'
-import { http, HttpResponse } from '../../msw/server'
-import { useIntegrationTestSetup, server } from '../../helpers/integrationSetup'
-import { highElfWizardL2 } from '../../msw/fixtures/characters'
+import { http, HttpResponse } from '#tests/msw/server'
+import { useIntegrationTestSetup, server } from '#tests/helpers/integrationSetup'
+import { highElfWizardL2 } from '#tests/msw/fixtures/characters'
 
 // Import store
 import { useCharacterLevelUpStore } from '~/stores/characterLevelUp'
