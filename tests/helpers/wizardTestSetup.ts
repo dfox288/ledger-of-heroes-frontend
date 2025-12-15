@@ -210,7 +210,7 @@ export function createUnifiedChoicesMock(customChoices?: PendingChoice[]) {
         spells: choices.filter(c => c.type === 'spell'),
         sizes: choices.filter(c => c.type === 'size'),
         subclass: choices.find(c => c.type === 'subclass') ?? null,
-        asiOrFeat: choices.filter(c => c.type === 'asi_or_feat'),
+        asiOrFeat: choices.filter(c => c.type === 'ability_score' && c.subtype === 'asi_or_feat'),
         optionalFeatures: choices.filter(c => c.type === 'optional_feature')
       }
     }),

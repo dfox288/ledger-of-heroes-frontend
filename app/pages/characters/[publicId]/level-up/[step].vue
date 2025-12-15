@@ -24,8 +24,8 @@ const stepComponents: Record<string, Component> = {
   'subclass': defineAsyncComponent(() => import('~/components/character/levelup/StepSubclassChoice.vue')),
   'hit-points': defineAsyncComponent(() => import('~/components/character/levelup/StepHitPoints.vue')),
   'summary': defineAsyncComponent(() => import('~/components/character/levelup/StepSummary.vue')),
-  // Shared steps - use character wizard components directly (consolidation per #625)
-  'asi-feat': defineAsyncComponent(() => import('~/components/character/wizard/StepFeats.vue')),
+  // Level-up specific ASI/Feat step - fixes #690 (choice type mismatch)
+  'asi-feat': defineAsyncComponent(() => import('~/components/character/levelup/StepAsiFeat.vue')),
   'feature-choices': defineAsyncComponent(() => import('~/components/character/wizard/StepFeatureChoices.vue')),
   'spells': defineAsyncComponent(() => import('~/components/character/wizard/StepSpells.vue')),
   'languages': defineAsyncComponent(() => import('~/components/character/wizard/StepLanguages.vue')),

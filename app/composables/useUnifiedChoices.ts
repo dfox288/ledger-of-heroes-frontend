@@ -111,7 +111,8 @@ export function useUnifiedChoices(characterId: Ref<number | null>) {
     equipmentMode: choices.value.find(c => c.type === 'equipment_mode') ?? null,
     spells: choices.value.filter(c => c.type === 'spell'),
     subclass: choices.value.find(c => c.type === 'subclass') ?? null,
-    asiOrFeat: choices.value.filter(c => c.type === 'asi_or_feat'),
+    // ASI/Feat choices - API returns type='ability_score' with subtype='asi_or_feat' (fixes #690)
+    asiOrFeat: choices.value.filter(c => c.type === 'ability_score' && c.subtype === 'asi_or_feat'),
     optionalFeatures: choices.value.filter(c => c.type === 'optional_feature'),
     abilityScores: choices.value.filter(c => c.type === 'ability_score'),
     feats: choices.value.filter(c => c.type === 'feat'),
