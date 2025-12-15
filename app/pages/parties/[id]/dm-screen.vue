@@ -228,6 +228,7 @@ async function handleRefresh() {
         <DmScreenPartySummary
           v-model:collapsed="summaryCollapsed"
           :summary="stats.party_summary"
+          :characters="stats.characters"
         />
       </div>
 
