@@ -177,3 +177,27 @@ export interface EncounterMonster {
 export type Combatant
   = | { type: 'character', key: string, data: DmScreenCharacter }
     | { type: 'monster', key: string, data: EncounterMonster }
+
+// ============================================================================
+// Encounter Preset Types
+// ============================================================================
+
+/**
+ * Monster entry in a preset (just ID and quantity, no instance data)
+ */
+export interface PresetMonster {
+  monster_id: number
+  monster_name: string // For display without extra API call
+  quantity: number
+}
+
+/**
+ * Saved encounter preset for quick loading
+ * Currently stored in localStorage, will move to backend API (issue #674)
+ */
+export interface EncounterPreset {
+  id: string
+  name: string
+  monsters: PresetMonster[]
+  created_at: number // Unix timestamp
+}

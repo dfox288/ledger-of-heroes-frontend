@@ -1,8 +1,9 @@
 <!-- app/pages/parties/[id]/dm-screen.vue -->
 <script setup lang="ts">
-import type { DmScreenPartyStats } from '~/types/dm-screen'
+import type { DmScreenPartyStats, EncounterPreset, PresetMonster } from '~/types/dm-screen'
 import { useDmScreenCombat } from '~/composables/useDmScreenCombat'
 import { useEncounterMonsters } from '~/composables/useEncounterMonsters'
+import { useEncounterPresets } from '~/composables/useEncounterPresets'
 import { logger } from '~/utils/logger'
 
 // Disable SSR for this page - combat state is client-side only
@@ -16,6 +17,9 @@ const toast = useToast()
 
 // Encounter monsters management
 const encounterMonsters = useEncounterMonsters(partyId.value)
+
+// Encounter presets (saved monster groups)
+const encounterPresets = useEncounterPresets()
 
 const { apiFetch } = useApi()
 
@@ -101,6 +105,54 @@ async function handleClearEncounter() {
   await encounterMonsters.clearEncounter()
 }
 
+// Preset modal state
+const showSavePresetModal = ref(false)
+const showLoadPresetModal = ref(false)
+
+// Convert current encounter monsters to preset format
+const currentMonstersForPreset = computed<PresetMonster[]>(() => {
+  // Group monsters by monster_id and count quantities
+  const grouped = new Map<number, { monster_id: number, monster_name: string, quantity: number }>()
+
+  for (const monster of encounterMonsters.monsters.value) {
+    const existing = grouped.get(monster.monster_id)
+    if (existing) {
+      existing.quantity++
+    } else {
+      grouped.set(monster.monster_id, {
+        monster_id: monster.monster_id,
+        monster_name: monster.monster.name,
+        quantity: 1
+      })
+    }
+  }
+
+  return Array.from(grouped.values())
+})
+
+// Preset handlers
+function handleSavePreset(name: string) {
+  encounterPresets.savePreset(name, currentMonstersForPreset.value)
+  toast.add({ title: 'Preset saved!', color: 'success' })
+}
+
+async function handleLoadPreset(preset: EncounterPreset) {
+  // Add each monster from the preset to the encounter
+  for (const monster of preset.monsters) {
+    try {
+      await encounterMonsters.addMonster(monster.monster_id, monster.quantity)
+    } catch (err) {
+      logger.error('Failed to add monster from preset:', err)
+    }
+  }
+  toast.add({ title: `Loaded "${preset.name}"`, color: 'success' })
+}
+
+function handleDeletePreset(presetId: string) {
+  encounterPresets.deletePreset(presetId)
+  toast.add({ title: 'Preset deleted', color: 'neutral' })
+}
+
 // SEO
 useSeoMeta({
   title: () => stats.value ? `DM Screen - ${stats.value.party.name}` : 'DM Screen',
@@ -147,6 +199,8 @@ onMounted(async () => {
   }
   // Fetch encounter monsters
   await encounterMonsters.fetchMonsters()
+  // Load saved presets
+  encounterPresets.loadPresets()
 })
 
 onUnmounted(() => {
@@ -279,6 +333,8 @@ async function handleRefresh() {
           @update-monster-label="handleUpdateMonsterLabel"
           @remove-monster="handleRemoveMonster"
           @clear-encounter="handleClearEncounter"
+          @save-preset="showSavePresetModal = true"
+          @load-preset="showLoadPresetModal = true"
         />
       </div>
     </template>
@@ -288,6 +344,21 @@ async function handleRefresh() {
       v-model:open="showAddMonsterModal"
       :loading="addingMonster"
       @add="handleAddMonster"
+    />
+
+    <!-- Save Preset Modal -->
+    <DmScreenSavePresetModal
+      v-model:open="showSavePresetModal"
+      :monsters="currentMonstersForPreset"
+      @save="handleSavePreset"
+    />
+
+    <!-- Load Preset Modal -->
+    <DmScreenLoadPresetModal
+      v-model:open="showLoadPresetModal"
+      :presets="encounterPresets.presets.value"
+      @load="handleLoadPreset"
+      @delete="handleDeletePreset"
     />
   </div>
 </template>
