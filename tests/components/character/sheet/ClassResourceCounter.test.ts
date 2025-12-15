@@ -84,4 +84,43 @@ describe('ClassResourceCounter', () => {
       expect(wrapper.find('[data-testid="counter-increment"]').exists()).toBe(true)
     })
   })
+
+  describe('Icon Interactions', () => {
+    it('emits spend when filled icon clicked in editable mode', async () => {
+      const wrapper = await mountSuspended(ClassResourceCounter, {
+        props: { counter: createCounter({ current: 3, max: 5 }), editable: true }
+      })
+      const filled = wrapper.find('[data-testid="counter-icon-filled"]')
+      await filled.trigger('click')
+      expect(wrapper.emitted('spend')).toBeTruthy()
+      expect(wrapper.emitted('spend')![0]).toEqual(['phb:bard:bardic-inspiration'])
+    })
+
+    it('does not emit spend when not editable', async () => {
+      const wrapper = await mountSuspended(ClassResourceCounter, {
+        props: { counter: createCounter({ current: 3, max: 5 }), editable: false }
+      })
+      const filled = wrapper.find('[data-testid="counter-icon-filled"]')
+      await filled.trigger('click')
+      expect(wrapper.emitted('spend')).toBeFalsy()
+    })
+
+    it('does not emit spend when disabled', async () => {
+      const wrapper = await mountSuspended(ClassResourceCounter, {
+        props: { counter: createCounter({ current: 3, max: 5 }), editable: true, disabled: true }
+      })
+      const filled = wrapper.find('[data-testid="counter-icon-filled"]')
+      await filled.trigger('click')
+      expect(wrapper.emitted('spend')).toBeFalsy()
+    })
+
+    it('does not emit spend when counter is at 0', async () => {
+      const wrapper = await mountSuspended(ClassResourceCounter, {
+        props: { counter: createCounter({ current: 0, max: 5 }), editable: true }
+      })
+      // No filled icons to click when current is 0
+      const filled = wrapper.findAll('[data-testid="counter-icon-filled"]')
+      expect(filled.length).toBe(0)
+    })
+  })
 })

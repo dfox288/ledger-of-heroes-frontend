@@ -2,16 +2,24 @@
 <script setup lang="ts">
 import type { Counter } from '~/types/character'
 
-defineProps<{
+const props = defineProps<{
   counter: Counter
   editable?: boolean
   disabled?: boolean
 }>()
 
-defineEmits<{
+const emit = defineEmits<{
   spend: [slug: string]
   restore: [slug: string]
 }>()
+
+const isInteractive = computed(() => props.editable && !props.disabled)
+
+function handleIconClick() {
+  if (!isInteractive.value) return
+  if (props.counter.current <= 0) return
+  emit('spend', props.counter.slug)
+}
 </script>
 
 <template>
@@ -34,8 +42,12 @@ defineEmits<{
         v-for="i in counter.current"
         :key="`filled-${i}`"
         name="i-heroicons-bolt-solid"
-        class="w-5 h-5 text-primary-600 dark:text-primary-500"
+        :class="[
+          'w-5 h-5 text-primary-600 dark:text-primary-500',
+          isInteractive ? 'cursor-pointer hover:opacity-80 transition-opacity' : ''
+        ]"
         data-testid="counter-icon-filled"
+        @click="handleIconClick"
       />
       <UIcon
         v-for="i in (counter.max - counter.current)"
