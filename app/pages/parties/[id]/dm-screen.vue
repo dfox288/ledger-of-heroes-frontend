@@ -64,6 +64,10 @@ function handleSetInitiative(key: string, value: number) {
   combat.value?.setInitiative(key, value)
 }
 
+function handleSetNote(key: string, text: string) {
+  combat.value?.setNote(key, text)
+}
+
 // Monster handlers
 const showAddMonsterModal = ref(false)
 const addingMonster = ref(false)
@@ -269,11 +273,14 @@ async function handleRefresh() {
           :characters="stats.characters"
           :monsters="encounterMonsters.monsters.value"
           :combat-state="combatState"
+          :get-note="combat?.getNote"
+          :has-note="combat?.hasNote"
           @start-combat="handleStartCombat"
           @next-turn="handleNextTurn"
           @previous-turn="handlePreviousTurn"
           @reset-combat="handleResetCombat"
           @set-initiative="handleSetInitiative"
+          @set-note="handleSetNote"
           @add-monster="showAddMonsterModal = true"
           @update-monster-hp="handleUpdateMonsterHp"
           @update-monster-label="handleUpdateMonsterLabel"

@@ -8,18 +8,23 @@ interface Props {
   isCurrentTurn?: boolean
   initiative?: number | null
   inCombat?: boolean
+  note?: string
+  hasNote?: boolean
 }
 
 const props = withDefaults(defineProps<Props>(), {
   expanded: false,
   isCurrentTurn: false,
   initiative: null,
-  inCombat: false
+  inCombat: false,
+  note: '',
+  hasNote: false
 })
 
 const emit = defineEmits<{
   'toggle': []
   'update:initiative': [value: number]
+  'update:note': [text: string]
 }>()
 
 // Initiative editing using composable
@@ -72,6 +77,38 @@ const speeds = computed(() => props.character.combat.speeds)
 const hasFly = computed(() => speeds.value.fly !== null && speeds.value.fly > 0)
 const hasSwim = computed(() => speeds.value.swim !== null && speeds.value.swim > 0)
 const hasClimb = computed(() => speeds.value.climb !== null && speeds.value.climb > 0)
+
+// Note editing
+const noteText = ref(props.note)
+const notePopoverOpen = ref(false)
+const MAX_NOTE_LENGTH = 100
+
+// Sync with prop when it changes
+watch(() => props.note, (newNote) => {
+  noteText.value = newNote
+})
+
+function saveNote() {
+  const trimmed = noteText.value.trim()
+  if (trimmed !== props.note) {
+    emit('update:note', trimmed)
+  }
+  notePopoverOpen.value = false
+}
+
+function cancelNote() {
+  noteText.value = props.note
+  notePopoverOpen.value = false
+}
+
+function handleNoteKeydown(event: KeyboardEvent) {
+  if (event.key === 'Escape') {
+    cancelNote()
+  } else if (event.key === 'Enter' && !event.shiftKey) {
+    event.preventDefault()
+    saveNote()
+  }
+}
 </script>
 
 <template>
@@ -105,7 +142,7 @@ const hasClimb = computed(() => speeds.value.climb !== null && speeds.value.clim
       </div>
       <!-- Status indicators -->
       <div
-        v-if="hasDeathSaves || isConcentrating || hasConditions"
+        v-if="hasDeathSaves || isConcentrating || hasConditions || hasNote"
         class="mt-1 flex flex-wrap gap-1"
         :class="{ 'ml-6': isCurrentTurn }"
       >
@@ -164,6 +201,128 @@ const hasClimb = computed(() => speeds.value.climb !== null && speeds.value.clim
         >
           {{ condition.name }}
         </UBadge>
+        <!-- Note indicator -->
+        <UPopover
+          v-if="hasNote"
+          v-model:open="notePopoverOpen"
+          :ui="{ content: 'p-3' }"
+        >
+          <UBadge
+            color="neutral"
+            variant="subtle"
+            size="md"
+            class="cursor-pointer hover:ring-2 hover:ring-neutral-500/50"
+            data-testid="note-badge"
+            @click.stop
+          >
+            <UIcon
+              name="i-heroicons-chat-bubble-bottom-center-text"
+              class="w-3 h-3 mr-1"
+            />
+            <span class="truncate max-w-[120px]">{{ note }}</span>
+          </UBadge>
+          <template #content>
+            <div
+              class="space-y-2 min-w-[250px]"
+              @click.stop
+            >
+              <div class="text-sm font-medium">
+                DM Note
+              </div>
+              <UTextarea
+                v-model="noteText"
+                placeholder="Add a note..."
+                :maxlength="MAX_NOTE_LENGTH"
+                :rows="2"
+                autofocus
+                class="w-full"
+                data-testid="note-input"
+                @keydown="handleNoteKeydown"
+              />
+              <div class="flex items-center justify-between">
+                <span class="text-xs text-neutral-400">{{ noteText.length }}/{{ MAX_NOTE_LENGTH }}</span>
+                <div class="flex gap-2">
+                  <UButton
+                    size="xs"
+                    variant="ghost"
+                    @click="cancelNote"
+                  >
+                    Cancel
+                  </UButton>
+                  <UButton
+                    size="xs"
+                    color="primary"
+                    @click="saveNote"
+                  >
+                    Save
+                  </UButton>
+                </div>
+              </div>
+            </div>
+          </template>
+        </UPopover>
+      </div>
+      <!-- Add note button (when no note exists) -->
+      <div
+        v-if="!hasNote"
+        class="mt-1"
+        :class="{ 'ml-6': isCurrentTurn }"
+      >
+        <UPopover
+          v-model:open="notePopoverOpen"
+          :ui="{ content: 'p-3' }"
+        >
+          <button
+            class="text-xs text-neutral-400 hover:text-neutral-600 dark:hover:text-neutral-300 flex items-center gap-1"
+            data-testid="add-note-btn"
+            @click.stop
+          >
+            <UIcon
+              name="i-heroicons-plus"
+              class="w-3 h-3"
+            />
+            Add note
+          </button>
+          <template #content>
+            <div
+              class="space-y-2 min-w-[250px]"
+              @click.stop
+            >
+              <div class="text-sm font-medium">
+                DM Note
+              </div>
+              <UTextarea
+                v-model="noteText"
+                placeholder="Add a note..."
+                :maxlength="MAX_NOTE_LENGTH"
+                :rows="2"
+                autofocus
+                class="w-full"
+                data-testid="note-input"
+                @keydown="handleNoteKeydown"
+              />
+              <div class="flex items-center justify-between">
+                <span class="text-xs text-neutral-400">{{ noteText.length }}/{{ MAX_NOTE_LENGTH }}</span>
+                <div class="flex gap-2">
+                  <UButton
+                    size="xs"
+                    variant="ghost"
+                    @click="cancelNote"
+                  >
+                    Cancel
+                  </UButton>
+                  <UButton
+                    size="xs"
+                    color="primary"
+                    @click="saveNote"
+                  >
+                    Save
+                  </UButton>
+                </div>
+              </div>
+            </div>
+          </template>
+        </UPopover>
       </div>
     </td>
 
