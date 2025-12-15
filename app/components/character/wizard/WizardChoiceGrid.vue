@@ -65,14 +65,17 @@ function handleClick(id: string) {
       @click="handleClick(option.id)"
     >
       <div class="flex items-center gap-2">
+        <!-- Selection indicator: check-circle when selected, empty circle when not -->
         <UIcon
+          v-if="isSelected(option.id)"
           :data-testid="`choice-icon-${option.id}`"
-          :name="isSelected(option.id) ? 'i-heroicons-check-circle-solid' : 'i-heroicons-circle'"
-          class="w-5 h-5"
-          :class="{
-            'text-primary': isSelected(option.id),
-            'text-gray-400': !isSelected(option.id)
-          }"
+          name="i-heroicons-check-circle-solid"
+          class="w-5 h-5 text-primary"
+        />
+        <span
+          v-else
+          :data-testid="`choice-icon-${option.id}`"
+          class="w-5 h-5 rounded-full border-2 border-gray-400"
         />
         <span class="font-medium">{{ option.name }}</span>
       </div>

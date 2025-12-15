@@ -148,13 +148,15 @@ onMounted(() => {
         @click="selectedSubclass = (option as any).slug"
       >
         <div class="flex items-center gap-3">
+          <!-- Selection indicator -->
           <UIcon
-            :name="selectedSubclass === ((option as any).slug) ? 'i-heroicons-check-circle-solid' : 'i-heroicons-circle'"
-            class="w-6 h-6 flex-shrink-0"
-            :class="{
-              'text-primary': selectedSubclass === ((option as any).slug),
-              'text-gray-400': selectedSubclass !== ((option as any).slug)
-            }"
+            v-if="selectedSubclass === ((option as any).slug)"
+            name="i-heroicons-check-circle-solid"
+            class="w-6 h-6 flex-shrink-0 text-primary"
+          />
+          <span
+            v-else
+            class="w-6 h-6 flex-shrink-0 rounded-full border-2 border-gray-400"
           />
           <div>
             <p class="font-semibold text-gray-900 dark:text-white">

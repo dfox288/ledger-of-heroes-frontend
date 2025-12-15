@@ -19,8 +19,8 @@ const route = useRoute()
 const publicId = computed(() => route.params.publicId as string)
 
 // Shared character data + play state initialization
-const { character, stats, isSpellcaster, loading, refreshCharacter, playStateStore } =
-  useCharacterSubPage(publicId)
+const { character, stats, isSpellcaster, loading, refreshCharacter, playStateStore }
+  = useCharacterSubPage(publicId)
 
 // Get reactive state from store
 const { canEdit, hitPoints, conditions } = storeToRefs(playStateStore)
@@ -120,7 +120,11 @@ useSeoMeta({
 
         <!-- Combat Stats Row (no currency for battle view) -->
         <div class="mt-6 grid grid-cols-2 sm:grid-cols-5 gap-3">
-          <CharacterSheetHitPointsManager :editable="canEdit" />
+          <CharacterSheetHitPointsManager
+            :editable="canEdit"
+            :initial-hit-points="stats.hit_points"
+            :initial-is-dead="character.is_dead"
+          />
           <CharacterSheetStatArmorClass
             :armor-class="stats.armor_class"
             :character="character"
@@ -152,6 +156,9 @@ useSeoMeta({
               <CharacterSheetDeathSavesManager
                 v-if="showDeathSaves"
                 :editable="canEdit"
+                :initial-death-saves="{ successes: character.death_save_successes ?? 0, failures: character.death_save_failures ?? 0 }"
+                :initial-is-dead="character.is_dead"
+                :initial-hp-current="stats.hit_points?.current"
               />
             </div>
           </div>

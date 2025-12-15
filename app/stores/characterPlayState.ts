@@ -84,8 +84,18 @@ export const useCharacterPlayStateStore = defineStore('characterPlayState', () =
   /** Character being managed */
   const characterId = ref<number | null>(null)
 
-  /** Whether play mode is active (enables interactive features) */
-  const isPlayMode = ref(false)
+  /**
+   * Whether play mode is active (enables interactive features)
+   * Stored in cookie for SSR hydration (available on both server and client)
+   */
+  const playModeCookie = useCookie<boolean>('character-play-mode', {
+    default: () => false,
+    watch: true
+  })
+  const isPlayMode = computed({
+    get: () => playModeCookie.value,
+    set: (val: boolean) => { playModeCookie.value = val }
+  })
 
   /** Whether character is dead (disables all interactions) */
   const isDead = ref(false)
@@ -204,30 +214,21 @@ export const useCharacterPlayStateStore = defineStore('characterPlayState', () =
   // PLAY MODE
   // ===========================================================================
 
-  const playModeKey = 'character-play-mode'
-
   /**
    * Set play mode state
    *
-   * Persists to localStorage for session continuity
+   * Automatically persisted to cookie for SSR compatibility
    */
   function setPlayMode(enabled: boolean) {
     isPlayMode.value = enabled
-    if (import.meta.client) {
-      localStorage.setItem(playModeKey, String(enabled))
-    }
   }
 
   /**
-   * Load play mode from localStorage
-   *
-   * Call this when the character page loads
+   * Load play mode - no-op since cookie handles this automatically
+   * @deprecated Cookie-based persistence loads automatically during SSR
    */
   function loadPlayMode() {
-    if (import.meta.client) {
-      const saved = localStorage.getItem(playModeKey)
-      isPlayMode.value = saved === 'true'
-    }
+    // No-op: cookie is read automatically during SSR hydration
   }
 
   // ===========================================================================

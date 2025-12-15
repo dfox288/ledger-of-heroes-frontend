@@ -7,16 +7,64 @@
  * Wraps DeathSaves display component.
  * Derives editability from store state (HP must be 0, not dead).
  *
+ * Accepts optional initial props for SSR hydration - the store
+ * may not be initialized during server render.
+ *
  * @see Issue #584 - Character sheet component refactor
+ * @see Issue #623 - Hydration fixes
  */
 import { useCharacterPlayStateStore } from '~/stores/characterPlayState'
 
+interface InitialDeathSaves {
+  successes: number
+  failures: number
+}
+
 const props = defineProps<{
   editable?: boolean
+  /** Initial death saves for SSR (optional, falls back to store) */
+  initialDeathSaves?: InitialDeathSaves
+  /** Initial isDead for SSR (optional, falls back to store) */
+  initialIsDead?: boolean
+  /** Initial HP current for SSR (for canEdit computation) */
+  initialHpCurrent?: number | null
 }>()
 
 const store = useCharacterPlayStateStore()
 const toast = useToast()
+
+/**
+ * Death saves for display - uses store if initialized, falls back to props
+ */
+const displayDeathSaves = computed(() => {
+  if (store.characterId !== null) {
+    return store.deathSaves
+  }
+  if (props.initialDeathSaves) {
+    return props.initialDeathSaves
+  }
+  return store.deathSaves
+})
+
+/**
+ * isDead for display - uses store if initialized, falls back to props
+ */
+const displayIsDead = computed(() => {
+  if (store.characterId !== null) {
+    return store.isDead
+  }
+  return props.initialIsDead ?? false
+})
+
+/**
+ * HP current for canEdit - uses store if initialized, falls back to props
+ */
+const displayHpCurrent = computed(() => {
+  if (store.characterId !== null) {
+    return store.hitPoints.current
+  }
+  return props.initialHpCurrent ?? 0
+})
 
 /**
  * Derived editability
@@ -27,8 +75,8 @@ const toast = useToast()
  */
 const canEdit = computed(() => {
   return props.editable === true
-    && store.hitPoints.current === 0
-    && !store.isDead
+    && displayHpCurrent.value === 0
+    && !displayIsDead.value
 })
 
 /**
@@ -49,10 +97,10 @@ async function handleUpdate(field: 'successes' | 'failures', value: number) {
 
 <template>
   <CharacterSheetDeathSaves
-    :successes="store.deathSaves.successes"
-    :failures="store.deathSaves.failures"
+    :successes="displayDeathSaves.successes"
+    :failures="displayDeathSaves.failures"
     :editable="canEdit"
-    :is-dead="store.isDead"
+    :is-dead="displayIsDead"
     @update:successes="handleUpdate('successes', $event)"
     @update:failures="handleUpdate('failures', $event)"
   />

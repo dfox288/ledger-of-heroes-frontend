@@ -7,7 +7,11 @@
  * Wraps HitDice display + LongRestConfirmModal.
  * Handles API calls and emits refresh events for the page to update data.
  *
+ * Accepts optional initial props for SSR hydration - the store
+ * may not be initialized during server render.
+ *
  * @see Issue #584 - Character sheet component refactor
+ * @see Issue #623 - Hydration fixes
  */
 import { useCharacterPlayStateStore } from '~/stores/characterPlayState'
 
@@ -15,6 +19,8 @@ const props = defineProps<{
   hitDice: { die: string, total: number, current: number }[]
   characterId: number
   editable?: boolean
+  /** Initial isDead for SSR (optional, falls back to store) */
+  initialIsDead?: boolean
 }>()
 
 const emit = defineEmits<{
@@ -26,6 +32,20 @@ const emit = defineEmits<{
 const store = useCharacterPlayStateStore()
 const { apiFetch } = useApi()
 const toast = useToast()
+
+// ===========================================================================
+// SSR HYDRATION
+// ===========================================================================
+
+/**
+ * isDead for display - uses store if initialized, falls back to props
+ */
+const displayIsDead = computed(() => {
+  if (store.characterId !== null) {
+    return store.isDead
+  }
+  return props.initialIsDead ?? false
+})
 
 // ===========================================================================
 // STATE
@@ -177,7 +197,7 @@ function openLongRestModal() {
       :hit-dice="hitDice"
       :editable="editable"
       :disabled="isResting"
-      :is-dead="store.isDead"
+      :is-dead="displayIsDead"
       @spend="handleSpend"
       @short-rest="handleShortRest"
       @long-rest="openLongRestModal"

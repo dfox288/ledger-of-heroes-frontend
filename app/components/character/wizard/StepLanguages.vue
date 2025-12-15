@@ -447,20 +447,28 @@ async function handleContinue() {
               @click="handleToggle(data.choice, option.slug)"
             >
               <div class="flex items-center gap-2">
+                <!-- Selection indicator: various states for language options -->
                 <UIcon
-                  :name="isLanguageAlreadyKnown(option.slug)
-                    ? 'i-heroicons-check-circle-solid'
-                    : isLanguageSelectedElsewhere(data.choice.id, option.slug)
-                      ? 'i-heroicons-no-symbol'
-                      : isOptionSelected(data.choice.id, option.slug)
-                        ? 'i-heroicons-check-circle-solid'
-                        : 'i-heroicons-circle'"
-                  class="w-5 h-5"
+                  v-if="isLanguageAlreadyKnown(option.slug)"
+                  name="i-heroicons-check-circle-solid"
+                  class="w-5 h-5 text-success"
+                />
+                <UIcon
+                  v-else-if="isLanguageSelectedElsewhere(data.choice.id, option.slug)"
+                  name="i-heroicons-no-symbol"
+                  class="w-5 h-5 text-gray-300 dark:text-gray-600"
+                />
+                <UIcon
+                  v-else-if="isOptionSelected(data.choice.id, option.slug)"
+                  name="i-heroicons-check-circle-solid"
+                  class="w-5 h-5 text-primary"
+                />
+                <span
+                  v-else
+                  class="w-5 h-5 rounded-full border-2"
                   :class="{
-                    'text-success': isLanguageAlreadyKnown(option.slug),
-                    'text-primary': !isLanguageAlreadyKnown(option.slug) && isOptionSelected(data.choice.id, option.slug),
-                    'text-gray-400': !isOptionSelected(data.choice.id, option.slug) && !isOptionDisabled(data.choice.id, option.slug),
-                    'text-gray-300 dark:text-gray-600': isOptionDisabled(data.choice.id, option.slug) && !isLanguageAlreadyKnown(option.slug)
+                    'border-gray-300 dark:border-gray-600': isOptionDisabled(data.choice.id, option.slug),
+                    'border-gray-400': !isOptionDisabled(data.choice.id, option.slug)
                   }"
                 />
                 <span

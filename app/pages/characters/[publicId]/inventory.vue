@@ -25,8 +25,8 @@ const toast = useToast()
 const { apiFetch } = useApi()
 
 // Shared character data + play state initialization
-const { character, stats, isSpellcaster, loading, refreshCharacter, playStateStore, addPendingState } =
-  useCharacterSubPage(publicId)
+const { character, stats, isSpellcaster, loading, refreshCharacter, playStateStore, addPendingState }
+  = useCharacterSubPage(publicId)
 
 // Get reactive state from store
 const { canEdit } = storeToRefs(playStateStore)
@@ -506,7 +506,10 @@ useSeoMeta({
         <!-- Right Column: Sidebar (sticky on desktop) -->
         <div class="space-y-4 lg:sticky lg:top-4 lg:self-start">
           <!-- Currency Manager (self-contained with modal) -->
-          <CharacterSheetCurrencyManager :editable="canEdit" />
+          <CharacterSheetCurrencyManager
+            :editable="canEdit"
+            :initial-currency="character?.currency"
+          />
 
           <!-- Equipment Status -->
           <CharacterInventoryEquipmentStatus

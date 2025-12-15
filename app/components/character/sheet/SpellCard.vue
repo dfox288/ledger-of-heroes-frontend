@@ -130,10 +130,10 @@ function handleExpandClick(event: MouseEvent) {
                 : 'text-spell-500 dark:text-spell-400'
             ]"
           />
-          <UIcon
+          <!-- Empty circle for unprepared state (heroicons doesn't have a plain circle icon) -->
+          <span
             v-else
-            name="i-heroicons-circle"
-            class="w-5 h-5 flex-shrink-0 text-gray-300 dark:text-gray-600"
+            class="w-5 h-5 flex-shrink-0 rounded-full border-2 border-gray-300 dark:border-gray-600"
           />
 
           <!-- Spell name -->

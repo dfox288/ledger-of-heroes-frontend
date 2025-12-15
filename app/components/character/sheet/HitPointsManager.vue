@@ -7,16 +7,61 @@
  * Wraps StatHitPoints display + HpEditModal + TempHpModal.
  * Reads from and writes to characterPlayState store.
  *
+ * Accepts optional initial HP props for SSR hydration - the store
+ * may not be initialized during server render, causing hydration mismatch.
+ *
  * @see Issue #584 - Character sheet component refactor
+ * @see Issue #623 - Hydration fixes
  */
 import { useCharacterPlayStateStore } from '~/stores/characterPlayState'
 
+interface InitialHitPoints {
+  current: number | null
+  max: number | null
+  temporary?: number | null
+}
+
 const props = defineProps<{
   editable?: boolean
+  /** Initial HP for SSR (optional, falls back to store) */
+  initialHitPoints?: InitialHitPoints
+  /** Initial isDead for SSR (optional, falls back to store) */
+  initialIsDead?: boolean
 }>()
 
 const store = useCharacterPlayStateStore()
 const toast = useToast()
+
+/**
+ * HP values for display - uses store if initialized, falls back to props for SSR
+ * Once store is initialized (characterId set), store values take precedence
+ */
+const displayHitPoints = computed(() => {
+  // If store has been initialized, use store values for reactivity
+  if (store.characterId !== null) {
+    return store.hitPoints
+  }
+  // During SSR or before store init, use props
+  if (props.initialHitPoints) {
+    return {
+      current: props.initialHitPoints.current ?? 0,
+      max: props.initialHitPoints.max ?? 0,
+      temporary: props.initialHitPoints.temporary ?? 0
+    }
+  }
+  // Fallback to store (will be zeros during SSR)
+  return store.hitPoints
+})
+
+/**
+ * isDead for display - uses store if initialized, falls back to props for SSR
+ */
+const displayIsDead = computed(() => {
+  if (store.characterId !== null) {
+    return store.isDead
+  }
+  return props.initialIsDead ?? false
+})
 
 // Modal states
 const hpModalOpen = ref(false)
@@ -86,11 +131,11 @@ async function handleTempHpClear() {
 
 <template>
   <div>
-    <!-- HP Display -->
+    <!-- HP Display (uses display computed for SSR compatibility) -->
     <CharacterSheetStatHitPoints
-      :hit-points="store.hitPoints"
+      :hit-points="displayHitPoints"
       :editable="editable"
-      :is-dead="store.isDead"
+      :is-dead="displayIsDead"
       :death-save-failures="store.deathSaves.failures"
       :death-save-successes="store.deathSaves.successes"
       @hp-click="openHpModal"

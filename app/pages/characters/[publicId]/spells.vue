@@ -22,13 +22,15 @@ const publicId = computed(() => route.params.publicId as string)
 const { apiFetch } = useApi()
 
 // Shared character data + play state initialization
-const { character, stats, isSpellcaster, loading, refreshCharacter, addPendingState } =
-  useCharacterSubPage(publicId)
+const { character, stats, isSpellcaster, loading, refreshCharacter, addPendingState }
+  = useCharacterSubPage(publicId)
 
 // Fetch spells data (page-specific)
+// dedupe: 'defer' prevents "incompatible handler" warning when navigating to/from overview
 const { data: spellsData, pending: spellsPending } = await useAsyncData(
   `character-${publicId.value}-spells`,
-  () => apiFetch<{ data: CharacterSpell[] }>(`/characters/${publicId.value}/spells`)
+  () => apiFetch<{ data: CharacterSpell[] }>(`/characters/${publicId.value}/spells`),
+  { dedupe: 'defer' }
 )
 
 // Fetch spell slots for detailed tracking (page-specific)
@@ -40,7 +42,8 @@ interface SpellSlotsResponse {
 }
 const { data: slotsData, pending: slotsPending } = await useAsyncData(
   `character-${publicId.value}-spell-slots`,
-  () => apiFetch<{ data: SpellSlotsResponse }>(`/characters/${publicId.value}/spell-slots`)
+  () => apiFetch<{ data: SpellSlotsResponse }>(`/characters/${publicId.value}/spell-slots`),
+  { dedupe: 'defer' }
 )
 
 // Register pending states so they're included in loading
