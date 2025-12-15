@@ -151,11 +151,11 @@ async function handleLoadPreset(presetId: number) {
   const presetName = preset?.name || 'preset'
 
   try {
-    // Clear existing encounter first (replace behavior)
-    await encounterMonsters.clearEncounter()
-
-    // Load preset via backend API - it creates all monsters in one call
+    // Load preset first - if this fails, original encounter is preserved
     const newMonsters = await encounterPresets.loadPreset(presetId)
+
+    // Only clear after successful load to avoid leaving user with empty encounter
+    await encounterMonsters.clearEncounter()
 
     // Update local monster state with the new monsters
     encounterMonsters.monsters.value = newMonsters

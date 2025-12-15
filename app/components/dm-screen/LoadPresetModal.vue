@@ -112,7 +112,7 @@ function getMonsterCount(preset: EncounterPreset): number {
           v-for="preset in sortedPresets"
           :key="preset.id"
           data-testid="preset-item"
-          class="p-3 rounded-lg border border-neutral-200 dark:border-neutral-700 hover:border-primary-500 transition-colors"
+          class="group p-3 rounded-lg border border-neutral-200 dark:border-neutral-700 hover:border-primary-500 transition-colors"
         >
           <!-- Delete Confirmation -->
           <div
