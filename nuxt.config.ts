@@ -58,7 +58,9 @@ export default defineNuxtConfig({
   // Route-specific rules
   routeRules: {
     // DM screen is client-only - combat state is ephemeral
-    '/parties/*/dm-screen': { ssr: false }
+    '/parties/*/dm-screen': { ssr: false },
+    // Redirect old character create URL to new wizard
+    '/characters/create': { redirect: { to: '/characters/new/sourcebooks', statusCode: 301 } }
   },
 
   experimental: {
