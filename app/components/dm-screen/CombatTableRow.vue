@@ -129,7 +129,9 @@ const hasClimb = computed(() => speeds.value.climb !== null && speeds.value.clim
           </UBadge>
           <template #content>
             <div class="space-y-2 min-w-[200px]">
-              <div class="text-sm font-medium">Concentration Check</div>
+              <div class="text-sm font-medium">
+                Concentration Check
+              </div>
               <div class="text-xs text-neutral-500">
                 Enter damage to calculate DC
               </div>
