@@ -105,6 +105,18 @@ export type Character = components['schemas']['CharacterResource'] & {
    * @see Issue #544
    */
   is_dead?: boolean
+
+  /**
+   * Character senses from race (Darkvision, Blindsight, etc.)
+   * @see Issue #648
+   */
+  senses?: CharacterSense[]
+
+  /**
+   * Attunement slot usage for magic items
+   * @see Issue #649
+   */
+  attunement_slots?: AttunementSlots
 }
 
 /**
@@ -220,6 +232,35 @@ export interface CharacterStats extends Omit<CharacterStatsFromAPI, 'ability_sco
 // =============================================================================
 // Local Types (not in OpenAPI spec)
 // =============================================================================
+
+/**
+ * Character sense (Darkvision, Blindsight, etc.)
+ * Matches EntitySenseResource from API
+ * @see Issue #648
+ */
+export interface CharacterSense {
+  /** Sense type identifier (e.g., "darkvision", "blindsight") */
+  type: string
+  /** Display name (e.g., "Darkvision", "Blindsight") */
+  name: string
+  /** Range in feet */
+  range: number
+  /** Whether the sense has limitations */
+  is_limited: boolean
+  /** Additional notes about the sense */
+  notes: string | null
+}
+
+/**
+ * Attunement slot tracking for magic items
+ * @see Issue #649
+ */
+export interface AttunementSlots {
+  /** Number of attunement slots currently in use */
+  used: number
+  /** Maximum attunement slots (typically 3, can be increased by class features) */
+  max: number
+}
 
 /**
  * Ability scores for character creation (camelCase for form binding)

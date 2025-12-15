@@ -511,9 +511,10 @@ useSeoMeta({
             :initial-currency="character?.currency"
           />
 
-          <!-- Equipment Status -->
+          <!-- Equipment Status (includes attunement counter) -->
           <CharacterInventoryEquipmentStatus
             :equipment="equipment"
+            :attunement="character?.attunement_slots"
             @item-click="handleSidebarItemClick"
           />
 

@@ -193,4 +193,64 @@ describe('EquipmentStatus', () => {
     expect(wrapper.text()).toContain('Lucky Ring')
     expect(wrapper.text()).not.toContain('Ring of Protection')
   })
+
+  describe('attunement prop (Issue #649)', () => {
+    it('uses attunement prop values when provided', async () => {
+      const wrapper = await mountSuspended(EquipmentStatus, {
+        props: {
+          equipment: mockEquipment,
+          attunement: { used: 2, max: 3 }
+        }
+      })
+
+      // Should use prop values, not count from equipment
+      expect(wrapper.text()).toContain('2/3')
+    })
+
+    it('supports increased max slots from class features', async () => {
+      // Artificer Soul of Artifice can have 6 attunement slots
+      const wrapper = await mountSuspended(EquipmentStatus, {
+        props: {
+          equipment: [],
+          attunement: { used: 4, max: 6 }
+        }
+      })
+
+      expect(wrapper.text()).toContain('4/6')
+    })
+
+    it('shows warning color when at max attunement', async () => {
+      const wrapper = await mountSuspended(EquipmentStatus, {
+        props: {
+          equipment: [],
+          attunement: { used: 3, max: 3 }
+        }
+      })
+
+      const counter = wrapper.find('[data-testid="attunement-counter"]')
+      expect(counter.classes()).toContain('text-warning')
+    })
+
+    it('shows normal color when under max attunement', async () => {
+      const wrapper = await mountSuspended(EquipmentStatus, {
+        props: {
+          equipment: [],
+          attunement: { used: 1, max: 3 }
+        }
+      })
+
+      const counter = wrapper.find('[data-testid="attunement-counter"]')
+      expect(counter.classes()).not.toContain('text-warning')
+    })
+
+    it('falls back to equipment count when attunement prop not provided', async () => {
+      const wrapper = await mountSuspended(EquipmentStatus, {
+        props: { equipment: mockEquipment }
+        // No attunement prop
+      })
+
+      // Should count attuned items from equipment (1 item is attuned in mockEquipment)
+      expect(wrapper.text()).toContain('1/3')
+    })
+  })
 })

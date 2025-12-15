@@ -5,17 +5,20 @@
  *
  * Read-only display of currently equipped items:
  * - Equipment Paperdoll: Visual display of all 12 equipment slots
- * - Attuned: Up to 3 attuned items
+ * - Attuned: Attuned items with slot counter
  *
  * Clicking an item emits 'item-click' to scroll to it in the item list.
  *
  * @see Design: docs/frontend/plans/2025-12-13-inventory-tab-design-v2.md
+ * @see Issue #649 - Display attunement slots counter
  */
 
-import type { CharacterEquipment } from '~/types/character'
+import type { CharacterEquipment, AttunementSlots } from '~/types/character'
 
 interface Props {
   equipment: CharacterEquipment[]
+  /** Attunement slot data from character - supports class features that increase max */
+  attunement?: AttunementSlots
 }
 
 const props = defineProps<Props>()
@@ -28,6 +31,11 @@ const emit = defineEmits<{
 const attunedItems = computed(() =>
   props.equipment.filter(e => e.is_attuned === true)
 )
+
+// Get attunement slot values (fallback to defaults if not provided)
+const attunementUsed = computed(() => props.attunement?.used ?? attunedItems.value.length)
+const attunementMax = computed(() => props.attunement?.max ?? 3)
+const isAtMax = computed(() => attunementUsed.value >= attunementMax.value)
 
 // Helper function
 function getItemName(equipment: CharacterEquipment): string {
@@ -47,9 +55,17 @@ function getItemName(equipment: CharacterEquipment): string {
 
     <!-- Attuned Section -->
     <div class="bg-gray-50 dark:bg-gray-800 rounded-lg p-4">
-      <h3 class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-3">
-        Attuned
-        <span class="text-gray-400 dark:text-gray-500">({{ attunedItems.length }}/3)</span>
+      <h3 class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-3 flex items-center justify-between">
+        <span>Attuned</span>
+        <span
+          data-testid="attunement-counter"
+          :class="[
+            'text-sm font-medium',
+            isAtMax ? 'text-warning' : 'text-gray-400 dark:text-gray-500'
+          ]"
+        >
+          {{ attunementUsed }}/{{ attunementMax }}
+        </span>
       </h3>
       <!-- Attuned items list -->
       <div
