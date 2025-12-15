@@ -75,15 +75,25 @@ function handlePlayModeToggle(enabled: boolean) {
 }
 
 // ============================================================================
-// Inspiration Toggle (self-contained)
+// Local State (synced with props, updated optimistically on save)
 // ============================================================================
 
 const localHasInspiration = ref(false)
 const isUpdatingInspiration = ref(false)
+const localName = ref('')
+const isEditing = ref(false)
 
+// Sync inspiration with props (unless we're mid-update)
 watch(() => props.character.has_inspiration, (hasInspiration) => {
   if (hasInspiration !== undefined && !isUpdatingInspiration.value) {
     localHasInspiration.value = hasInspiration
+  }
+}, { immediate: true })
+
+// Sync name with props (unless we're mid-edit)
+watch(() => props.character.name, (name) => {
+  if (name && !isEditing.value) {
+    localName.value = name
   }
 }, { immediate: true })
 
@@ -234,7 +244,6 @@ async function handleAddCondition(payload: { condition: string, source: string, 
 // ============================================================================
 
 const showEditModal = ref(false)
-const isEditing = ref(false)
 const editError = ref<string | null>(null)
 
 function handleEditClick() {
@@ -268,6 +277,11 @@ async function handleEditSave(payload: EditPayload) {
     }
 
     showEditModal.value = false
+
+    // Update local name immediately for instant UI feedback
+    if (hasNameChange) {
+      localName.value = payload.name
+    }
 
     const changes: string[] = []
     if (hasNameChange || hasAlignmentChange) changes.push('details')
@@ -465,7 +479,7 @@ const actionMenuItems = computed(() => {
             v-if="portraitSrc"
             data-testid="portrait-image"
             :src="portraitSrc"
-            :alt="`${character.name} portrait`"
+            :alt="`${localName} portrait`"
             class="w-full h-full object-cover"
           >
           <UIcon
@@ -479,7 +493,7 @@ const actionMenuItems = computed(() => {
         <!-- Name and info -->
         <div>
           <h1 class="text-3xl font-bold text-gray-900 dark:text-white">
-            {{ character.name }}
+            {{ localName }}
           </h1>
           <p class="mt-1 text-lg text-gray-600 dark:text-gray-400">
             <span v-if="character.race">{{ character.race.name }}<span v-if="character.size"> ({{ character.size }})</span></span>
