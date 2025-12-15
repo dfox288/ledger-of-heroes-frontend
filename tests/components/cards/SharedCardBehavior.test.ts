@@ -19,7 +19,7 @@ import {
   createMockRace,
   createMockBackground,
   createMockFeat
-} from '../../helpers/mockFactories'
+} from '#tests/helpers/mockFactories'
 
 /**
  * Consolidated card behavior tests for all main entity cards.

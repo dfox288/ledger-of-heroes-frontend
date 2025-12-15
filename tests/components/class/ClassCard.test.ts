@@ -1,9 +1,9 @@
 import { describe, it, expect } from 'vitest'
 import { mountSuspended } from '@nuxt/test-utils/runtime'
 import ClassCard from '~/components/class/ClassCard.vue'
-import { createMockClass } from '../../helpers/mockFactories'
-import { testDescriptionTruncation, testMissingDescriptionFallback } from '../../helpers/descriptionBehavior'
-import { testEntityCardBasics } from '../../helpers/cardBehavior'
+import { createMockClass } from '#tests/helpers/mockFactories'
+import { testDescriptionTruncation, testMissingDescriptionFallback } from '#tests/helpers/descriptionBehavior'
+import { testEntityCardBasics } from '#tests/helpers/cardBehavior'
 
 describe('ClassCard', () => {
   const mockClass = createMockClass()

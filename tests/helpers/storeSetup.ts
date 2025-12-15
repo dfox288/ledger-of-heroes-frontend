@@ -14,7 +14,7 @@ import { beforeEach } from 'vitest'
  *
  * Usage:
  * ```typescript
- * import { usePiniaSetup } from '../../helpers/storeSetup'
+ * import { usePiniaSetup } from '#tests/helpers/storeSetup'
  *
  * describe('useSpellFiltersStore', () => {
  *   usePiniaSetup()
@@ -34,7 +34,7 @@ export function usePiniaSetup(): void {
  *
  * Usage:
  * ```typescript
- * import { createTestStore } from '../../helpers/storeSetup'
+ * import { createTestStore } from '#tests/helpers/storeSetup'
  * import { useSpellFiltersStore } from '~/stores/spellFilters'
  *
  * const store = createTestStore(useSpellFiltersStore)

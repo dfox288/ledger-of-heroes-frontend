@@ -8,7 +8,7 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { mountSuspended, mockNuxtImport } from '@nuxt/test-utils/runtime'
 import StepSize from '~/components/character/wizard/StepSize.vue'
-import { setupWizardStore, createToastMock } from '../../../helpers/wizardTestSetup'
+import { setupWizardStore, createToastMock } from '#tests/helpers/wizardTestSetup'
 
 // =============================================================================
 // MOCK SETUP (must be at module level for mockNuxtImport)

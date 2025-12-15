@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest'
 import { mount } from '@vue/test-utils'
 import UiAccordionAbilitiesList from '~/components/ui/accordion/UiAccordionAbilitiesList.vue'
-import { testAccordionListBasics, testNameDescriptionPattern } from '../../../helpers/accordionListBehavior'
+import { testAccordionListBasics, testNameDescriptionPattern } from '#tests/helpers/accordionListBehavior'
 
 describe('UiAccordionAbilitiesList', () => {
   const mockAbilities = [

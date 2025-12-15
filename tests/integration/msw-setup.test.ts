@@ -9,9 +9,9 @@
  */
 
 import { describe, it, expect, beforeAll, afterAll, afterEach } from 'vitest'
-import { server, http, HttpResponse } from '../msw/server'
-import { humanFighterL1 } from '../msw/fixtures/characters/human-fighter-l1'
-import { draftClericL1 } from '../msw/fixtures/characters/draft-cleric-l1'
+import { server, http, HttpResponse } from '#tests/msw/server'
+import { humanFighterL1 } from '#tests/msw/fixtures/characters/human-fighter-l1'
+import { draftClericL1 } from '#tests/msw/fixtures/characters/draft-cleric-l1'
 
 // Start MSW server before tests
 beforeAll(() => {

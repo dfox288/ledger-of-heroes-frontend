@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest'
 import { mountSuspended } from '@nuxt/test-utils/runtime'
 import RaceDetailHeader from '~/components/race/DetailHeader.vue'
-import { createMockRace } from '../../helpers/mockFactories'
+import { createMockRace } from '#tests/helpers/mockFactories'
 
 describe('RaceDetailHeader', () => {
   describe('Base Race', () => {

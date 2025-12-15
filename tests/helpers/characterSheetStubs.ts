@@ -7,7 +7,7 @@
  *
  * Usage:
  * ```typescript
- * import { characterSheetStubs } from '@/tests/helpers/characterSheetStubs'
+ * import { characterSheetStubs } from '#tests/helpers/characterSheetStubs'
  *
  * const wrapper = await mountSuspended(StepReview, {
  *   global: { stubs: characterSheetStubs, plugins: [pinia] }

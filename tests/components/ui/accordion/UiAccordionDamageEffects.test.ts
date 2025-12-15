@@ -8,7 +8,7 @@ import {
   mockCantripEffectsArray,
   mockHealingEffect,
   mockCombinedScaling
-} from '../../../fixtures/damageEffects'
+} from '#tests/fixtures/damageEffects'
 
 describe('UiAccordionDamageEffects', () => {
   describe('basic rendering', () => {

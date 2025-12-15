@@ -2,7 +2,7 @@
 import { describe, it, expect } from 'vitest'
 import { mountSuspended } from '@nuxt/test-utils/runtime'
 import SubraceCard from '~/components/character/SubraceCard.vue'
-import { createMockRace, mockSource } from '../../helpers/mockFactories'
+import { createMockRace, mockSource } from '#tests/helpers/mockFactories'
 
 // Subrace is a partial Race with subrace-specific properties
 const mockSubrace = createMockRace({

@@ -7,7 +7,7 @@
  *
  * Usage in tests:
  * ```typescript
- * import { server } from '@/tests/msw/server'
+ * import { server } from '#tests/msw/server'
  * import { http, HttpResponse } from 'msw'
  *
  * // Use default handlers

@@ -1,9 +1,9 @@
 import { describe, it, expect } from 'vitest'
 import { mountSuspended } from '@nuxt/test-utils/runtime'
 import FeatCard from '~/components/feat/FeatCard.vue'
-import { createMockFeat } from '../../helpers/mockFactories'
-import { testMissingDescriptionFallback } from '../../helpers/descriptionBehavior'
-import { testEntityCardBasics } from '../../helpers/cardBehavior'
+import { createMockFeat } from '#tests/helpers/mockFactories'
+import { testMissingDescriptionFallback } from '#tests/helpers/descriptionBehavior'
+import { testEntityCardBasics } from '#tests/helpers/cardBehavior'
 
 describe('FeatCard', () => {
   const mockFeat = createMockFeat()

@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest'
 import { mountSuspended } from '@nuxt/test-utils/runtime'
 import SpellHero from '~/components/spell/SpellHero.vue'
-import { createMockSpell } from '../../helpers/mockFactories'
+import { createMockSpell } from '#tests/helpers/mockFactories'
 
 describe('SpellHero', () => {
   const mockSpell = createMockSpell()

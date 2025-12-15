@@ -7,8 +7,8 @@
  * @see #537 - HP endpoint integration
  */
 import { describe, it, expect } from 'vitest'
-import { http, HttpResponse } from '../../msw/server'
-import { useIntegrationTestSetup, addTestHandlers } from '../../helpers/integrationSetup'
+import { http, HttpResponse } from '#tests/msw/server'
+import { useIntegrationTestSetup, addTestHandlers } from '#tests/helpers/integrationSetup'
 
 describe('HP Modification Integration', () => {
   useIntegrationTestSetup({ resetWizardStore: false })

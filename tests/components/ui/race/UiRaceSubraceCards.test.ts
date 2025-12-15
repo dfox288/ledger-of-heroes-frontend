@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest'
 import { mountSuspended } from '@nuxt/test-utils/runtime'
 import UiRaceSubraceCards from '~/components/ui/race/UiRaceSubraceCards.vue'
-import { createMockRace, createMockSource } from '../../../helpers/mockFactories'
+import { createMockRace, createMockSource } from '#tests/helpers/mockFactories'
 
 describe('UiRaceSubraceCards', () => {
   const mockSubrace1 = createMockRace({

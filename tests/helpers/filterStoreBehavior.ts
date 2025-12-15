@@ -8,8 +8,8 @@ import { describe, it, expect } from 'vitest'
  *
  * Usage:
  * ```typescript
- * import { usePiniaSetup } from '../../helpers/storeSetup'
- * import { testHasActiveFilters, testActiveFilterCount, testClearAllAction, testUrlQuerySync } from '../../helpers/filterStoreBehavior'
+ * import { usePiniaSetup } from '#tests/helpers/storeSetup'
+ * import { testHasActiveFilters, testActiveFilterCount, testClearAllAction, testUrlQuerySync } from '#tests/helpers/filterStoreBehavior'
  * import { useSpellFiltersStore } from '~/stores/spellFilters'
  *
  * describe('useSpellFiltersStore', () => {

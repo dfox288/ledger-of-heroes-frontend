@@ -18,10 +18,10 @@
 
 import { describe, it, expect } from 'vitest'
 import { mountSuspended } from '@nuxt/test-utils/runtime'
-import { http, HttpResponse } from '../../msw/server'
-import { useIntegrationTestSetup, server } from '../../helpers/integrationSetup'
-import { variantHumanFighterL1, variantHumanRaceWithModifiers } from '../../msw/fixtures/characters/variant-human-fighter-l1'
-import { humanFighterL1 } from '../../msw/fixtures/characters/human-fighter-l1'
+import { http, HttpResponse } from '#tests/msw/server'
+import { useIntegrationTestSetup, server } from '#tests/helpers/integrationSetup'
+import { variantHumanFighterL1, variantHumanRaceWithModifiers } from '#tests/msw/fixtures/characters/variant-human-fighter-l1'
+import { humanFighterL1 } from '#tests/msw/fixtures/characters/human-fighter-l1'
 
 // Import step components
 import StepFeats from '~/components/character/wizard/StepFeats.vue'

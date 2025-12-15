@@ -11,7 +11,7 @@ import { setActivePinia, createPinia, type Pinia } from 'pinia'
 import StepClassSelection from '~/components/character/levelup/StepClassSelection.vue'
 import { useCharacterLevelUpStore } from '~/stores/characterLevelUp'
 import type { CharacterClassEntry } from '~/stores/characterLevelUp'
-import { baseClasses } from '../../../msw/fixtures/classes'
+import { baseClasses } from '#tests/msw/fixtures/classes'
 
 // Mock the useApi composable
 vi.mock('~/composables/useApi', () => ({

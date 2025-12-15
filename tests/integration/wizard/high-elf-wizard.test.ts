@@ -18,9 +18,9 @@
 
 import { describe, it, expect } from 'vitest'
 import { mountSuspended } from '@nuxt/test-utils/runtime'
-import { http, HttpResponse } from '../../msw/server'
-import { useIntegrationTestSetup, server } from '../../helpers/integrationSetup'
-import { highElfWizardL1 } from '../../msw/fixtures/characters/high-elf-wizard-l1'
+import { http, HttpResponse } from '#tests/msw/server'
+import { useIntegrationTestSetup, server } from '#tests/helpers/integrationSetup'
+import { highElfWizardL1 } from '#tests/msw/fixtures/characters/high-elf-wizard-l1'
 
 // Import step components
 import StepSubrace from '~/components/character/wizard/StepSubrace.vue'

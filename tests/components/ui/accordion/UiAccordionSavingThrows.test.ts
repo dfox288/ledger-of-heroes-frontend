@@ -9,7 +9,7 @@ import {
   mockSaveWithDisadvantage,
   mockSaveWithDC,
   mockSavingThrowsArray
-} from '../../../fixtures/savingThrows'
+} from '#tests/fixtures/savingThrows'
 
 describe('UiAccordionSavingThrows', () => {
   describe('basic rendering', () => {

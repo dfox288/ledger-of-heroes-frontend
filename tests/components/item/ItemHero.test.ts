@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest'
 import { mountSuspended } from '@nuxt/test-utils/runtime'
 import ItemHero from '~/components/item/ItemHero.vue'
-import { createMockItem } from '../../helpers/mockFactories'
+import { createMockItem } from '#tests/helpers/mockFactories'
 
 describe('ItemHero', () => {
   const mockItem = createMockItem()

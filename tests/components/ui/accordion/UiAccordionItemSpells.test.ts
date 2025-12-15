@@ -7,7 +7,7 @@ import {
   mockSpellWithUsageLimit,
   mockSpellWithLevelReq,
   mockItemSpellsArray
-} from '../../../fixtures/spells'
+} from '#tests/fixtures/spells'
 
 describe('UiAccordionItemSpells', () => {
   describe('spell list rendering', () => {

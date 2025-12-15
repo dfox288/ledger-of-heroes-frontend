@@ -1,10 +1,10 @@
 import { describe, it, expect } from 'vitest'
 import { mountSuspended } from '@nuxt/test-utils/runtime'
 import ItemCard from '~/components/item/ItemCard.vue'
-import { createMockItem } from '../../helpers/mockFactories'
-import { testBadgeVisibility } from '../../helpers/badgeVisibilityBehavior'
-import { testMissingDescriptionFallback } from '../../helpers/descriptionBehavior'
-import { testEntityCardBasics } from '../../helpers/cardBehavior'
+import { createMockItem } from '#tests/helpers/mockFactories'
+import { testBadgeVisibility } from '#tests/helpers/badgeVisibilityBehavior'
+import { testMissingDescriptionFallback } from '#tests/helpers/descriptionBehavior'
+import { testEntityCardBasics } from '#tests/helpers/cardBehavior'
 
 describe('ItemCard', () => {
   const mockItem = createMockItem()

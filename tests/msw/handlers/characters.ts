@@ -6,7 +6,7 @@
  */
 
 import { http, HttpResponse } from 'msw'
-import { humanFighterL1 } from '../fixtures/characters/human-fighter-l1'
+import { humanFighterL1 } from '#tests/msw/fixtures/characters/human-fighter-l1'
 
 // Base URL for API requests (matches Nitro server routes)
 const API_BASE = '/api'

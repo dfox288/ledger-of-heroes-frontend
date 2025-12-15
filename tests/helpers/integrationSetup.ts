@@ -6,7 +6,7 @@
  *
  * Usage:
  * ```typescript
- * import { useIntegrationTestSetup } from '@/tests/helpers/integrationSetup'
+ * import { useIntegrationTestSetup } from '#tests/helpers/integrationSetup'
  *
  * describe('My Integration Test', () => {
  *   useIntegrationTestSetup()
@@ -19,7 +19,7 @@
  */
 import { beforeAll, afterAll, afterEach, beforeEach } from 'vitest'
 import { setActivePinia, createPinia } from 'pinia'
-import { server } from '../msw/server'
+import { server } from '#tests/msw/server'
 import { useCharacterWizardStore } from '~/stores/characterWizard'
 
 /**
@@ -67,8 +67,8 @@ export function useIntegrationTestSetup(options?: {
  *
  * Usage:
  * ```typescript
- * import { addTestHandlers } from '@/tests/helpers/integrationSetup'
- * import { http, HttpResponse } from '../msw/server'
+ * import { addTestHandlers } from '#tests/helpers/integrationSetup'
+ * import { http, HttpResponse } from '#tests/msw/server'
  *
  * it('handles API errors', async () => {
  *   addTestHandlers([
@@ -87,4 +87,4 @@ export function addTestHandlers(handlers: Parameters<typeof server.use>) {
  * Re-export server utilities for convenience.
  * Tests can import everything from one place.
  */
-export { server } from '../msw/server'
+export { server } from '#tests/msw/server'

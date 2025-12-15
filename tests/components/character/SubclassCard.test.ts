@@ -2,8 +2,8 @@
 import { describe, it, expect } from 'vitest'
 import { mountSuspended } from '@nuxt/test-utils/runtime'
 import SubclassCard from '~/components/character/SubclassCard.vue'
-import { testPickerCardBehavior } from '../../helpers/pickerCardBehavior'
-import { createMockClass, mockSource } from '../../helpers/mockFactories'
+import { testPickerCardBehavior } from '#tests/helpers/pickerCardBehavior'
+import { createMockClass, mockSource } from '#tests/helpers/mockFactories'
 
 // Subclass has 'source' (singular) instead of 'sources' array - extend base mock
 const mockSubclass = {

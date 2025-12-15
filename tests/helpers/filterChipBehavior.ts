@@ -9,7 +9,7 @@ import type { VueWrapper } from '@vue/test-utils'
  *
  * Usage:
  * ```typescript
- * import { testFilterChipBehavior } from '../../helpers/filterChipBehavior'
+ * import { testFilterChipBehavior } from '#tests/helpers/filterChipBehavior'
  *
  * describe('Monsters Page Filters', () => {
  *   testFilterChipBehavior({

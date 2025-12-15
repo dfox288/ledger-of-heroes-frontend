@@ -25,7 +25,7 @@ import {
   humanFighterL3,
   highElfWizardL2,
   halflingRogueL4
-} from '../msw/fixtures/characters'
+} from '#tests/msw/fixtures/characters'
 
 // ════════════════════════════════════════════════════════════════════════════
 // SHAPE VALIDATORS
