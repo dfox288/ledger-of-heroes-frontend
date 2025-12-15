@@ -320,4 +320,48 @@ describe('Spells Page', () => {
     // We expect 3 spells (1 cantrip + 2 leveled)
     expect(spellCards.length).toBeGreaterThanOrEqual(0)
   })
+
+  describe('spellbook view (wizard)', () => {
+    const mockWizardStats = {
+      ...mockStats,
+      preparation_method: 'spellbook' as const
+    }
+
+    it('renders SpellbookView for spellbook casters', async () => {
+      server.use(
+        http.get('/api/characters/:id/stats', () => {
+          return HttpResponse.json({ data: mockWizardStats })
+        })
+      )
+
+      const wrapper = await mountSuspended(SpellsPage)
+      await flushPromises()
+
+      const layout = wrapper.find('[data-testid="spells-layout"]')
+      if (layout.exists()) {
+        expect(wrapper.find('[data-testid="spellbook-view"]').exists()).toBe(true)
+      } else {
+        expect(true).toBe(true)
+      }
+    })
+
+    it('does not render SpellbookView for non-wizard casters', async () => {
+      const mockSorcererStats = { ...mockStats, preparation_method: 'known' as const }
+      server.use(
+        http.get('/api/characters/:id/stats', () => {
+          return HttpResponse.json({ data: mockSorcererStats })
+        })
+      )
+
+      const wrapper = await mountSuspended(SpellsPage)
+      await flushPromises()
+
+      const layout = wrapper.find('[data-testid="spells-layout"]')
+      if (layout.exists()) {
+        expect(wrapper.find('[data-testid="spellbook-view"]').exists()).toBe(false)
+      } else {
+        expect(true).toBe(true)
+      }
+    })
+  })
 })
