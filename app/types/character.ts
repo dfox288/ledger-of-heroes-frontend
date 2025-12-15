@@ -454,6 +454,41 @@ export interface SpellSlotUpdateResponse {
 }
 
 /**
+ * Single spell slot level from /stats endpoint (new format)
+ * @see Issue #618
+ */
+export interface SpellSlotLevel {
+  total: number
+  spent: number
+  available: number
+}
+
+/**
+ * Pact magic slots for Warlocks from /stats endpoint (new format)
+ * @see Issue #618
+ */
+export interface PactMagicSlots {
+  level: number
+  total: number
+  spent: number
+  available: number
+}
+
+/**
+ * Spell slots response from /stats endpoint (new format)
+ *
+ * Breaking change from backend PR #184:
+ * - Old format: { "1": 4, "2": 3 } (level -> total)
+ * - New format: { slots: { "1": { total, spent, available } }, pact_magic: ... }
+ *
+ * @see Issue #618
+ */
+export interface SpellSlotsResponse {
+  slots: Record<string, SpellSlotLevel>
+  pact_magic: PactMagicSlots | null
+}
+
+/**
  * Skill with computed modifier for character sheet display
  */
 export interface CharacterSkill {

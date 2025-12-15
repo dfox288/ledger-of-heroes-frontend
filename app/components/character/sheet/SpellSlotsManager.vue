@@ -42,15 +42,15 @@ function ordinal(level: number): string {
 const isDisabled = computed(() => !props.editable || isUpdatingSpellSlot.value)
 
 /**
- * Get sorted list of spell levels that have slots
- * Filters out level 0 (cantrips) which don't use spell slots
+ * Get sorted list of standard spell levels that have slots
+ * Filters out level 0 (cantrips) and negative keys (pact magic)
  */
 const sortedLevels = computed(() => {
   const levels: Array<{ level: number, total: number, spent: number, available: number }> = []
 
   for (const [level, slot] of spellSlots.value) {
-    // Skip level 0 (cantrips don't use spell slots)
-    if (level === 0) continue
+    // Skip level 0 (cantrips) and negative keys (pact magic handled separately)
+    if (level <= 0) continue
     if (slot.total > 0) {
       levels.push({
         level,
@@ -65,12 +65,37 @@ const sortedLevels = computed(() => {
 })
 
 /**
- * Handle click on available slot (use it)
+ * Get pact magic slots if present (stored with negative key)
+ * Returns null if no pact magic slots
  */
-async function handleUseSlot(level: number) {
+const pactMagic = computed(() => {
+  for (const [level, slot] of spellSlots.value) {
+    // Pact magic stored with negative key
+    if (level < 0 && slot.slotType === 'pact_magic') {
+      return {
+        level: Math.abs(level),
+        total: slot.total,
+        spent: slot.spent,
+        available: slot.total - slot.spent
+      }
+    }
+  }
+  return null
+})
+
+/**
+ * Check if we have any pact magic slots to display
+ */
+const hasPactMagic = computed(() => pactMagic.value !== null)
+
+/**
+ * Handle click on available slot (use it)
+ * @param storeKey - The key used in the store (positive for standard, negative for pact)
+ */
+async function handleUseSlot(storeKey: number) {
   if (isDisabled.value) return
   try {
-    await store.useSpellSlot(level)
+    await store.useSpellSlot(storeKey)
   } catch {
     // Toast handled by store or parent
   }
@@ -78,11 +103,12 @@ async function handleUseSlot(level: number) {
 
 /**
  * Handle click on spent slot (restore it)
+ * @param storeKey - The key used in the store (positive for standard, negative for pact)
  */
-async function handleRestoreSlot(level: number) {
+async function handleRestoreSlot(storeKey: number) {
   if (isDisabled.value) return
   try {
-    await store.restoreSpellSlot(level)
+    await store.restoreSpellSlot(storeKey)
   } catch {
     // Toast handled by store or parent
   }
@@ -91,37 +117,93 @@ async function handleRestoreSlot(level: number) {
 
 <template>
   <div
-    v-if="sortedLevels.length > 0"
+    v-if="sortedLevels.length > 0 || hasPactMagic"
     class="space-y-4"
   >
-    <h4 class="text-sm font-semibold text-gray-700 dark:text-gray-300 uppercase">
-      Spell Slots
-    </h4>
+    <!-- Standard Spell Slots -->
+    <div v-if="sortedLevels.length > 0">
+      <h4 class="text-sm font-semibold text-gray-700 dark:text-gray-300 uppercase mb-2">
+        Spell Slots
+      </h4>
 
-    <div class="space-y-2">
-      <div
-        v-for="{ level, spent, available } in sortedLevels"
-        :key="level"
-        class="flex items-center gap-3"
-      >
-        <!-- Level Label -->
-        <div class="text-sm font-medium text-gray-700 dark:text-gray-300 w-8">
-          {{ ordinal(level) }}
+      <div class="space-y-2">
+        <div
+          v-for="{ level, spent, available } in sortedLevels"
+          :key="level"
+          class="flex items-center gap-3"
+        >
+          <!-- Level Label -->
+          <div class="text-sm font-medium text-gray-700 dark:text-gray-300 w-8">
+            {{ ordinal(level) }}
+          </div>
+
+          <!-- Slot Crystals -->
+          <div class="flex gap-1.5">
+            <!-- Available slots (filled) -->
+            <button
+              v-for="i in available"
+              :key="`available-${level}-${i}`"
+              :data-testid="`slot-${level}-available`"
+              :disabled="isDisabled"
+              :class="[
+                'w-7 h-7 transition-all',
+                !isDisabled ? 'cursor-pointer hover:scale-110' : 'cursor-default opacity-70'
+              ]"
+              @click="handleUseSlot(level)"
+            >
+              <UIcon
+                name="i-game-icons-crystal-shine"
+                class="w-7 h-7 text-spell-500 dark:text-spell-400"
+              />
+            </button>
+
+            <!-- Spent slots (empty/hollow) -->
+            <button
+              v-for="i in spent"
+              :key="`spent-${level}-${i}`"
+              :data-testid="`slot-${level}-spent`"
+              :disabled="isDisabled"
+              :class="[
+                'w-7 h-7 transition-all',
+                !isDisabled ? 'cursor-pointer hover:scale-110' : 'cursor-default opacity-70'
+              ]"
+              @click="handleRestoreSlot(level)"
+            >
+              <UIcon
+                name="i-game-icons-crystal-shine"
+                class="w-7 h-7 text-gray-300 dark:text-gray-600"
+              />
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Pact Magic Slots (Warlock) -->
+    <div v-if="hasPactMagic && pactMagic">
+      <h4 class="text-sm font-semibold text-gray-700 dark:text-gray-300 uppercase mb-2">
+        Pact Slots
+      </h4>
+
+      <div class="flex items-center gap-3">
+        <!-- Pact Level Label -->
+        <div class="text-sm font-medium text-gray-700 dark:text-gray-300">
+          {{ ordinal(pactMagic.level) }} level
         </div>
 
-        <!-- Slot Crystals -->
+        <!-- Pact Slot Crystals -->
         <div class="flex gap-1.5">
-          <!-- Available slots (filled) -->
+          <!-- Available pact slots (filled) -->
           <button
-            v-for="i in available"
-            :key="`available-${level}-${i}`"
-            :data-testid="`slot-${level}-available`"
+            v-for="i in pactMagic.available"
+            :key="`pact-available-${i}`"
+            data-testid="pact-slot-available"
             :disabled="isDisabled"
             :class="[
               'w-7 h-7 transition-all',
               !isDisabled ? 'cursor-pointer hover:scale-110' : 'cursor-default opacity-70'
             ]"
-            @click="handleUseSlot(level)"
+            @click="handleUseSlot(-pactMagic.level)"
           >
             <UIcon
               name="i-game-icons-crystal-shine"
@@ -129,17 +211,17 @@ async function handleRestoreSlot(level: number) {
             />
           </button>
 
-          <!-- Spent slots (empty/hollow) -->
+          <!-- Spent pact slots (empty/hollow) -->
           <button
-            v-for="i in spent"
-            :key="`spent-${level}-${i}`"
-            :data-testid="`slot-${level}-spent`"
+            v-for="i in pactMagic.spent"
+            :key="`pact-spent-${i}`"
+            data-testid="pact-slot-spent"
             :disabled="isDisabled"
             :class="[
               'w-7 h-7 transition-all',
               !isDisabled ? 'cursor-pointer hover:scale-110' : 'cursor-default opacity-70'
             ]"
-            @click="handleRestoreSlot(level)"
+            @click="handleRestoreSlot(-pactMagic.level)"
           >
             <UIcon
               name="i-game-icons-crystal-shine"

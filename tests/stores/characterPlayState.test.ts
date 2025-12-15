@@ -614,6 +614,55 @@ describe('characterPlayState store', () => {
 
       expect(store.canRestoreSlot(1)).toBe(false)
     })
+
+    it('initializes spell slots with spent values from API', () => {
+      const store = useCharacterPlayStateStore()
+      store.initializeSpellSlots([
+        { level: 1, total: 4, spent: 2 },
+        { level: 2, total: 3, spent: 1 }
+      ])
+
+      expect(store.getSlotState(1)).toEqual({ total: 4, spent: 2, available: 2 })
+      expect(store.getSlotState(2)).toEqual({ total: 3, spent: 1, available: 2 })
+    })
+
+    it('defaults spent to 0 when not provided (backwards compatibility)', () => {
+      const store = useCharacterPlayStateStore()
+      store.initializeSpellSlots([
+        { level: 1, total: 4 }
+      ])
+
+      expect(store.getSlotState(1)).toEqual({ total: 4, spent: 0, available: 4 })
+    })
+
+    it('initializes pact magic slots separately', () => {
+      const store = useCharacterPlayStateStore()
+      store.initializeSpellSlots([], {
+        level: 2,
+        total: 2,
+        spent: 1
+      })
+
+      // Pact slots are stored with negative key to avoid collision with standard slots
+      const pactState = store.spellSlots.get(-2)
+      expect(pactState).toEqual({ total: 2, spent: 1, slotType: 'pact_magic' })
+    })
+
+    it('handles both standard and pact magic slots', () => {
+      const store = useCharacterPlayStateStore()
+      store.initializeSpellSlots(
+        [{ level: 1, total: 4, spent: 0 }],
+        { level: 1, total: 2, spent: 1 }
+      )
+
+      // Standard slots at level 1
+      const standardState = store.spellSlots.get(1)
+      expect(standardState).toEqual({ total: 4, spent: 0, slotType: 'standard' })
+
+      // Pact slots stored with negative key to avoid collision
+      const pactState = store.spellSlots.get(-1)
+      expect(pactState).toEqual({ total: 2, spent: 1, slotType: 'pact_magic' })
+    })
   })
 
   // ===========================================================================

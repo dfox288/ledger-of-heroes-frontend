@@ -473,15 +473,36 @@ export const useCharacterPlayStateStore = defineStore('characterPlayState', () =
   /**
    * Initialize spell slots from character stats
    *
-   * Call this when character data loads
+   * Call this when character data loads. Accepts the new API format with
+   * spent values included, and optional pact magic for Warlocks.
+   *
+   * @param slots - Standard spell slots with total and optional spent count
+   * @param pactMagic - Optional pact magic slots for Warlocks
+   *
+   * @see Issue #618 - Spell slots format change
    */
-  function initializeSpellSlots(slots: Array<{ level: number, total: number }>) {
+  function initializeSpellSlots(
+    slots: Array<{ level: number, total: number, spent?: number }>,
+    pactMagic?: { level: number, total: number, spent?: number } | null
+  ) {
     spellSlots.value.clear()
+
+    // Initialize standard slots
     for (const slot of slots) {
       spellSlots.value.set(slot.level, {
         total: slot.total,
-        spent: 0,
+        spent: slot.spent ?? 0,
         slotType: 'standard'
+      })
+    }
+
+    // Initialize pact magic slots (stored with negative key to avoid collision)
+    if (pactMagic && pactMagic.total > 0) {
+      // Use negative level as key to distinguish from standard slots at same level
+      spellSlots.value.set(-pactMagic.level, {
+        total: pactMagic.total,
+        spent: pactMagic.spent ?? 0,
+        slotType: 'pact_magic'
       })
     }
   }
