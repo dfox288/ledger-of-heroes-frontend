@@ -1,5 +1,6 @@
 // tests/composables/useLevelUpWizard.test.ts
 import { describe, it, expect, beforeEach, vi } from 'vitest'
+import { mockNuxtImport } from '@nuxt/test-utils/runtime'
 import { setActivePinia, createPinia } from 'pinia'
 import { ref } from 'vue'
 
@@ -8,7 +9,12 @@ import { ref } from 'vue'
 // =============================================================================
 
 const mockGoToStep = vi.fn()
-const mockNavigateTo = vi.fn()
+
+// Mock navigateTo using vi.hoisted to ensure it's defined before mockNuxtImport is hoisted
+const { mockNavigateTo } = vi.hoisted(() => ({
+  mockNavigateTo: vi.fn()
+}))
+mockNuxtImport('navigateTo', () => mockNavigateTo)
 
 // Create reactive refs that tests can modify
 const mockLevelUpResult = ref<unknown>(null)
@@ -36,9 +42,6 @@ vi.mock('~/stores/characterLevelUp', () => ({
     goToStep: mockGoToStep
   }))
 }))
-
-// Mock navigateTo globally (auto-imported by Nuxt)
-vi.stubGlobal('navigateTo', mockNavigateTo)
 
 // Import composable AFTER mocks
 // eslint-disable-next-line import/first
