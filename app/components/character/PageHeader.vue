@@ -429,7 +429,7 @@ const actionMenuItems = computed(() => {
         {{ backLabel }}
       </UButton>
 
-      <!-- Play Mode Toggle (only for complete characters) -->
+      <!-- Play Mode Toggle (persisted via cookie for SSR compatibility) -->
       <div
         v-if="character.is_complete"
         class="flex items-center gap-2"
