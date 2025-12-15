@@ -2,11 +2,14 @@
 /**
  * Level-Up Wizard Navigation Composable
  *
- * Manages wizard step navigation using URL-based routing.
+ * Manages wizard step navigation using URL-based routing for level-up.
  * URL is source of truth for current step (matches character creation wizard pattern).
+ *
+ * Built on useWizardNavigation base composable (#625).
  */
 import { toValue, type MaybeRef } from 'vue'
 import { useCharacterLevelUpStore } from '~/stores/characterLevelUp'
+import { useWizardNavigation, type WizardStep } from './useWizardNavigation'
 import type { LevelUpStep } from '~/types/character'
 
 export interface UseLevelUpWizardOptions {
@@ -18,19 +21,8 @@ export interface UseLevelUpWizardOptions {
 
 /**
  * Create the step registry with visibility functions
- *
- * Steps are shown dynamically based on the level-up context:
- * - class-selection: Only for multiclass or first multiclass opportunity
- * - subclass: When reaching subclass level (placeholder for now)
- * - hit-points: Always shown (every level-up needs HP choice)
- * - asi-feat: At ASI levels (4, 8, 12, 16, 19)
- * - feature-choices: For class features (fighting style, expertise, optional features)
- * - spells: For spellcasters gaining new spells
- * - languages: For language choices
- * - proficiencies: For proficiency choices
- * - summary: Always shown as final step
  */
-function createStepRegistry(store: ReturnType<typeof useCharacterLevelUpStore>): LevelUpStep[] {
+function createStepRegistry(store: ReturnType<typeof useCharacterLevelUpStore>): WizardStep[] {
   return [
     {
       name: 'class-selection',
@@ -103,21 +95,7 @@ export function useLevelUpWizard(options?: UseLevelUpWizardOptions) {
   // Create step registry with store access
   const stepRegistry = createStepRegistry(store)
 
-  // ══════════════════════════════════════════════════════════════
-  // COMPUTED: Active Steps
-  // ══════════════════════════════════════════════════════════════
-
-  /**
-   * Only visible steps (filtered by visibility functions)
-   */
-  const activeSteps = computed(() =>
-    stepRegistry.filter(step => step.visible())
-  )
-
-  /**
-   * Current step name - from URL (options.currentStep) or store fallback
-   * Uses toValue to support both refs and plain strings for reactivity
-   */
+  // Current step name - from URL (options.currentStep) or store fallback
   const currentStepName = computed(() => {
     if (options?.currentStep) {
       return toValue(options.currentStep)
@@ -125,177 +103,55 @@ export function useLevelUpWizard(options?: UseLevelUpWizardOptions) {
     return store.currentStepName
   })
 
-  /**
-   * Current step index within active steps
-   */
-  const currentStepIndex = computed(() =>
-    activeSteps.value.findIndex(s => s.name === currentStepName.value)
-  )
-
-  /**
-   * Current step object
-   */
-  const currentStep = computed(() =>
-    activeSteps.value[currentStepIndex.value] ?? null
-  )
-
-  /**
-   * Total number of visible steps
-   */
-  const totalSteps = computed(() => activeSteps.value.length)
-
-  /**
-   * Is this the first step?
-   */
-  const isFirstStep = computed(() => currentStepIndex.value === 0)
-
-  /**
-   * Is this the last step (summary)?
-   */
-  const isLastStep = computed(() =>
-    currentStepIndex.value === totalSteps.value - 1
-  )
-
-  /**
-   * Progress percentage (0-100)
-   */
-  const progressPercent = computed(() => {
-    if (totalSteps.value <= 1) return 100
-    return Math.round((currentStepIndex.value / (totalSteps.value - 1)) * 100)
-  })
-
-  // ══════════════════════════════════════════════════════════════
-  // URL HELPERS
-  // ══════════════════════════════════════════════════════════════
-
+  // URL builder for level-up wizard
   function getStepUrl(stepName: string): string {
     if (!options?.publicId) {
-      throw new Error('options required')
+      throw new Error('publicId required for URL-based navigation')
     }
     return `/characters/${toValue(options.publicId)}/level-up/${stepName}`
   }
 
+  // Preview URL helper
   function getPreviewUrl(): string {
     if (!options?.publicId) {
-      throw new Error('options required')
+      throw new Error('publicId required for URL-based navigation')
     }
     return `/characters/${toValue(options.publicId)}/level-up`
   }
 
-  // ══════════════════════════════════════════════════════════════
-  // NAVIGATION
-  // ══════════════════════════════════════════════════════════════
-
-  /**
-   * Navigate to a step - uses URL navigation if options provided, store navigation otherwise
-   */
-  async function navigateToStep(stepName: string): Promise<void> {
-    if (options?.publicId && toValue(options.publicId)) {
-      await navigateTo(getStepUrl(stepName))
-    } else {
-      store.goToStep(stepName)
-    }
-  }
-
-  /**
-   * Navigate to next step, skipping any steps that should be skipped
-   */
-  async function nextStep(): Promise<void> {
-    let nextIndex = currentStepIndex.value + 1
-
-    while (nextIndex < activeSteps.value.length) {
-      const next = activeSteps.value[nextIndex]
-      if (next && !next.shouldSkip?.()) {
-        await navigateToStep(next.name)
-        return
-      }
-      nextIndex++
-    }
-  }
-
-  /**
-   * Navigate to previous step
-   */
-  async function previousStep(): Promise<void> {
-    let prevIndex = currentStepIndex.value - 1
-
-    while (prevIndex >= 0) {
-      const prev = activeSteps.value[prevIndex]
-      if (prev && !prev.shouldSkip?.()) {
-        await navigateToStep(prev.name)
-        return
-      }
-      prevIndex--
-    }
-  }
-
-  /**
-   * Navigate to specific step by name
-   */
-  async function goToStep(stepName: string): Promise<void> {
-    const step = activeSteps.value.find(s => s.name === stepName)
-    if (step) {
-      await navigateToStep(stepName)
-    }
-  }
-
-  /**
-   * Get information about next unskipped step
-   */
-  const nextStepInfo = computed(() => {
-    let nextIndex = currentStepIndex.value + 1
-    while (nextIndex < activeSteps.value.length) {
-      const next = activeSteps.value[nextIndex]
-      if (next && !next.shouldSkip?.()) {
-        return next
-      }
-      nextIndex++
-    }
-    return null
-  })
-
-  /**
-   * Get information about previous unskipped step
-   */
-  const previousStepInfo = computed(() => {
-    let prevIndex = currentStepIndex.value - 1
-    while (prevIndex >= 0) {
-      const prev = activeSteps.value[prevIndex]
-      if (prev && !prev.shouldSkip?.()) {
-        return prev
-      }
-      prevIndex--
-    }
-    return null
+  // Use base navigation composable
+  const navigation = useWizardNavigation({
+    stepRegistry,
+    currentStepName,
+    getStepUrl
   })
 
   // ══════════════════════════════════════════════════════════════
   // RETURN
   // ══════════════════════════════════════════════════════════════
 
+  // Cast activeSteps to LevelUpStep[] for backward compatibility
+  const activeSteps = navigation.activeSteps as ComputedRef<LevelUpStep[]>
+
   return {
-    // Step registry
-    stepRegistry,
+    // From base navigation (spread all properties)
+    stepRegistry: navigation.stepRegistry,
     activeSteps,
+    currentStep: navigation.currentStep,
+    currentStepName: navigation.currentStepName,
+    currentStepIndex: navigation.currentStepIndex,
+    totalSteps: navigation.totalSteps,
+    progressPercent: navigation.progressPercent,
+    isFirstStep: navigation.isFirstStep,
+    isLastStep: navigation.isLastStep,
+    nextStep: navigation.nextStep,
+    previousStep: navigation.previousStep,
+    goToStep: navigation.goToStep,
+    getStepUrl: navigation.getStepUrl,
+    nextStepInfo: navigation.nextStepInfo,
+    previousStepInfo: navigation.previousStepInfo,
 
-    // Current step
-    currentStep,
-    currentStepName,
-    currentStepIndex,
-
-    // Progress
-    totalSteps,
-    progressPercent,
-    isFirstStep,
-    isLastStep,
-
-    // Navigation
-    nextStep,
-    previousStep,
-    goToStep,
-    getStepUrl,
-    getPreviewUrl,
-    nextStepInfo,
-    previousStepInfo
+    // Level-up specific
+    getPreviewUrl
   }
 }
