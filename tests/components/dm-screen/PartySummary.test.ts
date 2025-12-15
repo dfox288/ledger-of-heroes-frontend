@@ -238,5 +238,40 @@ describe('DmScreenPartySummary', () => {
       })
       expect(wrapper.find('[data-testid="party-hp"]').exists()).toBe(false)
     })
+
+    it('handles zero max HP gracefully', async () => {
+      const characters = [
+        createMockCharacter({ id: 1, hit_points: { current: 0, max: 0, temp: 0 } })
+      ]
+      const wrapper = await mountSuspended(PartySummary, {
+        props: { summary: mockSummary, characters }
+      })
+      expect(wrapper.find('[data-testid="party-hp"]').text()).toContain('0/0')
+      expect(wrapper.find('[data-testid="party-hp-percentage"]').text()).toContain('(0%)')
+    })
+
+    it('shows yellow color at exactly 50%', async () => {
+      const characters = [
+        createMockCharacter({ id: 1, hit_points: { current: 50, max: 100, temp: 0 } })
+      ]
+      const wrapper = await mountSuspended(PartySummary, {
+        props: { summary: mockSummary, characters }
+      })
+      // Exactly 50% should be yellow (warning)
+      const hpElement = wrapper.find('[data-testid="party-hp-percentage"]')
+      expect(hpElement.classes().join(' ')).toMatch(/amber|yellow/)
+    })
+
+    it('shows red color at exactly 25%', async () => {
+      const characters = [
+        createMockCharacter({ id: 1, hit_points: { current: 25, max: 100, temp: 0 } })
+      ]
+      const wrapper = await mountSuspended(PartySummary, {
+        props: { summary: mockSummary, characters }
+      })
+      // Exactly 25% should be red (critical)
+      const hpElement = wrapper.find('[data-testid="party-hp-percentage"]')
+      expect(hpElement.classes().join(' ')).toMatch(/rose|red/)
+    })
   })
 })
