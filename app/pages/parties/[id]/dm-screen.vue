@@ -110,7 +110,27 @@ useSeoMeta({
 // Summary collapse state (persisted)
 const STORAGE_KEY = 'dm-screen-summary-collapsed'
 
-const summaryCollapsed = ref(false)
+const summaryCollapsed = ref(true) // Default collapsed - less clutter
+
+// Keyboard shortcuts
+function handleKeydown(event: KeyboardEvent) {
+  // Don't trigger if user is typing in an input
+  const target = event.target as HTMLElement
+  if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable) {
+    return
+  }
+
+  // Only handle shortcuts when in combat
+  if (!combatState.value?.inCombat) return
+
+  if (event.key === 'n' || event.key === 'N' || event.key === ' ') {
+    event.preventDefault()
+    handleNextTurn()
+  } else if (event.key === 'p' || event.key === 'P') {
+    event.preventDefault()
+    handlePreviousTurn()
+  }
+}
 
 onMounted(async () => {
   if (import.meta.client) {
@@ -122,9 +142,17 @@ onMounted(async () => {
     } catch {
       // localStorage unavailable (private browsing, storage full)
     }
+    // Add keyboard shortcut listener
+    window.addEventListener('keydown', handleKeydown)
   }
   // Fetch encounter monsters
   await encounterMonsters.fetchMonsters()
+})
+
+onUnmounted(() => {
+  if (import.meta.client) {
+    window.removeEventListener('keydown', handleKeydown)
+  }
 })
 
 watch(summaryCollapsed, (val) => {

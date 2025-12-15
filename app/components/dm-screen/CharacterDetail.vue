@@ -51,7 +51,7 @@ function getSaveColorClass(modifier: number): string {
 
 <template>
   <div class="bg-white dark:bg-neutral-900 border-t border-neutral-200 dark:border-neutral-700 p-4">
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
       <!-- Combat Section -->
       <div>
         <h4 class="text-xs font-medium text-neutral-500 uppercase mb-2">
@@ -111,31 +111,11 @@ function getSaveColorClass(modifier: number): string {
         </div>
       </div>
 
-      <!-- Equipment Section -->
+      <!-- Equipment Section (simplified - AC shown in main row) -->
       <div>
         <h4 class="text-xs font-medium text-neutral-500 uppercase mb-2">
           Equipment
         </h4>
-
-        <!-- Armor -->
-        <div
-          v-if="character.equipment.armor"
-          class="mb-2"
-        >
-          <div class="text-xs text-neutral-400 mb-1">
-            Armor
-          </div>
-          <div class="text-sm">
-            {{ character.equipment.armor.name }}
-            <span class="text-neutral-500">({{ character.equipment.armor.type }})</span>
-            <span
-              v-if="character.equipment.armor.stealth_disadvantage"
-              class="text-amber-500 ml-1"
-            >
-              ⚠️ Stealth disadvantage
-            </span>
-          </div>
-        </div>
 
         <!-- Shield -->
         <div
@@ -171,54 +151,6 @@ function getSaveColorClass(modifier: number): string {
                 ({{ weapon.range }})
               </span>
             </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Capabilities Section -->
-      <div>
-        <h4 class="text-xs font-medium text-neutral-500 uppercase mb-2">
-          Capabilities
-        </h4>
-
-        <!-- Size -->
-        <div class="mb-2 text-sm">
-          <span class="text-neutral-500">Size:</span> {{ character.capabilities.size }}
-        </div>
-
-        <!-- Languages -->
-        <div class="mb-2">
-          <div class="text-xs text-neutral-400 mb-1">
-            Languages
-          </div>
-          <div class="flex flex-wrap gap-1">
-            <UBadge
-              v-for="lang in character.capabilities.languages"
-              :key="lang"
-              color="neutral"
-              variant="subtle"
-              size="md"
-            >
-              {{ lang }}
-            </UBadge>
-          </div>
-        </div>
-
-        <!-- Tool Proficiencies -->
-        <div v-if="character.capabilities.tool_proficiencies.length > 0">
-          <div class="text-xs text-neutral-400 mb-1">
-            Tools
-          </div>
-          <div class="flex flex-wrap gap-1">
-            <UBadge
-              v-for="tool in character.capabilities.tool_proficiencies"
-              :key="tool"
-              color="neutral"
-              variant="outline"
-              size="md"
-            >
-              {{ tool }}
-            </UBadge>
           </div>
         </div>
       </div>

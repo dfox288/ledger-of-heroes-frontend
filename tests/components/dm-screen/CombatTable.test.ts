@@ -233,5 +233,41 @@ describe('DmScreenCombatTable', () => {
       await wrapper.find('[data-testid="clear-encounter-btn"]').trigger('click')
       expect(wrapper.emitted('clearEncounter')).toBeTruthy()
     })
+
+    it('moves dead monsters to bottom of initiative order', async () => {
+      const deadMonster: EncounterMonster = {
+        ...mockMonster,
+        id: 2,
+        label: 'Dead Goblin',
+        current_hp: 0
+      }
+      const livingMonster: EncounterMonster = {
+        ...mockMonster,
+        id: 3,
+        label: 'Living Goblin',
+        current_hp: 7
+      }
+      const combatStateWithInit = {
+        ...mockCombatState,
+        initiatives: {
+          char_1: 10,
+          monster_2: 25, // Dead goblin has highest init
+          monster_3: 15 // Living goblin
+        }
+      }
+      const wrapper = await mountSuspended(CombatTable, {
+        props: {
+          characters: mockCharacters,
+          monsters: [deadMonster, livingMonster],
+          combatState: combatStateWithInit
+        }
+      })
+      const rows = wrapper.findAll('[data-testid="combat-row"], [data-testid="monster-row"]')
+      // Dead monster should be last despite having highest initiative
+      // Order: Living Goblin (15), Aldric (10), Mira (no init), Dead Goblin (25 but dead)
+      expect(rows.length).toBe(4)
+      // Last row should be the dead monster
+      expect(rows[rows.length - 1].text()).toContain('Dead Goblin')
+    })
   })
 })

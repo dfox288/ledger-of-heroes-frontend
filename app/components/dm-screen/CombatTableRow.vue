@@ -46,6 +46,15 @@ const hasDeathSaves = computed(() =>
 const isConcentrating = computed(() => props.character.combat.concentration.active)
 const hasConditions = computed(() => props.character.conditions.length > 0)
 
+// Concentration check helper
+const concentrationDamage = ref('')
+const concentrationDc = computed(() => {
+  const damage = parseInt(concentrationDamage.value, 10)
+  if (isNaN(damage) || damage <= 0) return 10
+  // DC = 10 or half damage, whichever is higher
+  return Math.max(10, Math.floor(damage / 2))
+})
+
 // Display initiative: show rolled value or just modifier if not rolled
 const initiativeDisplay = computed(() => {
   if (props.initiative !== null) {
@@ -105,14 +114,47 @@ const hasClimb = computed(() => speeds.value.climb !== null && speeds.value.clim
           :successes="character.combat.death_saves.successes"
           :failures="character.combat.death_saves.failures"
         />
-        <UBadge
+        <UPopover
           v-if="isConcentrating"
-          color="spell"
-          variant="subtle"
-          size="md"
+          :ui="{ content: 'p-3' }"
         >
-          ◉ {{ character.combat.concentration.spell }}
-        </UBadge>
+          <UBadge
+            color="spell"
+            variant="subtle"
+            size="md"
+            class="cursor-pointer hover:ring-2 hover:ring-spell-500/50"
+            data-testid="concentration-badge"
+          >
+            ◉ {{ character.combat.concentration.spell }}
+          </UBadge>
+          <template #content>
+            <div class="space-y-2 min-w-[200px]">
+              <div class="text-sm font-medium">
+                Concentration Check
+              </div>
+              <div class="text-xs text-neutral-500">
+                Enter damage to calculate DC
+              </div>
+              <UInput
+                v-model="concentrationDamage"
+                type="number"
+                placeholder="Damage taken"
+                size="sm"
+                class="w-full"
+                data-testid="concentration-damage-input"
+              />
+              <div
+                v-if="concentrationDamage"
+                class="text-sm"
+              >
+                <span class="font-medium">DC {{ concentrationDc }}</span>
+                <span class="text-neutral-500">
+                  (CON {{ formatModifier(character.saving_throws.CON) }})
+                </span>
+              </div>
+            </div>
+          </template>
+        </UPopover>
         <UBadge
           v-for="condition in character.conditions"
           :key="condition.slug"

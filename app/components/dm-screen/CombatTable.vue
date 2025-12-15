@@ -52,8 +52,16 @@ function toggleExpand(key: string) {
   }
 }
 
+// Check if a combatant is dead (only applies to monsters)
+function isDead(combatant: Combatant): boolean {
+  if (combatant.type === 'monster') {
+    return (combatant.data as EncounterMonster).current_hp <= 0
+  }
+  return false
+}
+
 // Sort all combatants by initiative (highest first), tiebreaker: DEX modifier for characters
-// Combatants without initiative go to end in original order
+// Dead monsters go to the bottom, combatants without initiative go before dead monsters
 const sortedCombatants = computed<Combatant[]>(() => {
   const combatants: Combatant[] = []
 
@@ -79,10 +87,12 @@ const sortedCombatants = computed<Combatant[]>(() => {
     })
   }
 
-  const withInit = combatants.filter(c => c.init !== null)
-  const withoutInit = combatants.filter(c => c.init === null)
+  // Separate into: living with init, living without init, dead
+  const livingWithInit = combatants.filter(c => c.init !== null && !isDead(c))
+  const livingWithoutInit = combatants.filter(c => c.init === null && !isDead(c))
+  const dead = combatants.filter(c => isDead(c))
 
-  withInit.sort((a, b) => {
+  livingWithInit.sort((a, b) => {
     if ((b.init ?? 0) !== (a.init ?? 0)) return (b.init ?? 0) - (a.init ?? 0)
     // Tiebreaker: higher DEX modifier goes first (characters only)
     const modA = a.type === 'character'
@@ -94,7 +104,7 @@ const sortedCombatants = computed<Combatant[]>(() => {
     return modB - modA
   })
 
-  return [...withInit, ...withoutInit]
+  return [...livingWithInit, ...livingWithoutInit, ...dead]
 })
 
 function isCurrentTurn(key: string): boolean {
