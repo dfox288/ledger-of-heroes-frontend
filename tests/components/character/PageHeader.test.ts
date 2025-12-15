@@ -243,4 +243,72 @@ describe('CharacterPageHeader - Store Integration', () => {
       expect(store.hitPoints.current).toBe(1)
     })
   })
+
+  describe('Edit Character Name', () => {
+    it('updates displayed name immediately after successful edit', async () => {
+      const store = useCharacterPlayStateStore()
+      const character = createMockCharacter({ name: 'Original Name' })
+
+      store.initialize({
+        characterId: 1,
+        isDead: false,
+        hitPoints: { current: 20, max: 40, temporary: 0 },
+        deathSaves: { successes: 0, failures: 0 },
+        currency: { pp: 0, gp: 50, ep: 0, sp: 10, cp: 5 }
+      })
+
+      // Mock successful PATCH
+      apiFetchMock.mockResolvedValueOnce({ data: { name: 'New Name' } })
+
+      const wrapper = await mountSuspended(CharacterPageHeader, {
+        props: { character },
+        global: { plugins: [pinia] }
+      })
+
+      // Verify initial name is displayed
+      expect(wrapper.find('h1').text()).toBe('Original Name')
+
+      // Trigger edit save via component method
+      const vm = wrapper.vm as unknown as {
+        handleEditSave: (payload: { name: string, alignment: string | null, portraitFile: File | null }) => Promise<void>
+      }
+      await vm.handleEditSave({
+        name: 'New Name',
+        alignment: character.alignment,
+        portraitFile: null
+      })
+
+      // Name should be updated immediately in the UI
+      expect(wrapper.find('h1').text()).toBe('New Name')
+    })
+
+    it('syncs localName from props when not editing', async () => {
+      const store = useCharacterPlayStateStore()
+      const character = createMockCharacter({ name: 'Initial Name' })
+
+      store.initialize({
+        characterId: 1,
+        isDead: false,
+        hitPoints: { current: 20, max: 40, temporary: 0 },
+        deathSaves: { successes: 0, failures: 0 },
+        currency: { pp: 0, gp: 50, ep: 0, sp: 10, cp: 5 }
+      })
+
+      const wrapper = await mountSuspended(CharacterPageHeader, {
+        props: { character },
+        global: { plugins: [pinia] }
+      })
+
+      // Initial name should be displayed
+      expect(wrapper.find('h1').text()).toBe('Initial Name')
+
+      // Update props (simulating parent refresh)
+      await wrapper.setProps({
+        character: createMockCharacter({ name: 'Updated From Props' })
+      })
+
+      // Name should sync from props
+      expect(wrapper.find('h1').text()).toBe('Updated From Props')
+    })
+  })
 })
