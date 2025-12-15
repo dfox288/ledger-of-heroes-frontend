@@ -123,16 +123,16 @@ describe('CharacterSheetSpellsByLevel', () => {
     expect(checkIconCount).toBe(7) // 7 prepared spells
   })
 
-  it('uses circle icon for unprepared spells', async () => {
+  it('uses empty circle indicator for unprepared spells', async () => {
     const wrapper = await mountSuspended(SpellsByLevel, {
       props: { spells: mockSpells }
     })
 
     const html = wrapper.html()
-    // Count occurrences of plain circle icon (not check-circle)
-    // The component uses 'i-heroicons-circle' for unprepared spells
-    const circleIconCount = (html.match(/i-heroicons-circle(?!-)/g) || []).length
-    expect(circleIconCount).toBe(3) // 3 unprepared spells
+    // The component uses a styled span with rounded-full border for unprepared spells
+    // (heroicons doesn't have a plain circle icon)
+    const emptyCircleCount = (html.match(/rounded-full border-2 border-gray-300/g) || []).length
+    expect(emptyCircleCount).toBe(3) // 3 unprepared spells
   })
 
   it('sorts spells with prepared first, then alphabetically', async () => {

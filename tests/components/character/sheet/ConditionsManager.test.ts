@@ -3,7 +3,7 @@
  * ConditionsManager Component Tests
  *
  * Tests the Manager component that wraps Conditions display + DeadlyExhaustionConfirmModal.
- * Handles API calls for removing conditions and updating exhaustion levels.
+ * Uses characterPlayState store for condition operations.
  *
  * @see Issue #584 - Character sheet component refactor
  */
@@ -29,7 +29,6 @@ mockNuxtImport('useApi', () => () => ({ apiFetch: apiFetchMock }))
 // =============================================================================
 
 interface ConditionsManagerVM {
-  isUpdating: boolean
   showDeadlyExhaustionModal: boolean
   handleRemove: (conditionSlug: string) => Promise<void>
   handleUpdateLevel: (payload: { slug: string, level: number, source: string | null, duration: string | null }) => Promise<void>
@@ -93,21 +92,35 @@ const mockExhaustion = createCondition({
 // =============================================================================
 
 let pinia: ReturnType<typeof createPinia>
+let store: ReturnType<typeof useCharacterPlayStateStore>
 
-function setupStore(overrides: Partial<{
-  characterId: number
-  isDead: boolean
-}> = {}) {
+/**
+ * Initialize store with conditions via direct state setting
+ * (The component reads conditions from the store, not props)
+ */
+function setupStore(options: {
+  characterId?: number
+  isDead?: boolean
+  conditions?: CharacterCondition[]
+} = {}) {
   pinia = createPinia()
   setActivePinia(pinia)
-  const store = useCharacterPlayStateStore()
+  store = useCharacterPlayStateStore()
+
+  // Initialize basic play state
   store.initialize({
-    characterId: overrides.characterId ?? 42,
-    isDead: overrides.isDead ?? false,
+    characterId: options.characterId ?? 42,
+    isDead: options.isDead ?? false,
     hitPoints: { current: 20, max: 30, temporary: 0 },
     deathSaves: { successes: 0, failures: 0 },
     currency: { pp: 0, gp: 0, ep: 0, sp: 0, cp: 0 }
   })
+
+  // Set conditions directly on store (component reads from store)
+  if (options.conditions) {
+    store.conditions = options.conditions
+  }
+
   return store
 }
 
@@ -131,14 +144,10 @@ describe('ConditionsManager', () => {
 
   describe('rendering', () => {
     it('renders Conditions component with provided data', async () => {
-      setupStore()
+      setupStore({ conditions: [mockCondition] })
 
       const wrapper = await mountSuspended(ConditionsManager, {
-        props: {
-          conditions: [mockCondition],
-          characterId: 42,
-          editable: true
-        },
+        props: { editable: true },
         ...getMountOptions()
       })
 
@@ -147,14 +156,10 @@ describe('ConditionsManager', () => {
     })
 
     it('renders nothing when no conditions', async () => {
-      setupStore()
+      setupStore({ conditions: [] })
 
       const wrapper = await mountSuspended(ConditionsManager, {
-        props: {
-          conditions: [],
-          characterId: 42,
-          editable: true
-        },
+        props: { editable: true },
         ...getMountOptions()
       })
 
@@ -162,14 +167,10 @@ describe('ConditionsManager', () => {
     })
 
     it('passes editable and isDead to Conditions component', async () => {
-      setupStore({ isDead: true })
+      setupStore({ isDead: true, conditions: [mockCondition] })
 
       const wrapper = await mountSuspended(ConditionsManager, {
-        props: {
-          conditions: [mockCondition],
-          characterId: 42,
-          editable: true
-        },
+        props: { editable: true },
         ...getMountOptions()
       })
 
@@ -183,16 +184,12 @@ describe('ConditionsManager', () => {
   // ===========================================================================
 
   describe('remove condition', () => {
-    it('calls API to remove condition', async () => {
-      setupStore()
+    it('calls store action to remove condition', async () => {
+      setupStore({ conditions: [mockCondition] })
       apiFetchMock.mockResolvedValue({})
 
       const wrapper = await mountSuspended(ConditionsManager, {
-        props: {
-          conditions: [mockCondition],
-          characterId: 42,
-          editable: true
-        },
+        props: { editable: true },
         ...getMountOptions()
       })
 
@@ -204,35 +201,28 @@ describe('ConditionsManager', () => {
       })
     })
 
-    it('emits refresh after successful remove', async () => {
-      setupStore()
+    it('updates store conditions after successful remove', async () => {
+      setupStore({ conditions: [mockCondition] })
       apiFetchMock.mockResolvedValue({})
 
       const wrapper = await mountSuspended(ConditionsManager, {
-        props: {
-          conditions: [mockCondition],
-          characterId: 42,
-          editable: true
-        },
+        props: { editable: true },
         ...getMountOptions()
       })
 
       const vm = wrapper.vm as unknown as ConditionsManagerVM
       await vm.handleRemove('core:poisoned')
 
-      expect(wrapper.emitted('refresh')).toBeTruthy()
+      // Store should have removed the condition (optimistic update)
+      expect(store.conditions).toHaveLength(0)
     })
 
     it('shows success toast after remove', async () => {
-      setupStore()
+      setupStore({ conditions: [mockCondition] })
       apiFetchMock.mockResolvedValue({})
 
       const wrapper = await mountSuspended(ConditionsManager, {
-        props: {
-          conditions: [mockCondition],
-          characterId: 42,
-          editable: true
-        },
+        props: { editable: true },
         ...getMountOptions()
       })
 
@@ -248,15 +238,11 @@ describe('ConditionsManager', () => {
     })
 
     it('shows error toast on remove failure', async () => {
-      setupStore()
+      setupStore({ conditions: [mockCondition] })
       apiFetchMock.mockRejectedValue(new Error('Network error'))
 
       const wrapper = await mountSuspended(ConditionsManager, {
-        props: {
-          conditions: [mockCondition],
-          characterId: 42,
-          editable: true
-        },
+        props: { editable: true },
         ...getMountOptions()
       })
 
@@ -271,8 +257,8 @@ describe('ConditionsManager', () => {
       )
     })
 
-    it('prevents concurrent remove operations', async () => {
-      setupStore()
+    it('prevents concurrent remove operations via store guard', async () => {
+      setupStore({ conditions: [mockCondition] })
       let resolveFirst: () => void
       const firstPromise = new Promise<void>((resolve) => {
         resolveFirst = resolve
@@ -280,11 +266,7 @@ describe('ConditionsManager', () => {
       apiFetchMock.mockImplementationOnce(() => firstPromise)
 
       const wrapper = await mountSuspended(ConditionsManager, {
-        props: {
-          conditions: [mockCondition],
-          characterId: 42,
-          editable: true
-        },
+        props: { editable: true },
         ...getMountOptions()
       })
 
@@ -293,10 +275,10 @@ describe('ConditionsManager', () => {
       // Start first remove
       const firstRemove = vm.handleRemove('core:poisoned')
 
-      // Try second remove while first is in progress
+      // Try second remove while first is in progress (store guard should prevent)
       await vm.handleRemove('core:frightened')
 
-      // Only first call should have been made
+      // Only first call should have been made (store.isUpdatingConditions blocks second)
       expect(apiFetchMock).toHaveBeenCalledTimes(1)
 
       // Complete first request
@@ -310,16 +292,14 @@ describe('ConditionsManager', () => {
   // ===========================================================================
 
   describe('update exhaustion level', () => {
-    it('calls API to update exhaustion level', async () => {
-      setupStore()
+    it('calls store action to update exhaustion level', async () => {
+      setupStore({ conditions: [mockExhaustion] })
       apiFetchMock.mockResolvedValue({})
+      // Mock fetchConditions response for refresh
+      apiFetchMock.mockResolvedValue({ data: [mockExhaustion] })
 
       const wrapper = await mountSuspended(ConditionsManager, {
-        props: {
-          conditions: [mockExhaustion],
-          characterId: 42,
-          editable: true
-        },
+        props: { editable: true },
         ...getMountOptions()
       })
 
@@ -342,16 +322,19 @@ describe('ConditionsManager', () => {
       })
     })
 
-    it('emits refresh after successful update', async () => {
-      setupStore()
-      apiFetchMock.mockResolvedValue({})
+    it('refreshes conditions from store after successful update', async () => {
+      setupStore({ conditions: [mockExhaustion] })
+      const updatedExhaustion = createCondition({
+        ...mockExhaustion,
+        level: 3
+      })
+      // First call is POST, second is GET for refresh
+      apiFetchMock
+        .mockResolvedValueOnce({})
+        .mockResolvedValueOnce({ data: [updatedExhaustion] })
 
       const wrapper = await mountSuspended(ConditionsManager, {
-        props: {
-          conditions: [mockExhaustion],
-          characterId: 42,
-          editable: true
-        },
+        props: { editable: true },
         ...getMountOptions()
       })
 
@@ -363,19 +346,16 @@ describe('ConditionsManager', () => {
         duration: 'Until long rest'
       })
 
-      expect(wrapper.emitted('refresh')).toBeTruthy()
+      // Store should fetch updated conditions
+      expect(apiFetchMock).toHaveBeenCalledWith('/characters/42/conditions')
     })
 
     it('shows success toast after update', async () => {
-      setupStore()
-      apiFetchMock.mockResolvedValue({})
+      setupStore({ conditions: [mockExhaustion] })
+      apiFetchMock.mockResolvedValue({ data: [mockExhaustion] })
 
       const wrapper = await mountSuspended(ConditionsManager, {
-        props: {
-          conditions: [mockExhaustion],
-          characterId: 42,
-          editable: true
-        },
+        props: { editable: true },
         ...getMountOptions()
       })
 
@@ -396,15 +376,11 @@ describe('ConditionsManager', () => {
     })
 
     it('shows error toast on update failure', async () => {
-      setupStore()
+      setupStore({ conditions: [mockExhaustion] })
       apiFetchMock.mockRejectedValue(new Error('Network error'))
 
       const wrapper = await mountSuspended(ConditionsManager, {
-        props: {
-          conditions: [mockExhaustion],
-          characterId: 42,
-          editable: true
-        },
+        props: { editable: true },
         ...getMountOptions()
       })
 
@@ -425,15 +401,11 @@ describe('ConditionsManager', () => {
     })
 
     it('handles null source and duration', async () => {
-      setupStore()
-      apiFetchMock.mockResolvedValue({})
+      setupStore({ conditions: [mockExhaustion] })
+      apiFetchMock.mockResolvedValue({ data: [mockExhaustion] })
 
       const wrapper = await mountSuspended(ConditionsManager, {
-        props: {
-          conditions: [mockExhaustion],
-          characterId: 42,
-          editable: true
-        },
+        props: { editable: true },
         ...getMountOptions()
       })
 
@@ -463,14 +435,10 @@ describe('ConditionsManager', () => {
 
   describe('deadly exhaustion confirmation', () => {
     it('opens confirmation modal when deadly exhaustion requested', async () => {
-      setupStore()
+      setupStore({ conditions: [mockExhaustion] })
 
       const wrapper = await mountSuspended(ConditionsManager, {
-        props: {
-          conditions: [mockExhaustion],
-          characterId: 42,
-          editable: true
-        },
+        props: { editable: true },
         ...getMountOptions()
       })
 
@@ -486,16 +454,12 @@ describe('ConditionsManager', () => {
       expect(vm.showDeadlyExhaustionModal).toBe(true)
     })
 
-    it('calls API with level 6 after confirmation', async () => {
-      setupStore()
-      apiFetchMock.mockResolvedValue({})
+    it('calls store action with level 6 after confirmation', async () => {
+      setupStore({ conditions: [mockExhaustion] })
+      apiFetchMock.mockResolvedValue({ data: [mockExhaustion] })
 
       const wrapper = await mountSuspended(ConditionsManager, {
-        props: {
-          conditions: [mockExhaustion],
-          characterId: 42,
-          editable: true
-        },
+        props: { editable: true },
         ...getMountOptions()
       })
 
@@ -525,15 +489,11 @@ describe('ConditionsManager', () => {
     })
 
     it('clears pending data after confirmation', async () => {
-      setupStore()
-      apiFetchMock.mockResolvedValue({})
+      setupStore({ conditions: [mockExhaustion] })
+      apiFetchMock.mockResolvedValue({ data: [mockExhaustion] })
 
       const wrapper = await mountSuspended(ConditionsManager, {
-        props: {
-          conditions: [mockExhaustion],
-          characterId: 42,
-          editable: true
-        },
+        props: { editable: true },
         ...getMountOptions()
       })
 
@@ -557,12 +517,12 @@ describe('ConditionsManager', () => {
   })
 
   // ===========================================================================
-  // ISUPDATING STATE
+  // ISUPDATINGCONDITIONS STATE (from store)
   // ===========================================================================
 
-  describe('isUpdating state', () => {
-    it('sets isUpdating during remove operation', async () => {
-      setupStore()
+  describe('isUpdatingConditions state', () => {
+    it('store sets isUpdatingConditions during remove operation', async () => {
+      setupStore({ conditions: [mockCondition] })
       let resolveRemove: () => void
       const removePromise = new Promise<void>((resolve) => {
         resolveRemove = resolve
@@ -570,11 +530,7 @@ describe('ConditionsManager', () => {
       apiFetchMock.mockImplementation(() => removePromise)
 
       const wrapper = await mountSuspended(ConditionsManager, {
-        props: {
-          conditions: [mockCondition],
-          characterId: 42,
-          editable: true
-        },
+        props: { editable: true },
         ...getMountOptions()
       })
 
@@ -583,34 +539,30 @@ describe('ConditionsManager', () => {
       // Start operation
       const removeOp = vm.handleRemove('core:poisoned')
 
-      // Should be updating
-      expect(vm.isUpdating).toBe(true)
+      // Store should be updating
+      expect(store.isUpdatingConditions).toBe(true)
 
       // Complete operation
       resolveRemove!()
       await removeOp
 
-      // Should no longer be updating
-      expect(vm.isUpdating).toBe(false)
+      // Store should no longer be updating
+      expect(store.isUpdatingConditions).toBe(false)
     })
 
-    it('resets isUpdating on error', async () => {
-      setupStore()
+    it('store resets isUpdatingConditions on error', async () => {
+      setupStore({ conditions: [mockCondition] })
       apiFetchMock.mockRejectedValue(new Error('Network error'))
 
       const wrapper = await mountSuspended(ConditionsManager, {
-        props: {
-          conditions: [mockCondition],
-          characterId: 42,
-          editable: true
-        },
+        props: { editable: true },
         ...getMountOptions()
       })
 
       const vm = wrapper.vm as unknown as ConditionsManagerVM
       await vm.handleRemove('core:poisoned')
 
-      expect(vm.isUpdating).toBe(false)
+      expect(store.isUpdatingConditions).toBe(false)
     })
   })
 })
