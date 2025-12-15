@@ -37,6 +37,8 @@ const emit = defineEmits<{
   updateMonsterLabel: [instanceId: number, value: string]
   removeMonster: [instanceId: number]
   clearEncounter: []
+  savePreset: []
+  loadPreset: []
 }>()
 
 // Check if there are monsters in the encounter
@@ -169,6 +171,27 @@ const hasCombatants = computed(() => {
           @click="emit('addMonster')"
         >
           Add Monster
+        </UButton>
+
+        <!-- Preset Buttons -->
+        <UButton
+          data-testid="save-preset-btn"
+          icon="i-heroicons-bookmark"
+          size="sm"
+          variant="ghost"
+          :disabled="!hasMonsters"
+          @click="emit('savePreset')"
+        >
+          Save Preset
+        </UButton>
+        <UButton
+          data-testid="load-preset-btn"
+          icon="i-heroicons-folder-open"
+          size="sm"
+          variant="ghost"
+          @click="emit('loadPreset')"
+        >
+          Load Preset
         </UButton>
 
         <!-- Clear Encounter -->
