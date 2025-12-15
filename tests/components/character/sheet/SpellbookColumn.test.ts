@@ -83,7 +83,8 @@ describe('SpellbookColumn', () => {
       const wrapper = await mountSuspended(SpellbookColumn, {
         props: { spells: mockSpells, atPrepLimit: false }
       })
-      // Would need to interact with dropdown - simplified test
+      // Dropdown exists - full interaction test would require more setup
+      expect(wrapper.find('[data-testid="school-filter"]').exists()).toBe(true)
     })
 
     it('filters by concentration', async () => {

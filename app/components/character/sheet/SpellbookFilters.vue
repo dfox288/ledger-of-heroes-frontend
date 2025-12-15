@@ -9,7 +9,7 @@
  * @see Issue #680 - Wizard Spellbook Phase 2
  */
 
-const props = defineProps<{
+defineProps<{
   searchQuery: string
   selectedSchool: string | null
   selectedLevel: number | null
@@ -72,7 +72,7 @@ const levelOptions = [
         option-attribute="label"
         placeholder="School"
         class="flex-1"
-        @update:model-value="emit('update:selectedSchool', $event)"
+        @update:model-value="emit('update:selectedSchool', $event as string | null)"
       />
       <USelectMenu
         data-testid="level-filter"
@@ -82,7 +82,7 @@ const levelOptions = [
         option-attribute="label"
         placeholder="Level"
         class="flex-1"
-        @update:model-value="emit('update:selectedLevel', $event)"
+        @update:model-value="emit('update:selectedLevel', $event as number | null)"
       />
     </div>
 
@@ -92,13 +92,13 @@ const levelOptions = [
         data-testid="concentration-filter"
         :model-value="concentrationOnly"
         label="Concentration"
-        @update:model-value="emit('update:concentrationOnly', $event)"
+        @update:model-value="emit('update:concentrationOnly', $event as boolean)"
       />
       <UCheckbox
         data-testid="ritual-filter"
         :model-value="ritualOnly"
         label="Ritual"
-        @update:model-value="emit('update:ritualOnly', $event)"
+        @update:model-value="emit('update:ritualOnly', $event as boolean)"
       />
     </div>
   </div>

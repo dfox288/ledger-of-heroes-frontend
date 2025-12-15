@@ -34,11 +34,11 @@ const spellsByLevel = computed(() => {
   for (const spell of preparedSpells.value) {
     const level = spell.spell!.level
     if (!groups[level]) groups[level] = []
-    groups[level].push(spell)
+    groups[level]!.push(spell)
   }
   // Sort within each level
   for (const level in groups) {
-    groups[level].sort((a, b) => a.spell!.name.localeCompare(b.spell!.name))
+    groups[level]!.sort((a, b) => a.spell!.name.localeCompare(b.spell!.name))
   }
   return groups
 })

@@ -1,5 +1,5 @@
 // tests/components/character/sheet/SpellbookFilters.test.ts
-import { describe, it, expect, beforeEach } from 'vitest'
+import { describe, it, expect } from 'vitest'
 import { mountSuspended } from '@nuxt/test-utils/runtime'
 import SpellbookFilters from '~/components/character/sheet/SpellbookFilters.vue'
 

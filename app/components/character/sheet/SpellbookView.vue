@@ -12,7 +12,7 @@ import { storeToRefs } from 'pinia'
 import type { CharacterSpell } from '~/types/character'
 import { useCharacterPlayStateStore } from '~/stores/characterPlayState'
 
-const props = defineProps<{
+defineProps<{
   spells: CharacterSpell[]
   preparedCount: number
   preparationLimit: number

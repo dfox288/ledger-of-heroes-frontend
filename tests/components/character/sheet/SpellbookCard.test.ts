@@ -1,5 +1,5 @@
 // tests/components/character/sheet/SpellbookCard.test.ts
-import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { describe, it, expect, beforeEach } from 'vitest'
 import { mountSuspended } from '@nuxt/test-utils/runtime'
 import { setActivePinia, createPinia } from 'pinia'
 import SpellbookCard from '~/components/character/sheet/SpellbookCard.vue'
