@@ -83,6 +83,12 @@ const sortedLevels = computed(() =>
   Object.keys(spellsByLevel.value).map(Number).sort((a, b) => a - b)
 )
 
+// Determine if this is a spellbook caster (wizard)
+const preparationMethod = computed(() =>
+  (stats.value as { preparation_method?: string | null } | null)?.preparation_method ?? null
+)
+const isSpellbookCaster = computed(() => preparationMethod.value === 'spellbook')
+
 useSeoMeta({
   title: () => character.value ? `${character.value.name} - Spells` : 'Spells'
 })
@@ -194,40 +200,57 @@ useSeoMeta({
             />
           </div>
 
-          <!-- Cantrips Section -->
+          <!-- Wizard Spellbook View (two-column) -->
           <div
-            v-if="cantrips.length > 0"
+            v-if="isSpellbookCaster"
+            data-testid="spellbook-view"
             class="mt-8"
           >
-            <h3 class="text-lg font-semibold text-gray-700 dark:text-gray-300 mb-3">
-              Cantrips
-            </h3>
-            <div class="space-y-2">
-              <CharacterSheetSpellCard
-                v-for="spell in cantrips"
-                :key="spell.id"
-                :spell="spell"
-              />
-            </div>
+            <CharacterSheetSpellbookView
+              :spells="validSpells"
+              :prepared-count="spellSlots?.prepared_count ?? 0"
+              :preparation-limit="spellSlots?.preparation_limit ?? 0"
+              :character-id="character.id"
+            />
           </div>
 
-          <!-- Leveled Spells by Level -->
-          <div
-            v-for="level in sortedLevels"
-            :key="level"
-            class="mt-8"
-          >
-            <h3 class="text-lg font-semibold text-gray-700 dark:text-gray-300 mb-3">
-              {{ formatSpellLevel(level) }} Level
-            </h3>
-            <div class="space-y-2">
-              <CharacterSheetSpellCard
-                v-for="spell in spellsByLevel[level]"
-                :key="spell.id"
-                :spell="spell"
-              />
+          <!-- Standard Spell List (for non-wizard casters) -->
+          <template v-else>
+            <!-- Cantrips Section -->
+            <div
+              v-if="cantrips.length > 0"
+              class="mt-8"
+            >
+              <h3 class="text-lg font-semibold text-gray-700 dark:text-gray-300 mb-3">
+                Cantrips
+              </h3>
+              <div class="space-y-2">
+                <CharacterSheetSpellCard
+                  v-for="spell in cantrips"
+                  :key="spell.id"
+                  :spell="spell"
+                />
+              </div>
             </div>
-          </div>
+
+            <!-- Leveled Spells by Level -->
+            <div
+              v-for="level in sortedLevels"
+              :key="level"
+              class="mt-8"
+            >
+              <h3 class="text-lg font-semibold text-gray-700 dark:text-gray-300 mb-3">
+                {{ formatSpellLevel(level) }} Level
+              </h3>
+              <div class="space-y-2">
+                <CharacterSheetSpellCard
+                  v-for="spell in spellsByLevel[level]"
+                  :key="spell.id"
+                  :spell="spell"
+                />
+              </div>
+            </div>
+          </template>
 
           <!-- Empty State -->
           <div

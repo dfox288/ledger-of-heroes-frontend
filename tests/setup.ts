@@ -4,19 +4,35 @@ import { h } from 'vue'
 import 'vitest-canvas-mock'
 
 // =============================================================================
-// SUPPRESS VUE-ROUTER TEARDOWN ERRORS
+// SUPPRESS TEARDOWN ERRORS
 // =============================================================================
-// When tests mount page components, vue-router may start navigation that
-// doesn't complete before the test ends. This causes "history is not defined"
-// errors during teardown. These are harmless - suppress them to keep output clean.
+// When tests mount page components, vue-router and Nuxt plugins may start
+// async operations that don't complete before the test ends. These cause
+// harmless errors during teardown - suppress them to keep output clean.
 // =============================================================================
 process.on('unhandledRejection', (reason: unknown) => {
   // Suppress vue-router navigation errors during teardown
   if (reason instanceof ReferenceError && reason.message === 'history is not defined') {
     return // Silently ignore
   }
+  // Suppress Nuxt navigation-repaint.client.js errors during teardown
+  // This plugin uses requestAnimationFrame which may not complete before teardown
+  if (reason instanceof ReferenceError && reason.message === 'requestAnimationFrame is not defined') {
+    return // Silently ignore
+  }
   // Re-throw other unhandled rejections so they still fail tests
   throw reason
+})
+
+// Suppress uncaught exceptions that occur after test environment teardown
+// These are typically from Nuxt/Vue cleanup that happens asynchronously
+process.on('uncaughtException', (error: Error) => {
+  // Suppress Nuxt navigation-repaint.client.js errors
+  if (error instanceof ReferenceError && error.message === 'requestAnimationFrame is not defined') {
+    return // Silently ignore
+  }
+  // Re-throw other exceptions
+  throw error
 })
 
 // =============================================================================
