@@ -127,7 +127,7 @@ export function useDmScreenCombat(
       // eslint-disable-next-line @typescript-eslint/no-dynamic-delete
       delete state.value.notes[key]
     } else {
-      state.value.notes[key] = text
+      state.value.notes[key] = trimmed
     }
   }
 

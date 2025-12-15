@@ -27,8 +27,8 @@ interface Props {
 
 const props = withDefaults(defineProps<Props>(), {
   monsters: () => [],
-  getNote: () => () => '',
-  hasNote: () => () => false
+  getNote: () => (_key: string) => '',
+  hasNote: () => (_key: string) => false
 })
 
 const emit = defineEmits<{
@@ -280,7 +280,6 @@ const hasCombatants = computed(() => {
           :initiative="combatant.init"
           :in-combat="combatState.inCombat"
           :note="getNote(combatant.key)"
-          :has-note="hasNote(combatant.key)"
           @toggle="toggleExpand(combatant.key)"
           @update:initiative="(value) => emit('setInitiative', combatant.key, value)"
           @update:note="(text) => emit('setNote', combatant.key, text)"
@@ -294,7 +293,6 @@ const hasCombatants = computed(() => {
           :is-current-turn="isCurrentTurn(combatant.key)"
           :initiative="combatant.init"
           :note="getNote(combatant.key)"
-          :has-note="hasNote(combatant.key)"
           @toggle="toggleExpand(combatant.key)"
           @update:initiative="(value) => emit('setInitiative', combatant.key, value)"
           @update:note="(text) => emit('setNote', combatant.key, text)"
