@@ -124,6 +124,53 @@ describe('ClassResourceCounter', () => {
     })
   })
 
+  describe('Keyboard Accessibility', () => {
+    it('filled icons are focusable when interactive', async () => {
+      const wrapper = await mountSuspended(ClassResourceCounter, {
+        props: { counter: createCounter({ current: 3, max: 5 }), editable: true }
+      })
+      const filled = wrapper.find('[data-testid="counter-icon-filled"]')
+      expect(filled.attributes('tabindex')).toBe('0')
+    })
+
+    it('filled icons are not focusable when not interactive', async () => {
+      const wrapper = await mountSuspended(ClassResourceCounter, {
+        props: { counter: createCounter({ current: 3, max: 5 }), editable: false }
+      })
+      const filled = wrapper.find('[data-testid="counter-icon-filled"]')
+      expect(filled.attributes('tabindex')).toBe('-1')
+    })
+
+    it('emits spend on Enter key press', async () => {
+      const wrapper = await mountSuspended(ClassResourceCounter, {
+        props: { counter: createCounter({ current: 3, max: 5 }), editable: true }
+      })
+      const filled = wrapper.find('[data-testid="counter-icon-filled"]')
+      await filled.trigger('keydown.enter')
+      expect(wrapper.emitted('spend')).toBeTruthy()
+      expect(wrapper.emitted('spend')![0]).toEqual(['phb:bard:bardic-inspiration'])
+    })
+
+    it('emits spend on Space key press', async () => {
+      const wrapper = await mountSuspended(ClassResourceCounter, {
+        props: { counter: createCounter({ current: 3, max: 5 }), editable: true }
+      })
+      const filled = wrapper.find('[data-testid="counter-icon-filled"]')
+      await filled.trigger('keydown.space')
+      expect(wrapper.emitted('spend')).toBeTruthy()
+      expect(wrapper.emitted('spend')![0]).toEqual(['phb:bard:bardic-inspiration'])
+    })
+
+    it('has accessible role and label', async () => {
+      const wrapper = await mountSuspended(ClassResourceCounter, {
+        props: { counter: createCounter({ current: 3, max: 5 }), editable: true }
+      })
+      const filled = wrapper.find('[data-testid="counter-icon-filled"]')
+      expect(filled.attributes('role')).toBe('button')
+      expect(filled.attributes('aria-label')).toContain('Spend')
+    })
+  })
+
   describe('Reset Badge', () => {
     it('shows "Long" badge for long_rest reset', async () => {
       const wrapper = await mountSuspended(ClassResourceCounter, {

@@ -40,9 +40,12 @@ function handleIconClick() {
           data-testid="reset-badge"
           color="neutral"
           variant="subtle"
-          size="xs"
+          size="md"
         >
-          <UIcon name="i-heroicons-arrow-path" class="w-3 h-3 mr-0.5" />
+          <UIcon
+            name="i-heroicons-arrow-path"
+            class="w-3 h-3 mr-0.5"
+          />
           {{ resetLabel }}
         </UBadge>
         <span class="text-gray-500 dark:text-gray-400">
@@ -62,10 +65,15 @@ function handleIconClick() {
         name="i-heroicons-bolt-solid"
         :class="[
           'w-5 h-5 text-primary-600 dark:text-primary-500',
-          isInteractive ? 'cursor-pointer hover:opacity-80 transition-opacity' : ''
+          isInteractive ? 'cursor-pointer hover:opacity-80 transition-opacity focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-1 rounded' : ''
         ]"
+        :tabindex="isInteractive ? 0 : -1"
+        role="button"
+        :aria-label="`Spend 1 ${counter.name}`"
         data-testid="counter-icon-filled"
         @click="handleIconClick"
+        @keydown.enter="handleIconClick"
+        @keydown.space.prevent="handleIconClick"
       />
       <UIcon
         v-for="i in (counter.max - counter.current)"
