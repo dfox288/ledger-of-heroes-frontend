@@ -566,6 +566,71 @@ describe('HitDiceManager', () => {
   })
 
   // ===========================================================================
+  // SSR HYDRATION
+  // ===========================================================================
+
+  describe('SSR hydration', () => {
+    it('uses initialIsDead prop when store not initialized', async () => {
+      // Don't initialize store - simulates SSR
+      pinia = createPinia()
+      setActivePinia(pinia)
+
+      const wrapper = await mountSuspended(HitDiceManager, {
+        props: {
+          hitDice: mockHitDice,
+          characterId: 42,
+          editable: true,
+          initialIsDead: true // Character is dead
+        },
+        ...getMountOptions()
+      })
+
+      // Rest buttons should be disabled when dead (even without store)
+      const shortRestBtn = wrapper.find('[data-testid="short-rest-btn"]')
+      expect(shortRestBtn.attributes('disabled')).toBeDefined()
+    })
+
+    it('uses store.isDead after store is initialized', async () => {
+      // Initialize store with isDead=false
+      setupStore({ isDead: false })
+
+      const wrapper = await mountSuspended(HitDiceManager, {
+        props: {
+          hitDice: mockHitDice,
+          characterId: 42,
+          editable: true,
+          initialIsDead: true // Props say dead, but store says alive
+        },
+        ...getMountOptions()
+      })
+
+      // Store should take precedence - buttons NOT disabled
+      const shortRestBtn = wrapper.find('[data-testid="short-rest-btn"]')
+      expect(shortRestBtn.attributes('disabled')).toBeUndefined()
+    })
+
+    it('defaults to false when no initialIsDead and store not initialized', async () => {
+      // Don't initialize store
+      pinia = createPinia()
+      setActivePinia(pinia)
+
+      const wrapper = await mountSuspended(HitDiceManager, {
+        props: {
+          hitDice: mockHitDice,
+          characterId: 42,
+          editable: true
+          // No initialIsDead prop
+        },
+        ...getMountOptions()
+      })
+
+      // Should default to not dead - buttons NOT disabled
+      const shortRestBtn = wrapper.find('[data-testid="short-rest-btn"]')
+      expect(shortRestBtn.attributes('disabled')).toBeUndefined()
+    })
+  })
+
+  // ===========================================================================
   // ISRESTING STATE
   // ===========================================================================
 

@@ -202,6 +202,7 @@ const isSpellcaster = computed(() => !!stats.value?.spellcasting)
             :hit-dice="hitDice"
             :character-id="character.id"
             :editable="canEdit"
+            :initial-is-dead="character.is_dead"
             @refresh-hit-dice="refreshHitDice"
             @refresh-short-rest="refreshForShortRest"
             @refresh-long-rest="refreshForLongRest"
