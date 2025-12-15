@@ -16,7 +16,6 @@ const {
 
 async function handleNext() {
   if (isLastStep.value) {
-    // TODO: Finish wizard and redirect to character page
     await navigateTo('/characters')
   } else {
     await nextStep()

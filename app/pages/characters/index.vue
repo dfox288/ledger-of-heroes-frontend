@@ -159,7 +159,7 @@ async function handleImport(importData: ImportData) {
           Import
         </UButton>
         <UButton
-          to="/characters/create"
+          to="/characters/new/sourcebooks"
           icon="i-heroicons-plus"
           size="lg"
         >
@@ -232,7 +232,7 @@ async function handleImport(importData: ImportData) {
               Clear Search
             </UButton>
             <UButton
-              to="/characters/create"
+              to="/characters/new/sourcebooks"
               icon="i-heroicons-plus"
             >
               {{ hasActiveFilters ? 'Create Character' : 'Create Your First Character' }}

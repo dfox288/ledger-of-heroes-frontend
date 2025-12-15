@@ -223,14 +223,6 @@ export const useCharacterPlayStateStore = defineStore('characterPlayState', () =
     isPlayMode.value = enabled
   }
 
-  /**
-   * Load play mode - no-op since cookie handles this automatically
-   * @deprecated Cookie-based persistence loads automatically during SSR
-   */
-  function loadPlayMode() {
-    // No-op: cookie is read automatically during SSR hydration
-  }
-
   // ===========================================================================
   // INITIALIZATION
   // ===========================================================================
@@ -243,7 +235,6 @@ export const useCharacterPlayStateStore = defineStore('characterPlayState', () =
   function initialize(data: CharacterPlayData) {
     characterId.value = data.characterId
     isDead.value = data.isDead
-    loadPlayMode()
 
     // Force play mode off for dead characters
     if (isDead.value && isPlayMode.value) {
@@ -843,7 +834,6 @@ export const useCharacterPlayStateStore = defineStore('characterPlayState', () =
     // Actions
     initialize,
     setPlayMode,
-    loadPlayMode,
     updateHp,
     setTempHp,
     clearTempHp,
