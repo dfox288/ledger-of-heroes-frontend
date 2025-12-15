@@ -195,6 +195,7 @@ const isSpellcaster = computed(() => !!stats.value?.spellcasting)
             :investigation="stats.passive_investigation"
             :insight="stats.passive_insight"
           />
+          <CharacterSheetSenses :senses="character.senses" />
           <CharacterSheetHitDiceManager
             v-if="hitDice.length && character"
             :hit-dice="hitDice"

@@ -484,9 +484,9 @@ function handleEquip(item: CharacterEquipment) {
                 {{ getEquipLabel(item) }}
               </UButton>
 
-              <!-- Attune button for EQUIPPED items that can be attuned -->
+              <!-- Attune button for items that can be attuned (equipped or not) -->
               <UButton
-                v-if="canAttune(item) && item.equipped"
+                v-if="canAttune(item)"
                 data-testid="action-attune"
                 size="xs"
                 variant="ghost"

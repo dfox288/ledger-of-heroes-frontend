@@ -485,15 +485,14 @@ describe('ItemTable', () => {
       expect(wrapper.find('[data-testid="attuned-badge-11"]').exists()).toBe(false)
     })
 
-    it('shows "Equip" button for unequipped items (not Attune)', async () => {
-      // Items with equipment_slot should show "Equip", not "Attune"
+    it('shows both Equip and Attune buttons for unequipped items that require attunement', async () => {
+      // Attune is allowed regardless of equipped status (D&D house rule)
       const wrapper = await mountSuspended(ItemTable, {
         props: { items: [mockUnattunedBackpackItem], editable: true }
       })
 
       expect(wrapper.find('[data-testid="action-equip"]').exists()).toBe(true)
-      // Attune button should NOT show for unequipped items - equip first
-      expect(wrapper.find('[data-testid="action-attune"]').exists()).toBe(false)
+      expect(wrapper.find('[data-testid="action-attune"]').exists()).toBe(true)
     })
 
     it('shows "Attune" button for equipped items that require attunement', async () => {
