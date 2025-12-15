@@ -2,6 +2,14 @@
 import { describe, it, expect } from 'vitest'
 import { mount } from '@vue/test-utils'
 import CurrencyEditModal from '~/components/character/sheet/CurrencyEditModal.vue'
+import {
+  testModalPropsInterface,
+  testModalMountsCorrectly,
+  testEnterKeySubmission,
+  testCancelBehavior,
+  testCanSaveComputed,
+  testSaveDoesNotCloseModal
+} from '../../../helpers/modalBehavior'
 
 /**
  * Type for accessing CurrencyEditModal internal state in tests
@@ -46,57 +54,55 @@ describe('CurrencyEditModal', () => {
   }
 
   // =========================================================================
-  // Props Interface Tests
+  // Shared Behavior Tests (from modalBehavior.ts)
   // =========================================================================
 
-  describe('props', () => {
-    it('accepts open prop', () => {
-      const wrapper = mount(CurrencyEditModal, {
-        props: defaultProps
-      })
-      expect(wrapper.props('open')).toBe(true)
-    })
+  testModalPropsInterface(CurrencyEditModal, defaultProps, [
+    { prop: 'open', value: true },
+    { prop: 'currency', value: defaultCurrency },
+    { prop: 'loading', value: true }
+  ])
 
-    it('accepts currency prop', () => {
-      const wrapper = mount(CurrencyEditModal, {
-        props: defaultProps
-      })
-      expect(wrapper.props('currency')).toEqual(defaultCurrency)
-    })
+  testModalMountsCorrectly(CurrencyEditModal, defaultProps)
 
-    it('accepts loading prop', () => {
-      const wrapper = mount(CurrencyEditModal, {
-        props: { ...defaultProps, loading: true }
-      })
-      expect(wrapper.props('loading')).toBe(true)
-    })
+  testEnterKeySubmission(CurrencyEditModal, defaultProps, {
+    setupValidState: (vm) => {
+      (vm.inputs as CurrencyEditModalVM['inputs']).gp = '-5'
+    },
+    getHandleKeydown: vm => vm.handleKeydown as (event: KeyboardEvent) => void,
+    emitName: 'apply'
+  })
 
+  testCancelBehavior(CurrencyEditModal, defaultProps, 'apply')
+
+  testCanSaveComputed(CurrencyEditModal, defaultProps, {
+    computedName: 'canApply',
+    setupValidState: (vm) => {
+      (vm.inputs as CurrencyEditModalVM['inputs']).gp = '-5'
+    }
+  })
+
+  describe('events interface', () => {
+    testSaveDoesNotCloseModal(
+      CurrencyEditModal,
+      defaultProps,
+      'handleApply',
+      (vm) => {
+        (vm.inputs as CurrencyEditModalVM['inputs']).gp = '-5'
+      }
+    )
+  })
+
+  // =========================================================================
+  // Props Edge Cases
+  // =========================================================================
+
+  describe('props edge cases', () => {
     it('handles null currency gracefully', () => {
       const wrapper = mount(CurrencyEditModal, {
         props: { ...defaultProps, currency: null }
       })
       expect(wrapper.props('currency')).toBe(null)
-    })
-  })
-
-  // =========================================================================
-  // Component Interface Tests
-  // =========================================================================
-
-  describe('component interface', () => {
-    it('mounts without error', () => {
-      const wrapper = mount(CurrencyEditModal, {
-        props: defaultProps
-      })
-      expect(wrapper.exists()).toBe(true)
-    })
-
-    it('mounts when closed', () => {
-      const wrapper = mount(CurrencyEditModal, {
-        props: { ...defaultProps, open: false }
-      })
-      expect(wrapper.exists()).toBe(true)
-      expect(wrapper.props('open')).toBe(false)
     })
 
     it('exposes all prop types correctly', () => {
@@ -294,30 +300,10 @@ describe('CurrencyEditModal', () => {
   })
 
   // =========================================================================
-  // canApply Computed Tests
+  // canApply Edge Cases
   // =========================================================================
 
-  describe('canApply computed', () => {
-    it('returns false when all inputs are empty', () => {
-      const wrapper = mount(CurrencyEditModal, {
-        props: defaultProps
-      })
-      const vm = wrapper.vm as unknown as CurrencyEditModalVM
-      // All inputs default to empty
-
-      expect(vm.canApply).toBe(false)
-    })
-
-    it('returns true when at least one input has valid value', () => {
-      const wrapper = mount(CurrencyEditModal, {
-        props: defaultProps
-      })
-      const vm = wrapper.vm as unknown as CurrencyEditModalVM
-      vm.inputs.gp = '-5'
-
-      expect(vm.canApply).toBe(true)
-    })
-
+  describe('canApply edge cases', () => {
     it('returns true when multiple inputs have valid values', () => {
       const wrapper = mount(CurrencyEditModal, {
         props: defaultProps
@@ -329,33 +315,23 @@ describe('CurrencyEditModal', () => {
       expect(vm.canApply).toBe(true)
     })
 
-    it('returns false when loading is true', () => {
-      const wrapper = mount(CurrencyEditModal, {
-        props: { ...defaultProps, loading: true }
-      })
-      const vm = wrapper.vm as unknown as CurrencyEditModalVM
-      vm.inputs.gp = '-5'
-
-      expect(vm.canApply).toBe(false)
-    })
-
     it('returns false when any input is invalid (even if others valid)', () => {
       const wrapper = mount(CurrencyEditModal, {
         props: defaultProps
       })
       const vm = wrapper.vm as unknown as CurrencyEditModalVM
-      vm.inputs.gp = '-5' // valid
-      vm.inputs.sp = 'invalid' // invalid
+      vm.inputs.gp = '-5'
+      vm.inputs.sp = 'invalid'
 
       expect(vm.canApply).toBe(false)
     })
   })
 
   // =========================================================================
-  // Event Handler Tests
+  // Apply Event Tests
   // =========================================================================
 
-  describe('events interface', () => {
+  describe('apply events', () => {
     it('emits apply with payload when handleApply called with valid input', () => {
       const wrapper = mount(CurrencyEditModal, {
         props: defaultProps
@@ -385,7 +361,6 @@ describe('CurrencyEditModal', () => {
         props: defaultProps
       })
       const vm = wrapper.vm as unknown as CurrencyEditModalVM
-      // All inputs empty
       vm.handleApply()
 
       expect(wrapper.emitted('apply')).toBeUndefined()
@@ -401,40 +376,6 @@ describe('CurrencyEditModal', () => {
 
       expect(wrapper.emitted('apply')).toBeUndefined()
     })
-
-    it('emits update:open false when handleCancel called', () => {
-      const wrapper = mount(CurrencyEditModal, {
-        props: defaultProps
-      })
-      const vm = wrapper.vm as unknown as CurrencyEditModalVM
-      vm.handleCancel()
-
-      expect(wrapper.emitted('update:open')).toBeTruthy()
-      expect(wrapper.emitted('update:open')![0]).toEqual([false])
-    })
-
-    it('does not emit apply when handleCancel called', () => {
-      const wrapper = mount(CurrencyEditModal, {
-        props: defaultProps
-      })
-      const vm = wrapper.vm as unknown as CurrencyEditModalVM
-      vm.inputs.gp = '-5'
-      vm.handleCancel()
-
-      expect(wrapper.emitted('apply')).toBeUndefined()
-    })
-
-    it('does not emit update:open on apply (parent controls close)', () => {
-      const wrapper = mount(CurrencyEditModal, {
-        props: defaultProps
-      })
-      const vm = wrapper.vm as unknown as CurrencyEditModalVM
-      vm.inputs.gp = '-5'
-      vm.handleApply()
-
-      // Modal stays open - parent closes on success
-      expect(wrapper.emitted('update:open')).toBeUndefined()
-    })
   })
 
   // =========================================================================
@@ -448,14 +389,11 @@ describe('CurrencyEditModal', () => {
       })
       const vm = wrapper.vm as unknown as CurrencyEditModalVM
 
-      // Set some values while closed
       vm.inputs.gp = '-5'
       vm.inputs.sp = '+10'
 
-      // Open the modal
       await wrapper.setProps({ open: true })
 
-      // Inputs should be cleared
       expect(vm.inputs.pp).toBe('')
       expect(vm.inputs.gp).toBe('')
       expect(vm.inputs.ep).toBe('')
@@ -469,13 +407,10 @@ describe('CurrencyEditModal', () => {
       })
       const vm = wrapper.vm as unknown as CurrencyEditModalVM
 
-      // Set some values
       vm.inputs.gp = '-5'
 
-      // Close the modal
       await wrapper.setProps({ open: false })
 
-      // Value should remain (allows parent to read last input if needed)
       expect(vm.inputs.gp).toBe('-5')
     })
   })
@@ -549,38 +484,10 @@ describe('CurrencyEditModal', () => {
   })
 
   // =========================================================================
-  // Enter Key Submission Tests
+  // Enter Key Edge Cases (invalid input)
   // =========================================================================
 
-  describe('enter key submission', () => {
-    it('emits apply when Enter is pressed with valid input', () => {
-      const wrapper = mount(CurrencyEditModal, {
-        props: defaultProps
-      })
-      const vm = wrapper.vm as unknown as CurrencyEditModalVM
-      vm.inputs.gp = '-5'
-
-      // Simulate Enter keydown
-      const event = new KeyboardEvent('keydown', { key: 'Enter' })
-      vm.handleKeydown(event)
-
-      expect(wrapper.emitted('apply')).toBeTruthy()
-      expect(wrapper.emitted('apply')![0]).toEqual([{ gp: '-5' }])
-    })
-
-    it('does not emit apply when Enter pressed with empty input', () => {
-      const wrapper = mount(CurrencyEditModal, {
-        props: defaultProps
-      })
-      const vm = wrapper.vm as unknown as CurrencyEditModalVM
-      // All inputs empty
-
-      const event = new KeyboardEvent('keydown', { key: 'Enter' })
-      vm.handleKeydown(event)
-
-      expect(wrapper.emitted('apply')).toBeUndefined()
-    })
-
+  describe('enter key edge cases', () => {
     it('does not emit apply when Enter pressed with invalid input', () => {
       const wrapper = mount(CurrencyEditModal, {
         props: defaultProps
@@ -589,32 +496,6 @@ describe('CurrencyEditModal', () => {
       vm.inputs.gp = 'invalid'
 
       const event = new KeyboardEvent('keydown', { key: 'Enter' })
-      vm.handleKeydown(event)
-
-      expect(wrapper.emitted('apply')).toBeUndefined()
-    })
-
-    it('does not emit apply when Enter pressed while loading', () => {
-      const wrapper = mount(CurrencyEditModal, {
-        props: { ...defaultProps, loading: true }
-      })
-      const vm = wrapper.vm as unknown as CurrencyEditModalVM
-      vm.inputs.gp = '-5'
-
-      const event = new KeyboardEvent('keydown', { key: 'Enter' })
-      vm.handleKeydown(event)
-
-      expect(wrapper.emitted('apply')).toBeUndefined()
-    })
-
-    it('ignores other keys', () => {
-      const wrapper = mount(CurrencyEditModal, {
-        props: defaultProps
-      })
-      const vm = wrapper.vm as unknown as CurrencyEditModalVM
-      vm.inputs.gp = '-5'
-
-      const event = new KeyboardEvent('keydown', { key: 'Space' })
       vm.handleKeydown(event)
 
       expect(wrapper.emitted('apply')).toBeUndefined()
@@ -645,7 +526,6 @@ describe('CurrencyEditModal', () => {
         props: { ...defaultProps, open: false, error: 'Previous error' }
       })
 
-      // Open the modal - should emit clear-error event
       await wrapper.setProps({ open: true })
 
       expect(wrapper.emitted('clear-error')).toBeTruthy()
@@ -656,10 +536,8 @@ describe('CurrencyEditModal', () => {
         props: { ...defaultProps, error: 'Some error' }
       })
 
-      // Close the modal
       await wrapper.setProps({ open: false })
 
-      // Should not emit clear-error on close (only on open)
       expect(wrapper.emitted('clear-error')).toBeUndefined()
     })
   })
