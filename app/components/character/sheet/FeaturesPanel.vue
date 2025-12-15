@@ -294,6 +294,13 @@ function getSourceLabel(source: string): string {
               v-if="isExpanded(feature.id) && feature.feature?.description"
               class="px-4 pb-4 pt-0"
             >
+              <!-- Prerequisite (for feats only) -->
+              <div
+                v-if="feature.source === 'feat' && feature.feature?.prerequisite"
+                class="pl-7 mb-2 text-xs text-gray-500 dark:text-gray-400 italic"
+              >
+                <span class="font-medium">Prerequisite:</span> {{ feature.feature.prerequisite }}
+              </div>
               <div class="pl-7 text-sm text-gray-600 dark:text-gray-300 whitespace-pre-line border-l-2 border-gray-200 dark:border-gray-600 ml-0.5">
                 {{ feature.feature.description }}
               </div>
