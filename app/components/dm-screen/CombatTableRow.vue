@@ -26,7 +26,7 @@ const emit = defineEmits<{
 // validate() runs before onSave(), so no need to re-validate
 const initEdit = useInlineEdit<string>({
   getValue: () => props.initiative?.toString() ?? '',
-  onSave: (value) => emit('update:initiative', parseInt(value, 10)),
+  onSave: value => emit('update:initiative', parseInt(value, 10)),
   validate: (value) => {
     const parsed = parseInt(value, 10)
     // D&D initiative range: -10 (very low DEX) to 50 (high DEX + bonuses)

@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { describe, it, expect, vi } from 'vitest'
 import { useInlineEdit } from '~/composables/useInlineEdit'
 
 describe('useInlineEdit', () => {
@@ -80,7 +80,7 @@ describe('useInlineEdit', () => {
       const { editValue, startEdit, save } = useInlineEdit({
         getValue: () => '',
         onSave,
-        validate: (value) => value.length > 0
+        validate: value => value.length > 0
       })
 
       startEdit()
@@ -94,7 +94,7 @@ describe('useInlineEdit', () => {
       const { isEditing, editValue, startEdit, save } = useInlineEdit({
         getValue: () => '',
         onSave: vi.fn(),
-        validate: (value) => value.length > 0
+        validate: value => value.length > 0
       })
 
       startEdit()
@@ -109,7 +109,7 @@ describe('useInlineEdit', () => {
       const { editValue, startEdit, save } = useInlineEdit({
         getValue: () => '',
         onSave,
-        validate: (value) => value.length > 0
+        validate: value => value.length > 0
       })
 
       startEdit()
@@ -197,7 +197,7 @@ describe('useInlineEdit', () => {
       const { editValue, startEdit, save } = useInlineEdit<number>({
         getValue: () => 10,
         onSave,
-        validate: (value) => value >= 0 && value <= 100
+        validate: value => value >= 0 && value <= 100
       })
 
       startEdit()
