@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { useCharacterLevelUpStore } from '~/stores/characterLevelUp'
+import { logger } from '~/utils/logger'
 
 const props = defineProps<{
   characterId: number
@@ -83,10 +84,10 @@ async function handleConfirm() {
   const hpValue = hpGained.value
   const method = selectedMethod.value
 
-  console.log('[HP Step] handleConfirm called, method:', method, 'hpGained:', hpValue)
+  logger.debug('[HP Step] handleConfirm called, method:', method, 'hpGained:', hpValue)
 
   if (!method || hpValue === null) {
-    console.log('[HP Step] method or hpGained is null, returning early')
+    logger.debug('[HP Step] method or hpGained is null, returning early')
     error.value = 'Please select a method (Roll or Average) first.'
     return
   }
@@ -100,7 +101,7 @@ async function handleConfirm() {
     const hpChoices = choicesByType.value.hitPoints
     const firstChoice = hpChoices?.[0]
 
-    console.log('[HP Step] Found HP choices:', hpChoices?.length, 'First choice:', firstChoice?.id)
+    logger.debug('[HP Step] Found HP choices:', hpChoices?.length, 'First choice:', firstChoice?.id)
 
     if (!firstChoice) {
       // No HP choice available - may have already been resolved or character at max level
@@ -114,11 +115,11 @@ async function handleConfirm() {
       selected: [method]
     }
 
-    console.log('[HP Step] Resolving choice:', firstChoice.id, 'with payload:', JSON.stringify(payload))
+    logger.debug('[HP Step] Resolving choice:', firstChoice.id, 'with payload:', JSON.stringify(payload))
 
     await resolveChoice(firstChoice.id, payload)
 
-    console.log('[HP Step] Choice resolved successfully')
+    logger.debug('[HP Step] Choice resolved successfully')
 
     emit('choice-made', hpValue)
     props.nextStep()
