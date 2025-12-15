@@ -59,15 +59,26 @@ const savingThrows = computed(() => {
 // Extract skills from stats and map to CharacterSkill format
 const skills = computed(() => {
   if (!stats.value?.skills) return []
-  return stats.value.skills.map((skill, index) => ({
-    id: index,
-    name: skill.name,
-    slug: skill.slug,
-    ability_code: skill.ability as AbilityScoreCode,
-    modifier: skill.modifier ?? 0,
-    proficient: skill.proficient,
-    expertise: skill.expertise
-  }))
+  return stats.value.skills.map((skill, index) => {
+    // Type assertion for fields added in backend PR #186
+    const extendedSkill = skill as typeof skill & {
+      has_reliable_talent?: boolean
+      minimum_roll?: number | null
+      minimum_total?: number | null
+    }
+    return {
+      id: index,
+      name: skill.name,
+      slug: skill.slug,
+      ability_code: skill.ability as AbilityScoreCode,
+      modifier: skill.modifier ?? 0,
+      proficient: skill.proficient,
+      expertise: skill.expertise,
+      has_reliable_talent: extendedSkill.has_reliable_talent ?? false,
+      minimum_roll: extendedSkill.minimum_roll ?? null,
+      minimum_total: extendedSkill.minimum_total ?? null
+    }
+  })
 })
 
 // Check if character is at 0 HP (from play state store)

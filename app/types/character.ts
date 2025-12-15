@@ -499,6 +499,12 @@ export interface CharacterSkill {
   modifier: number
   proficient: boolean
   expertise: boolean
+  /** Rogue's Reliable Talent - treat d20 rolls of 9 or lower as 10 for proficient skills */
+  has_reliable_talent: boolean
+  /** Minimum d20 roll (e.g., 10 for Reliable Talent/Silver Tongue), null if no minimum */
+  minimum_roll: number | null
+  /** Guaranteed minimum total result (minimum_roll + modifier), null if no minimum */
+  minimum_total: number | null
 }
 
 /**
