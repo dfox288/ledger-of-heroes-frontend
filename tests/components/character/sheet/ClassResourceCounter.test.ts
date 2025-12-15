@@ -32,4 +32,34 @@ describe('ClassResourceCounter', () => {
     expect(wrapper.text()).toContain('3')
     expect(wrapper.text()).toContain('5')
   })
+
+  describe('Icon Mode (max <= 6)', () => {
+    it('shows icons when max <= 6', async () => {
+      const wrapper = await mountSuspended(ClassResourceCounter, {
+        props: { counter: createCounter({ max: 5 }) }
+      })
+      const icons = wrapper.findAll('[data-testid^="counter-icon"]')
+      expect(icons.length).toBe(5)
+    })
+
+    it('shows filled icons for current value', async () => {
+      const wrapper = await mountSuspended(ClassResourceCounter, {
+        props: { counter: createCounter({ current: 3, max: 5 }) }
+      })
+      const filled = wrapper.findAll('[data-testid="counter-icon-filled"]')
+      const empty = wrapper.findAll('[data-testid="counter-icon-empty"]')
+      expect(filled.length).toBe(3)
+      expect(empty.length).toBe(2)
+    })
+
+    it('shows all empty icons when depleted', async () => {
+      const wrapper = await mountSuspended(ClassResourceCounter, {
+        props: { counter: createCounter({ current: 0, max: 4 }) }
+      })
+      const filled = wrapper.findAll('[data-testid="counter-icon-filled"]')
+      const empty = wrapper.findAll('[data-testid="counter-icon-empty"]')
+      expect(filled.length).toBe(0)
+      expect(empty.length).toBe(4)
+    })
+  })
 })
