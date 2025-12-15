@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars, @typescript-eslint/no-explicit-any */
 /**
  * Monsters Page - Filter Interaction Tests (Consolidated)
  * Consolidation: 6 files → 3 files

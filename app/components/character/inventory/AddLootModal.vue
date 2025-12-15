@@ -77,7 +77,7 @@ async function searchItems(query: string) {
       params: { q: query, per_page: 10 }
     })
     searchResults.value = response.data || []
-  } catch (error) {
+  } catch {
     searchResults.value = []
   } finally {
     isSearching.value = false

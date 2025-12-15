@@ -1,5 +1,5 @@
 // tests/components/character/TabNavigation.test.ts
-import { describe, it, expect, vi } from 'vitest'
+import { describe, it, expect } from 'vitest'
 import { mountSuspended, mockNuxtImport } from '@nuxt/test-utils/runtime'
 import TabNavigation from '~/components/character/TabNavigation.vue'
 

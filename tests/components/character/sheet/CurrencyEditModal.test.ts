@@ -1,5 +1,5 @@
 // tests/components/character/sheet/CurrencyEditModal.test.ts
-import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { describe, it, expect } from 'vitest'
 import { mount } from '@vue/test-utils'
 import CurrencyEditModal from '~/components/character/sheet/CurrencyEditModal.vue'
 

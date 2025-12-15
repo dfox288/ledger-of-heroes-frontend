@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 /**
  * Feats Page - Filter Tests (Consolidated)
  *

@@ -7,7 +7,7 @@
  *
  * @see Issue #584 - Character sheet component refactor
  */
-import { describe, it, expect, beforeEach, vi, type Mock } from 'vitest'
+import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { mountSuspended, mockNuxtImport } from '@nuxt/test-utils/runtime'
 import { setActivePinia, createPinia } from 'pinia'
 import { flushPromises } from '@vue/test-utils'
@@ -214,7 +214,9 @@ describe('HitDiceManager', () => {
     it('prevents concurrent spend operations', async () => {
       setupStore()
       let resolveFirst: () => void
-      const firstPromise = new Promise<void>((resolve) => { resolveFirst = resolve })
+      const firstPromise = new Promise<void>((resolve) => {
+        resolveFirst = resolve
+      })
       apiFetchMock.mockImplementationOnce(() => firstPromise)
 
       const wrapper = await mountSuspended(HitDiceManager, {
@@ -573,7 +575,9 @@ describe('HitDiceManager', () => {
     it('sets isResting during spend operation', async () => {
       setupStore()
       let resolveSpend: () => void
-      const spendPromise = new Promise<void>((resolve) => { resolveSpend = resolve })
+      const spendPromise = new Promise<void>((resolve) => {
+        resolveSpend = resolve
+      })
       apiFetchMock.mockImplementation(() => spendPromise)
 
       const wrapper = await mountSuspended(HitDiceManager, {

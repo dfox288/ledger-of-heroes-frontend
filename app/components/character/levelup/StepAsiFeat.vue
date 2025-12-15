@@ -6,7 +6,7 @@
  * Choose Ability Score Improvement or Feat at ASI levels.
  * Wraps the existing CharacterWizardStepFeats component.
  */
-const props = defineProps<{
+defineProps<{
   characterId?: number
   nextStep?: () => Promise<void>
   refreshAfterSave?: () => Promise<void>

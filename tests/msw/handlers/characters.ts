@@ -50,7 +50,7 @@ export const characterHandlers = [
   }),
 
   // PATCH /api/characters/:id - Update character
-  http.patch(`${API_BASE}/characters/:id`, async ({ params, request }) => {
+  http.patch(`${API_BASE}/characters/:id`, async ({ request }) => {
     const body = await request.json() as Record<string, unknown>
     return HttpResponse.json({
       data: {

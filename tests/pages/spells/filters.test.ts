@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 /**
  * Spells Page - Filter Tests (Consolidated)
  *

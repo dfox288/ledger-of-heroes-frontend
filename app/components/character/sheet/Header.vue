@@ -100,15 +100,6 @@ const totalLevel = computed(() => {
 })
 
 /**
- * Can this character level up?
- * - Must be complete (not a draft)
- * - Must be under max level (20)
- */
-const canLevelUp = computed(() => {
-  return props.character.is_complete && totalLevel.value < 20
-})
-
-/**
  * Build dropdown menu items based on character state
  * Uses onSelect for click handlers (NuxtUI 4 syntax)
  */

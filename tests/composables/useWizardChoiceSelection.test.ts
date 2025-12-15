@@ -1,4 +1,5 @@
 // tests/composables/useWizardChoiceSelection.test.ts
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { ref, computed, nextTick } from 'vue'
 import { useWizardChoiceSelection } from '~/composables/useWizardChoiceSelection'
@@ -105,7 +106,7 @@ describe('useWizardChoiceSelection', () => {
       }]
       const choices = computed(() => choicesWithSelected as unknown as MockPendingChoice[])
 
-      const { localSelections, getSelectedCount } = useWizardChoiceSelection(choices, {
+      const { getSelectedCount } = useWizardChoiceSelection(choices, {
         resolveChoice
       })
 

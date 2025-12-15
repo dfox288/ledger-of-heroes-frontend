@@ -6,7 +6,7 @@
  * Handles skill/tool proficiency selection from feature choices.
  * Wraps the existing CharacterWizardStepProficiencies component.
  */
-const props = defineProps<{
+defineProps<{
   characterId?: number
   nextStep?: () => Promise<void>
   refreshAfterSave?: () => Promise<void>

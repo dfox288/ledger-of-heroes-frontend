@@ -3,7 +3,6 @@ import { reactive } from 'vue'
 import { mountSuspended } from '@nuxt/test-utils/runtime'
 import { setActivePinia, createPinia } from 'pinia'
 import WizardFooter from '~/components/character/wizard/WizardFooter.vue'
-import { useCharacterWizardStore } from '~/stores/characterWizard'
 
 // Mock navigateTo as a no-op (actual navigation tested in integration tests)
 vi.stubGlobal('navigateTo', vi.fn())

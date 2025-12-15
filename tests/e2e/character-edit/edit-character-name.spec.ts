@@ -39,10 +39,10 @@ test.describe('Edit Character: Change Name Flow', () => {
 
     // Find a character that has at least race, class, and background
     const character = data.data?.find((c: Record<string, unknown>) =>
-      c.public_id &&
-      c.race &&
-      c.class &&
-      c.background
+      c.public_id
+      && c.race
+      && c.class
+      && c.background
     )
 
     if (!character) {
@@ -51,7 +51,6 @@ test.describe('Edit Character: Change Name Flow', () => {
     }
 
     const publicId = character.public_id as string
-    const originalName = character.name as string
 
     // ═══════════════════════════════════════════════════════════════════
     // PART 2: Navigate directly to Edit Mode (details step)
@@ -149,10 +148,10 @@ test.describe('Edit Character: Change Name Flow', () => {
     const data = await response.json()
 
     const character = data.data?.find((c: Record<string, unknown>) =>
-      c.public_id &&
-      c.race &&
-      c.class &&
-      c.background
+      c.public_id
+      && c.race
+      && c.class
+      && c.background
     )
 
     if (!character) {

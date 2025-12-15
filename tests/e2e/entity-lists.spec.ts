@@ -25,7 +25,7 @@ test.describe('Entity List Pages', () => {
     { name: 'Monsters', url: '/monsters', singularSlug: 'goblin' }
   ]
 
-  entities.forEach(({ name, url, singularSlug }) => {
+  entities.forEach(({ name, url }) => {
     test.describe(`${name} List Page`, () => {
       test.beforeEach(async ({ page }) => {
         await page.goto(url)

@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 /**
  * Monsters Page - Filter Presentation Tests (Consolidated)
  * Consolidation: 6 files → 3 files

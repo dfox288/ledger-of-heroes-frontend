@@ -43,12 +43,6 @@ test.describe('Level Up: Level 1 to 2 (Average HP)', () => {
     // Wait for character cards to load
     await page.waitForTimeout(2000)
 
-    // Look for character cards with "Complete" badge that we can click
-    // Find the View link for the first complete character by looking at href pattern
-    const completeCharacterViewLinks = page.locator('a[href^="/characters/"][href*="-"]').filter({
-      hasText: 'View'
-    })
-
     // Find a View link that's near a "Complete" badge in the same card container
     // We'll iterate through cards and find one that's complete
     let publicId: string | null = null

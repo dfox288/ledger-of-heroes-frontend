@@ -1,5 +1,5 @@
 // tests/components/character/ImportModal.test.ts
-import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { describe, it, expect } from 'vitest'
 import { mountSuspended } from '@nuxt/test-utils/runtime'
 import ImportModal from '~/components/character/ImportModal.vue'
 

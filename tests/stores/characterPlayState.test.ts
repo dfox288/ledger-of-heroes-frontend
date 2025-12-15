@@ -1,4 +1,5 @@
 // tests/stores/characterPlayState.test.ts
+/* eslint-disable @typescript-eslint/no-explicit-any */
 /**
  * Tests for characterPlayState store
  *

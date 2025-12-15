@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 /**
  * Backgrounds Page - Filter Tests (Consolidated)
  *

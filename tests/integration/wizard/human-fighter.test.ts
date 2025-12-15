@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 /**
  * Human Fighter Creation Flow - Integration Test
  *
@@ -21,7 +22,7 @@ import { describe, it, expect } from 'vitest'
 import { mountSuspended } from '@nuxt/test-utils/runtime'
 import { http, HttpResponse } from '../../msw/server'
 import { humanFighterL1 } from '../../msw/fixtures/characters/human-fighter-l1'
-import { useIntegrationTestSetup, addTestHandlers, server } from '../../helpers/integrationSetup'
+import { useIntegrationTestSetup, server } from '../../helpers/integrationSetup'
 
 // Import step components for structure testing
 import StepRace from '~/components/character/wizard/StepRace.vue'

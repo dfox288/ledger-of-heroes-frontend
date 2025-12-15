@@ -187,9 +187,9 @@ test.describe('Elf Wizard (Spellcaster with Subrace)', () => {
 
     // Wait for navigation to settle - Human goes to subrace (optional) or size/class
     await page.waitForFunction(
-      () => window.location.href.includes('/subrace') ||
-            window.location.href.includes('/size') ||
-            window.location.href.includes('/class'),
+      () => window.location.href.includes('/subrace')
+        || window.location.href.includes('/size')
+        || window.location.href.includes('/class'),
       { timeout: 15000 }
     )
 

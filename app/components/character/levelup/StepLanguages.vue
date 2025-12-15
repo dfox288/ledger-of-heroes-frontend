@@ -6,7 +6,7 @@
  * Handles language selection from feature choices.
  * Wraps the existing CharacterWizardStepLanguages component.
  */
-const props = defineProps<{
+defineProps<{
   characterId?: number
   nextStep?: () => Promise<void>
   refreshAfterSave?: () => Promise<void>

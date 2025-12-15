@@ -465,7 +465,6 @@ describe('useLevelUpWizard', () => {
 
       // Initial state
       expect(currentStepName.value).toBe('hit-points')
-      const initialIndex = currentStepIndex.value
 
       // Change the step ref
       currentStepRef.value = 'spells'

@@ -6,7 +6,7 @@
  * Handles spell learning and replacement for casters.
  * Wraps the existing CharacterWizardStepSpells component.
  */
-const props = defineProps<{
+defineProps<{
   characterId?: number
   nextStep?: () => Promise<void>
 }>()

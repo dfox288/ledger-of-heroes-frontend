@@ -248,7 +248,7 @@ describe('UiClassSubclassCards', () => {
       })
 
       // PHB subclass should have success (green) color
-      const badge = wrapper.find('[data-testid="source-badge"]')
+      wrapper.find('[data-testid="source-badge"]')
       // Just verify PHB is shown - color is applied via class
       expect(wrapper.text()).toContain('PHB')
     })

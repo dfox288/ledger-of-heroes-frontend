@@ -11,9 +11,9 @@ mockNuxtImport('useCharacterWizard', () => () => ({
 
 // Mock sources data
 const mockSources = [
-  { id: 1, code: 'PHB', name: "Player's Handbook", category: 'Core Rules', publication_year: 2014 },
-  { id: 2, code: 'XGE', name: "Xanathar's Guide to Everything", category: 'Expansion', publication_year: 2017 },
-  { id: 3, code: 'TCE', name: "Tasha's Cauldron of Everything", category: 'Expansion', publication_year: 2020 }
+  { id: 1, code: 'PHB', name: 'Player\'s Handbook', category: 'Core Rules', publication_year: 2014 },
+  { id: 2, code: 'XGE', name: 'Xanathar\'s Guide to Everything', category: 'Expansion', publication_year: 2017 },
+  { id: 3, code: 'TCE', name: 'Tasha\'s Cauldron of Everything', category: 'Expansion', publication_year: 2020 }
 ]
 
 // Mock useAsyncData for sources
@@ -67,7 +67,7 @@ describe('StepSourcebooks', () => {
     it('renders Continue button', async () => {
       const wrapper = await mountSuspended(StepSourcebooks)
 
-      const continueBtn = wrapper.find('button')
+      wrapper.find('button')
       expect(wrapper.text()).toContain('Continue')
     })
   })

@@ -1,4 +1,5 @@
 // tests/components/character/sheet/StatArmorClass.test.ts
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { describe, it, expect } from 'vitest'
 import { mountSuspended } from '@nuxt/test-utils/runtime'
 import StatArmorClass from '~/components/character/sheet/StatArmorClass.vue'

@@ -86,7 +86,7 @@ test.describe('Homepage', () => {
       { label: 'Spell Schools', url: '/spell-schools' }
     ]
 
-    referenceItems.forEach(({ label, url }) => {
+    referenceItems.forEach(({ label }) => {
       test(`displays ${label} reference link`, async ({ page }) => {
         // Use getByRole to find links by accessible name (avoids strict mode violations)
         const link = page.getByRole('link', { name: label })

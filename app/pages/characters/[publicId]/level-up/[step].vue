@@ -47,7 +47,6 @@ const store = useCharacterLevelUpStore()
 // Pass refs (not .value) to maintain reactivity when route changes
 const {
   activeSteps,
-  currentStep,
   isFirstStep,
   isLastStep,
   nextStep,

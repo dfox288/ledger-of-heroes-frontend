@@ -253,7 +253,7 @@ async function checkApiConnectivity(): Promise<boolean> {
   try {
     await apiFetch('/races?per_page=1')
     return true
-  } catch (err) {
+  } catch {
     console.error('❌ Cannot connect to API at', API_BASE)
     console.error('')
     console.error('💡 Make sure the backend is running:')

@@ -1,5 +1,5 @@
 // tests/pages/characters/create.test.ts
-import { describe, it, expect, beforeEach, vi } from 'vitest'
+import { describe, it, expect, beforeEach } from 'vitest'
 import { mountSuspended } from '@nuxt/test-utils/runtime'
 import { setActivePinia, createPinia } from 'pinia'
 

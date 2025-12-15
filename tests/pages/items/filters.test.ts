@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 /**
  * Items Page - Filter Tests (Consolidated)
  * Consolidation: 4 files → 2 files

@@ -28,7 +28,6 @@ const wizardNav = useCharacterWizard()
 const effectiveCharacterId = computed(() => props.characterId ?? store.characterId)
 const effectiveNextStep = computed(() => props.nextStep ?? wizardNav.nextStep)
 
-const { apiFetch } = useApi()
 const { selections } = storeToRefs(store)
 
 // Toast for user feedback
@@ -55,7 +54,6 @@ onMounted(async () => {
 
 // Use choice selection composable for core selection logic
 const {
-  localSelections,
   isSaving,
   getSelectedCount,
   isOptionSelected,

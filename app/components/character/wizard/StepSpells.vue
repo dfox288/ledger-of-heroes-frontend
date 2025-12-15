@@ -63,7 +63,6 @@ const error = computed(() => storeError.value || choicesError.value)
 
 // Use choice selection composable for core selection logic
 const {
-  localSelections: selectedSpells,
   isSaving,
   getSelectedCount,
   isOptionSelected: isSpellSelectedById,

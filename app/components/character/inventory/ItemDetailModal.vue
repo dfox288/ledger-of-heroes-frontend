@@ -81,7 +81,7 @@ watch(() => props.open, async (open) => {
   try {
     const response = await apiFetch<{ data: FullItemData }>(`/items/${itemSlug}`)
     fullItemData.value = response.data
-  } catch (err) {
+  } catch {
     fetchError.value = 'Failed to load item details'
     fullItemData.value = null
   } finally {

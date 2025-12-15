@@ -234,7 +234,6 @@ export function useWizardChoiceSelection(
   const allComplete = computed(() => {
     for (const choice of choices.value) {
       const selectedCount = getSelectedCount(choice.id)
-      const alreadySelected = choice.selected.length
 
       // A choice initialized from already-selected has those in localSelections,
       // but we also need to handle the case where the choice was partially selected

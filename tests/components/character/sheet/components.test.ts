@@ -1,5 +1,5 @@
 // tests/components/character/sheet/components.test.ts
-import { describe, it, expect, beforeEach } from 'vitest'
+import { describe, it, expect } from 'vitest'
 import { mountSuspended } from '@nuxt/test-utils/runtime'
 import { setActivePinia, createPinia } from 'pinia'
 import Header from '~/components/character/sheet/Header.vue'

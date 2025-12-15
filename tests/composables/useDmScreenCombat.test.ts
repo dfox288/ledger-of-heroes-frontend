@@ -13,9 +13,9 @@ function createLocalStorageMock() {
   return {
     getItem: vi.fn((key: string) => store[key] || null),
     setItem: vi.fn((key: string, value: string) => { store[key] = value }),
-    removeItem: vi.fn((key: string) => { delete store[key] }),
+    removeItem: vi.fn((key: string) => { Reflect.deleteProperty(store, key) }),
     clear: vi.fn(() => {
-      Object.keys(store).forEach(key => delete store[key])
+      Object.keys(store).forEach(key => Reflect.deleteProperty(store, key))
     }),
     _store: store
   }

@@ -1,4 +1,5 @@
 // tests/components/character/sheet/CombatStatsGrid.test.ts
+/* eslint-disable @typescript-eslint/no-explicit-any */
 /**
  * CombatStatsGrid Tests
  *

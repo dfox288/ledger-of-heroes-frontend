@@ -1,7 +1,5 @@
 // tests/composables/useCharacterStats.test.ts
-import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { ref } from 'vue'
-import { mountSuspended } from '@nuxt/test-utils/runtime'
+import { describe, it, expect } from 'vitest'
 
 // Test formatting function (extracted for unit testing)
 function formatModifier(mod: number | null | undefined): string {

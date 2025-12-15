@@ -93,7 +93,6 @@ onMounted(async () => {
 // Use choice selection composable for core selection logic
 const {
   localSelections,
-  isSaving,
   getSelectedCount,
   isOptionSelected,
   isOptionDisabled,

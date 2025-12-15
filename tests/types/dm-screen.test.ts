@@ -2,15 +2,7 @@ import { describe, it, expect } from 'vitest'
 import type {
   DmScreenCharacter,
   DmScreenPartyStats,
-  DmScreenPartySummary,
-  CharacterHitPoints,
-  CharacterCombat,
-  CharacterSenses,
-  CharacterCapabilities,
-  DmScreenEquipment,
-  CharacterSavingThrows,
-  DmScreenCondition,
-  DmScreenSpellSlots
+  DmScreenPartySummary
 } from '~/types/dm-screen'
 
 describe('DmScreen Types', () => {

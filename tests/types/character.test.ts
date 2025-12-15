@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { describe, it, expectTypeOf, expect } from 'vitest'
 import type { CharacterClassEntry } from '~/types/character'
 import type { CharacterClass } from '~/types'

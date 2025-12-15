@@ -52,7 +52,7 @@ const mockWeapon: CharacterEquipment = {
   location: 'main_hand'
 }
 
-const mockPotion: CharacterEquipment = {
+const _mockPotion: CharacterEquipment = {
   id: 3,
   item: {
     name: 'Potion of Healing',

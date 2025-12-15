@@ -6,7 +6,7 @@
  * Handles Fighting Style, Expertise, and Optional Feature choices.
  * Wraps the existing CharacterWizardStepFeatureChoices component.
  */
-const props = defineProps<{
+defineProps<{
   characterId?: number
   nextStep?: () => Promise<void>
   refreshAfterSave?: () => Promise<void>

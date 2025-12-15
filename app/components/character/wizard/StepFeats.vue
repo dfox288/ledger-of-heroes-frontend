@@ -45,7 +45,6 @@ const featChoices = computed(() => choicesByType.value.feats)
 
 // Use choice selection composable for core selection logic
 const {
-  localSelections: selectedFeats,
   isSaving,
   getSelectedCount,
   isOptionSelected: isFeatSelectedById,

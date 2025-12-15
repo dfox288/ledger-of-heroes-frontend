@@ -1,5 +1,5 @@
 // tests/components/character/sheet/NotesManager.test.ts
-import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { describe, it, expect } from 'vitest'
 import { mount } from '@vue/test-utils'
 import NotesManager from '~/components/character/sheet/NotesManager.vue'
 import type { CharacterNote } from '~/types/character'

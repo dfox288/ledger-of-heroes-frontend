@@ -23,8 +23,6 @@ const {
   character,
   stats,
   proficiencies,
-  features,
-  equipment,
   spells,
   languages,
   // conditions now come from store

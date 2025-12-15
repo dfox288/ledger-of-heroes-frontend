@@ -56,7 +56,7 @@ const mockSubclasses = [
 
 // Mock useAsyncData to return mock subclasses
 mockNuxtImport('useAsyncData', () => {
-  return vi.fn((key, fetcher) => {
+  return vi.fn((_key, _fetcher) => {
     // Call fetcher if it's a function to simulate real behavior
     const data = ref(mockSubclasses)
     return {

@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 /**
  * Classes Page - Filter Tests (Consolidated)
  * Consolidation: 2 files → 1 file
