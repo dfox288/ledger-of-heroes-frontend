@@ -19,15 +19,17 @@ import { useLevelUpWizard } from '~/composables/useLevelUpWizard'
  * Using defineAsyncComponent for lazy loading each step
  */
 const stepComponents: Record<string, Component> = {
+  // Level-up specific steps
   'class-selection': defineAsyncComponent(() => import('~/components/character/levelup/StepClassSelection.vue')),
   'subclass': defineAsyncComponent(() => import('~/components/character/levelup/StepSubclassChoice.vue')),
   'hit-points': defineAsyncComponent(() => import('~/components/character/levelup/StepHitPoints.vue')),
-  'asi-feat': defineAsyncComponent(() => import('~/components/character/levelup/StepAsiFeat.vue')),
-  'feature-choices': defineAsyncComponent(() => import('~/components/character/levelup/StepFeatureChoices.vue')),
-  'spells': defineAsyncComponent(() => import('~/components/character/levelup/StepSpells.vue')),
-  'languages': defineAsyncComponent(() => import('~/components/character/levelup/StepLanguages.vue')),
-  'proficiencies': defineAsyncComponent(() => import('~/components/character/levelup/StepProficiencies.vue')),
-  'summary': defineAsyncComponent(() => import('~/components/character/levelup/StepSummary.vue'))
+  'summary': defineAsyncComponent(() => import('~/components/character/levelup/StepSummary.vue')),
+  // Shared steps - use character wizard components directly (consolidation per #625)
+  'asi-feat': defineAsyncComponent(() => import('~/components/character/wizard/StepFeats.vue')),
+  'feature-choices': defineAsyncComponent(() => import('~/components/character/wizard/StepFeatureChoices.vue')),
+  'spells': defineAsyncComponent(() => import('~/components/character/wizard/StepSpells.vue')),
+  'languages': defineAsyncComponent(() => import('~/components/character/wizard/StepLanguages.vue')),
+  'proficiencies': defineAsyncComponent(() => import('~/components/character/wizard/StepProficiencies.vue'))
 }
 
 // ════════════════════════════════════════════════════════════════
@@ -51,7 +53,8 @@ const {
   isLastStep,
   nextStep,
   previousStep,
-  progressPercent
+  progressPercent,
+  getStepUrl
 } = useLevelUpWizard({
   publicId,
   currentStep: stepName
@@ -111,11 +114,12 @@ useSeoMeta({
 
 <template>
   <div class="h-screen flex bg-gray-50 dark:bg-gray-900">
-    <!-- Sidebar -->
-    <CharacterLevelupLevelUpSidebar
+    <!-- Sidebar - uses unified WizardSidebar component (#625) -->
+    <CharacterWizardWizardSidebar
+      title="Level Up"
       :active-steps="activeSteps"
       :current-step="stepName"
-      :public-id="publicId"
+      :get-step-url="getStepUrl"
       class="w-64 flex-shrink-0 hidden lg:block"
     />
 

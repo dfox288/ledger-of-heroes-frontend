@@ -2,6 +2,7 @@
 <script setup lang="ts">
 import WizardSidebar from './WizardSidebar.vue'
 import WizardFooter from './WizardFooter.vue'
+import { useCharacterWizard } from '~/composables/useCharacterWizard'
 
 /**
  * Layout wrapper for the character builder wizard v2.
@@ -11,12 +12,20 @@ import WizardFooter from './WizardFooter.vue'
  * - Scrollable main content area
  * - Fixed footer with navigation buttons
  */
+
+const { activeSteps, currentStepName, getStepUrl } = useCharacterWizard()
 </script>
 
 <template>
   <div class="h-screen flex bg-gray-50 dark:bg-gray-900">
     <!-- Sidebar -->
-    <WizardSidebar class="w-64 flex-shrink-0 hidden lg:block" />
+    <WizardSidebar
+      title="Character Builder"
+      :active-steps="activeSteps"
+      :current-step="currentStepName"
+      :get-step-url="getStepUrl"
+      class="w-64 flex-shrink-0 hidden lg:block"
+    />
 
     <!-- Main content -->
     <div class="flex-1 flex flex-col min-w-0 overflow-hidden">

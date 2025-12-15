@@ -2,27 +2,13 @@
 /**
  * Character Wizard Navigation Composable
  *
- * Manages wizard step navigation, visibility, and validation.
+ * Manages wizard step navigation, visibility, and validation for character creation.
  * Uses URL as source of truth for current step.
+ *
+ * Built on useWizardNavigation base composable (#625).
  */
 import { useCharacterWizardStore } from '~/stores/characterWizard'
-
-// ════════════════════════════════════════════════════════════════
-// TYPES
-// ════════════════════════════════════════════════════════════════
-
-export interface WizardStep {
-  name: string
-  label: string
-  icon: string
-  visible: () => boolean
-  /**
-   * Optional function to determine if this step should be auto-skipped during navigation.
-   * Use this for steps that are always visible but may have no choices to make.
-   * This keeps the step array stable while allowing smart navigation.
-   */
-  shouldSkip?: () => boolean
-}
+import { useWizardNavigation, type WizardStep } from './useWizardNavigation'
 
 // ════════════════════════════════════════════════════════════════
 // STEP REGISTRY
@@ -57,7 +43,6 @@ function createStepRegistry(store: ReturnType<typeof useCharacterWizardStore>): 
       label: 'Size',
       icon: 'i-heroicons-arrows-up-down',
       visible: () => true,
-      // Skip during navigation if no size choices to make
       shouldSkip: () => !store.hasSizeChoices
     },
     {
@@ -83,7 +68,6 @@ function createStepRegistry(store: ReturnType<typeof useCharacterWizardStore>): 
       label: 'Feats',
       icon: 'i-heroicons-star',
       visible: () => true,
-      // Skip during navigation if no feat choices to make
       shouldSkip: () => !store.hasFeatChoices
     },
     {
@@ -97,7 +81,6 @@ function createStepRegistry(store: ReturnType<typeof useCharacterWizardStore>): 
       label: 'Skills',
       icon: 'i-heroicons-academic-cap',
       visible: () => true,
-      // Skip during navigation if no proficiency choices to make
       shouldSkip: () => !store.hasProficiencyChoices
     },
     {
@@ -111,7 +94,6 @@ function createStepRegistry(store: ReturnType<typeof useCharacterWizardStore>): 
       label: 'Languages',
       icon: 'i-heroicons-language',
       visible: () => true,
-      // Skip during navigation if no language choices to make
       shouldSkip: () => !store.hasLanguageChoices
     },
     {
@@ -181,69 +163,28 @@ export function useCharacterWizard(options: UseCharacterWizardOptions = {}) {
   // Create step registry with store access
   const stepRegistry = createStepRegistry(store)
 
-  // ══════════════════════════════════════════════════════════════
-  // COMPUTED: Active Steps
-  // ══════════════════════════════════════════════════════════════
-
-  /**
-   * Only visible steps (filtered by visibility functions)
-   */
-  const activeSteps = computed(() =>
-    stepRegistry.filter(step => step.visible())
-  )
-
-  /**
-   * Current step name from URL
-   */
+  // Current step name from URL
   const currentStepName = computed(() =>
     extractStepFromPath(route.path)
   )
 
-  /**
-   * Current step index within active steps
-   */
-  const currentStepIndex = computed(() =>
-    activeSteps.value.findIndex(s => s.name === currentStepName.value)
-  )
+  // URL builder for character wizard
+  function getStepUrl(stepName: string): string {
+    if (store.publicId) {
+      return `/characters/${store.publicId}/edit/${stepName}`
+    }
+    return `/characters/new/${stepName}`
+  }
 
-  /**
-   * Current step object
-   */
-  const currentStep = computed(() =>
-    activeSteps.value[currentStepIndex.value] ?? null
-  )
-
-  /**
-   * Total number of visible steps
-   */
-  const totalSteps = computed(() =>
-    activeSteps.value.length
-  )
-
-  /**
-   * Is this the first step?
-   */
-  const isFirstStep = computed(() =>
-    currentStepIndex.value === 0
-  )
-
-  /**
-   * Is this the last step (review)?
-   */
-  const isLastStep = computed(() =>
-    currentStepIndex.value === totalSteps.value - 1
-  )
-
-  /**
-   * Progress percentage (0-100)
-   */
-  const progressPercent = computed(() => {
-    if (totalSteps.value <= 1) return 100
-    return Math.round((currentStepIndex.value / (totalSteps.value - 1)) * 100)
+  // Use base navigation composable
+  const navigation = useWizardNavigation({
+    stepRegistry,
+    currentStepName,
+    getStepUrl
   })
 
   // ══════════════════════════════════════════════════════════════
-  // COMPUTED: Validation
+  // VALIDATION (Character wizard specific)
   // ══════════════════════════════════════════════════════════════
 
   /**
@@ -255,18 +196,15 @@ export function useCharacterWizard(options: UseCharacterWizardOptions = {}) {
 
     switch (stepName) {
       case 'sourcebooks':
-        // Can always proceed from sourcebooks (defaults to all)
         return true
 
       case 'race':
         return store.selections.race !== null
 
       case 'subrace':
-        // Can proceed if subrace selected OR if subrace is optional
         return store.selections.subrace !== null || !store.isSubraceRequired
 
       case 'size':
-        // Block until all size choices are complete
         if (!store.summary) return false
         return store.summary.pending_choices.size === 0
 
@@ -280,43 +218,32 @@ export function useCharacterWizard(options: UseCharacterWizardOptions = {}) {
         return store.selections.background !== null
 
       case 'feats':
-        // Allow if summary not loaded yet; block if pending feats remain
         if (!store.summary) return true
         return store.summary.pending_choices.feats === 0
 
       case 'abilities':
-        // Allow if summary not loaded yet; block if pending ASI bonuses remain
-        // This includes racial +2/+1 bonuses and feat-granted bonuses
         if (!store.summary) return true
         return store.summary.pending_choices.asi === 0
 
       case 'proficiencies':
-        // Allow if summary not loaded yet; block if pending proficiency choices remain
         if (!store.summary) return true
         return store.summary.pending_choices.proficiencies === 0
 
       case 'languages':
-        // Allow if summary not loaded yet; block if pending language choices remain
         if (!store.summary) return true
         return store.summary.pending_choices.languages === 0
 
       case 'equipment':
-        // Equipment validation is handled locally by StepEquipment component
-        // (allEquipmentChoicesMade computed disables Continue button)
-        // Equipment is not tracked in pending_choices summary
         return true
 
       case 'spells':
-        // Allow if summary not loaded yet; block if pending spell selections remain
         if (!store.summary) return true
         return store.summary.pending_choices.spells === 0
 
       case 'details':
-        // Name is required
         return store.selections.name.trim().length > 0
 
       case 'review':
-        // Always can "proceed" (finish) from review
         return true
 
       default:
@@ -325,131 +252,14 @@ export function useCharacterWizard(options: UseCharacterWizardOptions = {}) {
   })
 
   // ══════════════════════════════════════════════════════════════
-  // NAVIGATION
-  // ══════════════════════════════════════════════════════════════
-
-  /**
-   * Build the URL for a step
-   *
-   * Uses publicId for URLs once a character is created.
-   * This handles the transition from /characters/new/* to /characters/{publicId}/edit/*
-   * after the first save (race selection creates the character).
-   */
-  function getStepUrl(stepName: string): string {
-    // Once character is created, always use publicId URLs
-    // This handles the transition from "new" mode to "edit" mode
-    if (store.publicId) {
-      return `/characters/${store.publicId}/edit/${stepName}`
-    }
-
-    // Before character is created, use new mode URLs
-    // (only applies to sourcebooks and race steps before first save)
-    return `/characters/new/${stepName}`
-  }
-
-  /**
-   * Navigate to next step, skipping any steps that should be skipped
-   */
-  async function nextStep(): Promise<void> {
-    let nextIndex = currentStepIndex.value + 1
-
-    // Find the next step that shouldn't be skipped
-    while (nextIndex < activeSteps.value.length) {
-      const next = activeSteps.value[nextIndex]
-      if (next && !next.shouldSkip?.()) {
-        await navigateTo(getStepUrl(next.name))
-        return
-      }
-      nextIndex++
-    }
-  }
-
-  /**
-   * Navigate to previous step, skipping any steps that should be skipped
-   */
-  async function previousStep(): Promise<void> {
-    let prevIndex = currentStepIndex.value - 1
-
-    // Find the previous step that shouldn't be skipped
-    while (prevIndex >= 0) {
-      const prev = activeSteps.value[prevIndex]
-      if (prev && !prev.shouldSkip?.()) {
-        await navigateTo(getStepUrl(prev.name))
-        return
-      }
-      prevIndex--
-    }
-  }
-
-  /**
-   * Navigate to specific step by name
-   */
-  async function goToStep(stepName: string): Promise<void> {
-    const step = activeSteps.value.find(s => s.name === stepName)
-    if (step) {
-      await navigateTo(getStepUrl(stepName))
-    }
-  }
-
-  /**
-   * Get the next step (without navigating), respecting shouldSkip
-   */
-  const nextStepInfo = computed(() => {
-    let nextIndex = currentStepIndex.value + 1
-    while (nextIndex < activeSteps.value.length) {
-      const next = activeSteps.value[nextIndex]
-      if (next && !next.shouldSkip?.()) {
-        return next
-      }
-      nextIndex++
-    }
-    return null
-  })
-
-  /**
-   * Get the previous step (without navigating), respecting shouldSkip
-   */
-  const previousStepInfo = computed(() => {
-    let prevIndex = currentStepIndex.value - 1
-    while (prevIndex >= 0) {
-      const prev = activeSteps.value[prevIndex]
-      if (prev && !prev.shouldSkip?.()) {
-        return prev
-      }
-      prevIndex--
-    }
-    return null
-  })
-
-  // ══════════════════════════════════════════════════════════════
   // RETURN
   // ══════════════════════════════════════════════════════════════
 
   return {
-    // Step registry
-    stepRegistry,
-    activeSteps,
+    // From base navigation
+    ...navigation,
 
-    // Current step
-    currentStep,
-    currentStepName,
-    currentStepIndex,
-
-    // Progress
-    totalSteps,
-    progressPercent,
-    isFirstStep,
-    isLastStep,
-
-    // Validation
-    canProceed,
-
-    // Navigation
-    nextStep,
-    previousStep,
-    goToStep,
-    getStepUrl,
-    nextStepInfo,
-    previousStepInfo
+    // Character wizard specific
+    canProceed
   }
 }

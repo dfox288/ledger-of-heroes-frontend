@@ -1,14 +1,32 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest'
-import { reactive } from 'vue'
 import { mountSuspended } from '@nuxt/test-utils/runtime'
 import { setActivePinia, createPinia } from 'pinia'
 import WizardSidebar from '~/components/character/wizard/WizardSidebar.vue'
 
-// Mock navigateTo as a no-op (actual navigation tested in integration tests)
-vi.stubGlobal('navigateTo', vi.fn())
+/**
+ * WizardSidebar - Unified sidebar for character creation and level-up wizards
+ *
+ * Tests the prop-based API introduced in #625 consolidation.
+ */
 
-function createMockRoute(path: string = '/characters/new/sourcebooks') {
-  return reactive({ path })
+// Mock steps for testing
+const mockSteps = [
+  { name: 'sourcebooks', label: 'Sources', icon: 'i-heroicons-book-open' },
+  { name: 'race', label: 'Race', icon: 'i-heroicons-globe-alt' },
+  { name: 'class', label: 'Class', icon: 'i-heroicons-shield-check' },
+  { name: 'background', label: 'Background', icon: 'i-heroicons-book-open' },
+  { name: 'abilities', label: 'Abilities', icon: 'i-heroicons-chart-bar' },
+  { name: 'details', label: 'Details', icon: 'i-heroicons-user' },
+  { name: 'review', label: 'Review', icon: 'i-heroicons-check-circle' }
+]
+
+function createMockGetStepUrl(publicId?: string) {
+  return (stepName: string) => {
+    if (publicId) {
+      return `/characters/${publicId}/edit/${stepName}`
+    }
+    return `/characters/new/${stepName}`
+  }
 }
 
 describe('WizardSidebar', () => {
@@ -18,48 +36,62 @@ describe('WizardSidebar', () => {
   })
 
   describe('step list', () => {
-    it('displays visible steps', async () => {
-      const route = createMockRoute('/characters/new/sourcebooks')
+    it('displays all provided steps', async () => {
       const wrapper = await mountSuspended(WizardSidebar, {
-        props: { route }
+        props: {
+          title: 'Character Builder',
+          activeSteps: mockSteps,
+          currentStep: 'sourcebooks',
+          getStepUrl: createMockGetStepUrl()
+        }
       })
 
-      // Core visible steps should be shown
       expect(wrapper.text()).toContain('Sources')
       expect(wrapper.text()).toContain('Race')
       expect(wrapper.text()).toContain('Class')
       expect(wrapper.text()).toContain('Review')
     })
 
-    it('hides conditional steps when not needed', async () => {
-      const route = createMockRoute('/characters/new/sourcebooks')
+    it('displays the provided title', async () => {
       const wrapper = await mountSuspended(WizardSidebar, {
-        props: { route }
+        props: {
+          title: 'Level Up',
+          activeSteps: mockSteps,
+          currentStep: 'sourcebooks',
+          getStepUrl: createMockGetStepUrl()
+        }
       })
 
-      // Without race/class selection, conditional steps should be hidden
-      expect(wrapper.text()).not.toContain('Subrace')
-      expect(wrapper.text()).not.toContain('Subclass')
-      expect(wrapper.text()).not.toContain('Spells')
+      expect(wrapper.text()).toContain('Level Up')
     })
 
-    it('shows step icons', async () => {
-      const route = createMockRoute('/characters/new/sourcebooks')
+    it('shows step items with test IDs', async () => {
       const wrapper = await mountSuspended(WizardSidebar, {
-        props: { route }
+        props: {
+          title: 'Character Builder',
+          activeSteps: mockSteps,
+          currentStep: 'sourcebooks',
+          getStepUrl: createMockGetStepUrl()
+        }
       })
 
-      // Look for step items with specific test IDs
       const sourcebooksStep = wrapper.find('[data-testid="step-item-sourcebooks"]')
       expect(sourcebooksStep.exists()).toBe(true)
+
+      const raceStep = wrapper.find('[data-testid="step-item-race"]')
+      expect(raceStep.exists()).toBe(true)
     })
   })
 
   describe('current step highlighting', () => {
     it('highlights the current step', async () => {
-      const route = createMockRoute('/characters/new/race')
       const wrapper = await mountSuspended(WizardSidebar, {
-        props: { route }
+        props: {
+          title: 'Character Builder',
+          activeSteps: mockSteps,
+          currentStep: 'race',
+          getStepUrl: createMockGetStepUrl()
+        }
       })
 
       const currentStep = wrapper.find('[data-testid="step-item-race"]')
@@ -67,63 +99,129 @@ describe('WizardSidebar', () => {
     })
 
     it('shows completed indicator for past steps', async () => {
-      const route = createMockRoute('/characters/new/race')
       const wrapper = await mountSuspended(WizardSidebar, {
-        props: { route }
+        props: {
+          title: 'Character Builder',
+          activeSteps: mockSteps,
+          currentStep: 'race',
+          getStepUrl: createMockGetStepUrl()
+        }
       })
 
       // Sourcebooks (index 0) should show as completed when on race (index 1)
       const sourcebooksStep = wrapper.find('[data-testid="step-item-sourcebooks"]')
       expect(sourcebooksStep.find('[data-testid="check-icon"]').exists()).toBe(true)
     })
-  })
 
-  describe('navigation', () => {
-    it('allows clicking on completed steps', async () => {
-      const route = createMockRoute('/characters/new/class')
+    it('marks future steps as not clickable', async () => {
       const wrapper = await mountSuspended(WizardSidebar, {
-        props: { route }
+        props: {
+          title: 'Character Builder',
+          activeSteps: mockSteps,
+          currentStep: 'sourcebooks',
+          getStepUrl: createMockGetStepUrl()
+        }
       })
 
-      const raceStep = wrapper.find('[data-testid="step-item-race"]')
-      // Verify the step is clickable (not disabled)
-      expect(raceStep.classes()).toContain('cursor-pointer')
-      await raceStep.trigger('click')
-      // Navigation handled asynchronously; verified in integration tests
-    })
-
-    it('does not navigate when clicking current step', async () => {
-      const route = createMockRoute('/characters/new/race')
-      const wrapper = await mountSuspended(WizardSidebar, {
-        props: { route }
-      })
-
-      // Current step should not have cursor-pointer class
-      const raceStep = wrapper.find('[data-testid="step-item-race"]')
-      expect(raceStep.classes()).not.toContain('cursor-pointer')
-    })
-
-    it('does not navigate when clicking future steps', async () => {
-      const route = createMockRoute('/characters/new/sourcebooks')
-      const wrapper = await mountSuspended(WizardSidebar, {
-        props: { route }
-      })
-
-      // Future steps should be disabled
+      // Future steps should have cursor-not-allowed
       const reviewStep = wrapper.find('[data-testid="step-item-review"]')
       expect(reviewStep.classes()).toContain('cursor-not-allowed')
     })
   })
 
-  describe('progress display', () => {
-    it('shows progress percentage', async () => {
-      const route = createMockRoute('/characters/new/abilities')
+  describe('navigation', () => {
+    it('completed steps are clickable', async () => {
       const wrapper = await mountSuspended(WizardSidebar, {
-        props: { route }
+        props: {
+          title: 'Character Builder',
+          activeSteps: mockSteps,
+          currentStep: 'class',
+          getStepUrl: createMockGetStepUrl()
+        }
       })
 
-      // Progress bar should exist
+      // Race step (completed) should be hoverable/clickable
+      const raceStep = wrapper.find('[data-testid="step-item-race"]')
+      expect(raceStep.classes()).toContain('hover:bg-gray-100')
+    })
+
+    it('future steps are disabled', async () => {
+      const wrapper = await mountSuspended(WizardSidebar, {
+        props: {
+          title: 'Character Builder',
+          activeSteps: mockSteps,
+          currentStep: 'sourcebooks',
+          getStepUrl: createMockGetStepUrl()
+        }
+      })
+
+      const reviewStep = wrapper.find('[data-testid="step-item-review"]')
+      expect(reviewStep.classes()).toContain('pointer-events-none')
+    })
+  })
+
+  describe('progress display', () => {
+    it('shows progress bar', async () => {
+      const wrapper = await mountSuspended(WizardSidebar, {
+        props: {
+          title: 'Character Builder',
+          activeSteps: mockSteps,
+          currentStep: 'abilities',
+          getStepUrl: createMockGetStepUrl()
+        }
+      })
+
       expect(wrapper.find('[data-testid="progress-bar"]').exists()).toBe(true)
+    })
+
+    it('shows progress percentage text', async () => {
+      const wrapper = await mountSuspended(WizardSidebar, {
+        props: {
+          title: 'Character Builder',
+          activeSteps: mockSteps,
+          currentStep: 'abilities', // index 4 of 7 = 66%
+          getStepUrl: createMockGetStepUrl()
+        }
+      })
+
+      expect(wrapper.text()).toContain('% complete')
+    })
+
+    it('calculates progress correctly', async () => {
+      const wrapper = await mountSuspended(WizardSidebar, {
+        props: {
+          title: 'Character Builder',
+          activeSteps: mockSteps.slice(0, 3), // 3 steps
+          currentStep: 'race', // index 1 of 3 = 50%
+          getStepUrl: createMockGetStepUrl()
+        }
+      })
+
+      expect(wrapper.text()).toContain('50% complete')
+    })
+  })
+
+  describe('level-up wizard usage', () => {
+    it('works with level-up specific steps', async () => {
+      const levelUpSteps = [
+        { name: 'hit-points', label: 'Hit Points', icon: 'i-heroicons-heart' },
+        { name: 'asi-feat', label: 'ASI / Feat', icon: 'i-heroicons-arrow-trending-up' },
+        { name: 'summary', label: 'Summary', icon: 'i-heroicons-trophy' }
+      ]
+
+      const wrapper = await mountSuspended(WizardSidebar, {
+        props: {
+          title: 'Level Up',
+          activeSteps: levelUpSteps,
+          currentStep: 'hit-points',
+          getStepUrl: (name: string) => `/characters/test-id/level-up/${name}`
+        }
+      })
+
+      expect(wrapper.text()).toContain('Level Up')
+      expect(wrapper.text()).toContain('Hit Points')
+      expect(wrapper.text()).toContain('ASI / Feat')
+      expect(wrapper.text()).toContain('Summary')
     })
   })
 })

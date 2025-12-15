@@ -1,5 +1,6 @@
 // tests/composables/useLevelUpWizard.test.ts
 import { describe, it, expect, beforeEach, vi } from 'vitest'
+import { mockNuxtImport } from '@nuxt/test-utils/runtime'
 import { setActivePinia, createPinia } from 'pinia'
 import { ref } from 'vue'
 
@@ -8,7 +9,12 @@ import { ref } from 'vue'
 // =============================================================================
 
 const mockGoToStep = vi.fn()
-const mockNavigateTo = vi.fn()
+
+// Mock navigateTo using vi.hoisted to ensure it's defined before mockNuxtImport is hoisted
+const { mockNavigateTo } = vi.hoisted(() => ({
+  mockNavigateTo: vi.fn()
+}))
+mockNuxtImport('navigateTo', () => mockNavigateTo)
 
 // Create reactive refs that tests can modify
 const mockLevelUpResult = ref<unknown>(null)
@@ -36,15 +42,6 @@ vi.mock('~/stores/characterLevelUp', () => ({
     goToStep: mockGoToStep
   }))
 }))
-
-// Mock navigateTo from #app
-vi.mock('#app', async () => {
-  const actual = await vi.importActual('#app')
-  return {
-    ...actual,
-    navigateTo: (path: string) => mockNavigateTo(path)
-  }
-})
 
 // Import composable AFTER mocks
 // eslint-disable-next-line import/first
@@ -391,32 +388,42 @@ describe('useLevelUpWizard', () => {
   })
 
   describe('navigation', () => {
-    it('nextStep calls goToStep with next step name', () => {
+    it('nextStep navigates to next step URL', async () => {
       mockNeedsClassSelection.value = true
-      mockCurrentStepName.value = 'class-selection'
-      const { nextStep } = useLevelUpWizard()
+      mockLevelUpResult.value = { hp_choice_pending: true }
+      const { nextStep } = useLevelUpWizard({
+        publicId: 'test-hero-Ab12',
+        currentStep: 'class-selection'
+      })
 
-      nextStep()
+      await nextStep()
 
-      expect(mockGoToStep).toHaveBeenCalled()
+      expect(mockNavigateTo).toHaveBeenCalledWith('/characters/test-hero-Ab12/level-up/hit-points')
     })
 
-    it('previousStep calls goToStep with previous step name', () => {
+    it('previousStep navigates to previous step URL', async () => {
       mockNeedsClassSelection.value = true
-      mockCurrentStepName.value = 'hit-points'
-      const { previousStep } = useLevelUpWizard()
+      mockLevelUpResult.value = { hp_choice_pending: true }
+      const { previousStep } = useLevelUpWizard({
+        publicId: 'test-hero-Ab12',
+        currentStep: 'hit-points'
+      })
 
-      previousStep()
+      await previousStep()
 
-      expect(mockGoToStep).toHaveBeenCalled()
+      expect(mockNavigateTo).toHaveBeenCalledWith('/characters/test-hero-Ab12/level-up/class-selection')
     })
 
-    it('goToStep delegates to store', () => {
-      const { goToStep } = useLevelUpWizard()
+    it('goToStep navigates to step URL', async () => {
+      mockLevelUpResult.value = { hp_choice_pending: true }
+      const { goToStep } = useLevelUpWizard({
+        publicId: 'test-hero-Ab12',
+        currentStep: 'hit-points'
+      })
 
-      goToStep('summary')
+      await goToStep('summary')
 
-      expect(mockGoToStep).toHaveBeenCalledWith('summary')
+      expect(mockNavigateTo).toHaveBeenCalledWith('/characters/test-hero-Ab12/level-up/summary')
     })
   })
 
@@ -594,8 +601,8 @@ describe('useLevelUpWizard', () => {
     it('throws error when trying to use URL helpers without options', () => {
       const { getStepUrl, getPreviewUrl } = useLevelUpWizard()
 
-      expect(() => getStepUrl('spells')).toThrow('options required')
-      expect(() => getPreviewUrl()).toThrow('options required')
+      expect(() => getStepUrl('spells')).toThrow('publicId required')
+      expect(() => getPreviewUrl()).toThrow('publicId required')
     })
   })
 })
