@@ -65,6 +65,37 @@ describe('DmScreenCharacterDetail', () => {
       expect(wrapper.text()).toContain('+6') // INT saving throw
     })
 
+    it('highlights weak saves (modifier <= 0) with warning color', async () => {
+      // mockCharacter has STR: 0 and CHA: -1 (both weak)
+      const wrapper = await mountSuspended(CharacterDetail, {
+        props: { character: mockCharacter }
+      })
+      const strSave = wrapper.find('[data-testid="save-STR"]')
+      const chaSave = wrapper.find('[data-testid="save-CHA"]')
+      expect(strSave.classes().join(' ')).toMatch(/rose|red|warning/)
+      expect(chaSave.classes().join(' ')).toMatch(/rose|red|warning/)
+    })
+
+    it('highlights strong saves (modifier >= 5) with success color', async () => {
+      // mockCharacter has INT: 6 (strong)
+      const wrapper = await mountSuspended(CharacterDetail, {
+        props: { character: mockCharacter }
+      })
+      const intSave = wrapper.find('[data-testid="save-INT"]')
+      expect(intSave.classes().join(' ')).toMatch(/emerald|green|success/)
+    })
+
+    it('shows neutral color for normal saves', async () => {
+      // mockCharacter has DEX: 2 and CON: 1 (normal range)
+      const wrapper = await mountSuspended(CharacterDetail, {
+        props: { character: mockCharacter }
+      })
+      const dexSave = wrapper.find('[data-testid="save-DEX"]')
+      // Should NOT have warning or success colors
+      expect(dexSave.classes().join(' ')).not.toMatch(/rose|red|warning/)
+      expect(dexSave.classes().join(' ')).not.toMatch(/emerald|green|success/)
+    })
+
     it('displays concentration status', async () => {
       const wrapper = await mountSuspended(CharacterDetail, {
         props: { character: mockCharacter }
