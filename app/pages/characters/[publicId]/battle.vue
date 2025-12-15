@@ -19,8 +19,8 @@ const route = useRoute()
 const publicId = computed(() => route.params.publicId as string)
 
 // Shared character data + play state initialization
-const { character, stats, isSpellcaster, loading, refreshCharacter, playStateStore } =
-  useCharacterSubPage(publicId)
+const { character, stats, isSpellcaster, loading, refreshCharacter, playStateStore }
+  = useCharacterSubPage(publicId)
 
 // Get reactive state from store
 const { canEdit, hitPoints, conditions } = storeToRefs(playStateStore)

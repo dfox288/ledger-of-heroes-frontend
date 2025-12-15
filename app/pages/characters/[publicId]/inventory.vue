@@ -25,8 +25,8 @@ const toast = useToast()
 const { apiFetch } = useApi()
 
 // Shared character data + play state initialization
-const { character, stats, isSpellcaster, loading, refreshCharacter, playStateStore, addPendingState } =
-  useCharacterSubPage(publicId)
+const { character, stats, isSpellcaster, loading, refreshCharacter, playStateStore, addPendingState }
+  = useCharacterSubPage(publicId)
 
 // Get reactive state from store
 const { canEdit } = storeToRefs(playStateStore)

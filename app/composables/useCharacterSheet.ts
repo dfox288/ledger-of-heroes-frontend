@@ -101,11 +101,12 @@ export function useCharacterSheet(characterId: Ref<string | number>): UseCharact
   const dataAlreadyCached = cachedCharacter.value !== null && cachedStats.value !== null
 
   // Fetch character base data
+  // dedupe: 'defer' prevents duplicate requests during navigation
   const { data: characterData, pending: characterPending, error: characterError, refresh: refreshCharacter }
     = useAsyncData(
       `character-${characterId.value}`,
       () => apiFetch<{ data: Character }>(`/characters/${characterId.value}`),
-      { getCachedData: key => getCachedData(key) }
+      { getCachedData: key => getCachedData(key), dedupe: 'defer' }
     )
 
   // Fetch character stats
@@ -113,7 +114,7 @@ export function useCharacterSheet(characterId: Ref<string | number>): UseCharact
     = useAsyncData(
       `character-${characterId.value}-stats`,
       () => apiFetch<{ data: CharacterStats }>(`/characters/${characterId.value}/stats`),
-      { getCachedData: key => getCachedData(key) }
+      { getCachedData: key => getCachedData(key), dedupe: 'defer' }
     )
 
   // Fetch proficiencies

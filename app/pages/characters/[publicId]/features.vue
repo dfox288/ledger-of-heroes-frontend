@@ -19,13 +19,13 @@ const publicId = computed(() => route.params.publicId as string)
 const { apiFetch } = useApi()
 
 // Shared character data + play state initialization
-const { character, isSpellcaster, loading, refreshCharacter, addPendingState } =
-  useCharacterSubPage(publicId)
+const { character, isSpellcaster, loading, refreshCharacter, addPendingState }
+  = useCharacterSubPage(publicId)
 
 // Fetch features data (page-specific)
 const { data: featuresData, pending: featuresPending } = await useAsyncData(
   `character-${publicId.value}-features`,
-  () => apiFetch<{ data: CharacterFeature[] }>(`/characters/${publicId.value}/features`),
+  () => apiFetch<{ data: CharacterFeature[] }>(`/characters/${publicId.value}/features`)
 )
 
 // Register pending state so it's included in loading

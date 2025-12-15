@@ -96,19 +96,20 @@ export function useCharacterSubPage(publicId: Ref<string>): UseCharacterSubPageR
   const dataAlreadyCached = cachedCharacter.value !== null && cachedStats.value !== null
 
   // Fetch character data with SHARED cache key (same as useCharacterSheet)
-  const { data: characterData, pending: characterPending, refresh: refreshCharacter } =
-    useAsyncData(
+  // dedupe: 'defer' prevents duplicate requests during navigation
+  const { data: characterData, pending: characterPending, refresh: refreshCharacter }
+    = useAsyncData(
       `character-${publicId.value}`,
       () => apiFetch<{ data: Character }>(`/characters/${publicId.value}`),
-      { getCachedData: key => getCachedData(key) }
+      { getCachedData: key => getCachedData(key), dedupe: 'defer' }
     )
 
   // Fetch stats data with SHARED cache key (same as useCharacterSheet)
-  const { data: statsData, pending: statsPending } =
-    useAsyncData(
+  const { data: statsData, pending: statsPending }
+    = useAsyncData(
       `character-${publicId.value}-stats`,
       () => apiFetch<{ data: CharacterStats }>(`/characters/${publicId.value}/stats`),
-      { getCachedData: key => getCachedData(key) }
+      { getCachedData: key => getCachedData(key), dedupe: 'defer' }
     )
 
   // Computed data extraction

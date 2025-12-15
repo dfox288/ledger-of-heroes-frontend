@@ -19,8 +19,8 @@ const publicId = computed(() => route.params.publicId as string)
 const { apiFetch } = useApi()
 
 // Shared character data + play state initialization
-const { character, isSpellcaster, loading, refreshCharacter, addPendingState } =
-  useCharacterSubPage(publicId)
+const { character, isSpellcaster, loading, refreshCharacter, addPendingState }
+  = useCharacterSubPage(publicId)
 
 // Fetch notes data (grouped by category)
 const { data: notesData, pending: notesPending, refresh: refreshNotes } = await useAsyncData(
