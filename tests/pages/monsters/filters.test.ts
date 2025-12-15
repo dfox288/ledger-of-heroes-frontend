@@ -113,7 +113,7 @@ describe('Monsters Page - Filters', () => {
     })
 
     it('allows selecting multiple CR values', async () => {
-      const wrapper = await mountSuspended(MonstersPage)
+      const _wrapper = await mountSuspended(MonstersPage)
       const store = useMonsterFiltersStore()
 
       store.selectedCRs = ['0', '5', '17']
@@ -121,7 +121,7 @@ describe('Monsters Page - Filters', () => {
     })
 
     it('initializes as empty array', async () => {
-      const wrapper = await mountSuspended(MonstersPage)
+      const _wrapper = await mountSuspended(MonstersPage)
       const store = useMonsterFiltersStore()
 
       store.clearAll()
@@ -216,7 +216,7 @@ describe('Monsters Page - Filters', () => {
     })
 
     it('allows selecting multiple sizes', async () => {
-      const wrapper = await mountSuspended(MonstersPage)
+      const _wrapper = await mountSuspended(MonstersPage)
       const store = useMonsterFiltersStore()
 
       store.selectedSizes = ['1', '3', '6']
@@ -224,7 +224,7 @@ describe('Monsters Page - Filters', () => {
     })
 
     it('initializes as empty array', async () => {
-      const wrapper = await mountSuspended(MonstersPage)
+      const _wrapper = await mountSuspended(MonstersPage)
       const store = useMonsterFiltersStore()
 
       store.clearAll()
@@ -307,7 +307,7 @@ describe('Monsters Page - Filters', () => {
     })
 
     it('allows selecting multiple alignments', async () => {
-      const wrapper = await mountSuspended(MonstersPage)
+      const _wrapper = await mountSuspended(MonstersPage)
       const store = useMonsterFiltersStore()
 
       store.selectedAlignments = ['Lawful Good', 'Chaotic Evil', 'Neutral']
@@ -319,7 +319,7 @@ describe('Monsters Page - Filters', () => {
     })
 
     it('initializes as empty array', async () => {
-      const wrapper = await mountSuspended(MonstersPage)
+      const _wrapper = await mountSuspended(MonstersPage)
       const store = useMonsterFiltersStore()
 
       store.clearAll()
@@ -397,7 +397,7 @@ describe('Monsters Page - Filters', () => {
     })
 
     it('allows selecting multiple movement types', async () => {
-      const wrapper = await mountSuspended(MonstersPage)
+      const _wrapper = await mountSuspended(MonstersPage)
       const store = useMonsterFiltersStore()
 
       store.selectedMovementTypes = ['fly', 'swim', 'burrow']
@@ -409,7 +409,7 @@ describe('Monsters Page - Filters', () => {
     })
 
     it('initializes as empty array', async () => {
-      const wrapper = await mountSuspended(MonstersPage)
+      const _wrapper = await mountSuspended(MonstersPage)
       const store = useMonsterFiltersStore()
 
       store.clearAll()
@@ -501,7 +501,7 @@ describe('Monsters Page - Filters', () => {
     })
 
     it('allows selecting multiple armor types', async () => {
-      const wrapper = await mountSuspended(MonstersPage)
+      const _wrapper = await mountSuspended(MonstersPage)
       const store = useMonsterFiltersStore()
 
       store.selectedArmorTypes = ['natural armor', 'plate armor', 'leather armor']
@@ -513,7 +513,7 @@ describe('Monsters Page - Filters', () => {
     })
 
     it('initializes as empty array', async () => {
-      const wrapper = await mountSuspended(MonstersPage)
+      const _wrapper = await mountSuspended(MonstersPage)
       const store = useMonsterFiltersStore()
 
       store.clearAll()
@@ -554,7 +554,7 @@ describe('Monsters Page - Filters', () => {
 
   describe('AC Range Filter', () => {
     it('has AC range filter state', async () => {
-      const wrapper = await mountSuspended(MonstersPage)
+      const _wrapper = await mountSuspended(MonstersPage)
       const store = useMonsterFiltersStore()
 
       expect(store.selectedACRange).toBeDefined()
@@ -612,7 +612,7 @@ describe('Monsters Page - Filters', () => {
 
   describe('HP Range Filter', () => {
     it('has HP range filter state', async () => {
-      const wrapper = await mountSuspended(MonstersPage)
+      const _wrapper = await mountSuspended(MonstersPage)
       const store = useMonsterFiltersStore()
 
       expect(store.selectedHPRange).toBeDefined()
