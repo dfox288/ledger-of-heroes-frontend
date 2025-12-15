@@ -37,6 +37,16 @@ const savingThrowEntries = computed(() => {
     modifier: props.character.saving_throws[key]
   }))
 })
+
+// Determine color class for saving throw based on modifier
+// Weak (≤ 0): red/rose - easy to target
+// Strong (≥ 5): green/emerald - likely proficient
+// Normal (1-4): neutral
+function getSaveColorClass(modifier: number): string {
+  if (modifier <= 0) return 'text-rose-600 dark:text-rose-400'
+  if (modifier >= 5) return 'text-emerald-600 dark:text-emerald-400'
+  return ''
+}
 </script>
 
 <template>
@@ -90,10 +100,12 @@ const savingThrowEntries = computed(() => {
             <div
               v-for="st in savingThrowEntries"
               :key="st.ability"
+              :data-testid="`save-${st.ability}`"
               class="flex justify-between"
+              :class="getSaveColorClass(st.modifier)"
             >
-              <span class="text-neutral-500">{{ st.ability }}</span>
-              <span class="font-mono">{{ formatModifier(st.modifier) }}</span>
+              <span :class="getSaveColorClass(st.modifier) ? '' : 'text-neutral-500'">{{ st.ability }}</span>
+              <span class="font-mono font-medium">{{ formatModifier(st.modifier) }}</span>
             </div>
           </div>
         </div>
