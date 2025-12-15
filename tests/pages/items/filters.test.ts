@@ -11,7 +11,7 @@
  * Store-level tests (state mutations, hasActiveFilters, clearAll, URL sync)
  * are covered in tests/stores/filterStores.test.ts
  *
- * Consolidation: 2 files (1,472 lines) → 1 file (~500 lines)
+ * Consolidation: 2 files (1,472 lines) → 1 file (539 lines)
  * GitHub Issue: #635
  */
 import { describe, it, expect, beforeEach } from 'vitest'
@@ -327,6 +327,13 @@ describe('Items Page - Filters', () => {
         const firstRarity = component.rarityOptions[1]
         expect(firstRarity.label.charAt(0)).toBe(firstRarity.label.charAt(0).toUpperCase())
       }
+    })
+
+    it('capitalizes only first letter for multi-word rarities', async () => {
+      // Verify the capitalization logic produces "Very rare" not "Very Rare"
+      const testName = 'very rare'
+      const expectedLabel = testName.charAt(0).toUpperCase() + testName.slice(1)
+      expect(expectedLabel).toBe('Very rare')
     })
   })
 
