@@ -2,6 +2,13 @@
 <script setup lang="ts">
 import type { Counter } from '~/types/character'
 
+/**
+ * Threshold for switching between icon and numeric display modes.
+ * Counters with max <= this value show clickable icons.
+ * Counters with max > this value show +/- buttons.
+ */
+const ICON_MODE_THRESHOLD = 6
+
 const props = defineProps<{
   counter: Counter
   editable?: boolean
@@ -15,16 +22,41 @@ const emit = defineEmits<{
 
 const isInteractive = computed(() => props.editable && !props.disabled)
 
+/** Display mode: 'icon' for small pools, 'numeric' for larger pools */
+const displayMode = computed(() =>
+  props.counter.max <= ICON_MODE_THRESHOLD ? 'icon' : 'numeric'
+)
+
+/** Whether to show the reset badge (hide for unlimited counters) */
 const resetLabel = computed(() => {
+  if (props.counter.unlimited) return null
   if (props.counter.reset_on === 'short_rest') return 'Short'
   if (props.counter.reset_on === 'long_rest') return 'Long'
   return null
 })
 
-function handleIconClick() {
-  if (!isInteractive.value) return
-  if (props.counter.current <= 0) return
+/** Whether the counter can be spent (respects unlimited flag) */
+const canSpend = computed(() => {
+  if (!isInteractive.value) return false
+  if (props.counter.unlimited) return true
+  return props.counter.current > 0
+})
+
+/** Whether the counter can be restored */
+const canRestore = computed(() => {
+  if (!isInteractive.value) return false
+  if (props.counter.unlimited) return false // Can't restore unlimited
+  return props.counter.current < props.counter.max
+})
+
+function handleSpend() {
+  if (!canSpend.value) return
   emit('spend', props.counter.slug)
+}
+
+function handleRestore() {
+  if (!canRestore.value) return
+  emit('restore', props.counter.slug)
 }
 </script>
 
@@ -54,9 +86,9 @@ function handleIconClick() {
       </div>
     </div>
 
-    <!-- Icon Mode (max <= 6) -->
+    <!-- Icon Mode (max <= threshold) -->
     <div
-      v-if="counter.max <= 6"
+      v-if="displayMode === 'icon'"
       class="flex gap-1 flex-wrap"
     >
       <UIcon
@@ -65,15 +97,15 @@ function handleIconClick() {
         name="i-heroicons-bolt-solid"
         :class="[
           'w-5 h-5 text-primary-600 dark:text-primary-500',
-          isInteractive ? 'cursor-pointer hover:opacity-80 transition-opacity focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-1 rounded' : ''
+          canSpend ? 'cursor-pointer hover:opacity-80 transition-opacity focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-1 rounded' : ''
         ]"
-        :tabindex="isInteractive ? 0 : -1"
+        :tabindex="canSpend ? 0 : -1"
         role="button"
         :aria-label="`Spend 1 ${counter.name}`"
         data-testid="counter-icon-filled"
-        @click="handleIconClick"
-        @keydown.enter="handleIconClick"
-        @keydown.space.prevent="handleIconClick"
+        @click="handleSpend"
+        @keydown.enter="handleSpend"
+        @keydown.space.prevent="handleSpend"
       />
       <UIcon
         v-for="i in (counter.max - counter.current)"
@@ -84,7 +116,7 @@ function handleIconClick() {
       />
     </div>
 
-    <!-- Numeric Mode (max > 6) -->
+    <!-- Numeric Mode (max > threshold) -->
     <div
       v-else
       class="flex items-center gap-2"
@@ -95,8 +127,9 @@ function handleIconClick() {
         color="neutral"
         variant="soft"
         size="xs"
-        :disabled="!editable || disabled || counter.current <= 0"
-        @click="$emit('spend', counter.slug)"
+        :aria-label="`Spend 1 ${counter.name}`"
+        :disabled="!canSpend"
+        @click="handleSpend"
       />
       <span class="text-sm font-medium text-gray-700 dark:text-gray-300 min-w-12 text-center">
         {{ counter.current }} / {{ counter.max }}
@@ -107,8 +140,9 @@ function handleIconClick() {
         color="neutral"
         variant="soft"
         size="xs"
-        :disabled="!editable || disabled || counter.current >= counter.max"
-        @click="$emit('restore', counter.slug)"
+        :aria-label="`Restore 1 ${counter.name}`"
+        :disabled="!canRestore"
+        @click="handleRestore"
       />
     </div>
   </div>

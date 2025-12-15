@@ -350,4 +350,83 @@ describe('ClassResourcesManager', () => {
       expect(vm.localCounters[0].current).toBe(5)
     })
   })
+
+  // ===========================================================================
+  // RACE CONDITION PREVENTION
+  // ===========================================================================
+
+  describe('race condition prevention', () => {
+    it('prevents concurrent spend operations on same counter', async () => {
+      let resolveFirst: () => void
+      const firstPromise = new Promise<void>((resolve) => {
+        resolveFirst = resolve
+      })
+      apiFetchMock.mockImplementationOnce(() => firstPromise)
+
+      const wrapper = await mountSuspended(ClassResourcesManager, {
+        props: {
+          counters: [createCounter({ current: 5 })],
+          characterId: 42,
+          editable: true
+        },
+        ...getMountOptions()
+      })
+
+      const vm = wrapper.vm as unknown as ClassResourcesManagerVM
+
+      // Start first spend (doesn't complete yet)
+      const firstSpend = vm.handleSpend('phb:bard:bardic-inspiration')
+
+      // Try second spend while first is in progress
+      await vm.handleSpend('phb:bard:bardic-inspiration')
+
+      // Only one API call should have been made
+      expect(apiFetchMock).toHaveBeenCalledTimes(1)
+
+      // Counter should only be decremented once (optimistic)
+      expect(vm.localCounters[0].current).toBe(4)
+
+      // Complete first request
+      resolveFirst!()
+      await firstSpend
+    })
+
+    it('allows concurrent operations on different counters', async () => {
+      let resolveFirst: () => void
+      const firstPromise = new Promise<void>((resolve) => {
+        resolveFirst = resolve
+      })
+      apiFetchMock.mockImplementationOnce(() => firstPromise)
+      apiFetchMock.mockResolvedValueOnce({ data: createCounter() })
+
+      const counters = [
+        createCounter({ slug: 'counter-1', current: 5 }),
+        createCounter({ id: 2, slug: 'counter-2', current: 3 })
+      ]
+
+      const wrapper = await mountSuspended(ClassResourcesManager, {
+        props: {
+          counters,
+          characterId: 42,
+          editable: true
+        },
+        ...getMountOptions()
+      })
+
+      const vm = wrapper.vm as unknown as ClassResourcesManagerVM
+
+      // Start spend on first counter
+      const firstSpend = vm.handleSpend('counter-1')
+
+      // Spend on second counter while first is pending
+      await vm.handleSpend('counter-2')
+
+      // Both calls should have been made
+      expect(apiFetchMock).toHaveBeenCalledTimes(2)
+
+      // Complete first request
+      resolveFirst!()
+      await firstSpend
+    })
+  })
 })

@@ -10,11 +10,29 @@
  *
  * @see #632 - Class resources
  */
+const VALID_ACTIONS = ['use', 'restore', 'reset'] as const
+
 export default defineEventHandler(async (event) => {
   const config = useRuntimeConfig()
   const id = getRouterParam(event, 'id')
   const slug = getRouterParam(event, 'slug')
   const body = await readBody(event)
+
+  // Validate required parameters
+  if (!id || !slug) {
+    throw createError({
+      statusCode: 400,
+      statusMessage: 'Missing required parameters: id and slug'
+    })
+  }
+
+  // Validate action
+  if (!body?.action || !VALID_ACTIONS.includes(body.action)) {
+    throw createError({
+      statusCode: 400,
+      statusMessage: `Invalid action. Must be one of: ${VALID_ACTIONS.join(', ')}`
+    })
+  }
 
   try {
     const data = await $fetch(

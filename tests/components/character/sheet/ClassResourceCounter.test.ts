@@ -192,5 +192,54 @@ describe('ClassResourceCounter', () => {
       })
       expect(wrapper.find('[data-testid="reset-badge"]').exists()).toBe(false)
     })
+
+    it('shows no badge for unlimited counters', async () => {
+      const wrapper = await mountSuspended(ClassResourceCounter, {
+        props: { counter: createCounter({ unlimited: true, reset_on: 'long_rest' }) }
+      })
+      expect(wrapper.find('[data-testid="reset-badge"]').exists()).toBe(false)
+    })
+  })
+
+  describe('Unlimited Counters', () => {
+    it('allows spending when unlimited even at 0', async () => {
+      const wrapper = await mountSuspended(ClassResourceCounter, {
+        props: { counter: createCounter({ current: 0, max: 5, unlimited: true }), editable: true }
+      })
+      // For unlimited counters in numeric mode (since max > 6 is false here, it's icon mode)
+      // But with current: 0, there are no filled icons - however the component should still be interactive
+      // Let's use numeric mode to test the button
+      const wrapperNumeric = await mountSuspended(ClassResourceCounter, {
+        props: { counter: createCounter({ current: 0, max: 10, unlimited: true }), editable: true }
+      })
+      const decrementBtn = wrapperNumeric.find('[data-testid="counter-decrement"]')
+      expect(decrementBtn.attributes('disabled')).toBeUndefined()
+    })
+
+    it('disables restore button for unlimited counters', async () => {
+      const wrapper = await mountSuspended(ClassResourceCounter, {
+        props: { counter: createCounter({ current: 3, max: 10, unlimited: true }), editable: true }
+      })
+      const incrementBtn = wrapper.find('[data-testid="counter-increment"]')
+      expect(incrementBtn.attributes('disabled')).toBeDefined()
+    })
+  })
+
+  describe('Numeric Mode ARIA', () => {
+    it('has aria-label on decrement button', async () => {
+      const wrapper = await mountSuspended(ClassResourceCounter, {
+        props: { counter: createCounter({ max: 10 }), editable: true }
+      })
+      const decrementBtn = wrapper.find('[data-testid="counter-decrement"]')
+      expect(decrementBtn.attributes('aria-label')).toContain('Spend')
+    })
+
+    it('has aria-label on increment button', async () => {
+      const wrapper = await mountSuspended(ClassResourceCounter, {
+        props: { counter: createCounter({ max: 10 }), editable: true }
+      })
+      const incrementBtn = wrapper.find('[data-testid="counter-increment"]')
+      expect(incrementBtn.attributes('aria-label')).toContain('Restore')
+    })
   })
 })

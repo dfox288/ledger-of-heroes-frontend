@@ -23,12 +23,22 @@ const toast = useToast()
 // Local reactive copy for optimistic updates
 const localCounters = ref<Counter[]>([...props.counters])
 
-// Sync when props change
+// Track pending API requests to prevent race conditions
+const pendingUpdates = ref<Set<string>>(new Set())
+
+// Sync when props change (deep copy to avoid mutation issues)
 watch(() => props.counters, (newCounters) => {
-  localCounters.value = [...newCounters]
+  localCounters.value = newCounters.map(c => ({ ...c }))
 }, { deep: true })
 
 const isDisabled = computed(() => props.isDead)
+
+/**
+ * Check if a counter has a pending update
+ */
+function isPending(slug: string): boolean {
+  return pendingUpdates.value.has(slug)
+}
 
 /**
  * Spend a counter use (decrement)
@@ -36,6 +46,9 @@ const isDisabled = computed(() => props.isDead)
 async function handleSpend(slug: string) {
   const counter = localCounters.value.find(c => c.slug === slug)
   if (!counter || counter.current <= 0) return
+  if (pendingUpdates.value.has(slug)) return // Prevent race condition
+
+  pendingUpdates.value.add(slug)
 
   // Optimistic update
   counter.current--
@@ -53,6 +66,8 @@ async function handleSpend(slug: string) {
       title: err.data?.message || 'Failed to update counter',
       color: 'error'
     })
+  } finally {
+    pendingUpdates.value.delete(slug)
   }
 }
 
@@ -62,6 +77,9 @@ async function handleSpend(slug: string) {
 async function handleRestore(slug: string) {
   const counter = localCounters.value.find(c => c.slug === slug)
   if (!counter || counter.current >= counter.max) return
+  if (pendingUpdates.value.has(slug)) return // Prevent race condition
+
+  pendingUpdates.value.add(slug)
 
   // Optimistic update
   counter.current++
@@ -79,8 +97,13 @@ async function handleRestore(slug: string) {
       title: err.data?.message || 'Failed to update counter',
       color: 'error'
     })
+  } finally {
+    pendingUpdates.value.delete(slug)
   }
 }
+
+// Expose isPending for child components
+defineExpose({ isPending })
 </script>
 
 <template>
