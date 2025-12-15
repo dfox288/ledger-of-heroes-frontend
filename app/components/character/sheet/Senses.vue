@@ -27,7 +27,7 @@ function formatSense(sense: CharacterSense): string {
 }
 
 // Only render if there are senses
-const hasSenses = computed(() => props.senses && props.senses.length > 0)
+const hasSenses = computed(() => !!props.senses?.length)
 </script>
 
 <template>
