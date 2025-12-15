@@ -21,7 +21,11 @@ defineProps<{
 <template>
   <div class="grid grid-cols-3 gap-3">
     <!-- Row 1: HP (via manager), AC, Initiative -->
-    <CharacterSheetHitPointsManager :editable="editable" />
+    <CharacterSheetHitPointsManager
+      :editable="editable"
+      :initial-hit-points="stats.hit_points"
+      :initial-is-dead="character.is_dead"
+    />
 
     <CharacterSheetStatArmorClass
       :armor-class="stats.armor_class"

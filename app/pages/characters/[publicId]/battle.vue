@@ -120,7 +120,11 @@ useSeoMeta({
 
         <!-- Combat Stats Row (no currency for battle view) -->
         <div class="mt-6 grid grid-cols-2 sm:grid-cols-5 gap-3">
-          <CharacterSheetHitPointsManager :editable="canEdit" />
+          <CharacterSheetHitPointsManager
+            :editable="canEdit"
+            :initial-hit-points="stats.hit_points"
+            :initial-is-dead="character.is_dead"
+          />
           <CharacterSheetStatArmorClass
             :armor-class="stats.armor_class"
             :character="character"
