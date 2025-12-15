@@ -32,6 +32,33 @@ node scripts/sync-api-types.js             # Sync API types (run from HOST, not 
 | All Pinia stores | `npm run test:stores` | ~15s |
 | CI, pre-commit, final check | `npm run test` | ~250s |
 
+## Speeding Up Local Tests
+
+**CI uses sharding** (4 parallel GitHub runners via `--shard=X/4`), but this doesn't help locally since it splits tests across separate machines.
+
+### Local Speed Strategies
+
+| Strategy | When to Use | Example |
+|----------|-------------|---------|
+| **Domain suites** | Working on specific feature | `npm run test:spells` (~14s vs ~250s) |
+| **Watch mode** | TDD, iterating on tests | `npm run test -- --watch tests/components/spell/` |
+| **Single file** | Debugging one test file | `npm run test -- tests/path/to/file.test.ts` |
+| **Pattern match** | Run tests matching name | `npm run test -- -t "displays spell name"` |
+
+### Increase Parallelism (Optional)
+
+If Docker has 8GB+ memory, edit `vitest.config.ts`:
+```typescript
+maxForks: 4,  // Default is 2 to prevent memory issues
+```
+
+### Full Suite
+
+Run full test suite only for:
+- Pre-commit verification
+- Before creating PR
+- CI validation
+
 ## Character Builder Stress Test
 
 Rapidly create N characters via API to test the character builder without UI:
