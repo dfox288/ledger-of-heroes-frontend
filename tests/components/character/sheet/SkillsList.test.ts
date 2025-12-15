@@ -5,11 +5,11 @@ import SkillsList from '~/components/character/sheet/SkillsList.vue'
 import type { SkillAdvantage } from '~/types/character'
 
 const mockSkills = [
-  { id: 1, name: 'Acrobatics', slug: 'acrobatics', ability_code: 'DEX', modifier: 2, proficient: false, expertise: false },
-  { id: 2, name: 'Athletics', slug: 'athletics', ability_code: 'STR', modifier: 5, proficient: true, expertise: false },
-  { id: 3, name: 'Stealth', slug: 'stealth', ability_code: 'DEX', modifier: 6, proficient: true, expertise: true },
-  { id: 4, name: 'Deception', slug: 'deception', ability_code: 'CHA', modifier: 4, proficient: false, expertise: false },
-  { id: 5, name: 'Performance', slug: 'performance', ability_code: 'CHA', modifier: 4, proficient: false, expertise: false }
+  { id: 1, name: 'Acrobatics', slug: 'acrobatics', ability_code: 'DEX', modifier: 2, proficient: false, expertise: false, has_reliable_talent: false, minimum_roll: null, minimum_total: null },
+  { id: 2, name: 'Athletics', slug: 'athletics', ability_code: 'STR', modifier: 5, proficient: true, expertise: false, has_reliable_talent: false, minimum_roll: null, minimum_total: null },
+  { id: 3, name: 'Stealth', slug: 'stealth', ability_code: 'DEX', modifier: 6, proficient: true, expertise: true, has_reliable_talent: false, minimum_roll: null, minimum_total: null },
+  { id: 4, name: 'Deception', slug: 'deception', ability_code: 'CHA', modifier: 4, proficient: false, expertise: false, has_reliable_talent: false, minimum_roll: null, minimum_total: null },
+  { id: 5, name: 'Performance', slug: 'performance', ability_code: 'CHA', modifier: 4, proficient: false, expertise: false, has_reliable_talent: false, minimum_roll: null, minimum_total: null }
 ]
 
 const mockSkillAdvantages: SkillAdvantage[] = [
@@ -122,6 +122,56 @@ describe('CharacterSheetSkillsList', () => {
       expect(wrapper.text()).toContain('Acrobatics')
       const advantageIcons = wrapper.findAll('[data-testid="advantage-icon"]')
       expect(advantageIcons.length).toBe(0)
+    })
+  })
+
+  describe('minimum roll indicator (Reliable Talent, Silver Tongue)', () => {
+    const mockSkillsWithMinimumRoll = [
+      { id: 1, name: 'Acrobatics', slug: 'acrobatics', ability_code: 'DEX', modifier: 2, proficient: false, expertise: false, has_reliable_talent: false, minimum_roll: null, minimum_total: null },
+      { id: 2, name: 'Athletics', slug: 'athletics', ability_code: 'STR', modifier: 5, proficient: true, expertise: false, has_reliable_talent: false, minimum_roll: null, minimum_total: null },
+      { id: 3, name: 'Stealth', slug: 'stealth', ability_code: 'DEX', modifier: 11, proficient: true, expertise: true, has_reliable_talent: true, minimum_roll: 10, minimum_total: 21 },
+      { id: 4, name: 'Perception', slug: 'perception', ability_code: 'WIS', modifier: 8, proficient: true, expertise: false, has_reliable_talent: true, minimum_roll: 10, minimum_total: 18 },
+      { id: 5, name: 'Deception', slug: 'deception', ability_code: 'CHA', modifier: 4, proficient: false, expertise: false, has_reliable_talent: false, minimum_roll: 10, minimum_total: 14 } // Silver Tongue (no proficiency required)
+    ]
+
+    it('shows minimum roll badge for skills with minimum_total', async () => {
+      const wrapper = await mountSuspended(SkillsList, {
+        props: { skills: mockSkillsWithMinimumRoll }
+      })
+      const badges = wrapper.findAll('[data-testid="minimum-roll-badge"]')
+      expect(badges.length).toBe(3) // Stealth, Perception, Deception
+    })
+
+    it('displays the minimum total value in the badge', async () => {
+      const wrapper = await mountSuspended(SkillsList, {
+        props: { skills: mockSkillsWithMinimumRoll }
+      })
+      const stealthRow = wrapper.findAll('[data-testid="skill-row"]').find(row => row.text().includes('Stealth'))
+      expect(stealthRow?.text()).toContain('Min: 21')
+    })
+
+    it('does not show minimum roll badge for skills without minimum', async () => {
+      const wrapper = await mountSuspended(SkillsList, {
+        props: { skills: mockSkillsWithMinimumRoll }
+      })
+      const athleticsRow = wrapper.findAll('[data-testid="skill-row"]').find(row => row.text().includes('Athletics'))
+      expect(athleticsRow?.find('[data-testid="minimum-roll-badge"]').exists()).toBe(false)
+    })
+
+    it('shows aria-label with guaranteed minimum result', async () => {
+      const wrapper = await mountSuspended(SkillsList, {
+        props: { skills: mockSkillsWithMinimumRoll }
+      })
+      const badge = wrapper.find('[data-testid="minimum-roll-badge"]')
+      expect(badge.attributes('aria-label')).toContain('21')
+    })
+
+    it('renders without minimum roll badges when no skills have it', async () => {
+      const wrapper = await mountSuspended(SkillsList, {
+        props: { skills: mockSkills }
+      })
+      const badges = wrapper.findAll('[data-testid="minimum-roll-badge"]')
+      expect(badges.length).toBe(0)
     })
   })
 })

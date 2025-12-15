@@ -261,7 +261,13 @@ export function useCharacterSheet(characterId: Ref<string | number>): UseCharact
         ability_code: abilityCode,
         modifier,
         proficient: isProficient,
-        expertise: hasExpertise
+        expertise: hasExpertise,
+        // Minimum roll fields: populated by API stats.skills when available
+        // This composable computes skills from reference data, so defaults to no minimum
+        // Pages using stats.skills directly (like battle.vue) get the real values
+        has_reliable_talent: false,
+        minimum_roll: null,
+        minimum_total: null
       }
     })
   })

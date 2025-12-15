@@ -9,6 +9,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **Minimum Roll Indicators (#652) (2025-12-15)** - Display guaranteed minimum results on character sheet skills
+  - "Min: X" badge appears on skills with minimum roll guarantees (Reliable Talent, Silver Tongue)
+  - Tooltip explains the mechanic based on source feature
+  - Uses `minimum_total` from API (backend PR #186) for accurate display
+  - Updated `CharacterSkill` type with `minimum_roll` and `minimum_total` fields
+  - 5 new tests for badge display and accessibility
+
 ### Changed
 
 - **Test Suite Consolidation (PR #19) (2025-12-04)** - Comprehensive audit and cleanup to eliminate duplication

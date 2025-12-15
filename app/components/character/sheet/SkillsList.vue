@@ -63,6 +63,23 @@ function getAdvantage(slug: string): SkillAdvantage | undefined {
           {{ skill.name }}
           <span class="text-gray-400 dark:text-gray-500">({{ skill.ability_code }})</span>
         </span>
+        <!-- Minimum roll indicator (Reliable Talent, Silver Tongue) -->
+        <UTooltip
+          v-if="skill.minimum_total !== null"
+          :text="skill.has_reliable_talent
+            ? 'Reliable Talent: Treat d20 rolls of 9 or lower as 10'
+            : 'Silver Tongue: Treat d20 rolls of 9 or lower as 10'"
+        >
+          <UBadge
+            color="success"
+            variant="subtle"
+            size="xs"
+            data-testid="minimum-roll-badge"
+            :aria-label="`Guaranteed minimum result: ${skill.minimum_total}`"
+          >
+            Min: {{ skill.minimum_total }}
+          </UBadge>
+        </UTooltip>
         <!-- Advantage indicator -->
         <UTooltip
           v-if="getAdvantage(skill.slug)"
