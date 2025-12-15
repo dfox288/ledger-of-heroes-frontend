@@ -1,9 +1,12 @@
 // app/composables/useDmScreenCombat.ts
 import type { Ref } from 'vue'
+import { get, set } from 'idb-keyval'
 import type { DmScreenCharacter, EncounterMonster } from '~/types/dm-screen'
+import { logger } from '~/utils/logger'
 
 interface CombatState {
   initiatives: Record<string, number> // combatant key (char_N or monster_N) -> rolled initiative value
+  notes: Record<string, string> // combatant key -> DM notes (e.g., "Blessed +1d4", "Hiding")
   currentTurnId: string | null // combatant key of active turn
   round: number // current combat round
   inCombat: boolean // whether combat is active
@@ -16,38 +19,62 @@ interface Combatant {
   dexMod: number // For tiebreaker
 }
 
-const DEFAULT_STATE: CombatState = {
-  initiatives: {},
-  currentTurnId: null,
-  round: 1,
-  inCombat: false
-}
-
 function getStorageKey(partyId: string): string {
   return `dm-screen-combat-${partyId}`
 }
 
-function loadFromStorage(partyId: string): CombatState | null {
+/**
+ * Load state from IndexedDB (async)
+ */
+async function loadFromStorage(partyId: string): Promise<CombatState | null> {
   if (!import.meta.client) return null
 
   try {
-    const stored = localStorage.getItem(getStorageKey(partyId))
-    if (stored) {
-      return JSON.parse(stored) as CombatState
-    }
-  } catch {
-    // localStorage unavailable or corrupted
+    const stored = await get<CombatState>(getStorageKey(partyId))
+    return stored ?? null
+  } catch (e) {
+    logger.warn('[DM Screen] Failed to load from IndexedDB:', e)
+    return null
   }
-  return null
 }
 
-function saveToStorage(partyId: string, state: CombatState): void {
+/**
+ * Save state to IndexedDB (async, fire-and-forget)
+ */
+async function saveToStorage(partyId: string, state: CombatState): Promise<void> {
   if (!import.meta.client) return
 
   try {
-    localStorage.setItem(getStorageKey(partyId), JSON.stringify(state))
-  } catch {
-    // localStorage unavailable or full
+    await set(getStorageKey(partyId), state)
+  } catch (e) {
+    logger.warn('[DM Screen] Failed to save to IndexedDB:', e)
+  }
+}
+
+/**
+ * Create a fresh default state (deep copy to avoid shared references)
+ */
+function createDefaultState(): CombatState {
+  return {
+    initiatives: {},
+    notes: {},
+    currentTurnId: null,
+    round: 1,
+    inCombat: false
+  }
+}
+
+/**
+ * Merge saved state with defaults, handling backward compatibility
+ */
+function mergeWithDefaults(savedState: CombatState): CombatState {
+  const defaultState = createDefaultState()
+  return {
+    ...defaultState,
+    ...savedState,
+    // Deep copy nested objects and ensure they exist
+    initiatives: savedState.initiatives ? { ...savedState.initiatives } : {},
+    notes: savedState.notes ? { ...savedState.notes } : {}
   }
 }
 
@@ -56,11 +83,21 @@ export function useDmScreenCombat(
   characters: DmScreenCharacter[],
   monstersRef: Ref<EncounterMonster[]>
 ) {
-  // Initialize state from localStorage or defaults
-  const savedState = loadFromStorage(partyId)
-  const state = ref<CombatState>(savedState ?? { ...DEFAULT_STATE })
+  // Initialize with defaults, hydrate from IndexedDB async
+  const state = ref<CombatState>(createDefaultState())
+  const isHydrated = ref(false)
 
-  // Persist state changes to localStorage
+  // Hydrate state from IndexedDB on client
+  if (import.meta.client) {
+    loadFromStorage(partyId).then((savedState) => {
+      if (savedState) {
+        state.value = mergeWithDefaults(savedState)
+      }
+      isHydrated.value = true
+    })
+  }
+
+  // Persist state changes to IndexedDB (debounced via watch)
   watch(state, (newState) => {
     saveToStorage(partyId, newState)
   }, { deep: true })
@@ -77,6 +114,37 @@ export function useDmScreenCombat(
    */
   function getInitiative(key: string): number | null {
     return state.value.initiatives[key] ?? null
+  }
+
+  /**
+   * Set a note for a combatant by key
+   * Empty or whitespace-only notes are removed from state
+   */
+  function setNote(key: string, text: string): void {
+    const trimmed = text.trim()
+    if (trimmed === '') {
+      // Remove empty notes from state to keep it clean
+      // eslint-disable-next-line @typescript-eslint/no-dynamic-delete
+      delete state.value.notes[key]
+    } else {
+      state.value.notes[key] = trimmed
+    }
+  }
+
+  /**
+   * Get note for a combatant by key
+   * Returns empty string if no note exists
+   */
+  function getNote(key: string): string {
+    return state.value.notes[key] ?? ''
+  }
+
+  /**
+   * Check if a combatant has a non-empty note
+   */
+  function hasNote(key: string): boolean {
+    const note = state.value.notes[key]
+    return note !== undefined && note.trim() !== ''
   }
 
   /**
@@ -277,16 +345,21 @@ export function useDmScreenCombat(
   }
 
   /**
-   * Reset combat state
+   * Reset combat state (preserves notes)
    */
   function resetCombat(): void {
-    state.value = { ...DEFAULT_STATE }
+    // Preserve notes when resetting combat
+    const preservedNotes = { ...state.value.notes }
+    state.value = { ...createDefaultState(), notes: preservedNotes }
   }
 
   return {
     state,
     setInitiative,
     getInitiative,
+    setNote,
+    getNote,
+    hasNote,
     sortedCharacters,
     startCombat,
     nextTurn,

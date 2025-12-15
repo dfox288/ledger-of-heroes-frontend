@@ -7,12 +7,14 @@ interface Props {
   expanded?: boolean
   isCurrentTurn?: boolean
   initiative?: number | null
+  note?: string
 }
 
 const props = withDefaults(defineProps<Props>(), {
   expanded: false,
   isCurrentTurn: false,
-  initiative: null
+  initiative: null,
+  note: ''
 })
 
 const emit = defineEmits<{
@@ -20,6 +22,7 @@ const emit = defineEmits<{
   'update:hp': [value: number]
   'update:label': [value: string]
   'update:initiative': [value: number]
+  'update:note': [text: string]
   'remove': []
 }>()
 
@@ -173,6 +176,16 @@ function increaseHp(event: Event) {
             {{ monster.monster.name }}
           </div>
         </div>
+      </div>
+      <!-- Note (badge when exists, add button when doesn't) -->
+      <div
+        class="mt-1"
+        :class="{ 'ml-6': isCurrentTurn }"
+      >
+        <DmScreenNotePopover
+          :note="note"
+          @update:note="emit('update:note', $event)"
+        />
       </div>
     </td>
 

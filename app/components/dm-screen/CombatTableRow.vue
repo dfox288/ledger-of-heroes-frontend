@@ -8,18 +8,21 @@ interface Props {
   isCurrentTurn?: boolean
   initiative?: number | null
   inCombat?: boolean
+  note?: string
 }
 
 const props = withDefaults(defineProps<Props>(), {
   expanded: false,
   isCurrentTurn: false,
   initiative: null,
-  inCombat: false
+  inCombat: false,
+  note: ''
 })
 
 const emit = defineEmits<{
   'toggle': []
   'update:initiative': [value: number]
+  'update:note': [text: string]
 }>()
 
 // Initiative editing using composable
@@ -72,6 +75,10 @@ const speeds = computed(() => props.character.combat.speeds)
 const hasFly = computed(() => speeds.value.fly !== null && speeds.value.fly > 0)
 const hasSwim = computed(() => speeds.value.swim !== null && speeds.value.swim > 0)
 const hasClimb = computed(() => speeds.value.climb !== null && speeds.value.climb > 0)
+
+// Note indicator for status row - ensure note is always a string
+const noteString = computed(() => typeof props.note === 'string' ? props.note : '')
+const hasNote = computed(() => noteString.value.trim() !== '')
 </script>
 
 <template>
@@ -105,7 +112,7 @@ const hasClimb = computed(() => speeds.value.climb !== null && speeds.value.clim
       </div>
       <!-- Status indicators -->
       <div
-        v-if="hasDeathSaves || isConcentrating || hasConditions"
+        v-if="hasDeathSaves || isConcentrating || hasConditions || hasNote"
         class="mt-1 flex flex-wrap gap-1"
         :class="{ 'ml-6': isCurrentTurn }"
       >
@@ -164,6 +171,23 @@ const hasClimb = computed(() => speeds.value.climb !== null && speeds.value.clim
         >
           {{ condition.name }}
         </UBadge>
+        <!-- Note indicator -->
+        <DmScreenNotePopover
+          v-if="hasNote"
+          :note="note"
+          @update:note="emit('update:note', $event)"
+        />
+      </div>
+      <!-- Add note button (when no note exists) -->
+      <div
+        v-if="!hasNote"
+        class="mt-1"
+        :class="{ 'ml-6': isCurrentTurn }"
+      >
+        <DmScreenNotePopover
+          :note="note"
+          @update:note="emit('update:note', $event)"
+        />
       </div>
     </td>
 

@@ -4,6 +4,7 @@ import type { DmScreenCharacter, EncounterMonster } from '~/types/dm-screen'
 
 interface CombatState {
   initiatives: Record<string, number>
+  notes: Record<string, string>
   currentTurnId: string | null
   round: number
   inCombat: boolean
@@ -20,10 +21,14 @@ interface Props {
   characters: DmScreenCharacter[]
   monsters?: EncounterMonster[]
   combatState: CombatState
+  getNote?: (key: string) => string
+  hasNote?: (key: string) => boolean
 }
 
 const props = withDefaults(defineProps<Props>(), {
-  monsters: () => []
+  monsters: () => [],
+  getNote: () => (_key: string) => '',
+  hasNote: () => (_key: string) => false
 })
 
 const emit = defineEmits<{
@@ -32,6 +37,7 @@ const emit = defineEmits<{
   previousTurn: []
   resetCombat: []
   setInitiative: [key: string, value: number]
+  setNote: [key: string, text: string]
   addMonster: []
   updateMonsterHp: [instanceId: number, value: number]
   updateMonsterLabel: [instanceId: number, value: string]
@@ -296,8 +302,10 @@ const hasCombatants = computed(() => {
           :is-current-turn="isCurrentTurn(combatant.key)"
           :initiative="combatant.init"
           :in-combat="combatState.inCombat"
+          :note="getNote(combatant.key)"
           @toggle="toggleExpand(combatant.key)"
           @update:initiative="(value) => emit('setInitiative', combatant.key, value)"
+          @update:note="(text) => emit('setNote', combatant.key, text)"
         />
         <!-- Monster Row -->
         <DmScreenMonsterTableRow
@@ -307,8 +315,10 @@ const hasCombatants = computed(() => {
           :expanded="expandedKey === combatant.key"
           :is-current-turn="isCurrentTurn(combatant.key)"
           :initiative="combatant.init"
+          :note="getNote(combatant.key)"
           @toggle="toggleExpand(combatant.key)"
           @update:initiative="(value) => emit('setInitiative', combatant.key, value)"
+          @update:note="(text) => emit('setNote', combatant.key, text)"
           @update:hp="(value) => emit('updateMonsterHp', (combatant.data as EncounterMonster).id, value)"
           @update:label="(value) => emit('updateMonsterLabel', (combatant.data as EncounterMonster).id, value)"
           @remove="emit('removeMonster', (combatant.data as EncounterMonster).id)"
