@@ -137,15 +137,32 @@ function handleSavePreset(name: string) {
 }
 
 async function handleLoadPreset(preset: EncounterPreset) {
-  // Add each monster from the preset to the encounter
+  // Add each monster from the preset to the encounter, tracking successes/failures
+  let successCount = 0
+  const failedMonsters: string[] = []
+
   for (const monster of preset.monsters) {
     try {
       await encounterMonsters.addMonster(monster.monster_id, monster.quantity)
+      successCount += monster.quantity
     } catch (err) {
       logger.error('Failed to add monster from preset:', err)
+      failedMonsters.push(monster.monster_name)
     }
   }
-  toast.add({ title: `Loaded "${preset.name}"`, color: 'success' })
+
+  // Show appropriate toast based on results
+  if (failedMonsters.length === 0) {
+    toast.add({ title: `Loaded "${preset.name}"`, color: 'success' })
+  } else if (successCount === 0) {
+    toast.add({ title: `Failed to load "${preset.name}"`, description: 'Could not add any monsters', color: 'error' })
+  } else {
+    toast.add({
+      title: `Partially loaded "${preset.name}"`,
+      description: `Added ${successCount} monster${successCount !== 1 ? 's' : ''}, failed: ${failedMonsters.join(', ')}`,
+      color: 'warning'
+    })
+  }
 }
 
 function handleDeletePreset(presetId: string) {

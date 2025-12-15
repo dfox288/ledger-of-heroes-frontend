@@ -2,10 +2,15 @@
 <script setup lang="ts">
 import type { EncounterPreset } from '~/types/dm-screen'
 
-defineProps<{
+const props = defineProps<{
   open: boolean
   presets: EncounterPreset[]
 }>()
+
+// Sort presets by date (newest first)
+const sortedPresets = computed(() =>
+  [...props.presets].sort((a, b) => b.created_at - a.created_at)
+)
 
 const emit = defineEmits<{
   'update:open': [value: boolean]
@@ -31,7 +36,20 @@ function handleClose() {
 }
 
 function formatDate(timestamp: number): string {
-  return new Date(timestamp).toLocaleDateString(undefined, {
+  const date = new Date(timestamp)
+  const now = new Date()
+  const oneYearAgo = new Date(now.getFullYear() - 1, now.getMonth(), now.getDate())
+
+  // Show year for presets older than 1 year
+  if (date < oneYearAgo) {
+    return date.toLocaleDateString(undefined, {
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric'
+    })
+  }
+
+  return date.toLocaleDateString(undefined, {
     month: 'short',
     day: 'numeric'
   })
@@ -57,7 +75,7 @@ function getMonsterCount(preset: EncounterPreset): number {
       <div class="space-y-2 max-h-96 overflow-y-auto">
         <!-- Presets List -->
         <div
-          v-for="preset in presets"
+          v-for="preset in sortedPresets"
           :key="preset.id"
           data-testid="preset-item"
           class="p-3 rounded-lg border border-neutral-200 dark:border-neutral-700 hover:border-primary-500 transition-colors"

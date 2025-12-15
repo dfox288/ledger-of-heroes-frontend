@@ -63,6 +63,7 @@ function handleKeydown(event: KeyboardEvent) {
             v-model="presetName"
             data-testid="preset-name-input"
             placeholder="e.g., Goblin Patrol"
+            :maxlength="50"
             class="w-full"
             @keydown="handleKeydown"
           />

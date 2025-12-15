@@ -127,21 +127,6 @@ describe('useEncounterPresets', () => {
     })
   })
 
-  describe('renamePreset', () => {
-    it('updates preset name', () => {
-      const existingPresets: EncounterPreset[] = [
-        { id: '1', name: 'Old Name', monsters: mockMonsters, created_at: Date.now() }
-      ]
-      localStorageMock.getItem.mockReturnValueOnce(JSON.stringify(existingPresets))
-
-      const { presets, renamePreset, loadPresets } = useEncounterPresets()
-      loadPresets()
-      renamePreset('1', 'New Name')
-
-      expect(presets.value[0].name).toBe('New Name')
-    })
-  })
-
   describe('getPresetById', () => {
     it('returns preset by id', () => {
       const existingPresets: EncounterPreset[] = [

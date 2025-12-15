@@ -42,7 +42,7 @@ export function useEncounterPresets() {
    * Generate a unique ID for a new preset
    */
   function generateId(): string {
-    return `preset-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
+    return `preset-${Date.now()}-${Math.random().toString(36).slice(2, 11)}`
   }
 
   /**
@@ -69,17 +69,6 @@ export function useEncounterPresets() {
   }
 
   /**
-   * Rename a preset
-   */
-  function renamePreset(id: string, newName: string): void {
-    const preset = presets.value.find(p => p.id === id)
-    if (preset) {
-      preset.name = newName
-      persistPresets()
-    }
-  }
-
-  /**
    * Get a preset by ID
    */
   function getPresetById(id: string): EncounterPreset | undefined {
@@ -91,7 +80,6 @@ export function useEncounterPresets() {
     loadPresets,
     savePreset,
     deletePreset,
-    renamePreset,
     getPresetById
   }
 }
