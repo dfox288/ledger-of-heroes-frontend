@@ -75,14 +75,6 @@ describe('DmScreenCharacterDetail', () => {
   })
 
   describe('Equipment Section', () => {
-    it('displays armor info', async () => {
-      const wrapper = await mountSuspended(CharacterDetail, {
-        props: { character: mockCharacter }
-      })
-      expect(wrapper.text()).toContain('Studded Leather')
-      expect(wrapper.text()).toContain('light')
-    })
-
     it('displays weapons with damage', async () => {
       const wrapper = await mountSuspended(CharacterDetail, {
         props: { character: mockCharacter }
@@ -97,29 +89,38 @@ describe('DmScreenCharacterDetail', () => {
       })
       expect(wrapper.text()).toContain('Shield')
     })
+
+    it('does not display armor details (AC shown in main row)', async () => {
+      const wrapper = await mountSuspended(CharacterDetail, {
+        props: { character: mockCharacter }
+      })
+      // Armor name/type removed - AC is shown in the combat table row
+      expect(wrapper.text()).not.toContain('Studded Leather')
+    })
   })
 
-  describe('Capabilities Section', () => {
-    it('displays languages', async () => {
+  describe('Removed redundant sections', () => {
+    it('does not display languages (shown in Party Summary)', async () => {
       const wrapper = await mountSuspended(CharacterDetail, {
         props: { character: mockCharacter }
       })
-      expect(wrapper.text()).toContain('Common')
-      expect(wrapper.text()).toContain('Elvish')
+      // Languages are shown in Party Summary, not per-character
+      expect(wrapper.text()).not.toContain('Languages')
     })
 
-    it('displays tool proficiencies', async () => {
+    it('does not display size (rarely combat-relevant)', async () => {
       const wrapper = await mountSuspended(CharacterDetail, {
         props: { character: mockCharacter }
       })
-      expect(wrapper.text()).toContain('Thieves\' Tools')
+      expect(wrapper.text()).not.toContain('Size:')
     })
 
-    it('displays size', async () => {
+    it('does not display tool proficiencies (not combat-relevant)', async () => {
       const wrapper = await mountSuspended(CharacterDetail, {
         props: { character: mockCharacter }
       })
-      expect(wrapper.text()).toContain('Medium')
+      expect(wrapper.text()).not.toContain('Tools')
+      expect(wrapper.text()).not.toContain('Thieves\' Tools')
     })
   })
 

@@ -314,13 +314,13 @@ function increaseHp(event: Event) {
       </div>
     </td>
 
-    <!-- Actions (condensed) - spans 2 columns to match character Perc/Inv -->
+    <!-- Actions - spans 2 columns to match character Perc/Inv -->
     <td
       colspan="2"
       class="py-3 px-4 text-sm text-neutral-600 dark:text-neutral-400 text-left"
     >
       <div
-        v-for="action in monster.monster.actions.slice(0, 2)"
+        v-for="action in monster.monster.actions"
         :key="action.name"
         class="truncate"
       >
@@ -336,12 +336,6 @@ function increaseHp(event: Event) {
         <template v-else>
           {{ action.name }}
         </template>
-      </div>
-      <div
-        v-if="monster.monster.actions.length > 2"
-        class="text-xs text-neutral-400"
-      >
-        +{{ monster.monster.actions.length - 2 }} more
       </div>
     </td>
 

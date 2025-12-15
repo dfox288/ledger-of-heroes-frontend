@@ -134,6 +134,24 @@ describe('DmScreenCombatTableRow', () => {
     expect(wrapper.text()).toContain('Haste')
   })
 
+  it('has clickable concentration badge for DC calculation', async () => {
+    const concentratingCharacter = {
+      ...mockCharacter,
+      combat: {
+        ...mockCharacter.combat,
+        concentration: { active: true, spell: 'Haste' }
+      },
+      saving_throws: { ...mockCharacter.saving_throws, CON: 3 }
+    }
+    const wrapper = await mountSuspended(CombatTableRow, {
+      props: { character: concentratingCharacter }
+    })
+    // The concentration badge should exist and be clickable
+    const badge = wrapper.find('[data-testid="concentration-badge"]')
+    expect(badge.exists()).toBe(true)
+    expect(badge.classes().join(' ')).toContain('cursor-pointer')
+  })
+
   describe('speed display', () => {
     it('displays walk speed', async () => {
       const wrapper = await mountSuspended(CombatTableRow, {
