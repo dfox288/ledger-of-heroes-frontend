@@ -13,6 +13,7 @@
  * @see Issue #621 - Consolidated data fetching
  */
 
+import { storeToRefs } from 'pinia'
 import type { CharacterSpell } from '~/types/character'
 import { formatSpellLevel } from '~/composables/useSpellFormatters'
 import { formatModifier } from '~/composables/useCharacterStats'
@@ -22,8 +23,11 @@ const publicId = computed(() => route.params.publicId as string)
 const { apiFetch } = useApi()
 
 // Shared character data + play state initialization
-const { character, stats, isSpellcaster, loading, refreshCharacter, addPendingState }
+const { character, stats, isSpellcaster, loading, refreshCharacter, addPendingState, playStateStore }
   = useCharacterSubPage(publicId)
+
+// Get canEdit from store for interactive components
+const { canEdit } = storeToRefs(playStateStore)
 
 // Fetch spells data (page-specific)
 // dedupe: 'defer' prevents "incompatible handler" warning when navigating to/from overview
@@ -51,6 +55,21 @@ addPendingState(spellsPending)
 addPendingState(slotsPending)
 
 const spellSlots = computed(() => slotsData.value?.data ?? null)
+
+// Initialize spell slots in store when data loads (enables interactive slot tracking)
+watch(slotsData, (data) => {
+  if (data?.data?.slots) {
+    const slotData = Object.entries(data.data.slots).map(([level, slot]) => ({
+      level: parseInt(level),
+      total: slot.total,
+      spent: slot.spent
+    }))
+    const pactMagicData = data.data.pact_magic
+      ? { level: data.data.pact_magic.level, total: data.data.pact_magic.count, spent: 0 }
+      : null
+    playStateStore.initializeSpellSlots(slotData, pactMagicData)
+  }
+}, { immediate: true })
 
 // Filter and group spells
 const validSpells = computed(() =>
@@ -187,16 +206,14 @@ useSeoMeta({
             </div>
           </div>
 
-          <!-- Spell Slots -->
+          <!-- Interactive Spell Slots -->
           <div
-            v-if="spellSlots?.slots && Object.keys(spellSlots.slots).length > 0"
+            v-if="spellSlots?.slots && Object.keys(spellSlots.slots).length > 0 && character"
             class="mt-6"
           >
-            <CharacterSheetSpellSlots
-              :spell-slots="Object.fromEntries(
-                Object.entries(spellSlots.slots).map(([k, v]) => [k, v.total])
-              )"
-              :pact-slots="spellSlots.pact_magic ? { count: spellSlots.pact_magic.count, level: spellSlots.pact_magic.level } : null"
+            <CharacterSheetSpellSlotsManager
+              :character-id="character.id"
+              :editable="canEdit"
             />
           </div>
 
