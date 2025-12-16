@@ -203,9 +203,6 @@ describe('ClassResourceCounter', () => {
 
   describe('Unlimited Counters', () => {
     it('allows spending when unlimited even at 0', async () => {
-      const wrapper = await mountSuspended(ClassResourceCounter, {
-        props: { counter: createCounter({ current: 0, max: 5, unlimited: true }), editable: true }
-      })
       // For unlimited counters in numeric mode (since max > 6 is false here, it's icon mode)
       // But with current: 0, there are no filled icons - however the component should still be interactive
       // Let's use numeric mode to test the button
