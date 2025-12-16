@@ -43,34 +43,32 @@ const levelOptions = computed(() => {
 </script>
 
 <template>
-  <div class="space-y-3">
-    <!-- Search -->
+  <!-- All filters in one row -->
+  <div class="flex flex-wrap gap-3 items-center">
     <UInput
       :model-value="searchQuery"
       placeholder="Search spells..."
       icon="i-heroicons-magnifying-glass"
+      class="w-48"
       @update:model-value="emit('update:searchQuery', $event)"
     />
 
-    <!-- Level dropdown and hide prepared toggle -->
-    <div class="flex gap-3 items-center">
-      <USelectMenu
-        data-testid="level-filter"
-        :model-value="selectedLevel"
-        :options="levelOptions"
-        value-attribute="value"
-        option-attribute="label"
-        placeholder="Level"
-        class="w-32"
-        @update:model-value="emit('update:selectedLevel', $event as number | null)"
-      />
+    <USelectMenu
+      data-testid="level-filter"
+      :model-value="selectedLevel"
+      :options="levelOptions"
+      value-attribute="value"
+      option-attribute="label"
+      placeholder="Level"
+      class="w-32"
+      @update:model-value="emit('update:selectedLevel', $event as number | null)"
+    />
 
-      <UCheckbox
-        data-testid="hide-prepared-filter"
-        :model-value="hidePrepared"
-        label="Hide prepared"
-        @update:model-value="emit('update:hidePrepared', $event as boolean)"
-      />
-    </div>
+    <UCheckbox
+      data-testid="hide-prepared-filter"
+      :model-value="hidePrepared"
+      label="Hide prepared"
+      @update:model-value="emit('update:hidePrepared', $event as boolean)"
+    />
   </div>
 </template>

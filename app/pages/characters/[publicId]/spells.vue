@@ -21,7 +21,7 @@ import { storeToRefs } from 'pinia'
 import type { CharacterSpell, ClassSpellcastingInfo, SpellSlotsResponse, PreparationMethod } from '~/types/character'
 import { formatSpellLevel } from '~/composables/useSpellFormatters'
 import { formatModifier } from '~/composables/useCharacterStats'
-import { getClassColor, getClassName } from '~/utils/classColors'
+import { getClassColor, getClassName, getClassPreparationMethodFallback } from '~/utils/classColors'
 import { logger } from '~/utils/logger'
 
 const route = useRoute()
@@ -274,11 +274,27 @@ const maxCastableLevel = computed(() => {
 
 /**
  * Get preparation method for a specific class (multiclass support)
- * Falls back to top-level preparation method if not available per-class
+ *
+ * Priority:
+ * 1. Per-class preparation_method from API (if available)
+ * 2. Inferred from class slug (e.g., cleric -> 'prepared', wizard -> 'spellbook')
+ * 3. Top-level preparation_method as last resort
+ *
+ * @see Issue #726 - Per-class preparation method for multiclass
  */
 function getClassPreparationMethod(classSlug: string): PreparationMethod {
   const classInfo = stats.value?.spellcasting?.[classSlug]
-  return classInfo?.preparation_method ?? preparationMethod.value
+  // 1. Try API-provided per-class method
+  if (classInfo?.preparation_method) {
+    return classInfo.preparation_method
+  }
+  // 2. Infer from class slug (fallback for when API doesn't provide it)
+  const inferred = getClassPreparationMethodFallback(classSlug)
+  if (inferred) {
+    return inferred
+  }
+  // 3. Last resort: top-level preparation method
+  return preparationMethod.value
 }
 
 // ══════════════════════════════════════════════════════════════
@@ -684,7 +700,7 @@ useSeoMeta({
                   />
                 </div>
 
-                <!-- All Spells List -->
+                <!-- All Spells List (read-only - preparation happens in class tabs) -->
                 <div
                   v-if="cantrips.length > 0"
                   class="mt-4"
@@ -700,7 +716,7 @@ useSeoMeta({
                       :preparation-method="getSpellPreparationMethod(spell)"
                       :at-prep-limit="!!spell.class_slug && isAtClassPreparationLimit(spell.class_slug)"
                       :character-id="character.id"
-                      :editable="canEdit"
+                      :editable="false"
                     />
                   </div>
                 </div>
@@ -721,7 +737,7 @@ useSeoMeta({
                       :preparation-method="getSpellPreparationMethod(spell)"
                       :at-prep-limit="!!spell.class_slug && isAtClassPreparationLimit(spell.class_slug)"
                       :character-id="character.id"
-                      :editable="canEdit"
+                      :editable="false"
                     />
                   </div>
                 </div>

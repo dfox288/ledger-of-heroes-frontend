@@ -155,6 +155,15 @@ function isAlwaysPrepared(spell: Spell): boolean {
 }
 
 /**
+ * Check if spell is in character's spell list
+ * For prepared casters, only spells granted by domain/subclass are in the list
+ * TODO: Backend should support preparing any class spell (#726)
+ */
+function isInCharacterSpells(spell: Spell): boolean {
+  return characterSpellMap.value.has(spell.slug)
+}
+
+/**
  * Check if spell can be toggled
  */
 function canToggle(spell: Spell): boolean {
@@ -162,7 +171,7 @@ function canToggle(spell: Spell): boolean {
   if (spell.level === 0) return false
 
   const charSpell = characterSpellMap.value.get(spell.slug)
-  if (!charSpell) return false // Can't toggle if not in character spells
+  if (!charSpell) return false // Can't toggle if not in character spells (backend limitation)
 
   // Can't toggle always-prepared
   if (charSpell.is_always_prepared) return false
@@ -305,17 +314,19 @@ async function handleToggle(spell: Spell) {
               isSpellPrepared(spell)
                 ? 'border-spell-300 dark:border-spell-700'
                 : 'border-gray-200 dark:border-gray-700',
-              // Grey out unprepared at limit
-              !isSpellPrepared(spell) && atPrepLimit && level !== 0 && 'opacity-40',
-              // Dim unprepared (but not at limit)
-              !isSpellPrepared(spell) && !atPrepLimit && level !== 0 && 'opacity-60'
+              // Grey out spells not in character's spell list (can't toggle)
+              !isInCharacterSpells(spell) && level !== 0 && 'opacity-30',
+              // Dim unprepared at limit
+              isInCharacterSpells(spell) && !isSpellPrepared(spell) && atPrepLimit && level !== 0 && 'opacity-40',
+              // Slightly dim unprepared (but not at limit)
+              isInCharacterSpells(spell) && !isSpellPrepared(spell) && !atPrepLimit && level !== 0 && 'opacity-70'
             ]"
           >
             <div class="flex items-center justify-between gap-2">
               <div class="flex items-center gap-2 min-w-0">
                 <!-- Preparation toggle -->
                 <button
-                  v-if="level !== 0"
+                  v-if="level !== 0 && isInCharacterSpells(spell)"
                   :data-testid="`prepare-toggle`"
                   type="button"
                   :disabled="!canToggle(spell)"
@@ -343,6 +354,17 @@ async function handleToggle(spell: Spell) {
                     class="w-5 h-5 block rounded-full border-2 border-gray-300 dark:border-gray-600"
                   />
                 </button>
+
+                <!-- Not in spell list indicator (coming soon) -->
+                <UTooltip
+                  v-else-if="level !== 0"
+                  text="Not yet available - coming soon"
+                >
+                  <UIcon
+                    name="i-heroicons-lock-closed"
+                    class="w-5 h-5 text-gray-300 dark:text-gray-600 flex-shrink-0"
+                  />
+                </UTooltip>
 
                 <!-- Cantrip indicator (always ready) -->
                 <UIcon
@@ -385,7 +407,7 @@ async function handleToggle(spell: Spell) {
                 </UBadge>
 
                 <span class="text-sm text-gray-500 dark:text-gray-400">
-                  {{ spell.school }}
+                  {{ spell.school?.name }}
                 </span>
               </div>
             </div>

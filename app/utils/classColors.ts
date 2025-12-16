@@ -1,14 +1,15 @@
 // app/utils/classColors.ts
 /**
- * Class color utilities for multiclass spellcasting UI
+ * Class utilities for multiclass spellcasting UI
  *
- * Provides consistent color mapping for spellcasting class identification
- * in tabs, badges, and other UI elements.
+ * Provides consistent color mapping, abbreviations, and preparation methods
+ * for spellcasting class identification in tabs, badges, and other UI elements.
  *
  * @see Issue #631 - Multiclass spellcasting support
+ * @see Issue #726 - Per-class preparation method fallback
  */
 
-import type { ClassSpellcastingInfo } from '~/types/character'
+import type { ClassSpellcastingInfo, PreparationMethod } from '~/types/character'
 
 /**
  * Extract the primary (first) spellcasting info from the keyed object
@@ -111,4 +112,46 @@ export function getClassAbbreviation(classSlug: string): string {
 export function getClassName(classSlug: string): string {
   const className = classSlug.split(':').pop() ?? ''
   return className.charAt(0).toUpperCase() + className.slice(1).toLowerCase()
+}
+
+/**
+ * Preparation methods for each spellcasting class
+ *
+ * - prepared: Cleric, Druid, Paladin, Artificer (choose from full class list daily)
+ * - spellbook: Wizard (copy spells, prepare from spellbook)
+ * - known: Bard, Sorcerer, Warlock, Ranger, Fighter (EK), Rogue (AT) (fixed known spells)
+ *
+ * @see Issue #726 - Fallback when API doesn't provide per-class preparation_method
+ */
+const CLASS_PREPARATION_METHODS: Record<string, PreparationMethod> = {
+  wizard: 'spellbook',
+  cleric: 'prepared',
+  druid: 'prepared',
+  paladin: 'prepared',
+  artificer: 'prepared',
+  bard: 'known',
+  sorcerer: 'known',
+  warlock: 'known',
+  ranger: 'known',
+  fighter: 'known', // Eldritch Knight
+  rogue: 'known' // Arcane Trickster
+}
+
+/**
+ * Get the preparation method for a class
+ *
+ * Used as fallback when API doesn't provide per-class preparation_method
+ * (e.g., multiclass characters where top-level is "mixed")
+ *
+ * @param classSlug - Full class slug (e.g., "phb:cleric") or class name
+ * @returns Preparation method ('prepared', 'spellbook', 'known') or null if unknown
+ *
+ * @example
+ * getClassPreparationMethodFallback('phb:cleric') // 'prepared'
+ * getClassPreparationMethodFallback('wizard') // 'spellbook'
+ * getClassPreparationMethodFallback('unknown') // null
+ */
+export function getClassPreparationMethodFallback(classSlug: string): PreparationMethod {
+  const className = classSlug.split(':').pop()?.toLowerCase() ?? ''
+  return CLASS_PREPARATION_METHODS[className] ?? null
 }
