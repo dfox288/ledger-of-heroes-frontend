@@ -437,8 +437,11 @@ describe('CharacterSheetSpellsPanel', () => {
     { id: 1, spell: { name: 'Fire Bolt', level: 0 }, is_prepared: true },
     { id: 2, spell: { name: 'Magic Missile', level: 1 }, is_prepared: true }
   ]
+  // Spellcasting is now keyed by class slug for multiclass support (#631)
   const mockStats = {
-    spellcasting: { ability: 'INT', spell_save_dc: 13, spell_attack_bonus: 5 },
+    spellcasting: {
+      'phb:wizard': { ability: 'INT', ability_modifier: 3, spell_save_dc: 13, spell_attack_bonus: 5 }
+    },
     preparation_limit: null,
     prepared_spell_count: 0
   }
@@ -461,7 +464,9 @@ describe('CharacterSheetSpellsPanel', () => {
 
   it('displays preparation count when preparation_limit is set', async () => {
     const statsWithPreparation = {
-      spellcasting: { ability: 'INT', spell_save_dc: 13, spell_attack_bonus: 5 },
+      spellcasting: {
+        'phb:wizard': { ability: 'INT', ability_modifier: 3, spell_save_dc: 13, spell_attack_bonus: 5 }
+      },
       preparation_limit: 11,
       prepared_spell_count: 8
     }
@@ -473,7 +478,9 @@ describe('CharacterSheetSpellsPanel', () => {
 
   it('hides preparation count when preparation_limit is null', async () => {
     const statsWithoutPreparation = {
-      spellcasting: { ability: 'INT', spell_save_dc: 13, spell_attack_bonus: 5 },
+      spellcasting: {
+        'phb:wizard': { ability: 'INT', ability_modifier: 3, spell_save_dc: 13, spell_attack_bonus: 5 }
+      },
       preparation_limit: null,
       prepared_spell_count: 0
     }

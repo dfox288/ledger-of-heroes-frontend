@@ -50,7 +50,10 @@ const mockStats = {
   hit_points: { max: 28, current: 22, temporary: 5 },
   initiative_bonus: 2,
   passive_perception: 14,
-  spellcasting: { ability: 'WIS', spell_save_dc: 13, spell_attack_bonus: 5 }
+  // Spellcasting is now keyed by class slug for multiclass support (#631)
+  spellcasting: {
+    'phb:cleric': { ability: 'WIS', ability_modifier: 1, spell_save_dc: 13, spell_attack_bonus: 5 }
+  }
 }
 
 const mockSavingThrows = [

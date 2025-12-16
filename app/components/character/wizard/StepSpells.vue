@@ -8,6 +8,7 @@ import { useCharacterWizard } from '~/composables/useCharacterWizard'
 import { useWizardChoiceSelection } from '~/composables/useWizardChoiceSelection'
 import { normalizeEndpoint } from '~/composables/useApi'
 import { wizardErrors } from '~/utils/wizardErrors'
+import { getPrimarySpellcasting } from '~/utils/classColors'
 
 type PendingChoice = components['schemas']['PendingChoiceResource']
 
@@ -145,10 +146,11 @@ const spellcasting = computed(() => {
     }
   }
 
-  // Otherwise use store stats
-  if (!stats.value?.spellcasting) return null
+  // Otherwise use store stats (extract primary spellcasting class for multiclass)
+  const primary = getPrimarySpellcasting(stats.value?.spellcasting)
+  if (!primary) return null
 
-  const sc = stats.value.spellcasting
+  const sc = primary.info
   const abilityNames: Record<string, string> = {
     STR: 'Strength',
     DEX: 'Dexterity',

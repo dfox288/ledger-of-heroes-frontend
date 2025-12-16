@@ -112,9 +112,21 @@ export type CharacterSpellFromAPI = components['schemas']['CharacterSpellResourc
 
 /**
  * Character spell data from API
+ *
+ * Extended with class_slug for multiclass spellcasting support.
+ * The class_slug field identifies which class granted the spell.
+ *
  * @see CharacterSpellResource in OpenAPI spec
+ * @see Issue #631 - Multiclass spellcasting support
  */
-export type CharacterSpell = CharacterSpellFromAPI
+export type CharacterSpell = CharacterSpellFromAPI & {
+  /**
+   * Class slug identifying which class granted this spell
+   * e.g., "phb:wizard", "phb:cleric"
+   * Used for filtering spells by class in multiclass UI
+   */
+  class_slug: string | null
+}
 
 /**
  * Full character data from API with public_id
@@ -273,20 +285,46 @@ export interface SkillAdvantage {
 }
 
 /**
+ * Per-class spellcasting information
+ *
+ * For multiclass characters, each spellcasting class has its own stats.
+ * API returns spellcasting keyed by class slug (e.g., "phb:wizard").
+ *
+ * @see Issue #631 - Multiclass spellcasting support
+ */
+export interface ClassSpellcastingInfo {
+  /** Spellcasting ability code (INT, WIS, CHA, etc.) */
+  ability: AbilityScoreCode
+  /** Ability modifier used for spellcasting */
+  ability_modifier: number
+  /** Spell save DC = 8 + proficiency + ability modifier */
+  spell_save_dc: number
+  /** Spell attack bonus = proficiency + ability modifier */
+  spell_attack_bonus: number
+}
+
+/**
  * Character stats with strongly-typed ability score keys
  *
  * Extends the generated type with stricter typing for ability_scores
  * and saving_throws (AbilityScoreCode keys instead of generic string).
+ *
+ * Note: spellcasting is keyed by class slug (e.g., "phb:wizard") to support
+ * multiclass characters with different spellcasting abilities per class.
+ *
+ * @see Issue #631 - Multiclass spellcasting support
  */
 export interface CharacterStats extends Omit<CharacterStatsFromAPI, 'ability_scores' | 'saving_throws' | 'spellcasting'> {
   ability_scores: Record<AbilityScoreCode, { score: number | null, modifier: number | null }>
   saving_throws: Record<AbilityScoreCode, { modifier: number | null, proficient: boolean, total: number | null } | null>
-  spellcasting: {
-    ability: AbilityScoreCode
-    ability_modifier: number
-    spell_save_dc: number
-    spell_attack_bonus: number
-  } | null
+  /**
+   * Spellcasting stats keyed by class slug
+   *
+   * Single-class caster: { "phb:wizard": { ability: "INT", ... } }
+   * Multiclass caster: { "phb:wizard": {...}, "phb:cleric": {...} }
+   * Non-caster: null or empty object
+   */
+  spellcasting: Record<string, ClassSpellcastingInfo> | null
   damage_resistances: DamageDefense[]
   damage_immunities: DamageDefense[]
   damage_vulnerabilities: DamageDefense[]
@@ -533,17 +571,45 @@ export interface PactMagicSlots {
 }
 
 /**
- * Spell slots response from /stats endpoint (new format)
+ * Per-class preparation limit for multiclass spellcasters
+ *
+ * Multiclass characters have separate preparation limits per class:
+ * - Wizard: level + INT mod
+ * - Cleric: level + WIS mod
+ *
+ * @see Issue #631 - Multiclass spellcasting support
+ * @see Issue #715 - Per-class preparation limits
+ */
+export interface ClassPreparationLimit {
+  /** Maximum spells this class can prepare */
+  limit: number
+  /** Currently prepared spells for this class */
+  prepared: number
+}
+
+/**
+ * Spell slots response from /spell-slots endpoint
  *
  * Breaking change from backend PR #184:
  * - Old format: { "1": 4, "2": 3 } (level -> total)
  * - New format: { slots: { "1": { total, spent, available } }, pact_magic: ... }
  *
+ * Extended with per-class preparation limits for multiclass support:
+ * - preparation_limit: Combined total for single-class/multiclass
+ * - preparation_limits: Per-class breakdown (e.g., { "phb:wizard": { limit: 5, prepared: 3 } })
+ *
  * @see Issue #618
+ * @see Issue #631 - Multiclass spellcasting support
  */
 export interface SpellSlotsResponse {
   slots: Record<string, SpellSlotLevel>
   pact_magic: PactMagicSlots | null
+  /** Combined preparation limit (all classes) */
+  preparation_limit: number | null
+  /** Total prepared count across all classes */
+  prepared_count: number
+  /** Per-class preparation limits (for multiclass spellcasters) */
+  preparation_limits?: Record<string, ClassPreparationLimit>
 }
 
 /**
