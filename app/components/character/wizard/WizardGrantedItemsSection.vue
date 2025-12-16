@@ -1,7 +1,7 @@
-<!-- app/components/character/wizard/choice/GrantedItemsSection.vue -->
+<!-- app/components/character/wizard/WizardGrantedItemsSection.vue -->
 <script setup lang="ts">
 /**
- * GrantedItemsSection - Displays items already granted to the character
+ * WizardGrantedItemsSection - Displays items already granted to the character
  *
  * Used to show languages, proficiencies, or other items the character
  * already has before presenting choices.

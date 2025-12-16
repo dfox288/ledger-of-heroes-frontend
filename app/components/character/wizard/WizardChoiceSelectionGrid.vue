@@ -1,7 +1,7 @@
-<!-- app/components/character/wizard/choice/ChoiceSelectionGrid.vue -->
+<!-- app/components/character/wizard/WizardChoiceSelectionGrid.vue -->
 <script setup lang="ts">
 /**
- * ChoiceSelectionGrid - Grid layout for choice selection with header and count
+ * WizardChoiceSelectionGrid - Grid layout for choice selection with header and count
  *
  * Used in wizard steps to display a selection grid with:
  * - Label describing the choice

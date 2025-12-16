@@ -1,7 +1,7 @@
-<!-- app/components/character/wizard/choice/ChoiceToggleButton.vue -->
+<!-- app/components/character/wizard/WizardChoiceToggleButton.vue -->
 <script setup lang="ts">
 /**
- * ChoiceToggleButton - A toggle button for wizard choice selection
+ * WizardChoiceToggleButton - A toggle button for wizard choice selection
  *
  * Used in language, proficiency, and other simple choice steps.
  * Supports selected/disabled states and optional custom icons.
