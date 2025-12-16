@@ -8,6 +8,7 @@
  *
  * @see Issue #723 - Prepared caster spell selection
  */
+import { formatSpellLevel } from '~/composables/useSpellFormatters'
 
 const props = defineProps<{
   searchQuery: string
@@ -32,9 +33,9 @@ const levelOptions = computed(() => {
     { label: 'Cantrip', value: 0 }
   ]
 
-  const ordinals = ['1st', '2nd', '3rd', '4th', '5th', '6th', '7th', '8th', '9th']
+  // Use formatSpellLevel for safe ordinal generation (handles any level)
   for (let i = 1; i <= props.maxCastableLevel; i++) {
-    options.push({ label: ordinals[i - 1]!, value: i })
+    options.push({ label: formatSpellLevel(i), value: i })
   }
 
   return options

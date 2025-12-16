@@ -195,8 +195,16 @@ async function handleToggle(spell: Spell) {
 
   try {
     await store.toggleSpellPreparation(charSpell.id, currentlyPrepared)
-  } catch {
-    // Error handled by store
+  } catch (error) {
+    // Show error feedback to user
+    const message = error instanceof Error ? error.message : 'Failed to update spell'
+    toast.add({
+      title: 'Could not update spell',
+      description: message === 'Preparation limit reached'
+        ? 'You have reached your preparation limit. Unprepare a spell first.'
+        : message,
+      color: 'error'
+    })
   }
 }
 </script>
@@ -267,7 +275,7 @@ async function handleToggle(spell: Spell) {
         name="i-heroicons-magnifying-glass"
         class="w-8 h-8 mx-auto mb-2"
       />
-      <p v-if="searchQuery || selectedLevel !== null">
+      <p v-if="searchQuery || selectedLevel !== null || hidePrepared">
         No spells match your filters
       </p>
       <p v-else>

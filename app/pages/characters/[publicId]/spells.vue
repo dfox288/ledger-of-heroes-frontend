@@ -778,7 +778,7 @@ useSeoMeta({
             >
               <CharacterSheetPrepareSpellsView
                 :character-id="character.id"
-                :class-slug="primarySpellcasting.slug"
+                :class-slug="primarySpellcasting!.slug"
                 :max-castable-level="maxCastableLevel"
                 :preparation-limit="spellSlots?.preparation_limit ?? 0"
                 :prepared-count="reactiveTotalPreparedCount"
