@@ -149,6 +149,8 @@ describe('OptionalFeaturesPanel', () => {
     // Should not show others
     expect(wrapper.text()).not.toContain('Enhanced Weapon')
     expect(wrapper.text()).not.toContain('Homunculus Servant')
+    // Should show filtered count
+    expect(wrapper.text()).toContain('1 of 3')
   })
 
   it('shows no results message when search has no matches', async () => {

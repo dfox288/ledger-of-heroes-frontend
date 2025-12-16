@@ -98,11 +98,10 @@ function isExpanded(index: number): boolean {
 
 /** Toggle a single feature */
 function toggleFeature(index: number) {
-  const idx = expandedIndices.value.indexOf(index)
-  if (idx >= 0) {
-    expandedIndices.value.splice(idx, 1)
+  if (expandedIndices.value.includes(index)) {
+    expandedIndices.value = expandedIndices.value.filter(i => i !== index)
   } else {
-    expandedIndices.value.push(index)
+    expandedIndices.value = [...expandedIndices.value, index]
   }
 }
 
