@@ -14,7 +14,7 @@
  * @see Issue #616 - Spell preparation toggle
  */
 
-import type { CharacterSpell } from '~/types/character'
+import type { CharacterSpell, PreparationMethod } from '~/types/character'
 import { formatSpellLevel } from '~/composables/useSpellFormatters'
 import { useCharacterPlayStateStore } from '~/stores/characterPlayState'
 import { storeToRefs } from 'pinia'
@@ -28,11 +28,30 @@ const props = defineProps<{
   characterId?: number
   editable?: boolean
   atPrepLimit?: boolean
+  /**
+   * Preparation method for the character's spellcasting class.
+   * - 'known': Hide preparation UI (Bard, Sorcerer, Warlock, Ranger)
+   * - 'spellbook'/'prepared': Show preparation UI (Wizard, Cleric, etc.)
+   * - null/undefined: Fallback to current behavior (show UI)
+   * @see Issue #676
+   */
+  preparationMethod?: PreparationMethod
 }>()
 
 const store = useCharacterPlayStateStore()
 const { isUpdatingSpellPreparation } = storeToRefs(store)
 const isExpanded = ref(false)
+
+/**
+ * Whether to show preparation UI (toggle, indicator, dimming)
+ *
+ * Known casters (Bard, Sorcerer, Warlock, Ranger) have spells that are
+ * permanently known and always castable - no preparation needed.
+ * Hide preparation UI for these casters.
+ *
+ * @see Issue #676
+ */
+const showPreparationUI = computed(() => props.preparationMethod !== 'known')
 
 /**
  * Check if spell is prepared (includes always prepared)
@@ -53,6 +72,8 @@ const spellData = computed(() => props.spell.spell)
  * Check if this card can toggle preparation
  */
 const canToggle = computed(() => {
+  // Known casters don't have preparation toggle
+  if (!showPreparationUI.value) return false
   if (!props.editable) return false
   if (props.spell.is_always_prepared) return false
   // Can't prepare new spells when at limit
@@ -66,6 +87,8 @@ const canToggle = computed(() => {
  * Check if card should appear greyed out
  */
 const isGreyedOut = computed(() => {
+  // Known casters don't use grey out (spells always available)
+  if (!showPreparationUI.value) return false
   if (!props.spell.is_prepared && props.atPrepLimit) return true
   return false
 })
@@ -107,7 +130,8 @@ function handleExpandClick(event: MouseEvent) {
         : canToggle
           ? 'cursor-pointer hover:shadow-md'
           : 'cursor-default',
-      !isPrepared && !isGreyedOut && OPACITY_UNPREPARED
+      // Don't dim unprepared spells for known casters (always castable)
+      showPreparationUI && !isPrepared && !isGreyedOut && OPACITY_UNPREPARED
     ]"
   >
     <!-- Clickable body area for preparation toggle -->
@@ -118,9 +142,9 @@ function handleExpandClick(event: MouseEvent) {
       <!-- Collapsed Header -->
       <div class="flex items-center justify-between gap-2">
         <div class="flex items-center gap-2 min-w-0">
-          <!-- Prepared indicator -->
+          <!-- Prepared indicator (hidden for known casters) -->
           <UIcon
-            v-if="isPrepared"
+            v-if="showPreparationUI && isPrepared"
             data-testid="prepared-icon"
             name="i-heroicons-check-circle-solid"
             :class="[
@@ -130,9 +154,10 @@ function handleExpandClick(event: MouseEvent) {
                 : 'text-spell-500 dark:text-spell-400'
             ]"
           />
-          <!-- Empty circle for unprepared state (heroicons doesn't have a plain circle icon) -->
+          <!-- Empty circle for unprepared state (hidden for known casters) -->
           <span
-            v-else
+            v-else-if="showPreparationUI"
+            data-testid="unprepared-indicator"
             class="w-5 h-5 flex-shrink-0 rounded-full border-2 border-gray-300 dark:border-gray-600"
           />
 

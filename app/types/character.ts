@@ -201,6 +201,20 @@ export type CharacterStatsFromAPI = components['schemas']['CharacterStatsResourc
 export type AbilityScoreCode = 'STR' | 'DEX' | 'CON' | 'INT' | 'WIS' | 'CHA'
 
 /**
+ * Preparation method for spellcasting classes
+ *
+ * Determines UI behavior for spell management:
+ * - 'known': Spells permanently known, no preparation needed (Bard, Sorcerer, Warlock, Ranger)
+ * - 'spellbook': Wizard-style (learns into book, prepares subset)
+ * - 'prepared': Prepares from full class list daily (Cleric, Druid, Paladin)
+ * - 'mixed': Multiclass with different methods (top-level only, use per-class for UI)
+ * - null: Non-spellcaster
+ *
+ * @see Issue #676 - Spell preparation UI differentiation
+ */
+export type PreparationMethod = 'known' | 'spellbook' | 'prepared' | 'mixed' | null
+
+/**
  * Damage defense trait (resistance, immunity, vulnerability)
  */
 export interface DamageDefense {
@@ -301,6 +315,11 @@ export interface ClassSpellcastingInfo {
   spell_save_dc: number
   /** Spell attack bonus = proficiency + ability modifier */
   spell_attack_bonus: number
+  /**
+   * Preparation method for this class's spellcasting
+   * @see Issue #676
+   */
+  preparation_method?: PreparationMethod
 }
 
 /**

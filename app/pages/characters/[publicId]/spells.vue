@@ -18,7 +18,7 @@
  */
 
 import { storeToRefs } from 'pinia'
-import type { CharacterSpell, ClassSpellcastingInfo, SpellSlotsResponse } from '~/types/character'
+import type { CharacterSpell, ClassSpellcastingInfo, SpellSlotsResponse, PreparationMethod } from '~/types/character'
 import { formatSpellLevel } from '~/composables/useSpellFormatters'
 import { formatModifier } from '~/composables/useCharacterStats'
 import { getClassColor, getClassName } from '~/utils/classColors'
@@ -144,11 +144,38 @@ function getSortedLevelsForClass(classSlug: string): number[] {
   return Object.keys(getSpellsByLevelForClass(classSlug)).map(Number).sort((a, b) => a - b)
 }
 
-// Determine if this is a spellbook caster (wizard)
-const preparationMethod = computed(() =>
-  (stats.value as { preparation_method?: string | null } | null)?.preparation_method ?? null
+// ══════════════════════════════════════════════════════════════
+// PREPARATION METHOD UI DIFFERENTIATION (#676)
+// ══════════════════════════════════════════════════════════════
+
+/**
+ * Top-level preparation method from character stats
+ * Used for single-class display decisions
+ */
+const preparationMethod = computed<PreparationMethod>(() =>
+  (stats.value as { preparation_method?: PreparationMethod } | null)?.preparation_method ?? null
 )
+
+/**
+ * Whether this is a spellbook caster (wizard) - for spellbook view
+ */
 const isSpellbookCaster = computed(() => preparationMethod.value === 'spellbook')
+
+/**
+ * Whether to show preparation UI (counter, toggle) for single-class
+ * Known casters don't need preparation - hide these UI elements
+ * @see Issue #676
+ */
+const showPreparationUI = computed(() => preparationMethod.value !== 'known')
+
+/**
+ * Get preparation method for a specific class (multiclass support)
+ * Falls back to top-level preparation method if not available per-class
+ */
+function getClassPreparationMethod(classSlug: string): PreparationMethod {
+  const classInfo = stats.value?.spellcasting?.[classSlug]
+  return classInfo?.preparation_method ?? preparationMethod.value
+}
 
 // ══════════════════════════════════════════════════════════════
 // MULTICLASS SPELLCASTING SUPPORT
@@ -335,9 +362,9 @@ useSeoMeta({
                         </div>
                       </div>
                     </div>
-                    <!-- Per-Class Preparation Counter -->
+                    <!-- Per-Class Preparation Counter (hidden for known casters #676) -->
                     <div
-                      v-if="hasPerClassLimits && getClassPreparationLimit(sc.slug)"
+                      v-if="getClassPreparationMethod(sc.slug) !== 'known' && hasPerClassLimits && getClassPreparationLimit(sc.slug)"
                       class="text-center"
                       data-testid="class-preparation-limit"
                     >
@@ -348,9 +375,9 @@ useSeoMeta({
                         {{ getClassPreparationLimit(sc.slug)?.prepared ?? 0 }} / {{ getClassPreparationLimit(sc.slug)?.limit ?? 0 }}
                       </div>
                     </div>
-                    <!-- Fallback: Combined Preparation Counter -->
+                    <!-- Fallback: Combined Preparation Counter (hidden for known casters #676) -->
                     <div
-                      v-else-if="spellSlots?.preparation_limit !== null"
+                      v-else-if="getClassPreparationMethod(sc.slug) !== 'known' && spellSlots?.preparation_limit !== null"
                       class="text-center"
                     >
                       <div class="text-xs text-gray-500 uppercase">
@@ -387,6 +414,7 @@ useSeoMeta({
                       v-for="spell in getCantripsForClass(sc.slug)"
                       :key="spell.id"
                       :spell="spell"
+                      :preparation-method="getClassPreparationMethod(sc.slug)"
                     />
                   </div>
                 </div>
@@ -404,6 +432,7 @@ useSeoMeta({
                       v-for="spell in getSpellsByLevelForClass(sc.slug)[level]"
                       :key="spell.id"
                       :spell="spell"
+                      :preparation-method="getClassPreparationMethod(sc.slug)"
                     />
                   </div>
                 </div>
@@ -492,6 +521,7 @@ useSeoMeta({
                       v-for="spell in cantrips"
                       :key="spell.id"
                       :spell="spell"
+                      :preparation-method="spell.class_slug ? getClassPreparationMethod(spell.class_slug) : preparationMethod"
                     />
                   </div>
                 </div>
@@ -509,6 +539,7 @@ useSeoMeta({
                       v-for="spell in spellsByLevel[level]"
                       :key="spell.id"
                       :spell="spell"
+                      :preparation-method="spell.class_slug ? getClassPreparationMethod(spell.class_slug) : preparationMethod"
                     />
                   </div>
                 </div>
@@ -565,9 +596,9 @@ useSeoMeta({
                   </div>
                 </div>
 
-                <!-- Preparation Counter -->
+                <!-- Preparation Counter (hidden for known casters #676) -->
                 <div
-                  v-if="spellSlots?.preparation_limit !== null"
+                  v-if="showPreparationUI && spellSlots?.preparation_limit !== null"
                   class="text-center"
                 >
                   <div class="text-xs text-gray-500 uppercase">
@@ -620,6 +651,7 @@ useSeoMeta({
                     v-for="spell in cantrips"
                     :key="spell.id"
                     :spell="spell"
+                    :preparation-method="preparationMethod"
                   />
                 </div>
               </div>
@@ -638,6 +670,7 @@ useSeoMeta({
                     v-for="spell in spellsByLevel[level]"
                     :key="spell.id"
                     :spell="spell"
+                    :preparation-method="preparationMethod"
                   />
                 </div>
               </div>
