@@ -43,7 +43,7 @@ const {
   canProceed,
   handleSelect: handleClassSelect,
   confirmSelection,
-  detailModal: { open: detailModalOpen, item: detailClass, show: showDetails, close: closeDetails }
+  detailModal: { open: detailModalOpen, item: detailClass, show: showDetails, close: _closeDetails }
 } = useWizardEntitySelection(classes, {
   storeAction: cls => store.selectClass(cls),
   existingSelection: computed(() => selections.value.class)
@@ -143,9 +143,8 @@ async function handleConfirm() {
 
     <!-- Detail Modal -->
     <CharacterPickerClassDetailModal
+      v-model:open="detailModalOpen"
       :character-class="detailClass"
-      :open="detailModalOpen"
-      @close="closeDetails"
     />
   </div>
 </template>

@@ -41,7 +41,7 @@ const {
   canProceed,
   handleSelect: handleBackgroundSelect,
   confirmSelection,
-  detailModal: { open: detailModalOpen, item: detailBackground, show: showDetails, close: closeDetails }
+  detailModal: { open: detailModalOpen, item: detailBackground, show: showDetails, close: _closeDetails }
 } = useWizardEntitySelection(backgrounds, {
   storeAction: background => store.selectBackground(background),
   existingSelection: computed(() => selections.value.background),
@@ -145,9 +145,8 @@ async function handleConfirm() {
 
     <!-- Detail Modal -->
     <CharacterPickerBackgroundDetailModal
+      v-model:open="detailModalOpen"
       :background="detailBackground"
-      :open="detailModalOpen"
-      @close="closeDetails"
     />
   </div>
 </template>

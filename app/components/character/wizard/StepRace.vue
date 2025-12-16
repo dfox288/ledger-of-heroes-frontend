@@ -46,7 +46,7 @@ const {
   filtered: filteredRaces,
   canProceed,
   confirmSelection,
-  detailModal: { open: detailModalOpen, item: detailRace, show: showDetails, close: closeDetails }
+  detailModal: { open: detailModalOpen, item: detailRace, show: showDetails, close: _closeDetails }
 } = useWizardEntitySelection(races, {
   storeAction: race => store.selectRace(race),
   existingSelection: computed(() => selections.value.race)
@@ -171,9 +171,8 @@ async function handleConfirm() {
 
     <!-- Detail Modal -->
     <CharacterPickerRaceDetailModal
+      v-model:open="detailModalOpen"
       :race="detailRace"
-      :open="detailModalOpen"
-      @close="closeDetails"
     />
 
     <!-- Confirmation Modal for changing race when subrace was selected -->
