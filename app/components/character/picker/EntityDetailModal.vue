@@ -17,12 +17,10 @@
  *   fallback-title="Race Details"
  *   @close="showModal = false"
  * >
- *   <template #default="{ entity }">
- *     <div class="space-y-6">
- *       <p>{{ entity.description }}</p>
- *       <!-- More entity-specific content -->
- *     </div>
- *   </template>
+ *   <div class="space-y-6">
+ *     <p>{{ race.description }}</p>
+ *     <!-- More entity-specific content -->
+ *   </div>
  * </EntityDetailModal>
  */
 
@@ -70,10 +68,7 @@ const title = computed(() => props.entity?.name ?? props.fallbackTitle)
     :title="title"
   >
     <template #body>
-      <slot
-        v-if="entity"
-        :entity="entity"
-      />
+      <slot v-if="entity" />
     </template>
   </UModal>
 </template>
