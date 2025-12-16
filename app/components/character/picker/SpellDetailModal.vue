@@ -4,14 +4,11 @@ import type { Spell } from '~/types'
 
 interface Props {
   spell: Spell | null
-  open: boolean
 }
 
 const props = defineProps<Props>()
 
-const emit = defineEmits<{
-  close: []
-}>()
+const open = defineModel<boolean>('open', { default: false })
 
 /**
  * Format spell level text
@@ -38,10 +35,9 @@ const componentsText = computed(() => {
 
 <template>
   <CharacterPickerEntityDetailModal
+    v-model:open="open"
     :entity="spell"
-    :open="open"
     fallback-title="Spell Details"
-    @close="emit('close')"
   >
     <div class="space-y-4">
       <!-- Level and School Badge -->

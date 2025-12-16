@@ -4,14 +4,11 @@ import type { Feat } from '~/types'
 
 interface Props {
   feat: Feat | null
-  open: boolean
 }
 
 const props = defineProps<Props>()
 
-const emit = defineEmits<{
-  close: []
-}>()
+const open = defineModel<boolean>('open', { default: false })
 
 /**
  * Check if feat has prerequisites
@@ -81,10 +78,9 @@ const grantedProficiencies = computed(() => {
 
 <template>
   <CharacterPickerEntityDetailModal
+    v-model:open="open"
     :entity="feat"
-    :open="open"
     fallback-title="Feat Details"
-    @close="emit('close')"
   >
     <div class="space-y-4">
       <!-- Type Badges -->

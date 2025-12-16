@@ -179,7 +179,7 @@ const {
   open: detailModalOpen,
   item: detailFeat,
   show: handleViewDetails,
-  close: handleCloseModal
+  close: _handleCloseModal
 } = useDetailModal<Feat>()
 </script>
 
@@ -280,9 +280,8 @@ const {
 
     <!-- Feat Detail Modal -->
     <CharacterPickerFeatDetailModal
+      v-model:open="detailModalOpen"
       :feat="detailFeat"
-      :open="detailModalOpen"
-      @close="handleCloseModal"
     />
   </div>
 </template>

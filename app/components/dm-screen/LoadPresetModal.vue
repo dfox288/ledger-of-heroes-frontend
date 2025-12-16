@@ -3,9 +3,10 @@
 import type { EncounterPreset } from '~/types/dm-screen'
 
 const props = defineProps<{
-  open: boolean
   presets: EncounterPreset[]
 }>()
+
+const open = defineModel<boolean>('open', { default: false })
 
 // Sort presets by date (newest first)
 const sortedPresets = computed(() =>
@@ -15,10 +16,9 @@ const sortedPresets = computed(() =>
 )
 
 const emit = defineEmits<{
-  'update:open': [value: boolean]
-  'load': [presetId: number]
-  'delete': [presetId: number]
-  'rename': [presetId: number, newName: string]
+  load: [presetId: number]
+  delete: [presetId: number]
+  rename: [presetId: number, newName: string]
 }>()
 
 const confirmDeleteId = ref<number | null>(null)
@@ -37,7 +37,7 @@ function handleDelete(presetId: number) {
 }
 
 function handleClose() {
-  emit('update:open', false)
+  open.value = false
   confirmDeleteId.value = null
   editingId.value = null
 }
@@ -95,10 +95,7 @@ function getMonsterCount(preset: EncounterPreset): number {
 </script>
 
 <template>
-  <UModal
-    :open="open"
-    @update:open="emit('update:open', $event)"
-  >
+  <UModal v-model:open="open">
     <template #header>
       <h3 class="text-lg font-semibold">
         Load Encounter Preset

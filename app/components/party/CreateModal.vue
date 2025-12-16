@@ -3,15 +3,15 @@
 import type { PartyListItem } from '~/types'
 
 const props = defineProps<{
-  open: boolean
   party: PartyListItem | null
   loading?: boolean
   error?: string | null
 }>()
 
+const open = defineModel<boolean>('open', { default: false })
+
 const emit = defineEmits<{
-  'update:open': [value: boolean]
-  'save': [payload: { name: string, description: string | null }]
+  save: [payload: { name: string, description: string | null }]
 }>()
 
 /** Local state */
@@ -43,7 +43,7 @@ function handleSave() {
 }
 
 function handleCancel() {
-  emit('update:open', false)
+  open.value = false
 }
 
 function handleKeydown(event: KeyboardEvent) {
@@ -53,7 +53,7 @@ function handleKeydown(event: KeyboardEvent) {
 }
 
 /** Reset form when modal opens */
-watch(() => props.open, (isOpen) => {
+watch(open, (isOpen) => {
   if (isOpen) {
     if (props.party) {
       localName.value = props.party.name
@@ -68,8 +68,7 @@ watch(() => props.open, (isOpen) => {
 
 <template>
   <UModal
-    :open="open"
-    @update:open="emit('update:open', $event)"
+    v-model:open="open"
     @keydown="handleKeydown"
   >
     <template #header>

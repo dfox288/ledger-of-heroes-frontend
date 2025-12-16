@@ -35,25 +35,14 @@ interface FullItemData {
 }
 
 interface Props {
-  open: boolean
   item: CharacterEquipment | null
 }
 
 const props = defineProps<Props>()
 
-const emit = defineEmits<{
-  'update:open': [value: boolean]
-}>()
+const open = defineModel<boolean>('open', { default: false })
 
 const { apiFetch } = useApi()
-
-// Use local ref for v-model binding (matches SpellDetailModal pattern)
-const isOpen = computed({
-  get: () => props.open,
-  set: (value) => {
-    emit('update:open', value)
-  }
-})
 
 // Full item data fetched from API
 const fullItemData = ref<FullItemData | null>(null)
@@ -61,8 +50,8 @@ const isLoading = ref(false)
 const fetchError = ref<string | null>(null)
 
 // Fetch full item data when modal opens
-watch(() => props.open, async (open) => {
-  if (!open || !props.item) {
+watch(open, async (isOpen) => {
+  if (!isOpen || !props.item) {
     fullItemData.value = null
     fetchError.value = null
     return
@@ -221,7 +210,7 @@ const isCustomItem = computed(() => {
 
 <template>
   <UModal
-    v-model:open="isOpen"
+    v-model:open="open"
     :title="displayName"
   >
     <template #body>

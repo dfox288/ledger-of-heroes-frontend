@@ -9,14 +9,14 @@
  */
 import type { Condition } from '~/types'
 
-const props = defineProps<{
-  open: boolean
+defineProps<{
   availableConditions: Condition[]
 }>()
 
+const open = defineModel<boolean>('open', { default: false })
+
 const emit = defineEmits<{
-  'update:open': [value: boolean]
-  'add': [payload: { condition: string, source: string, duration: string, level?: number }]
+  add: [payload: { condition: string, source: string, duration: string, level?: number }]
 }>()
 
 /** Currently selected condition */
@@ -67,20 +67,20 @@ function handleAdd() {
     duration: duration.value,
     level: isExhaustion.value ? level.value : undefined
   })
-  emit('update:open', false)
+  open.value = false
 }
 
 /**
  * Handle Cancel button click
  */
 function handleCancel() {
-  emit('update:open', false)
+  open.value = false
 }
 
 /**
  * Reset state when modal opens
  */
-watch(() => props.open, (isOpen) => {
+watch(open, (isOpen) => {
   if (isOpen) {
     selectedCondition.value = null
     source.value = ''
@@ -128,10 +128,7 @@ function isSelected(condition: Condition): boolean {
 </script>
 
 <template>
-  <UModal
-    :open="open"
-    @update:open="emit('update:open', $event)"
-  >
+  <UModal v-model:open="open">
     <template #header>
       <div class="flex items-center justify-between w-full">
         <h3 class="text-lg font-semibold text-gray-900 dark:text-white">

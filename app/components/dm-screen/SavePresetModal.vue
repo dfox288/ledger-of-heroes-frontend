@@ -2,14 +2,14 @@
 <script setup lang="ts">
 import type { PresetMonster } from '~/types/dm-screen'
 
-const props = defineProps<{
-  open: boolean
+defineProps<{
   monsters: PresetMonster[]
 }>()
 
+const open = defineModel<boolean>('open', { default: false })
+
 const emit = defineEmits<{
-  'update:open': [value: boolean]
-  'save': [name: string]
+  save: [name: string]
 }>()
 
 const presetName = ref('')
@@ -24,11 +24,11 @@ function handleSave() {
 }
 
 function handleClose() {
-  emit('update:open', false)
+  open.value = false
 }
 
 // Reset state and focus when modal opens
-watch(() => props.open, (isOpen) => {
+watch(open, (isOpen) => {
   if (isOpen) {
     presetName.value = ''
     nextTick(() => nameInput.value?.focus())
@@ -44,10 +44,7 @@ function handleKeydown(event: KeyboardEvent) {
 </script>
 
 <template>
-  <UModal
-    :open="open"
-    @update:open="emit('update:open', $event)"
-  >
+  <UModal v-model:open="open">
     <template #header>
       <h3 class="text-lg font-semibold">
         Save Encounter Preset

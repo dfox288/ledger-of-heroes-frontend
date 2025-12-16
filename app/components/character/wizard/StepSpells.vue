@@ -244,7 +244,7 @@ const {
   open: detailModalOpen,
   item: detailSpell,
   show: handleViewDetails,
-  close: handleCloseModal
+  close: _handleCloseModal
 } = useDetailModal<Spell>()
 </script>
 
@@ -513,9 +513,8 @@ const {
 
     <!-- Spell Detail Modal -->
     <CharacterPickerSpellDetailModal
+      v-model:open="detailModalOpen"
       :spell="detailSpell"
-      :open="detailModalOpen"
-      @close="handleCloseModal"
     />
   </div>
 </template>

@@ -22,13 +22,10 @@ interface ImportData {
   [key: string]: unknown
 }
 
-const props = defineProps<{
-  open: boolean
-}>()
+const open = defineModel<boolean>('open', { default: false })
 
 const emit = defineEmits<{
-  'update:open': [value: boolean]
-  'import': [data: ImportData]
+  import: [data: ImportData]
 }>()
 
 /** Active tab: 'upload' or 'paste' */
@@ -223,20 +220,20 @@ function handleImport() {
   if (!parsedData.value) return
 
   emit('import', parsedData.value)
-  emit('update:open', false)
+  open.value = false
 }
 
 /**
  * Handle Cancel button click
  */
 function handleCancel() {
-  emit('update:open', false)
+  open.value = false
 }
 
 /**
  * Reset state when modal opens
  */
-watch(() => props.open, (isOpen) => {
+watch(open, (isOpen) => {
   if (isOpen) {
     activeTab.value = 'upload'
     selectedFile.value = null
@@ -276,10 +273,7 @@ watch(activeTab, () => {
 </script>
 
 <template>
-  <UModal
-    :open="open"
-    @update:open="emit('update:open', $event)"
-  >
+  <UModal v-model:open="open">
     <template #header>
       <div class="flex items-center justify-between w-full">
         <h3 class="text-lg font-semibold text-gray-900 dark:text-white">

@@ -5,8 +5,6 @@
 -->
 <script setup lang="ts">
 interface Props {
-  /** Whether the modal is open */
-  open: boolean
   /** The modal title */
   title: string
   /** The description message */
@@ -22,28 +20,26 @@ withDefaults(defineProps<Props>(), {
   cancelText: 'Cancel'
 })
 
+const open = defineModel<boolean>('open', { default: false })
+
 const emit = defineEmits<{
-  'update:open': [value: boolean]
-  'confirm': []
-  'cancel': []
+  confirm: []
+  cancel: []
 }>()
 
 function handleCancel() {
   emit('cancel')
-  emit('update:open', false)
+  open.value = false
 }
 
 function handleConfirm() {
   emit('confirm')
-  emit('update:open', false)
+  open.value = false
 }
 </script>
 
 <template>
-  <UModal
-    :open="open"
-    @update:open="emit('update:open', $event)"
-  >
+  <UModal v-model:open="open">
     <template #content>
       <div
         data-testid="wizard-confirmation-modal"

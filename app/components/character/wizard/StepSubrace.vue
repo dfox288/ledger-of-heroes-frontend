@@ -87,14 +87,6 @@ async function handleViewDetails(subrace: SubraceItem) {
 }
 
 /**
- * Close detail modal
- */
-function handleCloseModal() {
-  detailModalOpen.value = false
-  detailSubrace.value = null
-}
-
-/**
  * Confirm selection and save to store
  * Needs to fetch full race detail before saving since subraces array only has partial data
  */
@@ -264,10 +256,9 @@ onMounted(async () => {
 
     <!-- Detail Modal -->
     <CharacterPickerSubraceDetailModal
+      v-model:open="detailModalOpen"
       :subrace="detailSubrace"
-      :open="detailModalOpen"
       :parent-race="selections.race"
-      @close="handleCloseModal"
     />
   </div>
 </template>

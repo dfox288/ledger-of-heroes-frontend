@@ -58,7 +58,7 @@ const {
   canProceed,
   handleSelect: handleSubclassSelect,
   confirmSelection,
-  detailModal: { open: detailModalOpen, item: detailSubclass, show: showDetails, close: closeDetails }
+  detailModal: { open: detailModalOpen, item: detailSubclass, show: showDetails, close: _closeDetails }
 } = useWizardEntitySelection(subclasses, {
   storeAction: subclass => store.selectSubclass(subclass),
   existingSelection: computed(() => selections.value.subclass),
@@ -179,9 +179,8 @@ async function handleConfirm() {
 
     <!-- Detail Modal -->
     <CharacterPickerSubclassDetailModal
+      v-model:open="detailModalOpen"
       :subclass="detailSubclass"
-      :open="detailModalOpen"
-      @close="closeDetails"
     />
   </div>
 </template>

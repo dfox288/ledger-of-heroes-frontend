@@ -3,15 +3,15 @@
 import type { PartyCharacter } from '~/types'
 
 const props = defineProps<{
-  open: boolean
   characters: PartyCharacter[]
   existingCharacterIds: number[]
   loading?: boolean
 }>()
 
+const open = defineModel<boolean>('open', { default: false })
+
 const emit = defineEmits<{
-  'update:open': [value: boolean]
-  'add': [characterIds: number[]]
+  add: [characterIds: number[]]
 }>()
 
 /** Search filter */
@@ -64,11 +64,11 @@ function handleAdd() {
 
 /** Handle cancel */
 function handleCancel() {
-  emit('update:open', false)
+  open.value = false
 }
 
 /** Reset state when modal opens */
-watch(() => props.open, (isOpen) => {
+watch(open, (isOpen) => {
   if (isOpen) {
     searchQuery.value = ''
     selectedIds.value = new Set()
@@ -77,10 +77,7 @@ watch(() => props.open, (isOpen) => {
 </script>
 
 <template>
-  <UModal
-    :open="open"
-    @update:open="emit('update:open', $event)"
-  >
+  <UModal v-model:open="open">
     <template #header>
       <div class="flex items-center justify-between w-full">
         <h3 class="text-lg font-semibold text-gray-900 dark:text-white">

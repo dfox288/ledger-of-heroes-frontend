@@ -51,14 +51,14 @@ export interface EditPayload {
 }
 
 const props = defineProps<{
-  open: boolean
   character: CharacterData | null
   loading?: boolean
   error?: string | null
 }>()
 
+const open = defineModel<boolean>('open', { default: false })
+
 const emit = defineEmits<{
-  'update:open': [value: boolean]
   'save': [payload: EditPayload]
   'remove-portrait': []
 }>()
@@ -254,7 +254,7 @@ function handleSave() {
  * Handle cancel button click
  */
 function handleCancel() {
-  emit('update:open', false)
+  open.value = false
 }
 
 /**
@@ -269,7 +269,7 @@ function handleKeydown(event: KeyboardEvent) {
 /**
  * Reset state when modal opens
  */
-watch(() => props.open, (isOpen) => {
+watch(open, (isOpen) => {
   if (isOpen && props.character) {
     localName.value = props.character.name
     localAlignment.value = props.character.alignment
@@ -286,10 +286,9 @@ watch(() => props.open, (isOpen) => {
 
 <template>
   <UModal
-    :open="open"
+    v-model:open="open"
     title="Edit Character"
     description="Update character name, alignment, or portrait"
-    @update:open="emit('update:open', $event)"
     @keydown="handleKeydown"
   >
     <template #body>

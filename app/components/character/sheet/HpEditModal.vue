@@ -13,18 +13,18 @@
  */
 
 const props = defineProps<{
-  open: boolean
   currentHp: number
   maxHp: number
   tempHp: number
 }>()
 
+const open = defineModel<boolean>('open', { default: false })
+
 /** Maximum allowed HP delta (sanity cap to prevent typos) */
 const MAX_HP_DELTA = 999
 
 const emit = defineEmits<{
-  'update:open': [value: boolean]
-  'apply': [delta: number]
+  apply: [delta: number]
 }>()
 
 /** Input value as string to support +/- signs */
@@ -80,16 +80,16 @@ const canApply = computed(() => {
 function handleApply() {
   if (parsedDelta.value === null) return
   emit('apply', parsedDelta.value)
-  emit('update:open', false)
+  open.value = false
 }
 
 /** Handle cancel button click */
 function handleCancel() {
-  emit('update:open', false)
+  open.value = false
 }
 
 /** Clear input when modal opens */
-watch(() => props.open, (isOpen) => {
+watch(open, (isOpen) => {
   if (isOpen) {
     inputValue.value = ''
   }
@@ -97,10 +97,7 @@ watch(() => props.open, (isOpen) => {
 </script>
 
 <template>
-  <UModal
-    :open="open"
-    @update:open="emit('update:open', $event)"
-  >
+  <UModal v-model:open="open">
     <template #header>
       <div class="flex items-center justify-between w-full">
         <h3 class="text-lg font-semibold text-gray-900 dark:text-white">
