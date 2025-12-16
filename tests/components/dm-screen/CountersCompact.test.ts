@@ -124,6 +124,13 @@ describe('DmScreenCountersCompact', () => {
       props: { counters: [depletedCounter] }
     })
     const counterEl = wrapper.find('[data-testid="counter-rage"]')
-    expect(counterEl.classes().join(' ')).toMatch(/amber|warning|yellow/)
+    expect(counterEl.classes()).toContain('text-amber-600')
+  })
+
+  it('groups counters with null reset_on under "Other"', async () => {
+    const wrapper = await mountSuspended(CountersCompact, {
+      props: { counters: [mockUnlimited] }
+    })
+    expect(wrapper.text()).toContain('Other')
   })
 })

@@ -32,7 +32,8 @@ const groupedCounters = computed(() => {
 const hasCounters = computed(() => props.counters.length > 0)
 
 // Use pips for counters with 6 or fewer max uses
-const usePips = (counter: Counter) => !counter.unlimited && counter.max > 0 && counter.max <= 6
+const PIP_DISPLAY_THRESHOLD = 6
+const usePips = (counter: Counter) => !counter.unlimited && counter.max > 0 && counter.max <= PIP_DISPLAY_THRESHOLD
 
 // Get slug for test ID (extract last part of slug)
 function getTestId(counter: Counter): string {
@@ -56,9 +57,9 @@ function isDepleted(counter: Counter): boolean {
       v-for="group in groupedCounters"
       :key="group.label"
     >
-      <div class="text-xs text-neutral-400 mb-1">
+      <h5 class="text-xs text-neutral-400 mb-1">
         {{ group.label }}
-      </div>
+      </h5>
       <div class="space-y-1">
         <div
           v-for="counter in group.counters"
