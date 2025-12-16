@@ -32,14 +32,11 @@ interface SubclassWithDetails extends Subclass {
 
 interface Props {
   subclass: SubclassWithDetails | null
-  open: boolean
 }
 
 const props = defineProps<Props>()
 
-const emit = defineEmits<{
-  close: []
-}>()
+const open = defineModel<boolean>('open', { default: false })
 
 /**
  * Check if subclass has spellcasting
@@ -85,10 +82,9 @@ function truncateDescription(text: string | undefined, maxLength = 300): string 
 
 <template>
   <CharacterPickerEntityDetailModal
+    v-model:open="open"
     :entity="subclass"
-    :open="open"
     fallback-title="Subclass Details"
-    @close="emit('close')"
   >
     <div class="space-y-6">
       <!-- Parent Class Info -->

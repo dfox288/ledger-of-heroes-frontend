@@ -15,7 +15,6 @@
 import type { CharacterEquipment, CharacterCurrency } from '~/types/character'
 
 interface Props {
-  open: boolean
   item: CharacterEquipment | null
   currency: CharacterCurrency | null
   loading?: boolean
@@ -29,9 +28,10 @@ interface SellPayload {
 
 const props = defineProps<Props>()
 
+const open = defineModel<boolean>('open', { default: false })
+
 const emit = defineEmits<{
-  'update:open': [value: boolean]
-  'sell': [payload: SellPayload]
+  sell: [payload: SellPayload]
 }>()
 
 // Selection state
@@ -224,11 +224,11 @@ function handleSell() {
 
 // Handle cancel
 function handleCancel() {
-  emit('update:open', false)
+  open.value = false
 }
 
 // Reset state when modal opens/closes
-watch(() => props.open, (isOpen) => {
+watch(open, (isOpen) => {
   if (isOpen) {
     quantity.value = 1
     customPrice.value = null
@@ -244,10 +244,7 @@ watch(() => props.item, () => {
 </script>
 
 <template>
-  <UModal
-    :open="open"
-    @update:open="emit('update:open', $event)"
-  >
+  <UModal v-model:open="open">
     <template #header>
       <div class="flex items-center justify-between w-full">
         <h3 class="text-lg font-semibold text-gray-900 dark:text-white">

@@ -3,14 +3,11 @@ import type { Background } from '~/types'
 
 interface Props {
   background: Background | null
-  open: boolean
 }
 
 const props = defineProps<Props>()
 
-const emit = defineEmits<{
-  close: []
-}>()
+const open = defineModel<boolean>('open', { default: false })
 
 // Use background stats composable
 const backgroundRef = computed(() => props.background)
@@ -30,10 +27,9 @@ const equipmentItems = computed(() => {
 
 <template>
   <CharacterPickerEntityDetailModal
+    v-model:open="open"
     :entity="background"
-    :open="open"
     fallback-title="Background Details"
-    @close="emit('close')"
   >
     <div class="space-y-6">
       <!-- Feature -->

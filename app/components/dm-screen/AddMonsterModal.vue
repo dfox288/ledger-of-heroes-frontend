@@ -3,14 +3,14 @@
 import type { Monster } from '~/types'
 import { useDebounceFn } from '@vueuse/core'
 
-const props = defineProps<{
-  open: boolean
+defineProps<{
   loading?: boolean
 }>()
 
+const open = defineModel<boolean>('open', { default: false })
+
 const emit = defineEmits<{
-  'update:open': [value: boolean]
-  'add': [monsterId: number, quantity: number]
+  add: [monsterId: number, quantity: number]
 }>()
 
 const { apiFetch } = useApi()
@@ -71,11 +71,11 @@ function handleAdd() {
 }
 
 function handleClose() {
-  emit('update:open', false)
+  open.value = false
 }
 
 // Reset state when modal opens
-watch(() => props.open, (isOpen) => {
+watch(open, (isOpen) => {
   if (isOpen) {
     searchQuery.value = ''
     searchResults.value = []
@@ -86,10 +86,7 @@ watch(() => props.open, (isOpen) => {
 </script>
 
 <template>
-  <UModal
-    :open="open"
-    @update:open="emit('update:open', $event)"
-  >
+  <UModal v-model:open="open">
     <template #header>
       <h3 class="text-lg font-semibold">
         Add Monster to Encounter

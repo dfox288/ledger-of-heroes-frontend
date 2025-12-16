@@ -12,7 +12,6 @@
 import type { CharacterEquipment } from '~/types/character'
 
 interface Props {
-  open: boolean
   item: CharacterEquipment | null
   loading?: boolean
 }
@@ -24,8 +23,9 @@ interface EditQuantityPayload {
 
 const props = defineProps<Props>()
 
+const open = defineModel<boolean>('open', { default: false })
+
 const emit = defineEmits<{
-  'update:open': [value: boolean]
   'update-quantity': [payload: EditQuantityPayload]
 }>()
 
@@ -66,11 +66,11 @@ function handleSave() {
 
 // Handle cancel
 function handleCancel() {
-  emit('update:open', false)
+  open.value = false
 }
 
 // Reset state when modal opens
-watch(() => props.open, (isOpen) => {
+watch(open, (isOpen) => {
   if (isOpen && props.item) {
     newQuantity.value = props.item.quantity
   }
@@ -103,10 +103,7 @@ function getItemIcon(): string {
 </script>
 
 <template>
-  <UModal
-    :open="open"
-    @update:open="emit('update:open', $event)"
-  >
+  <UModal v-model:open="open">
     <template #header>
       <div class="flex items-center justify-between w-full">
         <h3 class="text-lg font-semibold text-gray-900 dark:text-white">

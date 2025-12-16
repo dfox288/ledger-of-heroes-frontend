@@ -9,7 +9,6 @@
 import { SLOT_LABELS, type EquipmentSlot } from '~/utils/equipmentSlots'
 
 interface Props {
-  open: boolean
   itemName: string
   validSlots: EquipmentSlot[]
   suggestedSlot?: EquipmentSlot | null
@@ -21,9 +20,10 @@ const props = withDefaults(defineProps<Props>(), {
   loading: false
 })
 
+const open = defineModel<boolean>('open', { default: false })
+
 const emit = defineEmits<{
-  'update:open': [value: boolean]
-  'select': [slot: EquipmentSlot]
+  select: [slot: EquipmentSlot]
 }>()
 
 // Selected slot (defaults to suggested or first valid)
@@ -32,14 +32,14 @@ const selectedSlot = ref<EquipmentSlot>(
 )
 
 // Reset selection when modal opens with new item
-watch(() => props.open, (isOpen) => {
+watch(open, (isOpen) => {
   if (isOpen) {
     selectedSlot.value = props.suggestedSlot ?? props.validSlots[0]!
   }
 })
 
 function handleCancel() {
-  emit('update:open', false)
+  open.value = false
 }
 
 function handleEquip() {
@@ -48,10 +48,7 @@ function handleEquip() {
 </script>
 
 <template>
-  <UModal
-    :open="open"
-    @update:open="emit('update:open', $event)"
-  >
+  <UModal v-model:open="open">
     <template #header>
       <div class="flex items-center gap-2">
         <UIcon

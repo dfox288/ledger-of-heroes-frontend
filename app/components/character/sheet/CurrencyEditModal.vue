@@ -29,15 +29,15 @@ export interface CurrencyDelta {
 }
 
 const props = defineProps<{
-  open: boolean
   currency: CharacterCurrency | null
   loading?: boolean
   /** Error message to display (e.g., "Insufficient funds") */
   error?: string | null
 }>()
 
+const open = defineModel<boolean>('open', { default: false })
+
 const emit = defineEmits<{
-  'update:open': [value: boolean]
   'apply': [payload: CurrencyDelta]
   'clear-error': []
 }>()
@@ -129,7 +129,7 @@ function handleApply() {
 
 /** Handle cancel button click */
 function handleCancel() {
-  emit('update:open', false)
+  open.value = false
 }
 
 /** Handle keydown events for Enter key submission */
@@ -140,7 +140,7 @@ function handleKeydown(event: KeyboardEvent) {
 }
 
 /** Clear all inputs and errors when modal opens */
-watch(() => props.open, (isOpen) => {
+watch(open, (isOpen) => {
   if (isOpen) {
     inputs.pp = ''
     inputs.gp = ''
@@ -177,10 +177,9 @@ const currentCurrencyDisplay = computed(() => {
 
 <template>
   <UModal
-    :open="open"
+    v-model:open="open"
     title="Manage Currency"
     description="Add, subtract, or set currency values"
-    @update:open="emit('update:open', $event)"
     @keydown="handleKeydown"
   >
     <template #body>

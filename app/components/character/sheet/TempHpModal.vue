@@ -11,17 +11,17 @@
  */
 
 const props = defineProps<{
-  open: boolean
   currentTempHp: number
 }>()
+
+const open = defineModel<boolean>('open', { default: false })
 
 /** Maximum allowed temp HP value (sanity cap to prevent typos) */
 const MAX_TEMP_HP = 999
 
 const emit = defineEmits<{
-  'update:open': [value: boolean]
-  'apply': [value: number]
-  'clear': []
+  apply: [value: number]
+  clear: []
 }>()
 
 /** Input value as string */
@@ -68,22 +68,22 @@ const canApply = computed(() => {
 function handleApply() {
   if (parsedValue.value === null) return
   emit('apply', parsedValue.value)
-  emit('update:open', false)
+  open.value = false
 }
 
 /** Handle clear button click */
 function handleClear() {
   emit('clear')
-  emit('update:open', false)
+  open.value = false
 }
 
 /** Handle cancel button click */
 function handleCancel() {
-  emit('update:open', false)
+  open.value = false
 }
 
 /** Clear input when modal opens */
-watch(() => props.open, (isOpen) => {
+watch(open, (isOpen) => {
   if (isOpen) {
     inputValue.value = ''
   }
@@ -91,10 +91,7 @@ watch(() => props.open, (isOpen) => {
 </script>
 
 <template>
-  <UModal
-    :open="open"
-    @update:open="emit('update:open', $event)"
-  >
+  <UModal v-model:open="open">
     <template #header>
       <div class="flex items-center justify-between w-full">
         <h3 class="text-lg font-semibold text-gray-900 dark:text-white">

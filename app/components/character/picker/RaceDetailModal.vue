@@ -4,14 +4,11 @@ import type { Race } from '~/types'
 
 interface Props {
   race: Race | null
-  open: boolean
 }
 
 const props = defineProps<Props>()
 
-const emit = defineEmits<{
-  close: []
-}>()
+const open = defineModel<boolean>('open', { default: false })
 
 /**
  * Get ability score modifiers
@@ -38,10 +35,9 @@ const speedDisplay = computed(() => {
 
 <template>
   <CharacterPickerEntityDetailModal
+    v-model:open="open"
     :entity="race"
-    :open="open"
     fallback-title="Race Details"
-    @close="emit('close')"
   >
     <div class="space-y-6">
       <!-- Description -->

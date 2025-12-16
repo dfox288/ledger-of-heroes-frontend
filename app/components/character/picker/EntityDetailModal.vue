@@ -6,16 +6,14 @@
  * Provides the shared modal structure:
  * - UModal wrapper with v-model open state
  * - Entity name as title (with fallback)
- * - Close event emission
  *
  * Entity-specific content is passed via the default slot.
  *
  * @example
  * <EntityDetailModal
+ *   v-model:open="showModal"
  *   :entity="race"
- *   :open="showModal"
  *   fallback-title="Race Details"
- *   @close="showModal = false"
  * >
  *   <div class="space-y-6">
  *     <p>{{ race.description }}</p>
@@ -31,8 +29,6 @@ interface Entity {
 interface Props {
   /** The entity to display details for */
   entity: Entity | null
-  /** Whether the modal is open */
-  open: boolean
   /** Fallback title when entity is null */
   fallbackTitle?: string
 }
@@ -41,20 +37,7 @@ const props = withDefaults(defineProps<Props>(), {
   fallbackTitle: 'Details'
 })
 
-const emit = defineEmits<{
-  close: []
-}>()
-
-/**
- * Computed for v-model binding with UModal.
- * Emits close when modal is closed.
- */
-const isOpen = computed({
-  get: () => props.open,
-  set: (value) => {
-    if (!value) emit('close')
-  }
-})
+const open = defineModel<boolean>('open', { default: false })
 
 /**
  * Modal title - entity name or fallback
@@ -64,7 +47,7 @@ const title = computed(() => props.entity?.name ?? props.fallbackTitle)
 
 <template>
   <UModal
-    v-model:open="isOpen"
+    v-model:open="open"
     :title="title"
   >
     <template #body>

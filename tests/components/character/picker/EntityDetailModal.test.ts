@@ -6,7 +6,7 @@ import EntityDetailModal from '~/components/character/picker/EntityDetailModal.v
  * Type for accessing EntityDetailModal internal state in tests
  */
 interface EntityDetailModalVM {
-  isOpen: boolean
+  open: boolean
   title: string
 }
 
@@ -87,36 +87,38 @@ describe('EntityDetailModal', () => {
     })
   })
 
-  describe('isOpen computed', () => {
+  describe('open model', () => {
     it('reflects open prop value', () => {
       const wrapper = mount(EntityDetailModal, {
         props: { ...defaultProps, open: true }
       })
       const vm = wrapper.vm as unknown as EntityDetailModalVM
-      expect(vm.isOpen).toBe(true)
+      expect(vm.open).toBe(true)
     })
 
-    it('emits close when set to false', async () => {
+    it('emits update:open when set to false', async () => {
       const wrapper = mount(EntityDetailModal, {
         props: { ...defaultProps, open: true }
       })
       const vm = wrapper.vm as unknown as EntityDetailModalVM
 
-      // Simulate modal closing by setting isOpen
-      vm.isOpen = false
+      // Simulate modal closing by setting open
+      vm.open = false
 
-      expect(wrapper.emitted('close')).toBeTruthy()
+      expect(wrapper.emitted('update:open')).toBeTruthy()
+      expect(wrapper.emitted('update:open')![0]).toEqual([false])
     })
 
-    it('does not emit close when set to true', () => {
+    it('emits update:open when set to true', () => {
       const wrapper = mount(EntityDetailModal, {
         props: { ...defaultProps, open: false }
       })
       const vm = wrapper.vm as unknown as EntityDetailModalVM
 
-      vm.isOpen = true
+      vm.open = true
 
-      expect(wrapper.emitted('close')).toBeFalsy()
+      expect(wrapper.emitted('update:open')).toBeTruthy()
+      expect(wrapper.emitted('update:open')![0]).toEqual([true])
     })
   })
 

@@ -4,16 +4,13 @@ import type { Race } from '~/types'
 
 interface Props {
   subrace: Race | null
-  open: boolean
   /** Parent race for showing inherited traits */
   parentRace?: Race | null
 }
 
 const props = defineProps<Props>()
 
-const emit = defineEmits<{
-  close: []
-}>()
+const open = defineModel<boolean>('open', { default: false })
 
 /**
  * Get subrace-specific ability score modifiers
@@ -123,10 +120,9 @@ const inheritedProficiencies = computed(() => {
 
 <template>
   <CharacterPickerEntityDetailModal
+    v-model:open="open"
     :entity="subrace"
-    :open="open"
     fallback-title="Subrace Details"
-    @close="emit('close')"
   >
     <div class="space-y-6">
       <!-- Basic Info -->

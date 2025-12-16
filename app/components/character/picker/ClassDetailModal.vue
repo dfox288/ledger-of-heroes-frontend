@@ -4,14 +4,11 @@ import type { CharacterClass } from '~/types'
 
 interface Props {
   characterClass: CharacterClass | null
-  open: boolean
 }
 
 const props = defineProps<Props>()
 
-const emit = defineEmits<{
-  close: []
-}>()
+const open = defineModel<boolean>('open', { default: false })
 
 /**
  * Check if class is a spellcaster
@@ -31,10 +28,9 @@ const hitDieText = computed(() => {
 
 <template>
   <CharacterPickerEntityDetailModal
+    v-model:open="open"
     :entity="characterClass"
-    :open="open"
     fallback-title="Class Details"
-    @close="emit('close')"
   >
     <div class="space-y-6">
       <!-- Description -->

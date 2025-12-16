@@ -126,3 +126,48 @@ Naming based on folder structure:
    ```
 
 **Common pitfall:** `app.config.ts` goes in `app/` directory (Nuxt 4), NOT root!
+
+## Modal Pattern
+
+All modals use Vue 3.4+ `defineModel` for open state management:
+
+```typescript
+// Open state via defineModel (replaces prop + emit pattern)
+const open = defineModel<boolean>('open', { default: false })
+
+// Other props (data the modal needs)
+const props = defineProps<{
+  characterId: string
+  currentHp: number
+}>()
+
+// Action emits only (no 'update:open')
+const emit = defineEmits<{
+  apply: [value: number]
+}>()
+
+// Action handlers close after success
+function handleApply() {
+  emit('apply', result)
+  open.value = false
+}
+```
+
+**Template:**
+```vue
+<UModal v-model:open="open">
+  <!-- content -->
+</UModal>
+```
+
+**Parent usage:**
+```vue
+<MyModal v-model:open="showModal" @apply="handleApply" />
+```
+
+**Key rules:**
+- Use `defineModel<boolean>('open')` instead of prop + `update:open` emit
+- Watch `open` directly, not `() => props.open`
+- Close with `open.value = false`, not `emit('update:open', false)`
+
+**Gold Standard:** `app/components/character/sheet/HpEditModal.vue`

@@ -8,18 +8,18 @@
  */
 
 defineProps<{
-  open: boolean
   itemName: string
   loading?: boolean
 }>()
 
+const open = defineModel<boolean>('open', { default: false })
+
 const emit = defineEmits<{
-  'update:open': [value: boolean]
-  'confirm': []
+  confirm: []
 }>()
 
 function handleCancel() {
-  emit('update:open', false)
+  open.value = false
 }
 
 function handleConfirm() {
@@ -28,10 +28,7 @@ function handleConfirm() {
 </script>
 
 <template>
-  <UModal
-    :open="open"
-    @update:open="emit('update:open', $event)"
-  >
+  <UModal v-model:open="open">
     <template #header>
       <div class="flex items-center gap-2">
         <UIcon

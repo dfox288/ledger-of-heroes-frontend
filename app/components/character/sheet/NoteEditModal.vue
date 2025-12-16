@@ -57,15 +57,15 @@ export interface NotePayload {
 }
 
 const props = defineProps<{
-  open: boolean
   note?: CharacterNote
   loading?: boolean
   error?: string | null
 }>()
 
+const open = defineModel<boolean>('open', { default: false })
+
 const emit = defineEmits<{
-  'update:open': [value: boolean]
-  'save': [payload: NotePayload]
+  save: [payload: NotePayload]
 }>()
 
 /** Local state */
@@ -111,7 +111,7 @@ const canSave = computed(() => {
 /** Handle cancel - reset transient state */
 function handleCancel() {
   customCategoryName.value = ''
-  emit('update:open', false)
+  open.value = false
 }
 
 /** Handle save */
@@ -174,7 +174,7 @@ function initializeState() {
 }
 
 /** Reset state when modal opens */
-watch(() => props.open, (isOpen) => {
+watch(open, (isOpen) => {
   if (isOpen) {
     initializeState()
   }
@@ -183,8 +183,7 @@ watch(() => props.open, (isOpen) => {
 
 <template>
   <UModal
-    :open="open"
-    @update:open="emit('update:open', $event)"
+    v-model:open="open"
     @keydown="handleKeydown"
   >
     <template #header>
