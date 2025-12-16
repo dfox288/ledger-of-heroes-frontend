@@ -223,4 +223,76 @@ describe('DmScreenMonsterTableRow', () => {
       expect(wrapper.find('[data-testid="speed-climb"]').exists()).toBe(true)
     })
   })
+
+  describe('status toggles (prone/flying)', () => {
+    it('displays prone toggle button', async () => {
+      const wrapper = await mountSuspended(MonsterTableRow, {
+        props: { monster: mockMonster }
+      })
+      expect(wrapper.find('[data-testid="status-prone"]').exists()).toBe(true)
+    })
+
+    it('displays flying toggle button', async () => {
+      const wrapper = await mountSuspended(MonsterTableRow, {
+        props: { monster: mockMonster }
+      })
+      expect(wrapper.find('[data-testid="status-flying"]').exists()).toBe(true)
+    })
+
+    it('shows prone as inactive when not in statuses', async () => {
+      const wrapper = await mountSuspended(MonsterTableRow, {
+        props: { monster: mockMonster, statuses: [] }
+      })
+      const proneButton = wrapper.find('[data-testid="status-prone"]')
+      expect(proneButton.classes().join(' ')).toMatch(/opacity-|neutral/)
+    })
+
+    it('shows prone as active when in statuses', async () => {
+      const wrapper = await mountSuspended(MonsterTableRow, {
+        props: { monster: mockMonster, statuses: ['prone'] }
+      })
+      const proneButton = wrapper.find('[data-testid="status-prone"]')
+      expect(proneButton.classes().join(' ')).not.toContain('opacity-40')
+    })
+
+    it('shows flying as active when in statuses', async () => {
+      const wrapper = await mountSuspended(MonsterTableRow, {
+        props: { monster: mockMonster, statuses: ['flying'] }
+      })
+      const flyingButton = wrapper.find('[data-testid="status-flying"]')
+      expect(flyingButton.classes().join(' ')).not.toContain('opacity-40')
+    })
+
+    it('emits toggle:status with "prone" when prone button clicked', async () => {
+      const wrapper = await mountSuspended(MonsterTableRow, {
+        props: { monster: mockMonster }
+      })
+      await wrapper.find('[data-testid="status-prone"]').trigger('click')
+      expect(wrapper.emitted('toggle:status')).toBeTruthy()
+      expect(wrapper.emitted('toggle:status')![0]).toEqual(['prone'])
+    })
+
+    it('emits toggle:status with "flying" when flying button clicked', async () => {
+      const wrapper = await mountSuspended(MonsterTableRow, {
+        props: { monster: mockMonster }
+      })
+      await wrapper.find('[data-testid="status-flying"]').trigger('click')
+      expect(wrapper.emitted('toggle:status')).toBeTruthy()
+      expect(wrapper.emitted('toggle:status')![0]).toEqual(['flying'])
+    })
+
+    it('shows fly speed when flying status is active', async () => {
+      const flyingMonster = {
+        ...mockMonster,
+        monster: {
+          ...mockMonster.monster,
+          speed: { walk: 30, fly: 60, swim: null, climb: null }
+        }
+      }
+      const wrapper = await mountSuspended(MonsterTableRow, {
+        props: { monster: flyingMonster, statuses: ['flying'] }
+      })
+      expect(wrapper.text()).toMatch(/60\s*ft|fly.*60/)
+    })
+  })
 })

@@ -7,6 +7,7 @@ import { logger } from '~/utils/logger'
 interface CombatState {
   initiatives: Record<string, number> // combatant key (char_N or monster_N) -> rolled initiative value
   notes: Record<string, string> // combatant key -> DM notes (e.g., "Blessed +1d4", "Hiding")
+  statuses: Record<string, string[]> // combatant key -> positional statuses (e.g., ['prone', 'flying'])
   currentTurnId: string | null // combatant key of active turn
   round: number // current combat round
   inCombat: boolean // whether combat is active
@@ -58,6 +59,7 @@ function createDefaultState(): CombatState {
   return {
     initiatives: {},
     notes: {},
+    statuses: {},
     currentTurnId: null,
     round: 1,
     inCombat: false
@@ -74,7 +76,8 @@ function mergeWithDefaults(savedState: CombatState): CombatState {
     ...savedState,
     // Deep copy nested objects and ensure they exist
     initiatives: savedState.initiatives ? { ...savedState.initiatives } : {},
-    notes: savedState.notes ? { ...savedState.notes } : {}
+    notes: savedState.notes ? { ...savedState.notes } : {},
+    statuses: savedState.statuses ? { ...savedState.statuses } : {}
   }
 }
 
@@ -145,6 +148,57 @@ export function useDmScreenCombat(
   function hasNote(key: string): boolean {
     const note = state.value.notes[key]
     return note !== undefined && note.trim() !== ''
+  }
+
+  /**
+   * Toggle a positional status (prone/flying) for a combatant
+   * If status is present, removes it. If not present, adds it.
+   * Prone and flying are mutually exclusive (D&D 5e: flying while prone = fall)
+   */
+  function toggleStatus(key: string, status: string): void {
+    const currentStatuses = state.value.statuses[key] ?? []
+    const index = currentStatuses.indexOf(status)
+
+    if (index === -1) {
+      // Adding a status - handle mutual exclusivity
+      let newStatuses = [...currentStatuses]
+
+      // Prone and flying are mutually exclusive
+      if (status === 'prone') {
+        newStatuses = newStatuses.filter(s => s !== 'flying')
+      } else if (status === 'flying') {
+        newStatuses = newStatuses.filter(s => s !== 'prone')
+      }
+
+      newStatuses.push(status)
+      state.value.statuses[key] = newStatuses
+    } else {
+      // Remove status
+      const newStatuses = currentStatuses.filter(s => s !== status)
+      if (newStatuses.length === 0) {
+        // Clean up empty arrays
+        // eslint-disable-next-line @typescript-eslint/no-dynamic-delete
+        delete state.value.statuses[key]
+      } else {
+        state.value.statuses[key] = newStatuses
+      }
+    }
+  }
+
+  /**
+   * Check if a combatant has a specific status
+   */
+  function hasStatus(key: string, status: string): boolean {
+    const statuses = state.value.statuses[key]
+    return statuses !== undefined && statuses.includes(status)
+  }
+
+  /**
+   * Get all statuses for a combatant
+   * Returns empty array if no statuses
+   */
+  function getStatuses(key: string): string[] {
+    return state.value.statuses[key] ?? []
   }
 
   /**
@@ -345,12 +399,13 @@ export function useDmScreenCombat(
   }
 
   /**
-   * Reset combat state (preserves notes)
+   * Reset combat state (preserves notes and statuses)
    */
   function resetCombat(): void {
-    // Preserve notes when resetting combat
+    // Preserve notes and statuses when resetting combat
     const preservedNotes = { ...state.value.notes }
-    state.value = { ...createDefaultState(), notes: preservedNotes }
+    const preservedStatuses = { ...state.value.statuses }
+    state.value = { ...createDefaultState(), notes: preservedNotes, statuses: preservedStatuses }
   }
 
   return {
@@ -360,6 +415,9 @@ export function useDmScreenCombat(
     setNote,
     getNote,
     hasNote,
+    toggleStatus,
+    hasStatus,
+    getStatuses,
     sortedCharacters,
     startCombat,
     nextTurn,

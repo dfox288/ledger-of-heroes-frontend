@@ -5,6 +5,7 @@ import type { DmScreenCharacter, EncounterMonster } from '~/types/dm-screen'
 interface CombatState {
   initiatives: Record<string, number>
   notes: Record<string, string>
+  statuses: Record<string, string[]>
   currentTurnId: string | null
   round: number
   inCombat: boolean
@@ -23,12 +24,14 @@ interface Props {
   combatState: CombatState
   getNote?: (key: string) => string
   hasNote?: (key: string) => boolean
+  getStatuses?: (key: string) => string[]
 }
 
 const props = withDefaults(defineProps<Props>(), {
   monsters: () => [],
-  getNote: () => (_key: string) => '',
-  hasNote: () => (_key: string) => false
+  getNote: () => '',
+  hasNote: () => false,
+  getStatuses: () => []
 })
 
 const emit = defineEmits<{
@@ -38,6 +41,7 @@ const emit = defineEmits<{
   resetCombat: []
   setInitiative: [key: string, value: number]
   setNote: [key: string, text: string]
+  toggleStatus: [key: string, status: string]
   addMonster: []
   updateMonsterHp: [instanceId: number, value: number]
   updateMonsterLabel: [instanceId: number, value: string]
@@ -303,9 +307,11 @@ const hasCombatants = computed(() => {
           :initiative="combatant.init"
           :in-combat="combatState.inCombat"
           :note="getNote(combatant.key)"
+          :statuses="getStatuses(combatant.key)"
           @toggle="toggleExpand(combatant.key)"
           @update:initiative="(value) => emit('setInitiative', combatant.key, value)"
           @update:note="(text) => emit('setNote', combatant.key, text)"
+          @toggle:status="(status) => emit('toggleStatus', combatant.key, status)"
         />
         <!-- Monster Row -->
         <DmScreenMonsterTableRow
@@ -316,9 +322,11 @@ const hasCombatants = computed(() => {
           :is-current-turn="isCurrentTurn(combatant.key)"
           :initiative="combatant.init"
           :note="getNote(combatant.key)"
+          :statuses="getStatuses(combatant.key)"
           @toggle="toggleExpand(combatant.key)"
           @update:initiative="(value) => emit('setInitiative', combatant.key, value)"
           @update:note="(text) => emit('setNote', combatant.key, text)"
+          @toggle:status="(status) => emit('toggleStatus', combatant.key, status)"
           @update:hp="(value) => emit('updateMonsterHp', (combatant.data as EncounterMonster).id, value)"
           @update:label="(value) => emit('updateMonsterLabel', (combatant.data as EncounterMonster).id, value)"
           @remove="emit('removeMonster', (combatant.data as EncounterMonster).id)"
