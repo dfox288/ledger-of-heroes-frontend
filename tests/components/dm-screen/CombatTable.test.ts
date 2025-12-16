@@ -7,6 +7,8 @@ import type { DmScreenCharacter, EncounterMonster } from '~/types/dm-screen'
 // Default combat state for tests (using string keys for combatant IDs)
 const mockCombatState = {
   initiatives: {} as Record<string, number>,
+  notes: {} as Record<string, string>,
+  statuses: {} as Record<string, string[]>,
   currentTurnId: null as string | null,
   round: 1,
   inCombat: false

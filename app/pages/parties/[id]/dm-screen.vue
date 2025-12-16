@@ -72,6 +72,10 @@ function handleSetNote(key: string, text: string) {
   combat.value?.setNote(key, text)
 }
 
+function handleToggleStatus(key: string, status: string) {
+  combat.value?.toggleStatus(key, status)
+}
+
 // Monster handlers
 const showAddMonsterModal = ref(false)
 const addingMonster = ref(false)
@@ -359,12 +363,14 @@ async function handleRefresh() {
           :combat-state="combatState"
           :get-note="combat?.getNote"
           :has-note="combat?.hasNote"
+          :get-statuses="combat?.getStatuses"
           @start-combat="handleStartCombat"
           @next-turn="handleNextTurn"
           @previous-turn="handlePreviousTurn"
           @reset-combat="handleResetCombat"
           @set-initiative="handleSetInitiative"
           @set-note="handleSetNote"
+          @toggle-status="handleToggleStatus"
           @add-monster="showAddMonsterModal = true"
           @update-monster-hp="handleUpdateMonsterHp"
           @update-monster-label="handleUpdateMonsterLabel"

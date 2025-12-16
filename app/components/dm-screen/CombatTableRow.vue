@@ -9,6 +9,7 @@ interface Props {
   initiative?: number | null
   inCombat?: boolean
   note?: string
+  statuses?: string[]
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -16,13 +17,15 @@ const props = withDefaults(defineProps<Props>(), {
   isCurrentTurn: false,
   initiative: null,
   inCombat: false,
-  note: ''
+  note: '',
+  statuses: () => []
 })
 
 const emit = defineEmits<{
   'toggle': []
   'update:initiative': [value: number]
   'update:note': [text: string]
+  'toggle:status': [status: string]
 }>()
 
 // Initiative editing using composable
@@ -79,6 +82,15 @@ const hasClimb = computed(() => speeds.value.climb !== null && speeds.value.clim
 // Note indicator for status row - ensure note is always a string
 const noteString = computed(() => typeof props.note === 'string' ? props.note : '')
 const hasNote = computed(() => noteString.value.trim() !== '')
+
+// Positional status toggles
+const isProne = computed(() => props.statuses.includes('prone'))
+const isFlying = computed(() => props.statuses.includes('flying'))
+
+function handleStatusToggle(status: string, event: Event) {
+  event.stopPropagation()
+  emit('toggle:status', status)
+}
 </script>
 
 <template>
@@ -268,6 +280,44 @@ const hasNote = computed(() => noteString.value.trim() !== '')
           class="w-3.5 h-3.5 text-amber-500"
           title="Can climb"
         />
+      </div>
+      <!-- Show fly speed when actively flying -->
+      <div
+        v-if="isFlying && hasFly"
+        class="text-xs text-sky-500 font-mono"
+      >
+        {{ speeds.fly }} ft fly
+      </div>
+      <!-- Status toggles -->
+      <div class="flex items-center justify-center gap-1 mt-1">
+        <button
+          data-testid="status-prone"
+          class="p-1 rounded transition-colors"
+          :class="isProne
+            ? 'bg-amber-100 dark:bg-amber-900/50 text-amber-600 dark:text-amber-400'
+            : 'opacity-40 hover:opacity-70 text-neutral-400'"
+          :title="isProne ? 'Prone (click to remove)' : 'Mark as prone'"
+          @click="handleStatusToggle('prone', $event)"
+        >
+          <UIcon
+            name="i-heroicons-arrow-down"
+            class="w-4 h-4"
+          />
+        </button>
+        <button
+          data-testid="status-flying"
+          class="p-1 rounded transition-colors"
+          :class="isFlying
+            ? 'bg-sky-100 dark:bg-sky-900/50 text-sky-600 dark:text-sky-400'
+            : 'opacity-40 hover:opacity-70 text-neutral-400'"
+          :title="isFlying ? 'Flying (click to remove)' : 'Mark as flying'"
+          @click="handleStatusToggle('flying', $event)"
+        >
+          <UIcon
+            name="i-heroicons-paper-airplane"
+            class="w-4 h-4"
+          />
+        </button>
       </div>
     </td>
 

@@ -495,4 +495,117 @@ describe('useDmScreenCombat', () => {
       expect(hasNote('char_1')).toBe(false)
     })
   })
+
+  describe('statuses (prone/flying)', () => {
+    it('initializes with empty statuses', () => {
+      const { state } = useDmScreenCombat(getPartyId(), mockCharacters, createEmptyMonstersRef())
+
+      expect(state.value.statuses).toEqual({})
+    })
+
+    it('toggles a status on for a combatant', () => {
+      const { toggleStatus, hasStatus } = useDmScreenCombat(getPartyId(), mockCharacters, createEmptyMonstersRef())
+
+      toggleStatus('char_1', 'prone')
+
+      expect(hasStatus('char_1', 'prone')).toBe(true)
+    })
+
+    it('toggles a status off when toggled again', () => {
+      const { toggleStatus, hasStatus } = useDmScreenCombat(getPartyId(), mockCharacters, createEmptyMonstersRef())
+
+      toggleStatus('char_1', 'prone')
+      toggleStatus('char_1', 'prone')
+
+      expect(hasStatus('char_1', 'prone')).toBe(false)
+    })
+
+    it('supports multiple statuses for same combatant', () => {
+      const { toggleStatus, hasStatus } = useDmScreenCombat(getPartyId(), mockCharacters, createEmptyMonstersRef())
+
+      toggleStatus('char_1', 'prone')
+      toggleStatus('char_1', 'flying')
+
+      expect(hasStatus('char_1', 'prone')).toBe(true)
+      expect(hasStatus('char_1', 'flying')).toBe(true)
+    })
+
+    it('supports statuses for monsters', () => {
+      const { toggleStatus, hasStatus } = useDmScreenCombat(getPartyId(), mockCharacters, createEmptyMonstersRef())
+
+      toggleStatus('monster_42', 'flying')
+
+      expect(hasStatus('monster_42', 'flying')).toBe(true)
+    })
+
+    it('returns false for combatant without any statuses', () => {
+      const { hasStatus } = useDmScreenCombat(getPartyId(), mockCharacters, createEmptyMonstersRef())
+
+      expect(hasStatus('char_1', 'prone')).toBe(false)
+      expect(hasStatus('char_1', 'flying')).toBe(false)
+    })
+
+    it('getStatuses returns all statuses for a combatant', () => {
+      const { toggleStatus, getStatuses } = useDmScreenCombat(getPartyId(), mockCharacters, createEmptyMonstersRef())
+
+      toggleStatus('char_1', 'prone')
+      toggleStatus('char_1', 'flying')
+
+      const statuses = getStatuses('char_1')
+      expect(statuses).toContain('prone')
+      expect(statuses).toContain('flying')
+      expect(statuses).toHaveLength(2)
+    })
+
+    it('getStatuses returns empty array for combatant without statuses', () => {
+      const { getStatuses } = useDmScreenCombat(getPartyId(), mockCharacters, createEmptyMonstersRef())
+
+      expect(getStatuses('char_1')).toEqual([])
+    })
+
+    it('loads statuses from IndexedDB', async () => {
+      const partyId = getPartyId()
+      const savedState = {
+        initiatives: {},
+        notes: {},
+        statuses: { char_1: ['prone'] },
+        currentTurnId: null,
+        round: 1,
+        inCombat: false
+      }
+      idbStore[`dm-screen-combat-${partyId}`] = savedState
+
+      const { hasStatus, getStatuses } = useDmScreenCombat(partyId, mockCharacters, createEmptyMonstersRef())
+
+      // Wait for async hydration
+      await nextTick()
+      await nextTick()
+
+      expect(hasStatus('char_1', 'prone')).toBe(true)
+      expect(getStatuses('char_1')).toEqual(['prone'])
+    })
+
+    it('preserves statuses when resetting combat', () => {
+      const { toggleStatus, hasStatus, setInitiative, startCombat, resetCombat } = useDmScreenCombat(getPartyId(), mockCharacters, createEmptyMonstersRef())
+
+      toggleStatus('char_1', 'prone')
+      setInitiative('char_1', 18)
+      startCombat()
+      resetCombat()
+
+      // Statuses should persist after combat reset (like notes)
+      expect(hasStatus('char_1', 'prone')).toBe(true)
+    })
+
+    it('cleans up statuses record when last status is toggled off', () => {
+      const { state, toggleStatus } = useDmScreenCombat(getPartyId(), mockCharacters, createEmptyMonstersRef())
+
+      toggleStatus('char_1', 'prone')
+      expect(state.value.statuses['char_1']).toEqual(['prone'])
+
+      toggleStatus('char_1', 'prone')
+      // Empty arrays should be removed from state to keep it clean
+      expect(state.value.statuses['char_1']).toBeUndefined()
+    })
+  })
 })
