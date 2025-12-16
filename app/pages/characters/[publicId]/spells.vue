@@ -235,10 +235,32 @@ const isPreparedCaster = computed(() => preparationMethod.value === 'prepared')
 
 /**
  * Mode toggle for prepared casters
- * When true, shows PrepareSpellsView instead of normal spell list
+ * Stores the class slug when in prepare mode, null otherwise
+ * Supports both single-class and multiclass prepared casters
  * @see Issue #723
  */
-const prepareSpellsMode = ref(false)
+const prepareSpellsMode = ref<string | null>(null)
+
+/**
+ * Check if prepare spells mode is active for a specific class
+ */
+function isPrepareSpellsModeFor(classSlug: string): boolean {
+  return prepareSpellsMode.value === classSlug
+}
+
+/**
+ * Enter prepare spells mode for a specific class
+ */
+function enterPrepareSpellsMode(classSlug: string): void {
+  prepareSpellsMode.value = classSlug
+}
+
+/**
+ * Exit prepare spells mode
+ */
+function exitPrepareSpellsMode(): void {
+  prepareSpellsMode.value = null
+}
 
 /**
  * Get max castable spell level for this character
@@ -506,6 +528,17 @@ useSeoMeta({
                         {{ reactiveTotalPreparedCount }} / {{ spellSlots?.preparation_limit }}
                       </div>
                     </div>
+                    <!-- Prepare Spells button for prepared casters in multiclass (#723) -->
+                    <UButton
+                      v-if="getClassPreparationMethod(sc.slug) === 'prepared' && !isPrepareSpellsModeFor(sc.slug)"
+                      :data-testid="`prepare-spells-button-${sc.slotName}`"
+                      variant="soft"
+                      color="spell"
+                      icon="i-heroicons-book-open"
+                      @click="enterPrepareSpellsMode(sc.slug)"
+                    >
+                      Prepare Spells
+                    </UButton>
                   </div>
                 </div>
 
@@ -520,11 +553,28 @@ useSeoMeta({
                   />
                 </div>
 
-                <!-- Spells List (filtered by class) -->
+                <!-- Prepare Spells View for this class (#723) -->
                 <div
-                  v-if="getCantripsForClass(sc.slug).length > 0"
+                  v-if="isPrepareSpellsModeFor(sc.slug) && character && hasPerClassLimits"
+                  :data-testid="`prepare-spells-view-${sc.slotName}`"
                   class="mt-4"
                 >
+                  <CharacterSheetPrepareSpellsView
+                    :character-id="character.id"
+                    :class-slug="sc.slug"
+                    :max-castable-level="maxCastableLevel"
+                    :preparation-limit="getClassPreparationLimit(sc.slug)?.limit ?? 0"
+                    :prepared-count="getReactivePreparedCount(sc.slug)"
+                    @close="exitPrepareSpellsMode"
+                  />
+                </div>
+
+                <!-- Spells List (filtered by class) - hidden when in prepare mode -->
+                <template v-else>
+                  <div
+                    v-if="getCantripsForClass(sc.slug).length > 0"
+                    class="mt-4"
+                  >
                   <h3 class="text-lg font-semibold text-gray-700 dark:text-gray-300 mb-3">
                     Cantrips
                   </h3>
@@ -562,17 +612,18 @@ useSeoMeta({
                   </div>
                 </div>
 
-                <!-- Empty state for class with no spells -->
-                <div
-                  v-if="getSpellsForClass(sc.slug).length === 0"
-                  class="mt-8 text-center py-8 text-gray-500 dark:text-gray-400"
-                >
-                  <UIcon
-                    name="i-heroicons-sparkles"
-                    class="w-10 h-10 mx-auto mb-3"
-                  />
-                  <p>No {{ sc.name }} spells known yet.</p>
-                </div>
+                  <!-- Empty state for class with no spells -->
+                  <div
+                    v-if="getSpellsForClass(sc.slug).length === 0"
+                    class="mt-8 text-center py-8 text-gray-500 dark:text-gray-400"
+                  >
+                    <UIcon
+                      name="i-heroicons-sparkles"
+                      class="w-10 h-10 mx-auto mb-3"
+                    />
+                    <p>No {{ sc.name }} spells known yet.</p>
+                  </div>
+                </template>
               </template>
 
               <!-- All Spells Tab -->
@@ -746,12 +797,12 @@ useSeoMeta({
                   </div>
                   <!-- Prepare Spells button for prepared casters (#723) -->
                   <UButton
-                    v-if="isPreparedCaster && !prepareSpellsMode"
+                    v-if="isPreparedCaster && !prepareSpellsMode && primarySpellcasting"
                     data-testid="prepare-spells-button"
                     variant="soft"
                     color="spell"
                     icon="i-heroicons-book-open"
-                    @click="prepareSpellsMode = true"
+                    @click="enterPrepareSpellsMode(primarySpellcasting.slug)"
                   >
                     Prepare Spells
                   </UButton>
@@ -778,11 +829,11 @@ useSeoMeta({
             >
               <CharacterSheetPrepareSpellsView
                 :character-id="character.id"
-                :class-slug="primarySpellcasting!.slug"
+                :class-slug="primarySpellcasting.slug"
                 :max-castable-level="maxCastableLevel"
                 :preparation-limit="spellSlots?.preparation_limit ?? 0"
                 :prepared-count="reactiveTotalPreparedCount"
-                @close="prepareSpellsMode = false"
+                @close="exitPrepareSpellsMode"
               />
             </div>
 
