@@ -21,7 +21,7 @@ import { storeToRefs } from 'pinia'
 import type { CharacterSpell, ClassSpellcastingInfo, SpellSlotsResponse, PreparationMethod } from '~/types/character'
 import { formatSpellLevel } from '~/composables/useSpellFormatters'
 import { formatModifier } from '~/composables/useCharacterStats'
-import { getClassColor, getClassName, getClassPreparationMethodFallback } from '~/utils/classColors'
+import { getClassColor, getClassName } from '~/utils/classColors'
 import { logger } from '~/utils/logger'
 
 const route = useRoute()
@@ -274,27 +274,11 @@ const maxCastableLevel = computed(() => {
 
 /**
  * Get preparation method for a specific class (multiclass support)
- *
- * Priority:
- * 1. Per-class preparation_method from API (if available)
- * 2. Inferred from class slug (e.g., cleric -> 'prepared', wizard -> 'spellbook')
- * 3. Top-level preparation_method as last resort
- *
- * @see Issue #726 - Per-class preparation method for multiclass
+ * Falls back to top-level preparation method if not available per-class
  */
 function getClassPreparationMethod(classSlug: string): PreparationMethod {
   const classInfo = stats.value?.spellcasting?.[classSlug]
-  // 1. Try API-provided per-class method
-  if (classInfo?.preparation_method) {
-    return classInfo.preparation_method
-  }
-  // 2. Infer from class slug (fallback for when API doesn't provide it)
-  const inferred = getClassPreparationMethodFallback(classSlug)
-  if (inferred) {
-    return inferred
-  }
-  // 3. Last resort: top-level preparation method
-  return preparationMethod.value
+  return classInfo?.preparation_method ?? preparationMethod.value
 }
 
 // ══════════════════════════════════════════════════════════════
