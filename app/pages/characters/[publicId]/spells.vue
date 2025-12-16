@@ -191,8 +191,19 @@ const primarySpellcasting = computed(() => spellcastingClasses.value[0] ?? null)
 
 /**
  * Active tab for multiclass view
+ * Default to "All Spells" tab (last index) once data loads
  */
 const activeTab = ref(0)
+const hasInitializedTab = ref(false)
+
+// Set default to "All Spells" tab when spellcasting classes are loaded
+watch(spellcastingClasses, (classes) => {
+  if (classes.length > 0 && !hasInitializedTab.value) {
+    // "All Spells" is at index = number of classes (last tab)
+    activeTab.value = classes.length
+    hasInitializedTab.value = true
+  }
+}, { immediate: true })
 
 /**
  * Build tab items for multiclass view
