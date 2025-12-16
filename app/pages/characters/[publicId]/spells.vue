@@ -22,6 +22,7 @@ import type { CharacterSpell, ClassSpellcastingInfo, SpellSlotsResponse, Prepara
 import { formatSpellLevel } from '~/composables/useSpellFormatters'
 import { formatModifier } from '~/composables/useCharacterStats'
 import { getClassColor, getClassName } from '~/utils/classColors'
+import { logger } from '~/utils/logger'
 
 const route = useRoute()
 const publicId = computed(() => route.params.publicId as string)
@@ -74,14 +75,18 @@ watch(slotsData, (data) => {
 // This enables preparation limit enforcement and optimistic UI updates
 watch([spellsData, slotsData], ([spells, slots]) => {
   if (spells?.data && slots?.data) {
-    playStateStore.initializeSpellPreparation({
-      spells: spells.data.map(s => ({
-        id: s.id,
-        is_prepared: s.is_prepared,
-        is_always_prepared: s.is_always_prepared
-      })),
-      preparationLimit: slots.data.preparation_limit ?? null
-    })
+    try {
+      playStateStore.initializeSpellPreparation({
+        spells: spells.data.map(s => ({
+          id: s.id,
+          is_prepared: s.is_prepared,
+          is_always_prepared: s.is_always_prepared
+        })),
+        preparationLimit: slots.data.preparation_limit ?? null
+      })
+    } catch (error) {
+      logger.error('Failed to initialize spell preparation state', error)
+    }
   }
 }, { immediate: true })
 
