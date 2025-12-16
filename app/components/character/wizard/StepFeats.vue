@@ -186,14 +186,10 @@ const {
 <template>
   <div class="space-y-8">
     <!-- Header -->
-    <div class="text-center">
-      <h2 class="text-2xl font-bold text-gray-900 dark:text-white">
-        Select Your Feats
-      </h2>
-      <p class="mt-2 text-gray-600 dark:text-gray-400">
-        Choose feats granted by your race or other features
-      </p>
-    </div>
+    <CharacterWizardStepHeader
+      title="Select Your Feats"
+      description="Choose feats granted by your race or other features"
+    />
 
     <!-- Error State -->
     <UAlert
@@ -204,15 +200,7 @@ const {
     />
 
     <!-- Loading State -->
-    <div
-      v-if="loadingChoices"
-      class="flex justify-center py-12"
-    >
-      <UIcon
-        name="i-heroicons-arrow-path"
-        class="w-8 h-8 animate-spin text-feat-500"
-      />
-    </div>
+    <CharacterWizardLoadingState v-if="loadingChoices" />
 
     <template v-else>
       <!-- Feat Choices Sections -->
@@ -248,35 +236,21 @@ const {
       </div>
 
       <!-- Empty State -->
-      <div
+      <CharacterWizardEmptyState
         v-if="featChoices.length === 0"
-        class="text-center py-12"
-      >
-        <UIcon
-          name="i-heroicons-star"
-          class="w-12 h-12 text-gray-400 mx-auto mb-4"
-        />
-        <p class="text-gray-600 dark:text-gray-400">
-          No feat choices available.
-        </p>
-        <p class="text-sm text-gray-500 dark:text-gray-500 mt-2">
-          Feats may be available from races like Variant Human or at certain class levels.
-        </p>
-      </div>
+        icon="i-heroicons-star"
+        title="No feat choices available."
+        description="Feats may be available from races like Variant Human or at certain class levels."
+      />
     </template>
 
     <!-- Continue Button -->
-    <div class="flex justify-center pt-4">
-      <UButton
-        data-testid="continue-btn"
-        size="lg"
-        :disabled="!canProceed || isLoading || isSaving"
-        :loading="isLoading || isSaving"
-        @click="handleContinue"
-      >
-        Continue with Feats
-      </UButton>
-    </div>
+    <CharacterWizardContinueButton
+      text="Continue with Feats"
+      :disabled="!canProceed || isLoading || isSaving"
+      :loading="isLoading || isSaving"
+      @click="handleContinue"
+    />
 
     <!-- Feat Detail Modal -->
     <CharacterPickerFeatDetailModal
