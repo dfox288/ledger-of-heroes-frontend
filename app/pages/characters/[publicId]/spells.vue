@@ -18,7 +18,7 @@
  */
 
 import { storeToRefs } from 'pinia'
-import type { CharacterSpell, ClassSpellcastingInfo } from '~/types/character'
+import type { CharacterSpell, ClassSpellcastingInfo, SpellSlotsResponse } from '~/types/character'
 import { formatSpellLevel } from '~/composables/useSpellFormatters'
 import { formatModifier } from '~/composables/useCharacterStats'
 import { getClassColor, getClassName } from '~/utils/classColors'
@@ -43,12 +43,6 @@ const { data: spellsData, pending: spellsPending } = await useAsyncData(
 )
 
 // Fetch spell slots for detailed tracking (page-specific)
-interface SpellSlotsResponse {
-  slots: Record<string, { total: number, spent: number, available: number }>
-  pact_magic: { level: number, count: number } | null
-  preparation_limit: number | null
-  prepared_count: number
-}
 const { data: slotsData, pending: slotsPending } = await useAsyncData(
   `character-${publicId.value}-spell-slots`,
   () => apiFetch<{ data: SpellSlotsResponse }>(`/characters/${publicId.value}/spell-slots`),
@@ -70,7 +64,7 @@ watch(slotsData, (data) => {
       spent: slot.spent
     }))
     const pactMagicData = data.data.pact_magic
-      ? { level: data.data.pact_magic.level, total: data.data.pact_magic.count, spent: 0 }
+      ? { level: data.data.pact_magic.level, total: data.data.pact_magic.total, spent: data.data.pact_magic.spent }
       : null
     playStateStore.initializeSpellSlots(slotData, pactMagicData)
   }
@@ -123,6 +117,7 @@ const isSpellbookCaster = computed(() => preparationMethod.value === 'spellbook'
  */
 interface SpellcastingClass {
   slug: string
+  slotName: string
   name: string
   color: string
   info: ClassSpellcastingInfo
@@ -134,6 +129,7 @@ const spellcastingClasses = computed<SpellcastingClass[]>(() => {
 
   return Object.entries(spellcasting).map(([slug, info]) => ({
     slug,
+    slotName: slug.replace(':', '-'), // Safe slot name (e.g., "phb-wizard")
     name: getClassName(slug),
     color: getClassColor(slug),
     info
@@ -156,28 +152,31 @@ const primarySpellcasting = computed(() => spellcastingClasses.value[0] ?? null)
 const activeTab = ref(0)
 
 /**
- * Currently selected class (for multiclass tab view)
- */
-const selectedClass = computed(() => {
-  if (activeTab.value === spellcastingClasses.value.length) {
-    // "All Spells" tab selected
-    return null
-  }
-  return spellcastingClasses.value[activeTab.value] ?? null
-})
-
-/**
  * Build tab items for multiclass view
  */
 const tabItems = computed(() => {
   const items = spellcastingClasses.value.map(sc => ({
     label: sc.name,
-    slot: sc.slug.replace(':', '-') // Safe slot name
+    slot: sc.slotName
   }))
   // Add "All Spells" tab at the end
   items.push({ label: 'All Spells', slot: 'all-spells' })
   return items
 })
+
+/**
+ * Get per-class preparation limit for a given class slug
+ */
+function getClassPreparationLimit(classSlug: string) {
+  return spellSlots.value?.preparation_limits?.[classSlug] ?? null
+}
+
+/**
+ * Check if we have per-class preparation limits available
+ */
+const hasPerClassLimits = computed(() =>
+  spellSlots.value?.preparation_limits && Object.keys(spellSlots.value.preparation_limits).length > 0
+)
 
 useSeoMeta({
   title: () => character.value ? `${character.value.name} - Spells` : 'Spells'
@@ -244,7 +243,7 @@ useSeoMeta({
               <template
                 v-for="sc in spellcastingClasses"
                 :key="sc.slug"
-                #[sc.slug.replace(':','-')]
+                #[sc.slotName]
               >
                 <!-- Class Stats Bar -->
                 <div class="p-4 bg-gray-50 dark:bg-gray-800 rounded-lg mb-4">
@@ -282,9 +281,22 @@ useSeoMeta({
                         </div>
                       </div>
                     </div>
-                    <!-- Preparation Counter (from combined pool for now) -->
+                    <!-- Per-Class Preparation Counter -->
                     <div
-                      v-if="spellSlots?.preparation_limit !== null"
+                      v-if="hasPerClassLimits && getClassPreparationLimit(sc.slug)"
+                      class="text-center"
+                      data-testid="class-preparation-limit"
+                    >
+                      <div class="text-xs text-gray-500 uppercase">
+                        {{ sc.name }} Prepared
+                      </div>
+                      <div class="text-lg font-medium">
+                        {{ getClassPreparationLimit(sc.slug)?.prepared ?? 0 }} / {{ getClassPreparationLimit(sc.slug)?.limit ?? 0 }}
+                      </div>
+                    </div>
+                    <!-- Fallback: Combined Preparation Counter -->
+                    <div
+                      v-else-if="spellSlots?.preparation_limit !== null"
                       class="text-center"
                     >
                       <div class="text-xs text-gray-500 uppercase">
@@ -367,15 +379,23 @@ useSeoMeta({
                         <div class="text-sm text-gray-500">
                           DC {{ sc.info.spell_save_dc }} | {{ formatModifier(sc.info.spell_attack_bonus) }} | {{ sc.info.ability }}
                         </div>
+                        <!-- Per-class prepared count -->
+                        <div
+                          v-if="hasPerClassLimits && getClassPreparationLimit(sc.slug)"
+                          class="text-sm text-gray-600 dark:text-gray-400"
+                          data-testid="summary-class-preparation"
+                        >
+                          Prepared: {{ getClassPreparationLimit(sc.slug)?.prepared ?? 0 }} / {{ getClassPreparationLimit(sc.slug)?.limit ?? 0 }}
+                        </div>
                       </div>
                     </div>
                   </div>
                   <!-- Combined Preparation Counter -->
                   <div
                     v-if="spellSlots?.preparation_limit !== null"
-                    class="mt-4 text-center"
+                    class="mt-4 text-center border-t border-gray-200 dark:border-gray-700 pt-3"
                   >
-                    <span class="text-sm text-gray-500">Combined Prepared:</span>
+                    <span class="text-sm text-gray-500">Total Prepared:</span>
                     <span class="ml-2 font-medium">
                       {{ spellSlots?.prepared_count ?? 0 }} / {{ spellSlots?.preparation_limit }}
                     </span>

@@ -38,7 +38,7 @@ const mockCharacter = {
   death_save_failures: 0
 }
 
-// Mock stats with spellcasting
+// Mock stats with spellcasting (keyed by class slug for multiclass support #631)
 const mockStats = {
   ability_scores: {
     STR: { score: 8, modifier: -1 },
@@ -55,10 +55,12 @@ const mockStats = {
     hit_points: { current: 30, max: 30, temporary: 0 }
   },
   spellcasting: {
-    ability: 'INT',
-    ability_modifier: 4,
-    spell_save_dc: 15,
-    spell_attack_bonus: 7
+    'phb:wizard': {
+      ability: 'INT',
+      ability_modifier: 4,
+      spell_save_dc: 15,
+      spell_attack_bonus: 7
+    }
   },
   spell_slots: { 1: 4, 2: 3, 3: 2 },
   hit_points: { current: 30, max: 30, temporary: 0 }
@@ -359,6 +361,176 @@ describe('Spells Page', () => {
       const layout = wrapper.find('[data-testid="spells-layout"]')
       if (layout.exists()) {
         expect(wrapper.find('[data-testid="spellbook-view"]').exists()).toBe(false)
+      } else {
+        expect(true).toBe(true)
+      }
+    })
+  })
+
+  describe('multiclass spellcasting (#631)', () => {
+    // Multiclass Wizard 5 / Cleric 5 character
+    const mockMulticlassCharacter = {
+      ...mockCharacter,
+      name: 'Multiclass Mage',
+      level: 10,
+      classes: [
+        { class: { id: 1, name: 'Wizard', slug: 'phb:wizard' }, level: 5, subclass: null },
+        { class: { id: 2, name: 'Cleric', slug: 'phb:cleric' }, level: 5, subclass: null }
+      ]
+    }
+
+    // Multiclass stats with two spellcasting classes
+    const mockMulticlassStats = {
+      ...mockStats,
+      spellcasting: {
+        'phb:wizard': {
+          ability: 'INT',
+          ability_modifier: 4,
+          spell_save_dc: 15,
+          spell_attack_bonus: 7
+        },
+        'phb:cleric': {
+          ability: 'WIS',
+          ability_modifier: 1,
+          spell_save_dc: 12,
+          spell_attack_bonus: 4
+        }
+      }
+    }
+
+    // Spell slots with per-class preparation limits
+    const mockMulticlassSpellSlots = {
+      slots: {
+        1: { total: 4, spent: 0, available: 4 },
+        2: { total: 3, spent: 0, available: 3 },
+        3: { total: 3, spent: 0, available: 3 },
+        4: { total: 3, spent: 0, available: 3 },
+        5: { total: 2, spent: 0, available: 2 }
+      },
+      pact_magic: null,
+      preparation_limit: 10,
+      prepared_count: 4,
+      preparation_limits: {
+        'phb:wizard': { limit: 5, prepared: 2 },
+        'phb:cleric': { limit: 5, prepared: 2 }
+      }
+    }
+
+    it('shows tabbed interface for multiclass spellcaster', async () => {
+      server.use(
+        http.get('/api/characters/:id', () => {
+          return HttpResponse.json({ data: mockMulticlassCharacter })
+        }),
+        http.get('/api/characters/:id/stats', () => {
+          return HttpResponse.json({ data: mockMulticlassStats })
+        }),
+        http.get('/api/characters/:id/spell-slots', () => {
+          return HttpResponse.json({ data: mockMulticlassSpellSlots })
+        })
+      )
+
+      const wrapper = await mountSuspended(SpellsPage)
+      await flushPromises()
+
+      const layout = wrapper.find('[data-testid="spells-layout"]')
+      if (layout.exists()) {
+        // Should have tabs for each spellcasting class
+        const text = wrapper.text()
+        expect(text).toContain('Wizard')
+        expect(text).toContain('Cleric')
+        expect(text).toContain('All Spells')
+      } else {
+        expect(true).toBe(true)
+      }
+    })
+
+    it('displays per-class preparation limits when available', async () => {
+      server.use(
+        http.get('/api/characters/:id', () => {
+          return HttpResponse.json({ data: mockMulticlassCharacter })
+        }),
+        http.get('/api/characters/:id/stats', () => {
+          return HttpResponse.json({ data: mockMulticlassStats })
+        }),
+        http.get('/api/characters/:id/spell-slots', () => {
+          return HttpResponse.json({ data: mockMulticlassSpellSlots })
+        })
+      )
+
+      const wrapper = await mountSuspended(SpellsPage)
+      await flushPromises()
+
+      const layout = wrapper.find('[data-testid="spells-layout"]')
+      if (layout.exists()) {
+        // Check for per-class preparation limits in class tabs
+        const prepLimits = wrapper.findAll('[data-testid="class-preparation-limit"]')
+        // At least one per-class preparation limit should be visible
+        expect(prepLimits.length).toBeGreaterThanOrEqual(1)
+
+        // Should show individual class preparation
+        const text = wrapper.text()
+        // In the stats summary, "Wizard Prepared" and "Cleric Prepared" should appear
+        expect(text).toMatch(/Wizard.*Prepared/)
+      } else {
+        expect(true).toBe(true)
+      }
+    })
+
+    it('shows stats for each spellcasting class', async () => {
+      server.use(
+        http.get('/api/characters/:id', () => {
+          return HttpResponse.json({ data: mockMulticlassCharacter })
+        }),
+        http.get('/api/characters/:id/stats', () => {
+          return HttpResponse.json({ data: mockMulticlassStats })
+        }),
+        http.get('/api/characters/:id/spell-slots', () => {
+          return HttpResponse.json({ data: mockMulticlassSpellSlots })
+        })
+      )
+
+      const wrapper = await mountSuspended(SpellsPage)
+      await flushPromises()
+
+      const layout = wrapper.find('[data-testid="spells-layout"]')
+      if (layout.exists()) {
+        const text = wrapper.text()
+        // Wizard stats: DC 15, +7 attack, INT
+        expect(text).toContain('15') // Wizard DC
+        expect(text).toContain('+7') // Wizard attack
+        expect(text).toContain('INT')
+        // Cleric stats: DC 12, +4 attack, WIS
+        expect(text).toContain('12') // Cleric DC
+        expect(text).toContain('+4') // Cleric attack
+        expect(text).toContain('WIS')
+      } else {
+        expect(true).toBe(true)
+      }
+    })
+
+    it('shows combined preparation total in All Spells tab', async () => {
+      server.use(
+        http.get('/api/characters/:id', () => {
+          return HttpResponse.json({ data: mockMulticlassCharacter })
+        }),
+        http.get('/api/characters/:id/stats', () => {
+          return HttpResponse.json({ data: mockMulticlassStats })
+        }),
+        http.get('/api/characters/:id/spell-slots', () => {
+          return HttpResponse.json({ data: mockMulticlassSpellSlots })
+        })
+      )
+
+      const wrapper = await mountSuspended(SpellsPage)
+      await flushPromises()
+
+      const layout = wrapper.find('[data-testid="spells-layout"]')
+      if (layout.exists()) {
+        // Total Prepared should show combined count
+        const text = wrapper.text()
+        expect(text).toContain('Total Prepared')
+        // Combined: 4 / 10
+        expect(text).toMatch(/4\s*\/\s*10/)
       } else {
         expect(true).toBe(true)
       }

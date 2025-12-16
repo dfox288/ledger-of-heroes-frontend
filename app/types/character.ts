@@ -559,17 +559,45 @@ export interface PactMagicSlots {
 }
 
 /**
- * Spell slots response from /stats endpoint (new format)
+ * Per-class preparation limit for multiclass spellcasters
+ *
+ * Multiclass characters have separate preparation limits per class:
+ * - Wizard: level + INT mod
+ * - Cleric: level + WIS mod
+ *
+ * @see Issue #631 - Multiclass spellcasting support
+ * @see Issue #715 - Per-class preparation limits
+ */
+export interface ClassPreparationLimit {
+  /** Maximum spells this class can prepare */
+  limit: number
+  /** Currently prepared spells for this class */
+  prepared: number
+}
+
+/**
+ * Spell slots response from /spell-slots endpoint
  *
  * Breaking change from backend PR #184:
  * - Old format: { "1": 4, "2": 3 } (level -> total)
  * - New format: { slots: { "1": { total, spent, available } }, pact_magic: ... }
  *
+ * Extended with per-class preparation limits for multiclass support:
+ * - preparation_limit: Combined total for single-class/multiclass
+ * - preparation_limits: Per-class breakdown (e.g., { "phb:wizard": { limit: 5, prepared: 3 } })
+ *
  * @see Issue #618
+ * @see Issue #631 - Multiclass spellcasting support
  */
 export interface SpellSlotsResponse {
   slots: Record<string, SpellSlotLevel>
   pact_magic: PactMagicSlots | null
+  /** Combined preparation limit (all classes) */
+  preparation_limit: number | null
+  /** Total prepared count across all classes */
+  prepared_count: number
+  /** Per-class preparation limits (for multiclass spellcasters) */
+  preparation_limits?: Record<string, ClassPreparationLimit>
 }
 
 /**
