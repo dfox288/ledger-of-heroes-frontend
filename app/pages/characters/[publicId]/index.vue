@@ -121,6 +121,9 @@ watch([character, stats, spells], async ([char, s, sp]) => {
       })
     }
 
+    // Initialize counters for class resources (Rage, Ki, etc.)
+    playStateStore.initializeCounters(char.counters ?? [])
+
     // Fetch conditions into store
     await playStateStore.fetchConditions()
   }
@@ -239,10 +242,7 @@ const isSpellcaster = computed(() => !!stats.value?.spellcasting)
           />
           <CharacterSheetClassResourcesManager
             v-if="character.counters?.length"
-            :counters="character.counters"
-            :character-id="character.id"
             :editable="canEdit"
-            :is-dead="character.is_dead"
           />
         </div>
 
