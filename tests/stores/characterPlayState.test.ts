@@ -719,10 +719,12 @@ describe('characterPlayState store', () => {
         preparationLimit: 5
       })
 
+      // Only manually-prepared spells are tracked (not always-prepared)
+      // Always-prepared spells can't be toggled and don't count against limit
       expect(store.preparedSpellIds.has(1)).toBe(true)
       expect(store.preparedSpellIds.has(2)).toBe(false)
-      expect(store.preparedSpellIds.has(3)).toBe(true)
-      expect(store.preparedSpellCount).toBe(2)
+      expect(store.preparedSpellIds.has(3)).toBe(false) // always-prepared excluded
+      expect(store.preparedSpellCount).toBe(1) // only spell 1
     })
 
     it('atPreparationLimit returns true when at limit', () => {

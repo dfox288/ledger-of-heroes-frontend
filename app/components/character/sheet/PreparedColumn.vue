@@ -6,7 +6,10 @@
  * Shows all spells the wizard has prepared for today, grouped by level.
  * Includes always-prepared spells (domain/subclass features).
  *
+ * Parent (SpellbookView) provides the reactive prepared count.
+ *
  * @see Issue #680 - Wizard Spellbook Phase 2
+ * @see Issue #719 - Preparation count reactivity fix
  */
 import type { CharacterSpell } from '~/types/character'
 

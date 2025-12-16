@@ -660,7 +660,10 @@ export const useCharacterPlayStateStore = defineStore('characterPlayState', () =
   /**
    * Initialize spell preparation state from character data
    *
-   * Call this when character spells load
+   * Call this when character spells load.
+   * Only tracks manually prepared spells (not always-prepared) since:
+   * - Always-prepared spells can't be toggled
+   * - Always-prepared spells don't count against preparation limit
    */
   function initializeSpellPreparation(data: {
     spells: Array<{ id: number, is_prepared: boolean, is_always_prepared: boolean }>
@@ -670,7 +673,9 @@ export const useCharacterPlayStateStore = defineStore('characterPlayState', () =
     preparationLimit.value = data.preparationLimit
 
     for (const spell of data.spells) {
-      if (spell.is_prepared || spell.is_always_prepared) {
+      // Only track manually prepared spells, not always-prepared
+      // Always-prepared don't count against the limit and can't be toggled
+      if (spell.is_prepared && !spell.is_always_prepared) {
         preparedSpellIds.value.add(spell.id)
       }
     }

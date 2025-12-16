@@ -4,14 +4,10 @@ description: Check frontend inbox for handoffs and assigned GitHub issues
 
 # Check Frontend Inbox
 
-Run these commands to check for pending work:
+Run `just inbox` to check for pending work (handoffs + GitHub issues).
 
 ```bash
-# 1. Check for handoffs from backend
-echo "=== Checking Handoffs ===" && grep -A 100 "## For: frontend" ../wrapper/.claude/handoffs.md 2>/dev/null | head -80 || echo "No frontend handoffs pending"
-
-# 2. Check GitHub issues assigned to frontend
-echo "=== GitHub Issues ===" && gh issue list --repo dfox288/ledger-of-heroes --label "frontend" --state open
+just inbox
 ```
 
 ## After checking:
@@ -23,3 +19,9 @@ echo "=== GitHub Issues ===" && gh issue list --repo dfox288/ledger-of-heroes --
 3. **After absorbing a handoff:** Delete that section from the handoffs file so it doesn't show up again.
 
 4. **Report findings:** Summarize what's pending and recommend what to tackle.
+
+## Related commands
+
+- `just issues` - List frontend issues only
+- `just issues both` - List issues assigned to both teams
+- `just issue-view <number>` - View specific issue details

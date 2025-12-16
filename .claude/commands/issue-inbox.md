@@ -16,6 +16,12 @@ Also check issues assigned to "both" teams:
 gh issue list --repo dfox288/ledger-of-heroes --label "both" --state open
 ```
 
+Or use the justfile shortcut:
+
+```bash
+just inbox
+```
+
 Summarize:
 - Total issues waiting
 - Any urgent or old issues (created > 3 days ago)

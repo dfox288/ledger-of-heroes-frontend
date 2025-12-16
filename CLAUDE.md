@@ -8,7 +8,7 @@ Nuxt 4.x frontend for D&D 5e Compendium. Consumes REST API from `../backend` (La
 
 **Tech Stack:** Nuxt 4.x | NuxtUI 4.x | TypeScript | Vitest | Playwright | Pinia | Docker
 
-**Commands:** `docker compose exec nuxt npm run ...` | Always use Docker, never run locally.
+**Commands:** Use `just` for all commands. Run `just` or `just --list` to see available recipes.
 
 **DO NOT use superpowers-chrome** - Browser automation is not needed for this project.
 
@@ -48,7 +48,7 @@ Switch between backend environments using `NUXT_BACKEND_ENV` in `.env`:
 
 **To switch:**
 1. Edit `.env`: `NUXT_BACKEND_ENV=stable`
-2. Restart dev server: `docker compose restart nuxt`
+2. Restart dev server: `just restart`
 
 ---
 
@@ -144,7 +144,7 @@ Detailed guidance is split into focused rule files in `.claude/rules/`:
 
 | Rule File | Contents |
 |-----------|----------|
-| `commands.md` | Docker commands, test suites, stress test |
+| `commands.md` | Test suite domains, stress test options |
 | `coordination.md` | Session checklist, GitHub issues, handoffs |
 | `troubleshooting.md` | Common issues, debugging techniques, nuclear options |
 

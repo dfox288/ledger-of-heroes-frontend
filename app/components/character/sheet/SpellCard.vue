@@ -54,19 +54,44 @@ const isExpanded = ref(false)
 const showPreparationUI = computed(() => props.preparationMethod !== 'known')
 
 /**
- * Check if spell is prepared (includes always prepared)
- */
-const isPrepared = computed(() => props.spell.is_prepared || props.spell.is_always_prepared)
-
-/**
- * Check if spell is always prepared (domain spells, etc.)
- */
-const isAlwaysPrepared = computed(() => props.spell.is_always_prepared)
-
-/**
  * Get spell data (handles null spell for dangling references)
  */
 const spellData = computed(() => props.spell.spell)
+
+/**
+ * Check if this is a cantrip (always ready, no preparation needed)
+ */
+const isCantrip = computed(() => spellData.value?.level === 0)
+
+/**
+ * Check if spell is prepared
+ * - Cantrips are always ready (show filled icon)
+ * - Always prepared spells (domain, etc.) are always prepared
+ * - Other spells use store's reactive state for optimistic updates
+ * - Falls back to prop if store isn't initialized for this character
+ *
+ * BUG FIX #719: Previously checked preparedSpellIds.size > 0, but this
+ * caused spells to revert to original state when ALL spells were unprepared.
+ * Now checks characterId to determine if store is initialized.
+ */
+const isPrepared = computed(() => {
+  // Cantrips are always ready
+  if (isCantrip.value) return true
+  // Always prepared spells
+  if (props.spell.is_always_prepared) return true
+  // Use store's reactive state for real-time updates if store is initialized
+  // (characterId is set when initializeSpellPreparation is called)
+  // Fall back to prop only for initial render / tests where store isn't initialized
+  if (store.characterId !== null) {
+    return store.isSpellPrepared(props.spell.id)
+  }
+  return props.spell.is_prepared
+})
+
+/**
+ * Check if spell is always prepared (domain spells, cantrips, etc.)
+ */
+const isAlwaysPrepared = computed(() => props.spell.is_always_prepared || isCantrip.value)
 
 /**
  * Check if this card can toggle preparation
@@ -75,9 +100,12 @@ const canToggle = computed(() => {
   // Known casters don't have preparation toggle
   if (!showPreparationUI.value) return false
   if (!props.editable) return false
+  // Cantrips are always ready - no toggle needed
+  if (isCantrip.value) return false
+  // Always prepared spells can't be toggled
   if (props.spell.is_always_prepared) return false
-  // Can't prepare new spells when at limit
-  if (!props.spell.is_prepared && props.atPrepLimit) return false
+  // Can't prepare new spells when at limit (but can unprepare)
+  if (!isPrepared.value && props.atPrepLimit) return false
   // Disable during API call to prevent spam-clicks
   if (isUpdatingSpellPreparation.value) return false
   return true
@@ -89,18 +117,38 @@ const canToggle = computed(() => {
 const isGreyedOut = computed(() => {
   // Known casters don't use grey out (spells always available)
   if (!showPreparationUI.value) return false
-  if (!props.spell.is_prepared && props.atPrepLimit) return true
+  // Cantrips are always ready - never grey out
+  if (isCantrip.value) return false
+  // Grey out unprepared spells at prep limit
+  if (!isPrepared.value && props.atPrepLimit) return true
   return false
 })
 
 /**
- * Handle card body click (toggle preparation)
+ * Handle header click (expand/collapse)
+ * Clicking anywhere on the header row expands/collapses the card
+ * @see Issue #719
  */
-async function handleCardClick() {
+function handleHeaderClick(event: MouseEvent) {
+  // Don't expand if clicking on the preparation toggle area
+  const target = event.target as HTMLElement
+  if (target.closest('[data-testid="preparation-toggle"]')) {
+    return
+  }
+  isExpanded.value = !isExpanded.value
+}
+
+/**
+ * Handle preparation toggle click
+ * Note: @click.stop on the button prevents header expand
+ */
+async function handlePreparationClick() {
   if (!canToggle.value) return
 
   try {
-    await store.toggleSpellPreparation(props.spell.id, props.spell.is_prepared)
+    // Use store's reactive state for current prepared status
+    const currentlyPrepared = store.isSpellPrepared(props.spell.id)
+    await store.toggleSpellPreparation(props.spell.id, currentlyPrepared)
   } catch {
     // Error handling done by store
   }
@@ -108,6 +156,7 @@ async function handleCardClick() {
 
 /**
  * Handle chevron click (expand/collapse only)
+ * Kept for accessibility - explicit expand button
  */
 function handleExpandClick(event: MouseEvent) {
   event.stopPropagation()
@@ -125,41 +174,51 @@ function handleExpandClick(event: MouseEvent) {
       isPrepared
         ? 'border-spell-300 dark:border-spell-700'
         : 'border-gray-200 dark:border-gray-700',
-      isGreyedOut
-        ? `${OPACITY_GREYED_OUT} cursor-not-allowed`
-        : canToggle
-          ? 'cursor-pointer hover:shadow-md'
-          : 'cursor-default',
-      // Don't dim unprepared spells for known casters (always castable)
+      // Greyed out state for unprepared spells at prep limit
+      isGreyedOut && OPACITY_GREYED_OUT,
+      // Dim unprepared spells for prepared/spellbook casters (not known casters)
       showPreparationUI && !isPrepared && !isGreyedOut && OPACITY_UNPREPARED
     ]"
   >
-    <!-- Clickable body area for preparation toggle -->
+    <!-- Clickable header for expand/collapse (#719) -->
     <div
-      data-testid="spell-card-body"
-      @click="handleCardClick"
+      data-testid="spell-card-header"
+      class="cursor-pointer"
+      @click="handleHeaderClick"
     >
       <!-- Collapsed Header -->
       <div class="flex items-center justify-between gap-2">
         <div class="flex items-center gap-2 min-w-0">
-          <!-- Prepared indicator (hidden for known casters) -->
-          <UIcon
-            v-if="showPreparationUI && isPrepared"
-            data-testid="prepared-icon"
-            name="i-heroicons-check-circle-solid"
+          <!-- Preparation toggle area (click to toggle preparation) -->
+          <button
+            v-if="showPreparationUI"
+            data-testid="preparation-toggle"
+            type="button"
             :class="[
-              'w-5 h-5 flex-shrink-0',
-              isAlwaysPrepared
-                ? 'text-amber-500 dark:text-amber-400'
-                : 'text-spell-500 dark:text-spell-400'
+              'flex-shrink-0 p-0.5 -m-0.5 rounded',
+              canToggle ? 'cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700' : 'cursor-not-allowed'
             ]"
-          />
-          <!-- Empty circle for unprepared state (hidden for known casters) -->
-          <span
-            v-else-if="showPreparationUI"
-            data-testid="unprepared-indicator"
-            class="w-5 h-5 flex-shrink-0 rounded-full border-2 border-gray-300 dark:border-gray-600"
-          />
+            @click.stop="handlePreparationClick"
+          >
+            <!-- Prepared indicator -->
+            <UIcon
+              v-if="isPrepared"
+              data-testid="prepared-icon"
+              name="i-heroicons-check-circle-solid"
+              :class="[
+                'w-5 h-5',
+                isAlwaysPrepared
+                  ? 'text-amber-500 dark:text-amber-400'
+                  : 'text-spell-500 dark:text-spell-400'
+              ]"
+            />
+            <!-- Empty circle for unprepared state -->
+            <span
+              v-else
+              data-testid="unprepared-indicator"
+              class="w-5 h-5 block rounded-full border-2 border-gray-300 dark:border-gray-600"
+            />
+          </button>
 
           <!-- Spell name -->
           <span class="font-medium truncate">{{ spellData.name }}</span>
@@ -172,7 +231,7 @@ function handleExpandClick(event: MouseEvent) {
             v-if="isAlwaysPrepared"
             color="warning"
             variant="subtle"
-            size="xs"
+            size="md"
           >
             Always
           </UBadge>
@@ -182,7 +241,7 @@ function handleExpandClick(event: MouseEvent) {
             v-if="spellData.concentration"
             color="spell"
             variant="subtle"
-            size="xs"
+            size="md"
           >
             Concentration
           </UBadge>
@@ -192,7 +251,7 @@ function handleExpandClick(event: MouseEvent) {
             v-if="spellData.ritual"
             color="neutral"
             variant="subtle"
-            size="xs"
+            size="md"
           >
             Ritual
           </UBadge>

@@ -263,6 +263,30 @@ describe('SpellCard', () => {
 
       expect(wrapper.text()).not.toContain('Casting Time')
     })
+
+    it('expands when clicking the header area (#719)', async () => {
+      const wrapper = await mountSuspended(SpellCard, {
+        props: { spell: mockLeveledSpell }
+      })
+
+      // Click on the header area (not the chevron button)
+      await wrapper.find('[data-testid="spell-card-header"]').trigger('click')
+
+      // Should expand to show details
+      expect(wrapper.find('[data-testid="spell-details"]').exists()).toBe(true)
+    })
+
+    it('collapses when clicking header area again (#719)', async () => {
+      const wrapper = await mountSuspended(SpellCard, {
+        props: { spell: mockLeveledSpell }
+      })
+
+      const header = wrapper.find('[data-testid="spell-card-header"]')
+      await header.trigger('click') // Expand
+      await header.trigger('click') // Collapse
+
+      expect(wrapper.find('[data-testid="spell-details"]').exists()).toBe(false)
+    })
   })
 
   describe('school display', () => {
@@ -295,7 +319,7 @@ describe('SpellCard', () => {
       }
     }
 
-    it('clicking card body toggles preparation when editable', async () => {
+    it('clicking preparation toggle toggles preparation when editable', async () => {
       const store = setupStore()
       store.initialize({
         characterId: 1,
@@ -321,8 +345,8 @@ describe('SpellCard', () => {
         ...getMountOptions()
       })
 
-      // Click the card body (not the expand button)
-      await wrapper.find('[data-testid="spell-card-body"]').trigger('click')
+      // Click the preparation toggle button
+      await wrapper.find('[data-testid="preparation-toggle"]').trigger('click')
 
       expect(toggleSpy).toHaveBeenCalledWith(mockLeveledSpell.id, true)
     })
@@ -370,7 +394,7 @@ describe('SpellCard', () => {
         ...getMountOptions()
       })
 
-      await wrapper.find('[data-testid="spell-card-body"]').trigger('click')
+      await wrapper.find('[data-testid="preparation-toggle"]').trigger('click')
 
       expect(toggleSpy).not.toHaveBeenCalled()
       // Check for greyed out state (opacity-40)
@@ -392,7 +416,7 @@ describe('SpellCard', () => {
         ...getMountOptions()
       })
 
-      await wrapper.find('[data-testid="spell-card-body"]').trigger('click')
+      await wrapper.find('[data-testid="preparation-toggle"]').trigger('click')
 
       expect(toggleSpy).not.toHaveBeenCalled()
     })
@@ -411,7 +435,7 @@ describe('SpellCard', () => {
         ...getMountOptions()
       })
 
-      await wrapper.find('[data-testid="spell-card-body"]').trigger('click')
+      await wrapper.find('[data-testid="preparation-toggle"]').trigger('click')
 
       expect(toggleSpy).not.toHaveBeenCalled()
     })
@@ -442,7 +466,7 @@ describe('SpellCard', () => {
         ...getMountOptions()
       })
 
-      await wrapper.find('[data-testid="spell-card-body"]').trigger('click')
+      await wrapper.find('[data-testid="preparation-toggle"]').trigger('click')
 
       expect(toggleSpy).toHaveBeenCalledWith(mockLeveledSpell.id, true)
     })
@@ -493,11 +517,7 @@ describe('SpellCard', () => {
         expect(card.classes().join(' ')).not.toMatch(/opacity-60/)
       })
 
-      it('does not allow toggle for known casters even when editable', async () => {
-        setActivePinia(createPinia())
-        const store = useCharacterPlayStateStore()
-        const toggleSpy = vi.spyOn(store, 'toggleSpellPreparation')
-
+      it('does not show preparation toggle for known casters', async () => {
         const wrapper = await mountSuspended(SpellCard, {
           props: {
             spell: mockLeveledSpell,
@@ -505,13 +525,11 @@ describe('SpellCard', () => {
             editable: true,
             atPrepLimit: false,
             preparationMethod: 'known'
-          },
-          global: { plugins: [createPinia()] }
+          }
         })
 
-        await wrapper.find('[data-testid="spell-card-body"]').trigger('click')
-
-        expect(toggleSpy).not.toHaveBeenCalled()
+        // Known casters should not have a preparation toggle button at all
+        expect(wrapper.find('[data-testid="preparation-toggle"]').exists()).toBe(false)
       })
 
       it('still allows expand/collapse for known casters', async () => {
