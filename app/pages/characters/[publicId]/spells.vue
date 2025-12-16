@@ -227,6 +227,30 @@ const spellbookPreparedCount = computed(() => {
 const showPreparationUI = computed(() => preparationMethod.value !== 'known')
 
 /**
+ * Whether this is a prepared caster (cleric, druid, paladin)
+ * These casters can select from the full class spell list
+ * @see Issue #723
+ */
+const isPreparedCaster = computed(() => preparationMethod.value === 'prepared')
+
+/**
+ * Mode toggle for prepared casters
+ * When true, shows PrepareSpellsView instead of normal spell list
+ * @see Issue #723
+ */
+const prepareSpellsMode = ref(false)
+
+/**
+ * Get max castable spell level for this character
+ * Based on available spell slots
+ */
+const maxCastableLevel = computed(() => {
+  if (!spellSlots.value?.slots) return 1
+  const levels = Object.keys(spellSlots.value.slots).map(Number)
+  return Math.max(...levels, 1)
+})
+
+/**
  * Get preparation method for a specific class (multiclass support)
  * Falls back to top-level preparation method if not available per-class
  */
@@ -703,19 +727,34 @@ useSeoMeta({
                   </div>
                 </div>
 
-                <!-- Preparation Counter (hidden for known casters #676) -->
+                <!-- Preparation Counter + Prepare Button (hidden for known casters #676) -->
                 <!-- Uses reactive count for real-time updates #719 -->
                 <div
                   v-if="showPreparationUI && spellSlots?.preparation_limit !== null"
-                  class="text-center"
-                  data-testid="preparation-limit"
+                  class="flex items-center gap-4"
                 >
-                  <div class="text-xs text-gray-500 uppercase">
-                    Prepared
+                  <div
+                    class="text-center"
+                    data-testid="preparation-limit"
+                  >
+                    <div class="text-xs text-gray-500 uppercase">
+                      Prepared
+                    </div>
+                    <div class="text-lg font-medium">
+                      {{ reactiveTotalPreparedCount }} / {{ spellSlots?.preparation_limit }}
+                    </div>
                   </div>
-                  <div class="text-lg font-medium">
-                    {{ reactiveTotalPreparedCount }} / {{ spellSlots?.preparation_limit }}
-                  </div>
+                  <!-- Prepare Spells button for prepared casters (#723) -->
+                  <UButton
+                    v-if="isPreparedCaster && !prepareSpellsMode"
+                    data-testid="prepare-spells-button"
+                    variant="soft"
+                    color="spell"
+                    icon="i-heroicons-book-open"
+                    @click="prepareSpellsMode = true"
+                  >
+                    Prepare Spells
+                  </UButton>
                 </div>
               </div>
             </div>
@@ -731,9 +770,25 @@ useSeoMeta({
               />
             </div>
 
+            <!-- Prepare Spells View for prepared casters (#723) -->
+            <div
+              v-if="prepareSpellsMode && isPreparedCaster && character && primarySpellcasting"
+              data-testid="prepare-spells-view"
+              class="mt-8"
+            >
+              <CharacterSheetPrepareSpellsView
+                :character-id="character.id"
+                :class-slug="primarySpellcasting.slug"
+                :max-castable-level="maxCastableLevel"
+                :preparation-limit="spellSlots?.preparation_limit ?? 0"
+                :prepared-count="reactiveTotalPreparedCount"
+                @close="prepareSpellsMode = false"
+              />
+            </div>
+
             <!-- Wizard Spellbook View (two-column) -->
             <div
-              v-if="isSpellbookCaster"
+              v-else-if="isSpellbookCaster"
               data-testid="spellbook-view"
               class="mt-8"
             >
