@@ -43,142 +43,69 @@ const subraceCount = computed(() => {
 })
 
 /**
- * Handle card click - emit select
+ * Handle select event from EntityPickerCard
  */
-function handleCardClick() {
+function handleSelect() {
   emit('select', props.race)
 }
 
 /**
- * Handle View Details click - emit event, stop propagation
+ * Handle view-details event from EntityPickerCard
  */
-function handleViewDetails(event: Event) {
-  event.stopPropagation()
+function handleViewDetails() {
   emit('view-details')
 }
-
-/**
- * Get background image path (256px variant)
- */
-const { getImagePath } = useEntityImage()
-const backgroundImage = computed(() => {
-  return getImagePath('races', props.race.slug, 256)
-})
 </script>
 
 <template>
-  <div
-    data-testid="picker-card"
-    class="relative cursor-pointer transition-all"
-    :class="[
-      selected ? 'ring-2 ring-race-500 ring-offset-2' : ''
-    ]"
-    @click="handleCardClick"
+  <CharacterEntityPickerCard
+    :entity="race"
+    :selected="selected"
+    color="race"
+    image-type="races"
+    @select="handleSelect"
+    @view-details="handleViewDetails"
   >
-    <UCard class="relative overflow-hidden hover:shadow-lg transition-shadow h-full border-2 border-race-300 dark:border-race-700 hover:border-race-500">
-      <!-- Background Image Layer -->
-      <div
-        v-if="backgroundImage"
-        class="absolute inset-0 bg-cover bg-center opacity-15 transition-all duration-300"
-        :style="{ backgroundImage: `url(${backgroundImage})` }"
-      />
-
-      <!-- Selected Checkmark -->
-      <div
-        v-if="selected"
-        class="absolute top-2 right-2 z-20"
+    <template #badges>
+      <UBadge
+        v-if="race.size"
+        color="info"
+        variant="subtle"
+        size="md"
       >
-        <UBadge
-          color="success"
-          variant="solid"
-          size="md"
-        >
-          <UIcon
-            name="i-heroicons-check"
-            class="w-4 h-4"
-          />
-        </UBadge>
+        {{ race.size.name }}
+      </UBadge>
+      <UBadge
+        v-if="hasSubraces"
+        color="race"
+        variant="subtle"
+        size="md"
+      >
+        {{ subraceCount }} {{ subraceCount === 1 ? 'Subrace' : 'Subraces' }}
+      </UBadge>
+    </template>
+
+    <template #stats>
+      <div
+        v-if="race.speed"
+        class="flex items-center gap-1"
+      >
+        <UIcon
+          name="i-heroicons-bolt"
+          class="w-4 h-4"
+        />
+        <span>{{ race.speed }} ft</span>
       </div>
-
-      <!-- Content Layer -->
-      <div class="relative z-10 flex flex-col h-full">
-        <div class="space-y-3 flex-1">
-          <!-- Size Badge -->
-          <div class="flex items-center gap-2 flex-wrap">
-            <UBadge
-              v-if="race.size"
-              color="info"
-              variant="subtle"
-              size="md"
-            >
-              {{ race.size.name }}
-            </UBadge>
-            <UBadge
-              v-if="hasSubraces"
-              color="race"
-              variant="subtle"
-              size="md"
-            >
-              {{ subraceCount }} {{ subraceCount === 1 ? 'Subrace' : 'Subraces' }}
-            </UBadge>
-          </div>
-
-          <!-- Race Name -->
-          <h3 class="text-xl font-semibold text-gray-900 dark:text-gray-100 line-clamp-2">
-            {{ race.name }}
-          </h3>
-
-          <!-- Quick Stats -->
-          <div class="flex items-center gap-4 flex-wrap text-sm text-gray-600 dark:text-gray-400">
-            <div
-              v-if="race.speed"
-              class="flex items-center gap-1"
-            >
-              <UIcon
-                name="i-heroicons-bolt"
-                class="w-4 h-4"
-              />
-              <span>{{ race.speed }} ft</span>
-            </div>
-            <div
-              v-if="abilityModifiers"
-              class="flex items-center gap-1"
-            >
-              <UIcon
-                name="i-heroicons-arrow-trending-up"
-                class="w-4 h-4"
-              />
-              <span>{{ abilityModifiers }}</span>
-            </div>
-          </div>
-
-          <!-- Description Preview -->
-          <p
-            v-if="race.description"
-            class="text-sm text-gray-700 dark:text-gray-300 line-clamp-2"
-          >
-            {{ race.description }}
-          </p>
-        </div>
-
-        <!-- View Details Button -->
-        <div class="mt-4 pt-3 border-t border-gray-200 dark:border-gray-700">
-          <UButton
-            data-testid="view-details-btn"
-            variant="ghost"
-            color="race"
-            size="sm"
-            block
-            @click="handleViewDetails"
-          >
-            <UIcon
-              name="i-heroicons-eye"
-              class="w-4 h-4 mr-1"
-            />
-            View Details
-          </UButton>
-        </div>
+      <div
+        v-if="abilityModifiers"
+        class="flex items-center gap-1"
+      >
+        <UIcon
+          name="i-heroicons-arrow-trending-up"
+          class="w-4 h-4"
+        />
+        <span>{{ abilityModifiers }}</span>
       </div>
-    </UCard>
-  </div>
+    </template>
+  </CharacterEntityPickerCard>
 </template>
