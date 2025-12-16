@@ -2,15 +2,17 @@
 /**
  * ClassResourcesManager Component Tests
  *
- * Tests the Manager component that handles API calls for
- * spending/restoring class resources (Rage, Ki, Bardic Inspiration, etc.)
+ * Tests the Manager component that delegates to characterPlayState store
+ * for spending/restoring class resources (Rage, Ki, Bardic Inspiration, etc.)
  *
  * @see Issue #632 - Class resources
+ * @see Issue #696 - Store consolidation
  */
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { mountSuspended, mockNuxtImport } from '@nuxt/test-utils/runtime'
 import { setActivePinia, createPinia } from 'pinia'
 import ClassResourcesManager from '~/components/character/sheet/ClassResourcesManager.vue'
+import { useCharacterPlayStateStore } from '~/stores/characterPlayState'
 import type { Counter } from '~/types/character'
 
 // =============================================================================
@@ -22,16 +24,6 @@ mockNuxtImport('useToast', () => () => toastMock)
 
 const apiFetchMock = vi.fn()
 mockNuxtImport('useApi', () => () => ({ apiFetch: apiFetchMock }))
-
-// =============================================================================
-// TYPES
-// =============================================================================
-
-interface ClassResourcesManagerVM {
-  localCounters: Counter[]
-  handleSpend: (slug: string) => Promise<void>
-  handleRestore: (slug: string) => Promise<void>
-}
 
 // =============================================================================
 // FIXTURES
@@ -66,6 +58,19 @@ function getMountOptions() {
   return { global: { plugins: [pinia] } }
 }
 
+function setupStore(counters: Counter[] = [createCounter()], characterId = 42) {
+  const store = useCharacterPlayStateStore()
+  store.initialize({
+    characterId,
+    isDead: false,
+    hitPoints: { current: 10, max: 10, temporary: 0 },
+    deathSaves: { successes: 0, failures: 0 },
+    currency: { pp: 0, gp: 0, ep: 0, sp: 0, cp: 0 }
+  })
+  store.initializeCounters(counters)
+  return store
+}
+
 // =============================================================================
 // TESTS
 // =============================================================================
@@ -82,37 +87,35 @@ describe('ClassResourcesManager', () => {
   // ===========================================================================
 
   describe('rendering', () => {
-    it('renders ClassResources with counters', async () => {
+    it('renders ClassResources with counters from store', async () => {
+      setupStore([createCounter()])
+
       const wrapper = await mountSuspended(ClassResourcesManager, {
-        props: {
-          counters: [createCounter()],
-          characterId: 1
-        },
+        props: { editable: true },
         ...getMountOptions()
       })
+
       expect(wrapper.text()).toContain('Bardic Inspiration')
       expect(wrapper.text()).toContain('Class Resources')
     })
 
-    it('renders nothing when counters is empty', async () => {
+    it('renders nothing when store has no counters', async () => {
+      setupStore([])
+
       const wrapper = await mountSuspended(ClassResourcesManager, {
-        props: {
-          counters: [],
-          characterId: 1
-        },
+        props: { editable: true },
         ...getMountOptions()
       })
+
       expect(wrapper.text()).not.toContain('Class Resources')
     })
 
-    it('disables counters when isDead is true', async () => {
+    it('disables counters when store isDead is true', async () => {
+      const store = setupStore([createCounter()])
+      store.isDead = true
+
       const wrapper = await mountSuspended(ClassResourcesManager, {
-        props: {
-          counters: [createCounter()],
-          characterId: 1,
-          editable: true,
-          isDead: true
-        },
+        props: { editable: true },
         ...getMountOptions()
       })
 
@@ -127,20 +130,17 @@ describe('ClassResourcesManager', () => {
   // ===========================================================================
 
   describe('spend counter', () => {
-    it('calls API to spend counter', async () => {
-      apiFetchMock.mockResolvedValue({ data: createCounter({ current: 2 }) })
+    it('calls store.useCounter to spend counter', async () => {
+      const store = setupStore([createCounter({ current: 3 })])
+      apiFetchMock.mockResolvedValue({ data: { current: 2 } })
 
       const wrapper = await mountSuspended(ClassResourcesManager, {
-        props: {
-          counters: [createCounter()],
-          characterId: 42,
-          editable: true
-        },
+        props: { editable: true },
         ...getMountOptions()
       })
 
-      const vm = wrapper.vm as unknown as ClassResourcesManagerVM
-      await vm.handleSpend('phb:bard:bardic-inspiration')
+      // Trigger spend via store action
+      await store.useCounter('phb:bard:bardic-inspiration')
 
       expect(apiFetchMock).toHaveBeenCalledWith(
         '/characters/42/counters/phb%3Abard%3Abardic-inspiration',
@@ -148,67 +148,46 @@ describe('ClassResourcesManager', () => {
       )
     })
 
-    it('optimistically decrements counter before API returns', async () => {
-      let resolveApi: () => void
-      const apiPromise = new Promise<void>((resolve) => {
-        resolveApi = resolve
-      })
-      apiFetchMock.mockImplementation(() => apiPromise)
+    it('decrements counter value after spend', async () => {
+      const store = setupStore([createCounter({ current: 3 })])
+      apiFetchMock.mockResolvedValue({ data: { current: 2 } })
 
-      const wrapper = await mountSuspended(ClassResourcesManager, {
-        props: {
-          counters: [createCounter({ current: 3 })],
-          characterId: 42,
-          editable: true
-        },
+      await mountSuspended(ClassResourcesManager, {
+        props: { editable: true },
         ...getMountOptions()
       })
 
-      const vm = wrapper.vm as unknown as ClassResourcesManagerVM
+      await store.useCounter('phb:bard:bardic-inspiration')
 
-      // Start spend operation (don't await)
-      const spendOp = vm.handleSpend('phb:bard:bardic-inspiration')
-
-      // Counter should already be decremented optimistically
-      expect(vm.localCounters[0].current).toBe(2)
-
-      // Complete API call
-      resolveApi!()
-      await spendOp
+      expect(store.counters[0].current).toBe(2)
     })
 
     it('rolls back on API failure', async () => {
-      apiFetchMock.mockRejectedValue({ data: { message: 'No uses remaining' } })
+      const store = setupStore([createCounter({ current: 3 })])
+      apiFetchMock.mockRejectedValueOnce({ data: { message: 'No uses remaining' } })
 
-      const wrapper = await mountSuspended(ClassResourcesManager, {
-        props: {
-          counters: [createCounter({ current: 3 })],
-          characterId: 42,
-          editable: true
-        },
+      await mountSuspended(ClassResourcesManager, {
+        props: { editable: true },
         ...getMountOptions()
       })
 
-      const vm = wrapper.vm as unknown as ClassResourcesManagerVM
-      await vm.handleSpend('phb:bard:bardic-inspiration')
+      await expect(store.useCounter('phb:bard:bardic-inspiration')).rejects.toBeDefined()
 
       // Counter should be rolled back
-      expect(vm.localCounters[0].current).toBe(3)
+      expect(store.counters[0].current).toBe(3)
     })
 
-    it('shows error toast on API failure', async () => {
-      apiFetchMock.mockRejectedValue({ data: { message: 'No uses remaining' } })
+    it('shows error toast on API failure via handleSpend', async () => {
+      const store = setupStore([createCounter({ current: 3 })])
+      apiFetchMock.mockRejectedValueOnce({ data: { message: 'No uses remaining' } })
 
       const wrapper = await mountSuspended(ClassResourcesManager, {
-        props: {
-          counters: [createCounter()],
-          characterId: 42,
-          editable: true
-        },
+        props: { editable: true },
         ...getMountOptions()
       })
 
-      const vm = wrapper.vm as unknown as ClassResourcesManagerVM
+      // Access the component's handleSpend method
+      const vm = wrapper.vm as { handleSpend: (slug: string) => Promise<void> }
       await vm.handleSpend('phb:bard:bardic-inspiration')
 
       expect(toastMock.add).toHaveBeenCalledWith(
@@ -217,17 +196,14 @@ describe('ClassResourcesManager', () => {
     })
 
     it('does not call API when counter is at 0', async () => {
-      const wrapper = await mountSuspended(ClassResourcesManager, {
-        props: {
-          counters: [createCounter({ current: 0 })],
-          characterId: 42,
-          editable: true
-        },
+      const store = setupStore([createCounter({ current: 0 })])
+
+      await mountSuspended(ClassResourcesManager, {
+        props: { editable: true },
         ...getMountOptions()
       })
 
-      const vm = wrapper.vm as unknown as ClassResourcesManagerVM
-      await vm.handleSpend('phb:bard:bardic-inspiration')
+      await store.useCounter('phb:bard:bardic-inspiration')
 
       expect(apiFetchMock).not.toHaveBeenCalled()
     })
@@ -238,20 +214,16 @@ describe('ClassResourcesManager', () => {
   // ===========================================================================
 
   describe('restore counter', () => {
-    it('calls API to restore counter', async () => {
-      apiFetchMock.mockResolvedValue({ data: createCounter({ current: 4 }) })
+    it('calls store.restoreCounter to restore counter', async () => {
+      const store = setupStore([createCounter({ current: 3, max: 5 })])
+      apiFetchMock.mockResolvedValue({ data: { current: 4 } })
 
-      const wrapper = await mountSuspended(ClassResourcesManager, {
-        props: {
-          counters: [createCounter({ current: 3, max: 5 })],
-          characterId: 42,
-          editable: true
-        },
+      await mountSuspended(ClassResourcesManager, {
+        props: { editable: true },
         ...getMountOptions()
       })
 
-      const vm = wrapper.vm as unknown as ClassResourcesManagerVM
-      await vm.handleRestore('phb:bard:bardic-inspiration')
+      await store.restoreCounter('phb:bard:bardic-inspiration')
 
       expect(apiFetchMock).toHaveBeenCalledWith(
         '/characters/42/counters/phb%3Abard%3Abardic-inspiration',
@@ -259,95 +231,71 @@ describe('ClassResourcesManager', () => {
       )
     })
 
-    it('optimistically increments counter before API returns', async () => {
-      let resolveApi: () => void
-      const apiPromise = new Promise<void>((resolve) => {
-        resolveApi = resolve
-      })
-      apiFetchMock.mockImplementation(() => apiPromise)
+    it('increments counter value after restore', async () => {
+      const store = setupStore([createCounter({ current: 3, max: 5 })])
+      apiFetchMock.mockResolvedValue({ data: { current: 4 } })
 
-      const wrapper = await mountSuspended(ClassResourcesManager, {
-        props: {
-          counters: [createCounter({ current: 3, max: 5 })],
-          characterId: 42,
-          editable: true
-        },
+      await mountSuspended(ClassResourcesManager, {
+        props: { editable: true },
         ...getMountOptions()
       })
 
-      const vm = wrapper.vm as unknown as ClassResourcesManagerVM
+      await store.restoreCounter('phb:bard:bardic-inspiration')
 
-      // Start restore operation (don't await)
-      const restoreOp = vm.handleRestore('phb:bard:bardic-inspiration')
-
-      // Counter should already be incremented optimistically
-      expect(vm.localCounters[0].current).toBe(4)
-
-      // Complete API call
-      resolveApi!()
-      await restoreOp
+      expect(store.counters[0].current).toBe(4)
     })
 
     it('rolls back on restore API failure', async () => {
-      apiFetchMock.mockRejectedValue({ data: { message: 'Already at max' } })
+      const store = setupStore([createCounter({ current: 3, max: 5 })])
+      apiFetchMock.mockRejectedValueOnce({ data: { message: 'Already at max' } })
 
-      const wrapper = await mountSuspended(ClassResourcesManager, {
-        props: {
-          counters: [createCounter({ current: 3, max: 5 })],
-          characterId: 42,
-          editable: true
-        },
+      await mountSuspended(ClassResourcesManager, {
+        props: { editable: true },
         ...getMountOptions()
       })
 
-      const vm = wrapper.vm as unknown as ClassResourcesManagerVM
-      await vm.handleRestore('phb:bard:bardic-inspiration')
+      await expect(store.restoreCounter('phb:bard:bardic-inspiration')).rejects.toBeDefined()
 
       // Counter should be rolled back
-      expect(vm.localCounters[0].current).toBe(3)
+      expect(store.counters[0].current).toBe(3)
     })
 
     it('does not call API when counter is at max', async () => {
-      const wrapper = await mountSuspended(ClassResourcesManager, {
-        props: {
-          counters: [createCounter({ current: 5, max: 5 })],
-          characterId: 42,
-          editable: true
-        },
+      const store = setupStore([createCounter({ current: 5, max: 5 })])
+
+      await mountSuspended(ClassResourcesManager, {
+        props: { editable: true },
         ...getMountOptions()
       })
 
-      const vm = wrapper.vm as unknown as ClassResourcesManagerVM
-      await vm.handleRestore('phb:bard:bardic-inspiration')
+      await store.restoreCounter('phb:bard:bardic-inspiration')
 
       expect(apiFetchMock).not.toHaveBeenCalled()
     })
   })
 
   // ===========================================================================
-  // PROPS SYNC
+  // STORE REACTIVITY
   // ===========================================================================
 
-  describe('props synchronization', () => {
-    it('syncs localCounters when props.counters change', async () => {
+  describe('store reactivity', () => {
+    it('updates display when store counters change', async () => {
+      const store = setupStore([createCounter({ current: 3 })])
+      apiFetchMock.mockResolvedValue({ data: { current: 2 } })
+
       const wrapper = await mountSuspended(ClassResourcesManager, {
-        props: {
-          counters: [createCounter({ current: 3 })],
-          characterId: 42,
-          editable: true
-        },
+        props: { editable: true },
         ...getMountOptions()
       })
 
-      const vm = wrapper.vm as unknown as ClassResourcesManagerVM
-      expect(vm.localCounters[0].current).toBe(3)
+      // Initial state - format is "3/5" not "3 / 5"
+      expect(wrapper.text()).toContain('3/5')
 
-      // Update props
-      await wrapper.setProps({
-        counters: [createCounter({ current: 5 })]
-      })
+      // Update via store
+      await store.useCounter('phb:bard:bardic-inspiration')
 
-      expect(vm.localCounters[0].current).toBe(5)
+      // Should reflect new value
+      expect(wrapper.text()).toContain('2/5')
     })
   })
 
@@ -356,35 +304,31 @@ describe('ClassResourcesManager', () => {
   // ===========================================================================
 
   describe('race condition prevention', () => {
-    it('prevents concurrent spend operations on same counter', async () => {
+    it('prevents concurrent spend operations on same counter via store', async () => {
+      const store = setupStore([createCounter({ current: 5 })])
+
       let resolveFirst: () => void
       const firstPromise = new Promise<void>((resolve) => {
         resolveFirst = resolve
       })
       apiFetchMock.mockImplementationOnce(() => firstPromise)
 
-      const wrapper = await mountSuspended(ClassResourcesManager, {
-        props: {
-          counters: [createCounter({ current: 5 })],
-          characterId: 42,
-          editable: true
-        },
+      await mountSuspended(ClassResourcesManager, {
+        props: { editable: true },
         ...getMountOptions()
       })
 
-      const vm = wrapper.vm as unknown as ClassResourcesManagerVM
-
       // Start first spend (doesn't complete yet)
-      const firstSpend = vm.handleSpend('phb:bard:bardic-inspiration')
+      const firstSpend = store.useCounter('phb:bard:bardic-inspiration')
 
       // Try second spend while first is in progress
-      await vm.handleSpend('phb:bard:bardic-inspiration')
+      await store.useCounter('phb:bard:bardic-inspiration')
 
       // Only one API call should have been made
       expect(apiFetchMock).toHaveBeenCalledTimes(1)
 
       // Counter should only be decremented once (optimistic)
-      expect(vm.localCounters[0].current).toBe(4)
+      expect(store.counters[0].current).toBe(4)
 
       // Complete first request
       resolveFirst!()
@@ -392,41 +336,26 @@ describe('ClassResourcesManager', () => {
     })
 
     it('allows concurrent operations on different counters', async () => {
-      let resolveFirst: () => void
-      const firstPromise = new Promise<void>((resolve) => {
-        resolveFirst = resolve
-      })
-      apiFetchMock.mockImplementationOnce(() => firstPromise)
-      apiFetchMock.mockResolvedValueOnce({ data: createCounter() })
-
       const counters = [
         createCounter({ slug: 'counter-1', current: 5 }),
         createCounter({ id: 2, slug: 'counter-2', current: 3 })
       ]
+      const store = setupStore(counters)
+      apiFetchMock.mockResolvedValue({ data: { current: 2 } })
 
-      const wrapper = await mountSuspended(ClassResourcesManager, {
-        props: {
-          counters,
-          characterId: 42,
-          editable: true
-        },
+      await mountSuspended(ClassResourcesManager, {
+        props: { editable: true },
         ...getMountOptions()
       })
 
-      const vm = wrapper.vm as unknown as ClassResourcesManagerVM
-
-      // Start spend on first counter
-      const firstSpend = vm.handleSpend('counter-1')
-
-      // Spend on second counter while first is pending
-      await vm.handleSpend('counter-2')
+      // Both operations should complete
+      await Promise.all([
+        store.useCounter('counter-1'),
+        store.useCounter('counter-2')
+      ])
 
       // Both calls should have been made
       expect(apiFetchMock).toHaveBeenCalledTimes(2)
-
-      // Complete first request
-      resolveFirst!()
-      await firstSpend
     })
   })
 })

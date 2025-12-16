@@ -812,6 +812,165 @@ describe('characterPlayState store', () => {
   })
 
   // ===========================================================================
+  // CLASS RESOURCE COUNTERS
+  // ===========================================================================
+
+  describe('class resource counters', () => {
+    const mockCounters = [
+      { id: 1, slug: 'rage', name: 'Rage', current: 3, max: 3, reset_on: 'long_rest' as const, source: 'Barbarian', source_type: 'class', unlimited: false },
+      { id: 2, slug: 'ki-points', name: 'Ki Points', current: 4, max: 5, reset_on: 'short_rest' as const, source: 'Monk', source_type: 'class', unlimited: false }
+    ]
+
+    describe('initializeCounters', () => {
+      it('sets counters from array', () => {
+        const store = useCharacterPlayStateStore()
+        store.initializeCounters(mockCounters)
+
+        expect(store.counters).toHaveLength(2)
+        expect(store.counters[0].slug).toBe('rage')
+        expect(store.counters[1].slug).toBe('ki-points')
+      })
+
+      it('deep copies counters to avoid mutation', () => {
+        const store = useCharacterPlayStateStore()
+        const original = [...mockCounters]
+        store.initializeCounters(original)
+
+        // Mutate original
+        original[0].current = 0
+
+        // Store should be unaffected
+        expect(store.counters[0].current).toBe(3)
+      })
+
+      it('clears existing counters on re-initialize', () => {
+        const store = useCharacterPlayStateStore()
+        store.initializeCounters(mockCounters)
+        store.initializeCounters([mockCounters[0]])
+
+        expect(store.counters).toHaveLength(1)
+      })
+    })
+
+    describe('useCounter', () => {
+      beforeEach(() => {
+        mockApiFetch.mockResolvedValue({ data: { current: 2 } })
+      })
+
+      it('sends use action to API', async () => {
+        const store = useCharacterPlayStateStore()
+        store.initialize(mockInitialData)
+        // Use fresh counter data with current > 0 to allow useCounter
+        store.initializeCounters([{ ...mockCounters[0], current: 3 }])
+
+        await store.useCounter('rage')
+
+        expect(mockApiFetch).toHaveBeenCalledWith(
+          '/characters/42/counters/rage',
+          { method: 'PATCH', body: { action: 'use' } }
+        )
+      })
+
+      it('decrements current value after API call', async () => {
+        const store = useCharacterPlayStateStore()
+        store.initialize(mockInitialData)
+        // Use fresh counter data with current > 0
+        store.initializeCounters([{ ...mockCounters[0], current: 3 }])
+
+        await store.useCounter('rage')
+
+        // After API call completes, value should be decremented
+        expect(store.counters.find(c => c.slug === 'rage')!.current).toBe(2)
+      })
+
+      it('does nothing if counter is at 0', async () => {
+        const store = useCharacterPlayStateStore()
+        store.initialize(mockInitialData)
+        store.initializeCounters([{ ...mockCounters[0], current: 0 }])
+
+        await store.useCounter('rage')
+
+        expect(mockApiFetch).not.toHaveBeenCalled()
+      })
+
+      it('does nothing if counter not found', async () => {
+        const store = useCharacterPlayStateStore()
+        store.initialize(mockInitialData)
+        store.initializeCounters(mockCounters)
+
+        await store.useCounter('nonexistent')
+
+        expect(mockApiFetch).not.toHaveBeenCalled()
+      })
+
+      it('rolls back on error', async () => {
+        const store = useCharacterPlayStateStore()
+        store.initialize(mockInitialData)
+        store.initializeCounters([{ ...mockCounters[0], current: 3 }])
+
+        mockApiFetch.mockRejectedValueOnce(new Error('Network error'))
+
+        await expect(store.useCounter('rage')).rejects.toThrow('Network error')
+
+        expect(store.counters.find(c => c.slug === 'rage')!.current).toBe(3) // Original value
+      })
+    })
+
+    describe('restoreCounter', () => {
+      beforeEach(() => {
+        mockApiFetch.mockResolvedValue({ data: { current: 4 } })
+      })
+
+      it('sends restore action to API', async () => {
+        const store = useCharacterPlayStateStore()
+        store.initialize(mockInitialData)
+        store.initializeCounters([{ ...mockCounters[0], current: 2 }])
+
+        await store.restoreCounter('rage')
+
+        expect(mockApiFetch).toHaveBeenCalledWith(
+          '/characters/42/counters/rage',
+          { method: 'PATCH', body: { action: 'restore' } }
+        )
+      })
+
+      it('increments current value after API call', async () => {
+        const store = useCharacterPlayStateStore()
+        store.initialize(mockInitialData)
+        store.initializeCounters([{ ...mockCounters[0], current: 2 }])
+
+        await store.restoreCounter('rage')
+
+        // After API call completes, value should be incremented
+        expect(store.counters.find(c => c.slug === 'rage')!.current).toBe(3)
+      })
+
+      it('does nothing if counter is at max', async () => {
+        const store = useCharacterPlayStateStore()
+        store.initialize(mockInitialData)
+        // Use fresh counter data to avoid any test isolation issues
+        store.initializeCounters([{ ...mockCounters[0], current: 3, max: 3 }])
+
+        await store.restoreCounter('rage')
+
+        expect(mockApiFetch).not.toHaveBeenCalled()
+      })
+
+      it('rolls back on error', async () => {
+        const store = useCharacterPlayStateStore()
+        store.initialize(mockInitialData)
+        store.initializeCounters([{ ...mockCounters[0], current: 2 }])
+
+        mockApiFetch.mockRejectedValueOnce(new Error('Network error'))
+
+        await expect(store.restoreCounter('rage')).rejects.toThrow('Network error')
+
+        expect(store.counters.find(c => c.slug === 'rage')!.current).toBe(2) // Original value
+      })
+    })
+  })
+
+  // ===========================================================================
   // RESET
   // ===========================================================================
 
@@ -827,6 +986,17 @@ describe('characterPlayState store', () => {
       expect(store.hitPoints).toEqual({ current: 0, max: 0, temporary: 0 })
       expect(store.deathSaves).toEqual({ successes: 0, failures: 0 })
       expect(store.currency).toEqual({ pp: 0, gp: 0, ep: 0, sp: 0, cp: 0 })
+    })
+
+    it('resets counters', () => {
+      const store = useCharacterPlayStateStore()
+      store.initializeCounters([
+        { id: 1, slug: 'rage', name: 'Rage', current: 2, max: 3, reset_on: 'long_rest', source: 'Barbarian', source_type: 'class', unlimited: false }
+      ])
+
+      store.$reset()
+
+      expect(store.counters).toEqual([])
     })
   })
 })

@@ -15,7 +15,7 @@
  * @see Issue #584 - Character sheet component refactor
  */
 import { defineStore } from 'pinia'
-import type { CharacterCurrency, CharacterCondition } from '~/types/character'
+import type { CharacterCurrency, CharacterCondition, Counter } from '~/types/character'
 import { logger } from '~/utils/logger'
 
 // =============================================================================
@@ -133,6 +133,12 @@ export const useCharacterPlayStateStore = defineStore('characterPlayState', () =
 
   /** Active conditions (status effects) */
   const conditions = ref<CharacterCondition[]>([])
+
+  /** Class resource counters (Rage, Ki Points, etc.) */
+  const counters = ref<Counter[]>([])
+
+  /** Track pending counter updates by slug to prevent race conditions */
+  const pendingCounterUpdates = ref<Set<string>>(new Set())
 
   /** Loading flags to prevent race conditions */
   const isUpdatingHp = ref(false)
@@ -774,6 +780,90 @@ export const useCharacterPlayStateStore = defineStore('characterPlayState', () =
   }
 
   // ===========================================================================
+  // CLASS RESOURCE COUNTER ACTIONS
+  // ===========================================================================
+
+  /**
+   * Initialize counters from character data
+   *
+   * Call this when character data loads. Deep copies to avoid mutation issues.
+   */
+  function initializeCounters(data: Counter[]) {
+    counters.value = data.map(c => ({ ...c }))
+  }
+
+  /**
+   * Check if a counter has a pending update
+   */
+  function isUpdatingCounter(slug: string): boolean {
+    return pendingCounterUpdates.value.has(slug)
+  }
+
+  /**
+   * Use a counter (decrement current by 1)
+   *
+   * Uses optimistic update - decrements immediately, rolls back on error.
+   * Per-counter locking allows concurrent updates to different counters.
+   */
+  async function useCounter(slug: string): Promise<void> {
+    const counter = counters.value.find(c => c.slug === slug)
+    if (!counter || counter.current <= 0) return
+    if (!characterId.value) return
+    if (pendingCounterUpdates.value.has(slug)) return
+
+    pendingCounterUpdates.value.add(slug)
+
+    // Optimistic update
+    const previousValue = counter.current
+    counter.current--
+
+    try {
+      await apiFetch(`/characters/${characterId.value}/counters/${encodeURIComponent(slug)}`, {
+        method: 'PATCH',
+        body: { action: 'use' }
+      })
+    } catch (error) {
+      // Rollback on failure
+      counter.current = previousValue
+      throw error
+    } finally {
+      pendingCounterUpdates.value.delete(slug)
+    }
+  }
+
+  /**
+   * Restore a counter (increment current by 1)
+   *
+   * Uses optimistic update - increments immediately, rolls back on error.
+   * Per-counter locking allows concurrent updates to different counters.
+   */
+  async function restoreCounter(slug: string): Promise<void> {
+    const counter = counters.value.find(c => c.slug === slug)
+    if (!counter || counter.current >= counter.max) return
+    if (!characterId.value) return
+    if (pendingCounterUpdates.value.has(slug)) return
+
+    pendingCounterUpdates.value.add(slug)
+
+    // Optimistic update
+    const previousValue = counter.current
+    counter.current++
+
+    try {
+      await apiFetch(`/characters/${characterId.value}/counters/${encodeURIComponent(slug)}`, {
+        method: 'PATCH',
+        body: { action: 'restore' }
+      })
+    } catch (error) {
+      // Rollback on failure
+      counter.current = previousValue
+      throw error
+    } finally {
+      pendingCounterUpdates.value.delete(slug)
+    }
+  }
+
+  // ===========================================================================
   // RESET
   // ===========================================================================
 
@@ -791,6 +881,7 @@ export const useCharacterPlayStateStore = defineStore('characterPlayState', () =
     isUpdatingSpellSlot.value = false
     isUpdatingSpellPreparation.value = false
     isUpdatingConditions.value = false
+    pendingCounterUpdates.value.clear()
 
     // Reset identity/mode
     characterId.value = null
@@ -820,6 +911,9 @@ export const useCharacterPlayStateStore = defineStore('characterPlayState', () =
 
     // Reset conditions
     conditions.value = []
+
+    // Reset counters
+    counters.value = []
   }
 
   // ===========================================================================
@@ -838,6 +932,7 @@ export const useCharacterPlayStateStore = defineStore('characterPlayState', () =
     preparedSpellIds,
     preparationLimit,
     conditions,
+    counters,
     isUpdatingHp,
     isUpdatingCurrency,
     isUpdatingDeathSaves,
@@ -855,6 +950,7 @@ export const useCharacterPlayStateStore = defineStore('characterPlayState', () =
     canUseSlot,
     canRestoreSlot,
     isSpellPrepared,
+    isUpdatingCounter,
 
     // Actions
     initialize,
@@ -874,6 +970,9 @@ export const useCharacterPlayStateStore = defineStore('characterPlayState', () =
     addCondition,
     removeCondition,
     updateExhaustionLevel,
+    initializeCounters,
+    useCounter,
+    restoreCounter,
     $reset
   }
 })
