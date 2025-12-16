@@ -12,15 +12,56 @@
  * @see Issue #621 - Consolidated data fetching
  */
 
-import type { AbilityScoreCode } from '~/types/character'
+import type { AbilityScoreCode, CharacterWeapon, CharacterEquipment } from '~/types/character'
 import { storeToRefs } from 'pinia'
 
 const route = useRoute()
 const publicId = computed(() => route.params.publicId as string)
+const { apiFetch } = useApi()
 
 // Shared character data + play state initialization
 const { character, stats, isSpellcaster, loading, refreshCharacter, playStateStore }
   = useCharacterSubPage(publicId)
+
+// Fetch equipment data to derive weapons from hand slots
+const { data: equipmentData } = await useAsyncData(
+  `character-${publicId.value}-equipment`,
+  () => apiFetch<{ data: CharacterEquipment[] }>(`/characters/${publicId.value}/equipment`),
+  { dedupe: 'defer' }
+)
+
+// Extended equipment type with new weapon fields from backend
+interface EquipmentWithWeaponData extends Omit<CharacterEquipment, 'proficiency_status' | 'item'> {
+  attack_bonus?: number
+  damage_bonus?: number
+  ability_used?: string
+  item?: {
+    name?: string
+    damage_dice?: string
+    [key: string]: unknown
+  } | null
+  proficiency_status?: {
+    has_proficiency?: boolean
+    [key: string]: unknown
+  }
+}
+
+// Derive weapons from equipment in main_hand/off_hand slots
+const weapons = computed<CharacterWeapon[]>(() => {
+  if (!equipmentData.value?.data) return []
+
+  return (equipmentData.value.data as EquipmentWithWeaponData[])
+    .filter(eq => eq.location === 'main_hand' || eq.location === 'off_hand')
+    .filter(eq => eq.item?.damage_dice) // Only items with damage dice are weapons
+    .map(eq => ({
+      name: eq.custom_name || eq.item?.name || 'Unknown Weapon',
+      damage_dice: eq.item?.damage_dice || '1d4',
+      attack_bonus: eq.attack_bonus ?? 0,
+      damage_bonus: eq.damage_bonus ?? 0,
+      ability_used: (eq.ability_used || 'STR') as AbilityScoreCode,
+      is_proficient: eq.proficiency_status?.has_proficiency ?? false
+    }))
+})
 
 // Get reactive state from store
 const { canEdit, hitPoints, conditions } = storeToRefs(playStateStore)
@@ -152,9 +193,9 @@ useSeoMeta({
         <div class="mt-6 grid md:grid-cols-2 gap-6">
           <!-- Left Column: Weapons + Saves/Death Saves -->
           <div class="space-y-6">
-            <!-- Weapons Panel -->
+            <!-- Weapons Panel (weapons derived from equipment in hand slots) -->
             <CharacterSheetWeaponsPanel
-              :weapons="stats.weapons ?? []"
+              :weapons="weapons"
               :proficiency-bonus="character.proficiency_bonus"
               :ability-modifiers="abilityModifiers"
             />
