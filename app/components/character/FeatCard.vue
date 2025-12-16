@@ -71,91 +71,69 @@ const isHalfFeat = computed(() => {
   )
 })
 
-function handleClick() {
-  if (!props.disabled) {
-    emit('toggle', props.feat)
-  }
+/**
+ * Handle select event from EntityPickerCard
+ */
+function handleSelect() {
+  emit('toggle', props.feat)
 }
 
-function handleViewDetails(event: Event) {
-  event.stopPropagation()
+/**
+ * Handle view-details event from EntityPickerCard
+ */
+function handleViewDetails() {
   emit('view-details')
 }
 </script>
 
 <template>
-  <div
-    data-testid="feat-card"
-    role="button"
-    :aria-label="`Select ${feat.name} feat`"
-    :aria-pressed="selected"
-    :tabindex="disabled ? -1 : 0"
-    class="relative p-3 rounded-lg border-2 transition-all cursor-pointer"
-    :class="[
-      disabled ? 'opacity-50 cursor-not-allowed' : '',
-      selected
-        ? 'ring-2 ring-feat-500 border-feat-500 bg-feat-50 dark:bg-feat-900/30'
-        : 'border-gray-200 dark:border-gray-700 hover:border-feat-300'
-    ]"
-    @click="handleClick"
-    @keydown.enter="handleClick"
-    @keydown.space.prevent="handleClick"
+  <CharacterEntityPickerCard
+    :entity="feat"
+    :selected="selected"
+    :disabled="disabled"
+    color="feat"
+    test-id="feat-card"
+    hide-view-details
+    @select="handleSelect"
+    @view-details="handleViewDetails"
   >
-    <!-- Selected Checkmark -->
-    <div
-      v-if="selected"
-      data-testid="selected-check"
-      class="absolute top-2 right-2 w-5 h-5 bg-feat-500 rounded-full flex items-center justify-center"
-    >
-      <UIcon
-        name="i-heroicons-check"
-        class="w-3 h-3 text-white"
-      />
-    </div>
+    <template #badges>
+      <UBadge
+        v-if="hasPrerequisites"
+        color="warning"
+        variant="subtle"
+        size="md"
+      >
+        {{ prerequisitesSummary }}
+      </UBadge>
+      <UBadge
+        v-else
+        color="success"
+        variant="subtle"
+        size="md"
+      >
+        No Prerequisites
+      </UBadge>
+      <UBadge
+        v-if="isHalfFeat"
+        color="feat"
+        variant="subtle"
+        size="md"
+      >
+        Half-Feat
+      </UBadge>
+    </template>
 
-    <div class="flex flex-col gap-2">
-      <!-- Top row: badges -->
-      <div class="flex items-center gap-2 flex-wrap">
-        <UBadge
-          v-if="hasPrerequisites"
-          color="warning"
-          variant="subtle"
-          size="md"
-        >
-          {{ prerequisitesSummary }}
-        </UBadge>
-        <UBadge
-          v-else
-          color="success"
-          variant="subtle"
-          size="md"
-        >
-          No Prerequisites
-        </UBadge>
-        <UBadge
-          v-if="isHalfFeat"
-          color="feat"
-          variant="subtle"
-          size="md"
-        >
-          Half-Feat
-        </UBadge>
-      </div>
-
-      <!-- Feat name -->
-      <h4 class="font-semibold text-gray-900 dark:text-white pr-6">
-        {{ feat.name }}
-      </h4>
-
-      <!-- View Details link -->
+    <template #stats>
+      <!-- View Details as a stats item since we hide the default button -->
       <button
         data-testid="view-details-btn"
         type="button"
-        class="text-xs text-feat-600 dark:text-feat-400 hover:underline self-start"
-        @click="handleViewDetails"
+        class="text-xs text-feat-600 dark:text-feat-400 hover:underline"
+        @click.stop="handleViewDetails"
       >
         View Details
       </button>
-    </div>
-  </div>
+    </template>
+  </CharacterEntityPickerCard>
 </template>

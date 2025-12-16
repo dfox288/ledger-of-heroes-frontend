@@ -52,13 +52,16 @@ interface Props {
   hideViewDetails?: boolean
   /** Custom data-testid attribute (defaults to 'picker-card') */
   testId?: string
+  /** Disable selection (visually dimmed, no select event) */
+  disabled?: boolean
 }
 
 const props = withDefaults(defineProps<Props>(), {
   imageType: undefined,
   imageSlug: undefined,
   hideViewDetails: false,
-  testId: 'picker-card'
+  testId: 'picker-card',
+  disabled: false
 })
 
 const emit = defineEmits<{
@@ -67,10 +70,12 @@ const emit = defineEmits<{
 }>()
 
 /**
- * Handle card click - emit select event
+ * Handle card click - emit select event (unless disabled)
  */
 function handleCardClick() {
-  emit('select', props.entity)
+  if (!props.disabled) {
+    emit('select', props.entity)
+  }
 }
 
 /**
@@ -102,15 +107,16 @@ const borderHoverClass = computed(() => `hover:border-${props.color}-500`)
 <template>
   <div
     :data-testid="testId"
-    class="relative cursor-pointer transition-all"
+    class="relative transition-all"
     :class="[
+      disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer',
       selected ? `ring-2 ${ringColorClass} ring-offset-2` : ''
     ]"
     @click="handleCardClick"
   >
     <UCard
-      class="relative overflow-hidden hover:shadow-lg transition-shadow h-full border-2"
-      :class="[borderColorClass, borderHoverClass]"
+      class="relative overflow-hidden transition-shadow h-full border-2"
+      :class="[borderColorClass, disabled ? '' : borderHoverClass, disabled ? '' : 'hover:shadow-lg']"
     >
       <!-- Background Image Layer -->
       <div
