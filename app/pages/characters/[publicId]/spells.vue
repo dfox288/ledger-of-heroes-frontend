@@ -259,6 +259,28 @@ const hasPerClassLimits = computed(() =>
   spellSlots.value?.preparation_limits && Object.keys(spellSlots.value.preparation_limits).length > 0
 )
 
+/**
+ * Check if a specific class is at its preparation limit
+ * Used to grey out unprepared spells when at limit
+ * @see Issue #718
+ */
+function isAtClassPreparationLimit(classSlug: string): boolean {
+  const limit = getClassPreparationLimit(classSlug)
+  if (!limit) return false
+  return limit.prepared >= limit.limit
+}
+
+/**
+ * Get preparation method for a spell based on its class_slug
+ * Falls back to top-level preparation method if spell has no class_slug
+ * @see Issue #718
+ */
+function getSpellPreparationMethod(spell: CharacterSpell): PreparationMethod {
+  return spell.class_slug
+    ? getClassPreparationMethod(spell.class_slug)
+    : preparationMethod.value
+}
+
 useSeoMeta({
   title: () => character.value ? `${character.value.name} - Spells` : 'Spells'
 })
@@ -415,6 +437,9 @@ useSeoMeta({
                       :key="spell.id"
                       :spell="spell"
                       :preparation-method="getClassPreparationMethod(sc.slug)"
+                      :at-prep-limit="isAtClassPreparationLimit(sc.slug)"
+                      :character-id="character.id"
+                      :editable="canEdit"
                     />
                   </div>
                 </div>
@@ -433,6 +458,9 @@ useSeoMeta({
                       :key="spell.id"
                       :spell="spell"
                       :preparation-method="getClassPreparationMethod(sc.slug)"
+                      :at-prep-limit="isAtClassPreparationLimit(sc.slug)"
+                      :character-id="character.id"
+                      :editable="canEdit"
                     />
                   </div>
                 </div>
@@ -521,7 +549,10 @@ useSeoMeta({
                       v-for="spell in cantrips"
                       :key="spell.id"
                       :spell="spell"
-                      :preparation-method="spell.class_slug ? getClassPreparationMethod(spell.class_slug) : preparationMethod"
+                      :preparation-method="getSpellPreparationMethod(spell)"
+                      :at-prep-limit="!!spell.class_slug && isAtClassPreparationLimit(spell.class_slug)"
+                      :character-id="character.id"
+                      :editable="canEdit"
                     />
                   </div>
                 </div>
@@ -539,7 +570,10 @@ useSeoMeta({
                       v-for="spell in spellsByLevel[level]"
                       :key="spell.id"
                       :spell="spell"
-                      :preparation-method="spell.class_slug ? getClassPreparationMethod(spell.class_slug) : preparationMethod"
+                      :preparation-method="getSpellPreparationMethod(spell)"
+                      :at-prep-limit="!!spell.class_slug && isAtClassPreparationLimit(spell.class_slug)"
+                      :character-id="character.id"
+                      :editable="canEdit"
                     />
                   </div>
                 </div>
@@ -600,6 +634,7 @@ useSeoMeta({
                 <div
                   v-if="showPreparationUI && spellSlots?.preparation_limit !== null"
                   class="text-center"
+                  data-testid="preparation-limit"
                 >
                   <div class="text-xs text-gray-500 uppercase">
                     Prepared
