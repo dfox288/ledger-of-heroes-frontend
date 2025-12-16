@@ -149,7 +149,7 @@ export const useCharacterPlayStateStore = defineStore('characterPlayState', () =
   /** Character notes grouped by category */
   const notes = ref<Record<string, CharacterNote[]>>({})
 
-  /** Temp ID counter for optimistic note creates */
+  /** Temp ID counter for optimistic note creates (negative to avoid server ID collisions) */
   let noteTempIdCounter = -1
 
   /** Optimistic notes pending API confirmation */
@@ -848,6 +848,11 @@ export const useCharacterPlayStateStore = defineStore('characterPlayState', () =
 
   /**
    * Check if a counter has a pending update
+   *
+   * Used to prevent race conditions and show loading states in UI.
+   *
+   * @param slug - The counter slug to check
+   * @returns True if an update is in progress for this counter
    */
   function isUpdatingCounter(slug: string): boolean {
     return pendingCounterUpdates.value.has(slug)
@@ -925,6 +930,7 @@ export const useCharacterPlayStateStore = defineStore('characterPlayState', () =
    * Initialize notes from grouped data
    *
    * Call this when character notes load. Deep copies to avoid mutation issues.
+   * Only clears pending state if no operations are in flight to avoid race conditions.
    */
   function initializeNotes(data: Record<string, CharacterNote[]>) {
     // Deep copy to avoid mutation
@@ -932,14 +938,20 @@ export const useCharacterPlayStateStore = defineStore('characterPlayState', () =
     for (const [category, categoryNotes] of Object.entries(data)) {
       notes.value[category] = categoryNotes.map(note => ({ ...note }))
     }
-    // Clear any pending state
-    pendingNoteCreates.value = []
-    pendingNoteDeletes.value.clear()
-    pendingNoteEdits.value.clear()
+    // Only clear pending state if no operations are in flight
+    // This prevents race conditions when component re-renders during an update
+    if (!isUpdatingNotes.value) {
+      pendingNoteCreates.value = []
+      pendingNoteDeletes.value.clear()
+      pendingNoteEdits.value.clear()
+    }
   }
 
   /**
    * Find a note by ID across all categories
+   *
+   * @param noteId - The note ID to find
+   * @returns The note if found, undefined otherwise
    */
   function findNote(noteId: number): CharacterNote | undefined {
     for (const categoryNotes of Object.values(notes.value)) {
@@ -1181,6 +1193,7 @@ export const useCharacterPlayStateStore = defineStore('characterPlayState', () =
     useCounter,
     restoreCounter,
     initializeNotes,
+    findNote,
     addNote,
     editNote,
     deleteNote,

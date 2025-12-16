@@ -16,7 +16,7 @@ import { useCharacterPlayStateStore } from '~/stores/characterPlayState'
 
 const props = defineProps<{
   notes: Record<string, CharacterNote[]>
-  characterId: number | string
+  characterId: number
 }>()
 
 const emit = defineEmits<{
@@ -102,6 +102,7 @@ async function handleSave(payload: NotePayload) {
     } else {
       toast.add({ title: 'Failed to update note', color: 'error' })
     }
+    // Refresh ensures server state is authoritative after optimistic update completes
     emit('refresh')
   } else {
     // CREATE MODE - Delegate to store
@@ -111,6 +112,7 @@ async function handleSave(payload: NotePayload) {
     } else {
       toast.add({ title: 'Failed to add note', color: 'error' })
     }
+    // Refresh ensures server state is authoritative after optimistic update completes
     emit('refresh')
   }
 }
@@ -134,6 +136,7 @@ async function handleDeleteConfirm() {
   } else {
     toast.add({ title: 'Failed to delete note', color: 'error' })
   }
+  // Refresh ensures server state is authoritative after optimistic update completes
   emit('refresh')
 }
 </script>
