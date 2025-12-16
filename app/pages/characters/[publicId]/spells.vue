@@ -550,8 +550,8 @@ useSeoMeta({
                       :key="spell.id"
                       :spell="spell"
                       :preparation-method="getSpellPreparationMethod(spell)"
-                      :at-prep-limit="spell.class_slug ? isAtClassPreparationLimit(spell.class_slug) : false"
-                      :character-id="character?.id"
+                      :at-prep-limit="!!spell.class_slug && isAtClassPreparationLimit(spell.class_slug)"
+                      :character-id="character.id"
                       :editable="canEdit"
                     />
                   </div>
@@ -571,8 +571,8 @@ useSeoMeta({
                       :key="spell.id"
                       :spell="spell"
                       :preparation-method="getSpellPreparationMethod(spell)"
-                      :at-prep-limit="spell.class_slug ? isAtClassPreparationLimit(spell.class_slug) : false"
-                      :character-id="character?.id"
+                      :at-prep-limit="!!spell.class_slug && isAtClassPreparationLimit(spell.class_slug)"
+                      :character-id="character.id"
                       :editable="canEdit"
                     />
                   </div>
