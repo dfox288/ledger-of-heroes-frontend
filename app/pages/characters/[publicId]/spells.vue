@@ -70,6 +70,21 @@ watch(slotsData, (data) => {
   }
 }, { immediate: true })
 
+// Initialize spell preparation state when data loads
+// This enables preparation limit enforcement and optimistic UI updates
+watch([spellsData, slotsData], ([spells, slots]) => {
+  if (spells?.data && slots?.data) {
+    playStateStore.initializeSpellPreparation({
+      spells: spells.data.map(s => ({
+        id: s.id,
+        is_prepared: s.is_prepared,
+        is_always_prepared: s.is_always_prepared
+      })),
+      preparationLimit: slots.data.preparation_limit ?? null
+    })
+  }
+}, { immediate: true })
+
 // Filter and group spells
 const validSpells = computed(() =>
   (spellsData.value?.data ?? []).filter(s => s.spell !== null)
@@ -162,6 +177,44 @@ const preparationMethod = computed<PreparationMethod>(() =>
 const isSpellbookCaster = computed(() => preparationMethod.value === 'spellbook')
 
 /**
+ * Find the spellbook caster class (wizard) for multiclass support
+ * Returns the class info for the wizard class, or null if none
+ * @see Issue #719 - Wizard preparation limit fix
+ */
+const spellbookClass = computed(() =>
+  spellcastingClasses.value.find(sc => sc.info.preparation_method === 'spellbook') ?? null
+)
+
+/**
+ * Get spells filtered to spellbook class only (for wizard view)
+ * Excludes cleric/other class spells from the spellbook
+ */
+const spellbookSpells = computed(() => {
+  if (!spellbookClass.value) return validSpells.value
+  return validSpells.value.filter(s => s.class_slug === spellbookClass.value!.slug)
+})
+
+/**
+ * Get preparation limit for the spellbook class
+ * Falls back to combined limit if per-class not available
+ */
+const spellbookPreparationLimit = computed(() => {
+  if (!spellbookClass.value) return spellSlots.value?.preparation_limit ?? 0
+  const perClassLimit = getClassPreparationLimit(spellbookClass.value.slug)
+  return perClassLimit?.limit ?? spellSlots.value?.preparation_limit ?? 0
+})
+
+/**
+ * Get prepared count for the spellbook class
+ * Falls back to combined count if per-class not available
+ */
+const spellbookPreparedCount = computed(() => {
+  if (!spellbookClass.value) return spellSlots.value?.prepared_count ?? 0
+  const perClassLimit = getClassPreparationLimit(spellbookClass.value.slug)
+  return perClassLimit?.prepared ?? spellSlots.value?.prepared_count ?? 0
+})
+
+/**
  * Whether to show preparation UI (counter, toggle) for single-class
  * Known casters don't need preparation - hide these UI elements
  * @see Issue #676
@@ -248,14 +301,28 @@ const hasPerClassLimits = computed(() =>
 )
 
 /**
+ * Get REACTIVE prepared count for a specific class
+ * Computes from store's preparedSpellIds instead of API data for real-time updates
+ * @see Issue #719 - Preparation counter reactivity fix
+ */
+function getReactivePreparedCount(classSlug: string): number {
+  // Filter spells by class and check if they're in the store's prepared set
+  const classSpells = validSpells.value.filter(s => s.class_slug === classSlug)
+  return classSpells.filter(s =>
+    playStateStore.preparedSpellIds.has(s.id) && !s.is_always_prepared
+  ).length
+}
+
+/**
  * Check if a specific class is at its preparation limit
- * Used to grey out unprepared spells when at limit
- * @see Issue #718
+ * Uses REACTIVE prepared count from store for real-time limit checking
+ * @see Issue #718, #719
  */
 function isAtClassPreparationLimit(classSlug: string): boolean {
   const limit = getClassPreparationLimit(classSlug)
   if (!limit) return false
-  return limit.prepared >= limit.limit
+  // Use reactive count instead of API data
+  return getReactivePreparedCount(classSlug) >= limit.limit
 }
 
 /**
@@ -268,6 +335,17 @@ function getSpellPreparationMethod(spell: CharacterSpell): PreparationMethod {
     ? getClassPreparationMethod(spell.class_slug)
     : preparationMethod.value
 }
+
+/**
+ * REACTIVE total prepared count across all classes
+ * Computes from store's preparedSpellIds for real-time updates
+ * @see Issue #719
+ */
+const reactiveTotalPreparedCount = computed(() => {
+  return validSpells.value.filter(s =>
+    playStateStore.preparedSpellIds.has(s.id) && !s.is_always_prepared
+  ).length
+})
 
 useSeoMeta({
   title: () => character.value ? `${character.value.name} - Spells` : 'Spells'
@@ -373,6 +451,7 @@ useSeoMeta({
                       </div>
                     </div>
                     <!-- Per-Class Preparation Counter (hidden for known casters #676) -->
+                    <!-- Uses reactive count from store for real-time updates #719 -->
                     <div
                       v-if="getClassPreparationMethod(sc.slug) !== 'known' && hasPerClassLimits && getClassPreparationLimit(sc.slug)"
                       class="text-center"
@@ -382,10 +461,11 @@ useSeoMeta({
                         {{ sc.name }} Prepared
                       </div>
                       <div class="text-lg font-medium">
-                        {{ getClassPreparationLimit(sc.slug)?.prepared ?? 0 }} / {{ getClassPreparationLimit(sc.slug)?.limit ?? 0 }}
+                        {{ getReactivePreparedCount(sc.slug) }} / {{ getClassPreparationLimit(sc.slug)?.limit ?? 0 }}
                       </div>
                     </div>
                     <!-- Fallback: Combined Preparation Counter (hidden for known casters #676) -->
+                    <!-- Uses reactive count for real-time updates #719 -->
                     <div
                       v-else-if="getClassPreparationMethod(sc.slug) !== 'known' && spellSlots?.preparation_limit !== null"
                       class="text-center"
@@ -394,7 +474,7 @@ useSeoMeta({
                         Prepared (Combined)
                       </div>
                       <div class="text-lg font-medium">
-                        {{ spellSlots?.prepared_count ?? 0 }} / {{ spellSlots?.preparation_limit }}
+                        {{ reactiveTotalPreparedCount }} / {{ spellSlots?.preparation_limit }}
                       </div>
                     </div>
                   </div>
@@ -490,25 +570,25 @@ useSeoMeta({
                         <div class="text-sm text-gray-500">
                           DC {{ sc.info.spell_save_dc }} | {{ formatModifier(sc.info.spell_attack_bonus) }} | {{ sc.info.ability }}
                         </div>
-                        <!-- Per-class prepared count -->
+                        <!-- Per-class prepared count (reactive #719) -->
                         <div
                           v-if="hasPerClassLimits && getClassPreparationLimit(sc.slug)"
                           class="text-sm text-gray-600 dark:text-gray-400"
                           data-testid="summary-class-preparation"
                         >
-                          Prepared: {{ getClassPreparationLimit(sc.slug)?.prepared ?? 0 }} / {{ getClassPreparationLimit(sc.slug)?.limit ?? 0 }}
+                          Prepared: {{ getReactivePreparedCount(sc.slug) }} / {{ getClassPreparationLimit(sc.slug)?.limit ?? 0 }}
                         </div>
                       </div>
                     </div>
                   </div>
-                  <!-- Combined Preparation Counter -->
+                  <!-- Combined Preparation Counter (reactive #719) -->
                   <div
                     v-if="spellSlots?.preparation_limit !== null"
                     class="mt-4 text-center border-t border-gray-200 dark:border-gray-700 pt-3"
                   >
                     <span class="text-sm text-gray-500">Total Prepared:</span>
                     <span class="ml-2 font-medium">
-                      {{ spellSlots?.prepared_count ?? 0 }} / {{ spellSlots?.preparation_limit }}
+                      {{ reactiveTotalPreparedCount }} / {{ spellSlots?.preparation_limit }}
                     </span>
                   </div>
                 </div>
@@ -619,6 +699,7 @@ useSeoMeta({
                 </div>
 
                 <!-- Preparation Counter (hidden for known casters #676) -->
+                <!-- Uses reactive count for real-time updates #719 -->
                 <div
                   v-if="showPreparationUI && spellSlots?.preparation_limit !== null"
                   class="text-center"
@@ -628,7 +709,7 @@ useSeoMeta({
                     Prepared
                   </div>
                   <div class="text-lg font-medium">
-                    {{ spellSlots?.prepared_count ?? 0 }} / {{ spellSlots?.preparation_limit }}
+                    {{ reactiveTotalPreparedCount }} / {{ spellSlots?.preparation_limit }}
                   </div>
                 </div>
               </div>
@@ -652,9 +733,9 @@ useSeoMeta({
               class="mt-8"
             >
               <CharacterSheetSpellbookView
-                :spells="validSpells"
-                :prepared-count="spellSlots?.prepared_count ?? 0"
-                :preparation-limit="spellSlots?.preparation_limit ?? 0"
+                :spells="spellbookSpells"
+                :prepared-count="spellbookPreparedCount"
+                :preparation-limit="spellbookPreparationLimit"
                 :character-id="character.id"
               />
             </div>

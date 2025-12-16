@@ -347,10 +347,10 @@ Three AI-powered agents automate E2E test creation:
 ### Running E2E Tests Manually
 
 ```bash
-npm run test:e2e           # Headless (CI)
-npm run test:e2e:ui        # Interactive UI mode
-npm run test:e2e:headed    # Visible browser
-npm run test:e2e:report    # View HTML report
+just e2e              # Headless (CI)
+just e2e-ui           # Interactive UI mode
+just e2e-headed       # Visible browser
+just e2e-report       # View HTML report
 ```
 
 ### Configuration Files

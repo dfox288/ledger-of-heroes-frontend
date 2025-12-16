@@ -9,8 +9,8 @@
 4. Write tests FIRST      -> Watch them fail (TDD mandatory)
 5. Write minimal code     -> Make tests pass
 6. Refactor while green   -> Clean up
-7. Run test suite         -> Smallest relevant suite
-8. Run npm run lint:fix   -> Fix linting
+7. Run test suite         -> just test-{domain} (smallest relevant suite)
+8. Run just lint-fix      -> Fix linting
 9. Update CHANGELOG.md    -> If user-facing
 10. Commit + Push         -> Clear message, push to feature branch
 11. Create PR             -> gh pr create with issue reference
@@ -27,7 +27,7 @@ When fixing bugs in code that has existing tests:
 3. UPDATE TESTS FIRST     -> Write/modify tests for CORRECT behavior
 4. Watch tests FAIL       -> Confirms test catches the bug
 5. Fix the code           -> Make tests pass
-6. Run test suite         -> Verify no regressions
+6. Run test suite         -> just test (verify no regressions)
 7. Commit + Push          -> Include "fix:" prefix
 ```
 
@@ -69,8 +69,8 @@ git checkout -b chore/issue-13-storybook-setup
 
 ## For API Type Changes (Additional)
 
-- Run `node scripts/sync-api-types.js` from HOST (not Docker) - requires backend running
-- Run `npm run typecheck`
+- Run `just types-sync` (requires backend running)
+- Run `just typecheck`
 - Update component props if needed
 
 ## Success Checklist
@@ -79,9 +79,9 @@ Before creating a PR:
 
 - [ ] Working on feature branch (`feature/issue-N-*`)
 - [ ] Tests written FIRST (TDD mandate)
-- [ ] All tests pass (domain suite + full suite)
-- [ ] TypeScript compiles (`npm run typecheck`)
-- [ ] ESLint passes (`npm run lint`)
+- [ ] All tests pass (`just test-{domain}` + `just test`)
+- [ ] TypeScript compiles (`just typecheck`)
+- [ ] ESLint passes (`just lint`)
 - [ ] Browser verification (light/dark mode)
 - [ ] Mobile-responsive
 - [ ] CHANGELOG.md updated (if user-facing)

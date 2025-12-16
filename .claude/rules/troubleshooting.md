@@ -9,26 +9,21 @@ Common issues and how to debug them.
 ### Check Service Health
 
 ```bash
-# Is everything running?
-docker compose ps
-
-# Check frontend logs
-docker compose logs nuxt --tail=50
-
-# Check backend is accessible
-curl http://localhost:8080/api/v1/health
+just status           # Check container status
+just logs-tail 50     # Last 50 lines of logs
+curl http://localhost:8080/api/v1/health  # Backend accessible?
 ```
 
 ### Check for TypeScript Errors
 
 ```bash
-docker compose exec nuxt npm run typecheck
+just typecheck
 ```
 
 ### Check for Lint Errors
 
 ```bash
-docker compose exec nuxt npm run lint
+just lint
 ```
 
 ---
@@ -43,7 +38,7 @@ docker compose exec nuxt npm run lint
 1. Restart TypeScript server in IDE (VS Code: Cmd+Shift+P -> "Restart TS Server")
 2. Check import path - use `~/` prefix for app directory
 3. For auto-imported composables, check they're in `app/composables/`
-4. Run `npm run typecheck` to see actual errors
+4. Run `just typecheck` to see actual errors
 
 ```typescript
 // WRONG
@@ -146,9 +141,9 @@ const { data } = await useAsyncData(`spell-${slug}`, () => apiFetch(`/spells/${s
 **Symptoms:** Changes don't appear without full refresh
 
 **Fixes:**
-1. Restart dev server: `docker compose restart nuxt`
+1. Restart dev server: `just restart`
 2. Check for syntax errors preventing HMR
-3. Clear `.nuxt` cache: `docker compose exec nuxt rm -rf .nuxt && npm run dev`
+3. Clear `.nuxt` cache: `just clean-nuxt && just dev`
 
 ---
 
@@ -181,14 +176,8 @@ logger.error('API failed:', error)
 ### Debugging Tests
 
 ```bash
-# Run single test file
-docker compose exec nuxt npm run test -- tests/components/spell/Card.test.ts
-
-# Run tests matching pattern
-docker compose exec nuxt npm run test -- -t "displays spell name"
-
-# Run with verbose output
-docker compose exec nuxt npm run test -- --reporter=verbose
+just test-file tests/components/spell/Card.test.ts  # Single file
+just test-filter "displays spell name"               # Pattern match
 ```
 
 ---
@@ -216,11 +205,8 @@ docker compose exec php php artisan migrate:fresh --seed
 ### Type Mismatch After Backend Changes
 
 ```bash
-# Regenerate types from backend
-node scripts/sync-api-types.js
-
-# Verify
-docker compose exec nuxt npm run typecheck
+just types-sync       # Regenerate types from backend
+just typecheck        # Verify
 ```
 
 ---
@@ -231,13 +217,12 @@ When all else fails:
 
 ```bash
 # Full rebuild
-docker compose down
-docker compose build --no-cache
-docker compose up -d
-docker compose exec nuxt npm install
-docker compose exec nuxt npm run dev
+just down
+just rebuild
+just install
+just dev
 
 # Clear all caches
-docker compose exec nuxt rm -rf .nuxt node_modules/.cache
-docker compose exec nuxt npm run dev
+just clean
+just dev
 ```

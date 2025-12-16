@@ -68,16 +68,21 @@ const isCantrip = computed(() => spellData.value?.level === 0)
  * - Cantrips are always ready (show filled icon)
  * - Always prepared spells (domain, etc.) are always prepared
  * - Other spells use store's reactive state for optimistic updates
- * - Falls back to prop if store isn't initialized
+ * - Falls back to prop if store isn't initialized for this character
+ *
+ * BUG FIX #719: Previously checked preparedSpellIds.size > 0, but this
+ * caused spells to revert to original state when ALL spells were unprepared.
+ * Now checks characterId to determine if store is initialized.
  */
 const isPrepared = computed(() => {
   // Cantrips are always ready
   if (isCantrip.value) return true
   // Always prepared spells
   if (props.spell.is_always_prepared) return true
-  // Use store's reactive state for real-time updates if initialized
-  // Fall back to prop for initial render / tests
-  if (store.preparedSpellIds.size > 0) {
+  // Use store's reactive state for real-time updates if store is initialized
+  // (characterId is set when initializeSpellPreparation is called)
+  // Fall back to prop only for initial render / tests where store isn't initialized
+  if (store.characterId !== null) {
     return store.isSpellPrepared(props.spell.id)
   }
   return props.spell.is_prepared
