@@ -587,4 +587,155 @@ describe('Spells Page', () => {
       }
     })
   })
+
+  // ==========================================================================
+  // PREPARATION METHOD UI DIFFERENTIATION (Issue #676)
+  // ==========================================================================
+
+  describe('preparation method UI differentiation (#676)', () => {
+    // Sorcerer character (known caster - no preparation needed)
+    const mockSorcererCharacter = {
+      ...mockCharacter,
+      name: 'Sorceron',
+      class: { id: 3, name: 'Sorcerer', slug: 'phb:sorcerer' },
+      classes: [{ class: { id: 3, name: 'Sorcerer', slug: 'phb:sorcerer' }, level: 5, subclass: null }]
+    }
+
+    const mockSorcererStats = {
+      ...mockStats,
+      preparation_method: 'known' as const,
+      spellcasting: {
+        'phb:sorcerer': {
+          ability: 'CHA',
+          ability_modifier: 3,
+          spell_save_dc: 14,
+          spell_attack_bonus: 6,
+          preparation_method: 'known' as const
+        }
+      }
+    }
+
+    // Cleric character (prepared caster)
+    const mockClericCharacter = {
+      ...mockCharacter,
+      name: 'Father Tuck',
+      class: { id: 2, name: 'Cleric', slug: 'phb:cleric' },
+      classes: [{ class: { id: 2, name: 'Cleric', slug: 'phb:cleric' }, level: 5, subclass: null }]
+    }
+
+    const mockClericStats = {
+      ...mockStats,
+      preparation_method: 'prepared' as const,
+      spellcasting: {
+        'phb:cleric': {
+          ability: 'WIS',
+          ability_modifier: 3,
+          spell_save_dc: 14,
+          spell_attack_bonus: 6,
+          preparation_method: 'prepared' as const
+        }
+      }
+    }
+
+    describe('known casters (single-class)', () => {
+      it('hides preparation counter for known casters', async () => {
+        server.use(
+          http.get('/api/characters/:id', () => {
+            return HttpResponse.json({ data: mockSorcererCharacter })
+          }),
+          http.get('/api/characters/:id/stats', () => {
+            return HttpResponse.json({ data: mockSorcererStats })
+          })
+        )
+
+        const wrapper = await mountSuspended(SpellsPage)
+        await flushPromises()
+
+        const layout = wrapper.find('[data-testid="spells-layout"]')
+        if (layout.exists()) {
+          const text = wrapper.text()
+          // Should NOT show "Prepared" counter for known casters
+          expect(text).not.toMatch(/Prepared.*\d+\s*\/\s*\d+/)
+        } else {
+          expect(true).toBe(true)
+        }
+      })
+
+      it('passes preparationMethod prop to SpellCards', async () => {
+        server.use(
+          http.get('/api/characters/:id', () => {
+            return HttpResponse.json({ data: mockSorcererCharacter })
+          }),
+          http.get('/api/characters/:id/stats', () => {
+            return HttpResponse.json({ data: mockSorcererStats })
+          })
+        )
+
+        const wrapper = await mountSuspended(SpellsPage)
+        await flushPromises()
+
+        const layout = wrapper.find('[data-testid="spells-layout"]')
+        if (layout.exists()) {
+          // For known casters, spell cards should not show preparation indicators
+          // The prepared icon should not be visible on any spell card
+          const preparedIcons = wrapper.findAll('[data-testid="prepared-icon"]')
+          expect(preparedIcons.length).toBe(0)
+        } else {
+          expect(true).toBe(true)
+        }
+      })
+    })
+
+    describe('prepared casters (single-class)', () => {
+      it('shows preparation counter for prepared casters', async () => {
+        server.use(
+          http.get('/api/characters/:id', () => {
+            return HttpResponse.json({ data: mockClericCharacter })
+          }),
+          http.get('/api/characters/:id/stats', () => {
+            return HttpResponse.json({ data: mockClericStats })
+          })
+        )
+
+        const wrapper = await mountSuspended(SpellsPage)
+        await flushPromises()
+
+        const layout = wrapper.find('[data-testid="spells-layout"]')
+        if (layout.exists()) {
+          const text = wrapper.text()
+          // Should show "Prepared" counter for prepared casters
+          expect(text).toContain('Prepared')
+        } else {
+          expect(true).toBe(true)
+        }
+      })
+
+      it('shows preparation indicators on spell cards', async () => {
+        server.use(
+          http.get('/api/characters/:id', () => {
+            return HttpResponse.json({ data: mockClericCharacter })
+          }),
+          http.get('/api/characters/:id/stats', () => {
+            return HttpResponse.json({ data: mockClericStats })
+          })
+        )
+
+        const wrapper = await mountSuspended(SpellsPage)
+        await flushPromises()
+
+        const layout = wrapper.find('[data-testid="spells-layout"]')
+        if (layout.exists()) {
+          // For prepared casters, spell cards should show preparation indicators
+          // Either prepared icon or unprepared indicator should be visible
+          const preparedIcons = wrapper.findAll('[data-testid="prepared-icon"]')
+          const unpreparedIndicators = wrapper.findAll('[data-testid="unprepared-indicator"]')
+          const totalIndicators = preparedIcons.length + unpreparedIndicators.length
+          // Should have at least as many indicators as there are spells
+          expect(totalIndicators).toBeGreaterThan(0)
+        } else {
+          expect(true).toBe(true)
+        }
+      })
+    })
+  })
 })

@@ -447,4 +447,164 @@ describe('SpellCard', () => {
       expect(toggleSpy).toHaveBeenCalledWith(mockLeveledSpell.id, true)
     })
   })
+
+  // ==========================================================================
+  // PREPARATION METHOD UI TESTS (Issue #676)
+  // ==========================================================================
+
+  describe('preparation method UI differentiation', () => {
+    describe('known casters (Bard, Sorcerer, Warlock, Ranger)', () => {
+      it('hides prepared indicator for known casters', async () => {
+        const preparedSpell = { ...mockLeveledSpell, is_prepared: true }
+        const wrapper = await mountSuspended(SpellCard, {
+          props: {
+            spell: preparedSpell,
+            preparationMethod: 'known'
+          }
+        })
+
+        expect(wrapper.find('[data-testid="prepared-icon"]').exists()).toBe(false)
+      })
+
+      it('hides unprepared indicator for known casters', async () => {
+        const unpreparedSpell = { ...mockLeveledSpell, is_prepared: false }
+        const wrapper = await mountSuspended(SpellCard, {
+          props: {
+            spell: unpreparedSpell,
+            preparationMethod: 'known'
+          }
+        })
+
+        // The empty circle indicator should not exist
+        expect(wrapper.find('[data-testid="unprepared-indicator"]').exists()).toBe(false)
+      })
+
+      it('does not dim unprepared spells for known casters', async () => {
+        const unpreparedSpell = { ...mockLeveledSpell, is_prepared: false, preparation_status: 'known' as const }
+        const wrapper = await mountSuspended(SpellCard, {
+          props: {
+            spell: unpreparedSpell,
+            preparationMethod: 'known'
+          }
+        })
+
+        const card = wrapper.find('[data-testid="spell-card"]')
+        // Should NOT have opacity class for known casters
+        expect(card.classes().join(' ')).not.toMatch(/opacity-60/)
+      })
+
+      it('does not allow toggle for known casters even when editable', async () => {
+        setActivePinia(createPinia())
+        const store = useCharacterPlayStateStore()
+        const toggleSpy = vi.spyOn(store, 'toggleSpellPreparation')
+
+        const wrapper = await mountSuspended(SpellCard, {
+          props: {
+            spell: mockLeveledSpell,
+            characterId: 1,
+            editable: true,
+            atPrepLimit: false,
+            preparationMethod: 'known'
+          },
+          global: { plugins: [createPinia()] }
+        })
+
+        await wrapper.find('[data-testid="spell-card-body"]').trigger('click')
+
+        expect(toggleSpy).not.toHaveBeenCalled()
+      })
+
+      it('still allows expand/collapse for known casters', async () => {
+        const wrapper = await mountSuspended(SpellCard, {
+          props: {
+            spell: mockLeveledSpell,
+            preparationMethod: 'known'
+          }
+        })
+
+        await wrapper.find('[data-testid="expand-toggle"]').trigger('click')
+
+        expect(wrapper.find('[data-testid="spell-details"]').exists()).toBe(true)
+      })
+    })
+
+    describe('prepared casters (Cleric, Druid, Paladin)', () => {
+      it('shows prepared indicator for prepared casters', async () => {
+        const preparedSpell = { ...mockLeveledSpell, is_prepared: true }
+        const wrapper = await mountSuspended(SpellCard, {
+          props: {
+            spell: preparedSpell,
+            preparationMethod: 'prepared'
+          }
+        })
+
+        expect(wrapper.find('[data-testid="prepared-icon"]').exists()).toBe(true)
+      })
+
+      it('shows unprepared indicator for unprepared spells', async () => {
+        const unpreparedSpell = { ...mockLeveledSpell, is_prepared: false }
+        const wrapper = await mountSuspended(SpellCard, {
+          props: {
+            spell: unpreparedSpell,
+            preparationMethod: 'prepared'
+          }
+        })
+
+        expect(wrapper.find('[data-testid="unprepared-indicator"]').exists()).toBe(true)
+      })
+
+      it('dims unprepared spells for prepared casters', async () => {
+        const unpreparedSpell = { ...mockLeveledSpell, is_prepared: false, preparation_status: 'known' as const }
+        const wrapper = await mountSuspended(SpellCard, {
+          props: {
+            spell: unpreparedSpell,
+            preparationMethod: 'prepared'
+          }
+        })
+
+        const card = wrapper.find('[data-testid="spell-card"]')
+        expect(card.classes().join(' ')).toMatch(/opacity-60/)
+      })
+    })
+
+    describe('spellbook casters (Wizard)', () => {
+      it('shows prepared indicator for spellbook casters', async () => {
+        const preparedSpell = { ...mockLeveledSpell, is_prepared: true }
+        const wrapper = await mountSuspended(SpellCard, {
+          props: {
+            spell: preparedSpell,
+            preparationMethod: 'spellbook'
+          }
+        })
+
+        expect(wrapper.find('[data-testid="prepared-icon"]').exists()).toBe(true)
+      })
+    })
+
+    describe('fallback behavior (null/undefined)', () => {
+      it('shows prepared indicator when preparationMethod is null', async () => {
+        const preparedSpell = { ...mockLeveledSpell, is_prepared: true }
+        const wrapper = await mountSuspended(SpellCard, {
+          props: {
+            spell: preparedSpell,
+            preparationMethod: null
+          }
+        })
+
+        expect(wrapper.find('[data-testid="prepared-icon"]').exists()).toBe(true)
+      })
+
+      it('shows prepared indicator when preparationMethod is undefined', async () => {
+        const preparedSpell = { ...mockLeveledSpell, is_prepared: true }
+        const wrapper = await mountSuspended(SpellCard, {
+          props: {
+            spell: preparedSpell
+            // preparationMethod not provided
+          }
+        })
+
+        expect(wrapper.find('[data-testid="prepared-icon"]').exists()).toBe(true)
+      })
+    })
+  })
 })
