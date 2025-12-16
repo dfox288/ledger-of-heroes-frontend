@@ -1,6 +1,6 @@
 # Project Status
 
-**D&D 5e Compendium Frontend** | **Last Updated:** 2025-12-10
+**D&D 5e Compendium Frontend** | **Last Updated:** 2025-12-16
 
 ---
 
@@ -8,13 +8,13 @@
 
 | Metric | Count |
 |--------|-------|
-| Test Files | 201 |
-| Test Cases | ~2,900 |
-| Components | 190 |
-| Pages | 40 |
-| Composables | 33 |
-| Pinia Stores | 13 |
-| Test Helpers | 11 |
+| Test Files | 296 |
+| Test Cases | ~5,150 |
+| Components | 273 |
+| Pages | 50 |
+| Composables | 44 |
+| Pinia Stores | 15 |
+| Test Helpers | 14 |
 
 ---
 
@@ -84,19 +84,22 @@
 
 ## Test Suite Performance
 
-| Suite | Files | Tests | Runtime | Command |
-|-------|-------|-------|---------|---------|
-| Spells | 9 | ~180 | ~14s | `npm run test:spells` |
-| Items | 7 | ~140 | ~12s | `npm run test:items` |
-| Monsters | 6 | ~120 | ~12s | `npm run test:monsters` |
-| Classes | 19 | ~300 | ~28s | `npm run test:classes` |
-| Races | 5 | ~100 | ~10s | `npm run test:races` |
-| Backgrounds | 5 | ~90 | ~10s | `npm run test:backgrounds` |
-| Feats | 4 | ~80 | ~8s | `npm run test:feats` |
-| Reference | 1 | ~70 | ~10s | `npm run test:reference` |
-| UI | 48 | ~500 | ~52s | `npm run test:ui` |
-| Core | 15 | ~150 | ~18s | `npm run test:core` |
-| **Full Suite** | 193 | ~2,848 | ~235s | `npm run test` |
+| Suite | Command | Description |
+|-------|---------|-------------|
+| Character | `npm run test:character` | Character builder, wizard steps |
+| Spells | `npm run test:spells` | Spells page, SpellCard, filters |
+| Items | `npm run test:items` | Items page, ItemCard, filters |
+| Monsters | `npm run test:monsters` | Monsters page, filters |
+| Classes | `npm run test:classes` | Classes page, filters |
+| Races | `npm run test:races` | Races page, filters |
+| Backgrounds | `npm run test:backgrounds` | Backgrounds page, filters |
+| Feats | `npm run test:feats` | Feats page, filters |
+| Reference | `npm run test:reference` | Reference entities |
+| UI | `npm run test:ui` | Shared UI components |
+| Core | `npm run test:core` | Composables, utils, server API |
+| **Full Suite** | `npm run test` | 296 files, ~5,150 tests |
+
+**Note:** CI uses 4-way sharding for faster runs. Local full suite ~8min.
 
 ---
 
@@ -145,6 +148,25 @@
 
 ## Recent Milestones
 
+- **2025-12-16:** Spell preparation UI follow-up fixes (#718) - multiclass SpellCard props
+- **2025-12-16:** Spell preparation UI differentiation (#676) - known vs prepared caster UI
+- **2025-12-16:** Multiclass spellcasting support (#631) - per-class spell tabs, class_slug tracking
+- **2025-12-15:** Wizard choice consolidation (#697) - shared UI components for choice steps
+- **2025-12-15:** Entity picker card consolidation - generic EntityPickerCard component
+- **2025-12-15:** Optional features on Features page (#712)
+- **2025-12-14:** Weapon bonus display from API (#709) - pre-computed attack/damage bonuses
+- **2025-12-14:** Modal state standardization (#699) - defineModel pattern for all modals
+- **2025-12-14:** Manager component consolidation - merged into characterPlayState store
+- **2025-12-13:** Prone/flying status toggles (#664) - DM screen combat status
+- **2025-12-13:** Entity detail modal consolidation - generic EntityDetailModal component
+- **2025-12-12:** Class resource counters (#632, #688) - character sheet and DM screen
+- **2025-12-12:** Minimum roll indicators (#652) - reliable talent/expertise on skills
+- **2025-12-11:** Spell slot spent tracking (#618) - new API format support
+- **2025-12-11:** Wizard spellbook two-column UI (#680)
+- **2025-12-11:** Enriched features endpoint (#619) - prerequisites display
+- **2025-12-11:** DM screen notes (#660) - per-combatant notes
+- **2025-12-11:** Encounter presets (#667) - save/load monster groups
+- **2025-12-11:** Condition disadvantages display (#651)
 - **2025-12-10:** Codebase cleanup (#439, #440) - removed 3 deprecated components, consolidated JsonDebugPanel
 - **2025-12-09:** Wizard step validation (#437) - validates pending choices before allowing navigation
 - **2025-12-09:** Character validation warnings (#435) - shows human-readable validation messages

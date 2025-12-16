@@ -94,12 +94,17 @@ app/
 ├── components/       # Vue components (auto-import)
 │   ├── spell/       # Entity-specific (SpellCard, etc.)
 │   ├── monster/
-│   ├── character/   # Character builder + sheet
-│   │   ├── wizard/  # StepName, StepRace, StepClass, etc.
-│   │   └── sheet/   # Header, AbilityScoreBlock, SkillsList, etc.
+│   ├── character/   # Character builder + sheet + play mode
+│   │   ├── wizard/  # Creation steps (StepRace, StepClass, etc.)
+│   │   ├── levelup/ # Level-up steps (StepHitPoints, StepAsiFeat, etc.)
+│   │   ├── sheet/   # Sheet panels (Header, AbilityScoreBlock, etc.)
+│   │   ├── inventory/ # Equipment/inventory management
+│   │   └── picker/  # Entity selection components
+│   ├── dm-screen/   # DM screen components
+│   ├── party/       # Party management
 │   └── ui/          # Reusable (UiListPageHeader, etc.)
 ├── composables/     # useEntityList, useMeilisearchFilters, etc.
-├── stores/          # Pinia stores (7 filter stores + characterWizard)
+├── stores/          # Pinia stores (7 filter + 3 character stores)
 ├── pages/           # File-based routing
 ├── types/           # TypeScript types (api/generated.ts)
 └── assets/css/      # Tailwind + NuxtUI colors

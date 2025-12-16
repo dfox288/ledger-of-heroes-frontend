@@ -7,7 +7,7 @@
 ```bash
 # Most common commands
 docker compose exec nuxt npm run dev        # Dev server
-docker compose exec nuxt npm run test       # Full test suite (~125s)
+docker compose exec nuxt npm run test       # Full test suite (~8 min)
 docker compose exec nuxt npm run typecheck  # TypeScript check
 docker compose exec nuxt npm run lint:fix   # Auto-fix linting
 node scripts/sync-api-types.js             # Sync API types (run from HOST, not Docker)
@@ -15,22 +15,24 @@ node scripts/sync-api-types.js             # Sync API types (run from HOST, not 
 
 ## Test Suites by Domain
 
-| Working On | Test Suite | Runtime |
-|------------|------------|---------|
-| **Character builder, wizard steps** | `npm run test:character` | ~40s |
-| Spells page, SpellCard, filters | `npm run test:spells` | ~14s |
-| Items page, ItemCard, filters | `npm run test:items` | ~12s |
-| Monsters page, filters | `npm run test:monsters` | ~12s |
-| Classes page, filters | `npm run test:classes` | ~12s |
-| Races page, filters | `npm run test:races` | ~10s |
-| Backgrounds page, filters | `npm run test:backgrounds` | ~10s |
-| Feats page, filters | `npm run test:feats` | ~8s |
-| Reference entities (sizes, skills) | `npm run test:reference` | ~10s |
-| Shared UI components, cards | `npm run test:ui` | ~55s |
-| Composables, utils, server API | `npm run test:core` | ~20s |
-| All page tests | `npm run test:pages` | ~60s |
-| All Pinia stores | `npm run test:stores` | ~15s |
-| CI, pre-commit, final check | `npm run test` | ~250s |
+| Working On | Test Suite |
+|------------|------------|
+| **Character builder, wizard steps** | `npm run test:character` |
+| Spells page, SpellCard, filters | `npm run test:spells` |
+| Items page, ItemCard, filters | `npm run test:items` |
+| Monsters page, filters | `npm run test:monsters` |
+| Classes page, filters | `npm run test:classes` |
+| Races page, filters | `npm run test:races` |
+| Backgrounds page, filters | `npm run test:backgrounds` |
+| Feats page, filters | `npm run test:feats` |
+| Reference entities (sizes, skills) | `npm run test:reference` |
+| Shared UI components, cards | `npm run test:ui` |
+| Composables, utils, server API | `npm run test:core` |
+| All page tests | `npm run test:pages` |
+| All Pinia stores | `npm run test:stores` |
+| CI, pre-commit, final check | `npm run test` |
+
+**Note:** Domain suites run much faster than full suite. Use them during development.
 
 ## Speeding Up Local Tests
 
