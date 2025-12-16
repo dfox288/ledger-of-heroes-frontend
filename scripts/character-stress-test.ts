@@ -454,6 +454,12 @@ async function pickRandomChoiceSelection(choice: PendingChoice): Promise<{ selec
       return { selected: pickRandomN(available, choice.quantity) }
     }
 
+    case 'equipment_mode': {
+      // Equipment mode: choose between starting equipment or starting gold
+      // Options are 'equipment' or 'gold' - we'll always pick 'equipment' for consistency
+      return { selected: ['equipment'] }
+    }
+
     default:
       console.warn(`    ⚠️  Unknown choice type: ${choice.type}`)
       return { selected: [] }
