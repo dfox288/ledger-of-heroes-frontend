@@ -9,10 +9,12 @@
  *
  * @see Issue #556 - Spells Tab
  * @see Issue #616 - Spell slot tracking
+ * @see Issue #631 - Multiclass spellcasting support
  */
 import { storeToRefs } from 'pinia'
 import type { CharacterSpell, CharacterStats } from '~/types/character'
 import { useCharacterPlayStateStore } from '~/stores/characterPlayState'
+import { getPrimarySpellcasting } from '~/utils/classColors'
 
 const props = defineProps<{
   spells: CharacterSpell[]
@@ -29,6 +31,9 @@ const validSpells = computed(() => props.spells.filter(s => s.spell !== null))
 const cantrips = computed(() => validSpells.value.filter(s => s.spell!.level === 0))
 const leveledSpells = computed(() => validSpells.value.filter(s => s.spell!.level > 0))
 
+// Extract primary spellcasting info (for multiclass, uses first class)
+const primarySpellcasting = computed(() => getPrimarySpellcasting(props.stats.spellcasting))
+
 function formatModifier(value: number): string {
   return value >= 0 ? `+${value}` : `${value}`
 }
@@ -38,7 +43,7 @@ function formatModifier(value: number): string {
   <div class="space-y-4">
     <!-- Spellcasting stats -->
     <div
-      v-if="stats.spellcasting"
+      v-if="primarySpellcasting"
       class="flex gap-4 flex-wrap"
     >
       <div class="bg-gray-50 dark:bg-gray-800 rounded-lg px-4 py-2 text-center">
@@ -46,7 +51,7 @@ function formatModifier(value: number): string {
           Spell DC
         </div>
         <div class="text-lg font-bold">
-          {{ stats.spellcasting.spell_save_dc }}
+          {{ primarySpellcasting.info.spell_save_dc }}
         </div>
       </div>
       <div class="bg-gray-50 dark:bg-gray-800 rounded-lg px-4 py-2 text-center">
@@ -54,7 +59,7 @@ function formatModifier(value: number): string {
           Attack
         </div>
         <div class="text-lg font-bold">
-          {{ formatModifier(stats.spellcasting.spell_attack_bonus) }}
+          {{ formatModifier(primarySpellcasting.info.spell_attack_bonus) }}
         </div>
       </div>
       <div class="bg-gray-50 dark:bg-gray-800 rounded-lg px-4 py-2 text-center">
@@ -62,7 +67,7 @@ function formatModifier(value: number): string {
           Ability
         </div>
         <div class="text-lg font-bold">
-          {{ stats.spellcasting.ability }}
+          {{ primarySpellcasting.info.ability }}
         </div>
       </div>
     </div>

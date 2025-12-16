@@ -115,7 +115,11 @@ export function useCharacterSubPage(publicId: Ref<string>): UseCharacterSubPageR
   // Computed data extraction
   const character = computed(() => characterData.value?.data ?? null)
   const stats = computed(() => statsData.value?.data ?? null)
-  const isSpellcaster = computed(() => !!stats.value?.spellcasting)
+  // Check if spellcasting has any class entries (object keyed by class slug)
+  const isSpellcaster = computed(() => {
+    const spellcasting = stats.value?.spellcasting
+    return spellcasting !== null && typeof spellcasting === 'object' && Object.keys(spellcasting).length > 0
+  })
 
   // Track initial load completion (prevents skeleton flash on refresh)
   const hasLoadedOnce = ref(dataAlreadyCached)

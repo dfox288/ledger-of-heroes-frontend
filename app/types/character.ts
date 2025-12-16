@@ -273,20 +273,46 @@ export interface SkillAdvantage {
 }
 
 /**
+ * Per-class spellcasting information
+ *
+ * For multiclass characters, each spellcasting class has its own stats.
+ * API returns spellcasting keyed by class slug (e.g., "phb:wizard").
+ *
+ * @see Issue #631 - Multiclass spellcasting support
+ */
+export interface ClassSpellcastingInfo {
+  /** Spellcasting ability code (INT, WIS, CHA, etc.) */
+  ability: AbilityScoreCode
+  /** Ability modifier used for spellcasting */
+  ability_modifier: number
+  /** Spell save DC = 8 + proficiency + ability modifier */
+  spell_save_dc: number
+  /** Spell attack bonus = proficiency + ability modifier */
+  spell_attack_bonus: number
+}
+
+/**
  * Character stats with strongly-typed ability score keys
  *
  * Extends the generated type with stricter typing for ability_scores
  * and saving_throws (AbilityScoreCode keys instead of generic string).
+ *
+ * Note: spellcasting is keyed by class slug (e.g., "phb:wizard") to support
+ * multiclass characters with different spellcasting abilities per class.
+ *
+ * @see Issue #631 - Multiclass spellcasting support
  */
 export interface CharacterStats extends Omit<CharacterStatsFromAPI, 'ability_scores' | 'saving_throws' | 'spellcasting'> {
   ability_scores: Record<AbilityScoreCode, { score: number | null, modifier: number | null }>
   saving_throws: Record<AbilityScoreCode, { modifier: number | null, proficient: boolean, total: number | null } | null>
-  spellcasting: {
-    ability: AbilityScoreCode
-    ability_modifier: number
-    spell_save_dc: number
-    spell_attack_bonus: number
-  } | null
+  /**
+   * Spellcasting stats keyed by class slug
+   *
+   * Single-class caster: { "phb:wizard": { ability: "INT", ... } }
+   * Multiclass caster: { "phb:wizard": {...}, "phb:cleric": {...} }
+   * Non-caster: null or empty object
+   */
+  spellcasting: Record<string, ClassSpellcastingInfo> | null
   damage_resistances: DamageDefense[]
   damage_immunities: DamageDefense[]
   damage_vulnerabilities: DamageDefense[]

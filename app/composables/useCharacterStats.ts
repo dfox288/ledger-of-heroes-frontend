@@ -1,5 +1,6 @@
 // app/composables/useCharacterStats.ts
 import { logger } from '~/utils/logger'
+import { getPrimarySpellcasting } from '~/utils/classColors'
 
 /**
  * Composable for fetching and displaying character stats
@@ -163,11 +164,15 @@ export function useCharacterStats(characterId: Ref<number | null>) {
 
   /**
    * Spellcasting info if character is a spellcaster
+   *
+   * For multiclass casters, returns the primary (first) class's stats.
+   * Use stats.spellcasting directly for per-class stats.
    */
   const spellcasting = computed<SpellcastingDisplay | null>(() => {
-    if (!stats.value?.spellcasting) return null
+    const primary = getPrimarySpellcasting(stats.value?.spellcasting)
+    if (!primary) return null
 
-    const sc = stats.value.spellcasting
+    const sc = primary.info
     return {
       ability: sc.ability,
       abilityName: ABILITY_NAMES[sc.ability],
@@ -186,8 +191,11 @@ export function useCharacterStats(characterId: Ref<number | null>) {
   /** How many spells are currently prepared */
   const preparedSpellCount = computed(() => stats.value?.prepared_spell_count ?? 0)
 
-  /** Is this character a spellcaster? */
-  const isSpellcaster = computed(() => stats.value?.spellcasting !== null)
+  /** Is this character a spellcaster? Check for any class entries in spellcasting object */
+  const isSpellcaster = computed(() => {
+    const spellcasting = stats.value?.spellcasting
+    return spellcasting !== null && typeof spellcasting === 'object' && Object.keys(spellcasting).length > 0
+  })
 
   // ══════════════════════════════════════════════════════════════
   // ACTIONS

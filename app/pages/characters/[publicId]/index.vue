@@ -167,7 +167,11 @@ const tabItems = [
 ]
 
 // Is this character a spellcaster? (for TabNavigation)
-const isSpellcaster = computed(() => !!stats.value?.spellcasting)
+// Check if spellcasting has any class entries (object keyed by class slug)
+const isSpellcaster = computed(() => {
+  const spellcasting = stats.value?.spellcasting
+  return spellcasting !== null && typeof spellcasting === 'object' && Object.keys(spellcasting).length > 0
+})
 </script>
 
 <template>
