@@ -33,6 +33,9 @@ addPendingState(featuresPending)
 
 const features = computed(() => featuresData.value?.data ?? [])
 
+// Get feature selections from character data (infusions, invocations, etc.)
+const featureSelections = computed(() => character.value?.feature_selections ?? [])
+
 useSeoMeta({
   title: () => character.value ? `${character.value.name} - Features` : 'Features'
 })
@@ -62,8 +65,11 @@ useSeoMeta({
       />
 
       <!-- Features Content -->
-      <div class="mt-6">
+      <div class="mt-6 space-y-8">
         <CharacterSheetFeaturesPanel :features="features" />
+
+        <!-- Optional Features (Infusions, Invocations, etc.) -->
+        <CharacterSheetOptionalFeaturesPanel :feature-selections="featureSelections" />
       </div>
     </template>
   </div>
