@@ -251,14 +251,10 @@ const {
 <template>
   <div class="space-y-8">
     <!-- Header -->
-    <div class="text-center">
-      <h2 class="text-2xl font-bold text-gray-900 dark:text-white">
-        Select Your Spells
-      </h2>
-      <p class="mt-2 text-gray-600 dark:text-gray-400">
-        Choose your starting spells from your class spell list
-      </p>
-    </div>
+    <CharacterWizardStepHeader
+      title="Select Your Spells"
+      description="Choose your starting spells from your class spell list"
+    />
 
     <!-- Spellcasting Info Card -->
     <div
@@ -313,15 +309,10 @@ const {
     />
 
     <!-- Loading State -->
-    <div
+    <CharacterWizardLoadingState
       v-if="loadingChoices"
-      class="flex justify-center py-12"
-    >
-      <UIcon
-        name="i-heroicons-arrow-path"
-        class="w-8 h-8 animate-spin text-spell-500"
-      />
-    </div>
+      color="spell"
+    />
 
     <template v-else>
       <!-- Fixed Racial Spells (if any) -->
@@ -484,32 +475,20 @@ const {
       </div>
 
       <!-- Empty State -->
-      <div
+      <CharacterWizardEmptyState
         v-if="choicesByType.spells.length === 0 && fixedRaceSpells.length === 0"
-        class="text-center py-12"
-      >
-        <UIcon
-          name="i-heroicons-sparkles"
-          class="w-12 h-12 text-gray-400 mx-auto mb-4"
-        />
-        <p class="text-gray-600 dark:text-gray-400">
-          No spells available for selection at this level.
-        </p>
-      </div>
+        icon="i-heroicons-sparkles"
+        title="No spells available for selection at this level."
+      />
     </template>
 
     <!-- Continue Button -->
-    <div class="flex justify-center pt-4">
-      <UButton
-        data-testid="continue-btn"
-        size="lg"
-        :disabled="!canProceed || isLoading || isSaving"
-        :loading="isLoading || isSaving"
-        @click="handleContinue"
-      >
-        Continue with Spells
-      </UButton>
-    </div>
+    <CharacterWizardContinueButton
+      text="Continue with Spells"
+      :disabled="!canProceed || isLoading || isSaving"
+      :loading="isLoading || isSaving"
+      @click="handleContinue"
+    />
 
     <!-- Spell Detail Modal -->
     <CharacterPickerSpellDetailModal

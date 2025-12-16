@@ -2,6 +2,7 @@
 <script setup lang="ts">
 import type { components } from '~/types/api/generated'
 import type { CharacterLanguage } from '~/types/character'
+import type { GrantedGroup } from './WizardGrantedItemsSection.vue'
 import { useCharacterWizard } from '~/composables/useCharacterWizard'
 import { useCharacterWizardStore } from '~/stores/characterWizard'
 import { useWizardChoiceSelection } from '~/composables/useWizardChoiceSelection'
@@ -51,26 +52,70 @@ const { data: knownLanguagesData, pending: knownLanguagesPending } = await useAs
   { watch: [effectiveCharacterId] }
 )
 
-// Group known languages by source
-const knownLanguagesBySource = computed(() => {
+// Group known languages by source for GrantedItemsSection
+const knownLanguageGroups = computed((): GrantedGroup[] => {
   const languages = knownLanguagesData.value ?? []
-  return {
+  const groups: GrantedGroup[] = []
+
+  // Group by source
+  const bySource = {
     race: languages.filter(l => l.source === 'race'),
     class: languages.filter(l => l.source === 'class'),
     background: languages.filter(l => l.source === 'background'),
     subclass_feature: languages.filter(l => l.source === 'subclass_feature')
   }
+
+  if (bySource.race.length > 0) {
+    groups.push({
+      label: `From Race (${store.selections.race?.name})`,
+      color: 'race',
+      items: bySource.race.map(l => ({
+        id: l.id,
+        name: l.language?.name || l.language_slug
+      }))
+    })
+  }
+
+  if (bySource.class.length > 0) {
+    groups.push({
+      label: `From Class (${store.selections.class?.name})`,
+      color: 'class',
+      items: bySource.class.map(l => ({
+        id: l.id,
+        name: l.language?.name || l.language_slug
+      }))
+    })
+  }
+
+  if (bySource.background.length > 0) {
+    groups.push({
+      label: `From Background (${store.selections.background?.name})`,
+      color: 'background',
+      items: bySource.background.map(l => ({
+        id: l.id,
+        name: l.language?.name || l.language_slug
+      }))
+    })
+  }
+
+  if (bySource.subclass_feature.length > 0) {
+    groups.push({
+      label: 'From Subclass',
+      color: 'class',
+      items: bySource.subclass_feature.map(l => ({
+        id: l.id,
+        name: l.language?.name || l.language_slug
+      }))
+    })
+  }
+
+  return groups
 })
 
 // Get all known language slugs for already-granted validation
 const knownLanguageSlugs = computed(() => {
   const languages = knownLanguagesData.value ?? []
   return new Set(languages.map(l => l.language_slug))
-})
-
-// Check if we have any known languages to display
-const hasKnownLanguages = computed(() => {
-  return (knownLanguagesData.value?.length ?? 0) > 0
 })
 
 // ══════════════════════════════════════════════════════════════
@@ -211,6 +256,27 @@ function isLanguageSelectedElsewhere(choiceId: string, slug: string): boolean {
   return false
 }
 
+// Custom icon helpers for language-specific states
+function getCustomIcon(choiceId: string, slug: string): string | undefined {
+  if (isLanguageAlreadyKnown(slug)) {
+    return 'i-heroicons-check-circle-solid'
+  }
+  if (isLanguageSelectedElsewhere(choiceId, slug)) {
+    return 'i-heroicons-no-symbol'
+  }
+  return undefined
+}
+
+function getCustomIconClass(choiceId: string, slug: string): string | undefined {
+  if (isLanguageAlreadyKnown(slug)) {
+    return 'text-success'
+  }
+  if (isLanguageSelectedElsewhere(choiceId, slug)) {
+    return 'text-gray-300 dark:text-gray-600'
+  }
+  return undefined
+}
+
 // ══════════════════════════════════════════════════════════════
 // Navigation
 // ══════════════════════════════════════════════════════════════
@@ -242,14 +308,12 @@ async function handleContinue() {
 
 <template>
   <div class="step-languages">
-    <div class="text-center mb-8">
-      <h2 class="text-2xl font-bold text-primary">
-        Choose Your Languages
-      </h2>
-      <p class="text-gray-600 dark:text-gray-400 mt-2">
-        Your race and background grant the following languages
-      </p>
-    </div>
+    <!-- Header -->
+    <CharacterWizardStepHeader
+      title="Choose Your Languages"
+      description="Your race and background grant the following languages"
+      class="mb-8"
+    />
 
     <!-- Error State -->
     <UAlert
@@ -262,119 +326,25 @@ async function handleContinue() {
     />
 
     <!-- Loading State -->
-    <div
+    <CharacterWizardLoadingState
       v-if="(pending || knownLanguagesPending || isLoading) && !choicesError"
-      class="flex justify-center py-8"
-    >
-      <UIcon
-        name="i-heroicons-arrow-path"
-        class="w-8 h-8 animate-spin text-primary"
-      />
-    </div>
+    />
 
-    <!-- Known Languages Section -->
-    <div
-      v-if="hasKnownLanguages && !knownLanguagesPending"
-      class="mb-8"
-    >
-      <h3 class="text-lg font-semibold mb-4 flex items-center gap-2">
-        <UIcon
-          name="i-heroicons-check-circle"
-          class="w-5 h-5 text-success"
-        />
-        Languages You Know
-      </h3>
-      <div class="bg-gray-50 dark:bg-gray-800/50 rounded-lg p-4 space-y-4">
-        <!-- From Race -->
-        <div v-if="knownLanguagesBySource.race.length > 0">
-          <p class="text-sm font-medium text-gray-600 dark:text-gray-400 mb-2">
-            From Race ({{ store.selections.race?.name }}):
-          </p>
-          <div class="flex flex-wrap gap-2">
-            <UBadge
-              v-for="lang in knownLanguagesBySource.race"
-              :key="lang.id"
-              color="race"
-              variant="subtle"
-              size="md"
-            >
-              {{ lang.language?.name || lang.language_slug }}
-            </UBadge>
-          </div>
-        </div>
-
-        <!-- From Class -->
-        <div v-if="knownLanguagesBySource.class.length > 0">
-          <p class="text-sm font-medium text-gray-600 dark:text-gray-400 mb-2">
-            From Class ({{ store.selections.class?.name }}):
-          </p>
-          <div class="flex flex-wrap gap-2">
-            <UBadge
-              v-for="lang in knownLanguagesBySource.class"
-              :key="lang.id"
-              color="class"
-              variant="subtle"
-              size="md"
-            >
-              {{ lang.language?.name || lang.language_slug }}
-            </UBadge>
-          </div>
-        </div>
-
-        <!-- From Background -->
-        <div v-if="knownLanguagesBySource.background.length > 0">
-          <p class="text-sm font-medium text-gray-600 dark:text-gray-400 mb-2">
-            From Background ({{ store.selections.background?.name }}):
-          </p>
-          <div class="flex flex-wrap gap-2">
-            <UBadge
-              v-for="lang in knownLanguagesBySource.background"
-              :key="lang.id"
-              color="background"
-              variant="subtle"
-              size="md"
-            >
-              {{ lang.language?.name || lang.language_slug }}
-            </UBadge>
-          </div>
-        </div>
-
-        <!-- From Subclass -->
-        <div v-if="knownLanguagesBySource.subclass_feature.length > 0">
-          <p class="text-sm font-medium text-gray-600 dark:text-gray-400 mb-2">
-            From Subclass:
-          </p>
-          <div class="flex flex-wrap gap-2">
-            <UBadge
-              v-for="lang in knownLanguagesBySource.subclass_feature"
-              :key="lang.id"
-              color="class"
-              variant="subtle"
-              size="md"
-            >
-              {{ lang.language?.name || lang.language_slug }}
-            </UBadge>
-          </div>
-        </div>
-      </div>
-    </div>
+    <!-- Known Languages Section (using shared component) -->
+    <CharacterWizardGrantedItemsSection
+      v-if="!knownLanguagesPending"
+      title="Languages You Know"
+      :groups="knownLanguageGroups"
+    />
 
     <!-- No choices needed -->
-    <div
+    <CharacterWizardEmptyState
       v-if="!hasAnyChoices && !pending && !knownLanguagesPending"
-      class="text-center py-8"
-    >
-      <UIcon
-        name="i-heroicons-check-circle"
-        class="w-12 h-12 text-success mx-auto mb-4"
-      />
-      <p class="text-lg">
-        No language choices needed
-      </p>
-      <p class="text-gray-600 dark:text-gray-400">
-        All your languages have been automatically assigned
-      </p>
-    </div>
+      icon="i-heroicons-check-circle"
+      icon-color="success"
+      title="No language choices needed"
+      description="All your languages have been automatically assigned"
+    />
 
     <!-- Language choices by source -->
     <div
@@ -417,96 +387,43 @@ async function handleContinue() {
           </div>
         </div>
 
-        <!-- Language choices -->
-        <div class="mb-6">
-          <div class="flex items-center justify-between mb-3">
-            <span class="text-sm font-medium">
-              Choose {{ data.choice.quantity }} language{{ data.choice.quantity > 1 ? 's' : '' }}:
-            </span>
-            <UBadge
-              :color="getSelectedCount(data.choice.id) === data.choice.quantity ? 'success' : 'neutral'"
-              size="md"
-            >
-              {{ getSelectedCount(data.choice.id) }}/{{ data.choice.quantity }} selected
-            </UBadge>
-          </div>
-
-          <!-- Language options grid (filtered to only show learnable languages) -->
-          <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
-            <button
-              v-for="option in getLearnableOptions(data.choice.options)"
-              :key="option.slug"
-              type="button"
-              class="language-option p-3 rounded-lg border text-left transition-all"
-              :class="{
-                'border-primary bg-primary/10': isOptionSelected(data.choice.id, option.slug),
-                'border-gray-200 dark:border-gray-700 hover:border-primary/50': !isOptionSelected(data.choice.id, option.slug) && !isOptionDisabled(data.choice.id, option.slug),
-                'border-gray-200 dark:border-gray-700 opacity-50 cursor-not-allowed': isOptionDisabled(data.choice.id, option.slug)
-              }"
-              :disabled="isOptionDisabled(data.choice.id, option.slug)"
-              @click="handleToggle(data.choice, option.slug)"
-            >
-              <div class="flex items-center gap-2">
-                <!-- Selection indicator: various states for language options -->
-                <UIcon
-                  v-if="isLanguageAlreadyKnown(option.slug)"
-                  name="i-heroicons-check-circle-solid"
-                  class="w-5 h-5 text-success"
-                />
-                <UIcon
-                  v-else-if="isLanguageSelectedElsewhere(data.choice.id, option.slug)"
-                  name="i-heroicons-no-symbol"
-                  class="w-5 h-5 text-gray-300 dark:text-gray-600"
-                />
-                <UIcon
-                  v-else-if="isOptionSelected(data.choice.id, option.slug)"
-                  name="i-heroicons-check-circle-solid"
-                  class="w-5 h-5 text-primary"
-                />
-                <span
-                  v-else
-                  class="w-5 h-5 rounded-full border-2"
-                  :class="{
-                    'border-gray-300 dark:border-gray-600': isOptionDisabled(data.choice.id, option.slug),
-                    'border-gray-400': !isOptionDisabled(data.choice.id, option.slug)
-                  }"
-                />
-                <span
-                  class="font-medium"
-                  :class="{ 'text-gray-400 dark:text-gray-500': isOptionDisabled(data.choice.id, option.slug) }"
-                >
-                  {{ option.name }}
-                </span>
-              </div>
+        <!-- Language choices (using shared grid component) -->
+        <CharacterWizardChoiceSelectionGrid
+          :label="`Choose ${data.choice.quantity} language${data.choice.quantity > 1 ? 's' : ''}`"
+          :quantity="data.choice.quantity"
+          :selected-count="getSelectedCount(data.choice.id)"
+        >
+          <!-- Language-specific option buttons with custom icon logic -->
+          <CharacterWizardChoiceToggleButton
+            v-for="option in getLearnableOptions(data.choice.options)"
+            :key="option.slug"
+            :name="option.name"
+            :selected="isOptionSelected(data.choice.id, option.slug)"
+            :disabled="isOptionDisabled(data.choice.id, option.slug)"
+            :disabled-reason="getDisabledReason(data.choice.id, option.slug) ?? undefined"
+            :custom-icon="getCustomIcon(data.choice.id, option.slug)"
+            :custom-icon-class="getCustomIconClass(data.choice.id, option.slug)"
+            @toggle="handleToggle(data.choice, option.slug)"
+          >
+            <template #subtitle>
               <p
-                v-if="getDisabledReason(data.choice.id, option.slug)"
-                class="text-xs text-gray-400 dark:text-gray-500 mt-1 ml-7"
-              >
-                {{ getDisabledReason(data.choice.id, option.slug) }}
-              </p>
-              <p
-                v-else-if="option.script"
-                class="text-xs text-gray-500 dark:text-gray-400 mt-1 ml-7"
+                v-if="option.script && !getDisabledReason(data.choice.id, option.slug)"
+                class="text-xs text-gray-500 dark:text-gray-400"
               >
                 Script: {{ option.script }}
               </p>
-            </button>
-          </div>
-        </div>
+            </template>
+          </CharacterWizardChoiceToggleButton>
+        </CharacterWizardChoiceSelectionGrid>
       </div>
     </div>
 
     <!-- Continue Button -->
-    <div class="flex justify-center pt-6">
-      <UButton
-        data-testid="continue-btn"
-        size="lg"
-        :disabled="!allLanguageChoicesComplete || pending || isLoading"
-        :loading="pending || isLoading"
-        @click="handleContinue"
-      >
-        Continue with Languages
-      </UButton>
-    </div>
+    <CharacterWizardContinueButton
+      text="Continue with Languages"
+      :disabled="!allLanguageChoicesComplete || pending || isLoading"
+      :loading="pending || isLoading"
+      @click="handleContinue"
+    />
   </div>
 </template>

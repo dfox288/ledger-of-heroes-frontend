@@ -346,14 +346,11 @@ async function handleContinue() {
 
 <template>
   <div class="step-proficiencies space-y-6">
-    <div class="text-center">
-      <h2 class="text-2xl font-bold text-primary">
-        Your Proficiencies
-      </h2>
-      <p class="text-gray-600 dark:text-gray-400 mt-2">
-        Review your proficiencies from class, race, and background
-      </p>
-    </div>
+    <!-- Header -->
+    <CharacterWizardStepHeader
+      title="Your Proficiencies"
+      description="Review your proficiencies from class, race, and background"
+    />
 
     <!-- Error State -->
     <UAlert
@@ -366,15 +363,9 @@ async function handleContinue() {
     />
 
     <!-- Loading State -->
-    <div
+    <CharacterWizardLoadingState
       v-if="loadingChoices && !choicesError"
-      class="flex justify-center py-8"
-    >
-      <UIcon
-        name="i-heroicons-arrow-path"
-        class="w-8 h-8 animate-spin text-primary"
-      />
-    </div>
+    />
 
     <!-- Granted Proficiencies -->
     <div
@@ -438,87 +429,34 @@ async function handleContinue() {
           {{ sourceData.label }}: {{ sourceData.entityName }}
         </h3>
 
-        <div
+        <!-- Use shared grid and toggle components -->
+        <CharacterWizardChoiceSelectionGrid
           v-for="choice in sourceData.choices"
           :key="choice.id"
-          class="mb-6"
+          :label="getChoiceLabel(choice)"
+          :quantity="choice.quantity"
+          :selected-count="getSelectedCount(choice.id)"
+          :loading="isOptionsLoading(choice)"
         >
-          <div class="flex items-center justify-between mb-3">
-            <span class="text-sm font-medium">
-              {{ getChoiceLabel(choice) }}:
-            </span>
-            <UBadge
-              :color="getSelectedCount(choice.id) === choice.quantity ? 'success' : 'neutral'"
-              size="md"
-            >
-              {{ getSelectedCount(choice.id) }}/{{ choice.quantity }} selected
-            </UBadge>
-          </div>
-
-          <div
-            v-if="isOptionsLoading(choice)"
-            class="flex items-center gap-2 p-4 text-gray-500"
-          >
-            <UIcon
-              name="i-heroicons-arrow-path"
-              class="w-5 h-5 animate-spin"
-            />
-            <span>Loading options...</span>
-          </div>
-
-          <div
-            v-else
-            class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3"
-          >
-            <button
-              v-for="option in getDisplayOptions(choice)"
-              :key="option.id"
-              type="button"
-              class="skill-option p-3 rounded-lg border text-left transition-all"
-              :class="{
-                'border-primary bg-primary/10': isOptionSelected(choice.id, option.id),
-                'border-gray-200 dark:border-gray-700 hover:border-primary/50': !isOptionSelected(choice.id, option.id) && !isOptionDisabled(choice.id, option.id),
-                'border-gray-200 dark:border-gray-700 opacity-50 cursor-not-allowed': isOptionDisabled(choice.id, option.id)
-              }"
-              :disabled="isOptionDisabled(choice.id, option.id)"
-              @click="handleOptionToggle(choice, option.id)"
-            >
-              <div class="flex items-center gap-2">
-                <!-- Selection indicator -->
-                <UIcon
-                  v-if="isOptionSelected(choice.id, option.id)"
-                  name="i-heroicons-check-circle-solid"
-                  class="w-5 h-5 text-primary"
-                />
-                <span
-                  v-else
-                  class="w-5 h-5 rounded-full border-2 border-gray-400"
-                />
-                <span class="font-medium">{{ option.name }}</span>
-              </div>
-              <p
-                v-if="getDisabledReason(choice.id, option.id)"
-                class="text-xs text-gray-400 dark:text-gray-500 mt-1 ml-7"
-              >
-                {{ getDisabledReason(choice.id, option.id) }}
-              </p>
-            </button>
-          </div>
-        </div>
+          <CharacterWizardChoiceToggleButton
+            v-for="option in getDisplayOptions(choice)"
+            :key="option.id"
+            :name="option.name"
+            :selected="isOptionSelected(choice.id, option.id)"
+            :disabled="isOptionDisabled(choice.id, option.id)"
+            :disabled-reason="getDisabledReason(choice.id, option.id) ?? undefined"
+            @toggle="handleOptionToggle(choice, option.id)"
+          />
+        </CharacterWizardChoiceSelectionGrid>
       </div>
     </div>
 
     <!-- Continue Button -->
-    <div class="flex justify-center pt-6">
-      <UButton
-        data-testid="continue-btn"
-        size="lg"
-        :disabled="(hasAnyChoices && !allProficiencyChoicesComplete) || loadingChoices || isSaving"
-        :loading="loadingChoices || isSaving"
-        @click="handleContinue"
-      >
-        {{ hasAnyChoices ? 'Continue with Proficiencies' : 'Continue' }}
-      </UButton>
-    </div>
+    <CharacterWizardContinueButton
+      :text="hasAnyChoices ? 'Continue with Proficiencies' : 'Continue'"
+      :disabled="(hasAnyChoices && !allProficiencyChoicesComplete) || loadingChoices || isSaving"
+      :loading="loadingChoices || isSaving"
+      @click="handleContinue"
+    />
   </div>
 </template>
