@@ -12,7 +12,7 @@
 import { storeToRefs } from 'pinia'
 import { useCharacterPlayStateStore } from '~/stores/characterPlayState'
 
-const props = defineProps<{
+defineProps<{
   editable?: boolean
 }>()
 

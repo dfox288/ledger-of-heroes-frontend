@@ -1,13 +1,32 @@
 // tests/components/character/sheet/NotesManager.test.ts
-import { describe, it, expect } from 'vitest'
-import { mount } from '@vue/test-utils'
+/**
+ * NotesManager Component Tests
+ *
+ * Tests the Manager component that delegates to characterPlayState store
+ * for managing character notes with optimistic updates.
+ *
+ * @see Issue #696 - Store consolidation
+ */
+import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { mountSuspended, mockNuxtImport } from '@nuxt/test-utils/runtime'
+import { setActivePinia, createPinia } from 'pinia'
 import NotesManager from '~/components/character/sheet/NotesManager.vue'
+import { useCharacterPlayStateStore } from '~/stores/characterPlayState'
 import type { CharacterNote } from '~/types/character'
 
-/**
- * NotesManager orchestrates NotesPanel + modals and handles API calls.
- * These tests focus on component interface and state management.
- */
+// =============================================================================
+// MOCK SETUP
+// =============================================================================
+
+const toastMock = { add: vi.fn() }
+mockNuxtImport('useToast', () => () => toastMock)
+
+const apiFetchMock = vi.fn()
+mockNuxtImport('useApi', () => () => ({ apiFetch: apiFetchMock }))
+
+// =============================================================================
+// FIXTURES
+// =============================================================================
 
 const mockNotes: Record<string, CharacterNote[]> = {
   custom: [
@@ -36,42 +55,123 @@ const mockNotes: Record<string, CharacterNote[]> = {
   ]
 }
 
+// =============================================================================
+// HELPERS
+// =============================================================================
+
+let pinia: ReturnType<typeof createPinia>
+
+function setupPinia() {
+  pinia = createPinia()
+  setActivePinia(pinia)
+  return pinia
+}
+
+function getMountOptions() {
+  return { global: { plugins: [pinia] } }
+}
+
+function setupStore(characterId = 42) {
+  const store = useCharacterPlayStateStore()
+  store.initialize({
+    characterId,
+    isDead: false,
+    hitPoints: { current: 10, max: 10, temporary: 0 },
+    deathSaves: { successes: 0, failures: 0 },
+    currency: { pp: 0, gp: 0, ep: 0, sp: 0, cp: 0 }
+  })
+  return store
+}
+
+// =============================================================================
+// TESTS
+// =============================================================================
+
 describe('NotesManager', () => {
-  // =========================================================================
+  beforeEach(() => {
+    setupPinia()
+    toastMock.add.mockClear()
+    apiFetchMock.mockClear()
+  })
+
+  // ===========================================================================
   // Props Interface Tests
-  // =========================================================================
+  // ===========================================================================
 
   describe('props', () => {
-    it('accepts notes prop', () => {
-      const wrapper = mount(NotesManager, {
-        props: { notes: mockNotes, characterId: 1 }
+    it('accepts notes prop', async () => {
+      setupStore()
+      const wrapper = await mountSuspended(NotesManager, {
+        props: { notes: mockNotes, characterId: 1 },
+        ...getMountOptions()
       })
       expect(wrapper.props('notes')).toEqual(mockNotes)
     })
 
-    it('accepts characterId prop', () => {
-      const wrapper = mount(NotesManager, {
-        props: { notes: mockNotes, characterId: 42 }
+    it('accepts characterId prop', async () => {
+      setupStore()
+      const wrapper = await mountSuspended(NotesManager, {
+        props: { notes: mockNotes, characterId: 42 },
+        ...getMountOptions()
       })
       expect(wrapper.props('characterId')).toBe(42)
     })
 
-    it('accepts empty notes', () => {
-      const wrapper = mount(NotesManager, {
-        props: { notes: {}, characterId: 1 }
+    it('accepts empty notes', async () => {
+      setupStore()
+      const wrapper = await mountSuspended(NotesManager, {
+        props: { notes: {}, characterId: 1 },
+        ...getMountOptions()
       })
       expect(wrapper.props('notes')).toEqual({})
     })
   })
 
-  // =========================================================================
+  // ===========================================================================
+  // Store Initialization Tests
+  // ===========================================================================
+
+  describe('store initialization', () => {
+    it('initializes store with notes prop', async () => {
+      const store = setupStore()
+
+      await mountSuspended(NotesManager, {
+        props: { notes: mockNotes, characterId: 1 },
+        ...getMountOptions()
+      })
+
+      expect(store.notes).toEqual(mockNotes)
+    })
+
+    it('updates store when notes prop changes', async () => {
+      const store = setupStore()
+
+      const wrapper = await mountSuspended(NotesManager, {
+        props: { notes: mockNotes, characterId: 1 },
+        ...getMountOptions()
+      })
+
+      const newNotes = {
+        session: [{ id: 99, category: 'session', category_label: 'Session', title: 'New', content: 'New content', sort_order: 0, created_at: '', updated_at: '' }]
+      }
+
+      await wrapper.setProps({ notes: newNotes })
+
+      expect(store.notes.session).toBeDefined()
+      expect(store.notes.custom).toBeUndefined()
+    })
+  })
+
+  // ===========================================================================
   // Modal State Tests
-  // =========================================================================
+  // ===========================================================================
 
   describe('modal state', () => {
-    it('initializes with modals closed', () => {
-      const wrapper = mount(NotesManager, {
-        props: { notes: mockNotes, characterId: 1 }
+    it('initializes with modals closed', async () => {
+      setupStore()
+      const wrapper = await mountSuspended(NotesManager, {
+        props: { notes: mockNotes, characterId: 1 },
+        ...getMountOptions()
       })
       const vm = wrapper.vm as unknown as {
         showEditModal: boolean
@@ -81,9 +181,11 @@ describe('NotesManager', () => {
       expect(vm.showDeleteModal).toBe(false)
     })
 
-    it('opens edit modal on handleAdd', () => {
-      const wrapper = mount(NotesManager, {
-        props: { notes: mockNotes, characterId: 1 }
+    it('opens edit modal on handleAdd', async () => {
+      setupStore()
+      const wrapper = await mountSuspended(NotesManager, {
+        props: { notes: mockNotes, characterId: 1 },
+        ...getMountOptions()
       })
       const vm = wrapper.vm as unknown as {
         showEditModal: boolean
@@ -95,9 +197,11 @@ describe('NotesManager', () => {
       expect(vm.noteToEdit).toBeNull()
     })
 
-    it('opens edit modal with note on handleEdit', () => {
-      const wrapper = mount(NotesManager, {
-        props: { notes: mockNotes, characterId: 1 }
+    it('opens edit modal with note on handleEdit', async () => {
+      setupStore()
+      const wrapper = await mountSuspended(NotesManager, {
+        props: { notes: mockNotes, characterId: 1 },
+        ...getMountOptions()
       })
       const vm = wrapper.vm as unknown as {
         showEditModal: boolean
@@ -109,9 +213,11 @@ describe('NotesManager', () => {
       expect(vm.noteToEdit).toEqual(mockNotes.custom[0])
     })
 
-    it('opens delete modal on handleDelete', () => {
-      const wrapper = mount(NotesManager, {
-        props: { notes: mockNotes, characterId: 1 }
+    it('opens delete modal on handleDelete', async () => {
+      setupStore()
+      const wrapper = await mountSuspended(NotesManager, {
+        props: { notes: mockNotes, characterId: 1 },
+        ...getMountOptions()
       })
       const vm = wrapper.vm as unknown as {
         showDeleteModal: boolean
@@ -124,17 +230,174 @@ describe('NotesManager', () => {
     })
   })
 
-  // =========================================================================
-  // Loading State Tests
-  // =========================================================================
+  // ===========================================================================
+  // Store Delegation Tests
+  // ===========================================================================
 
-  describe('loading state', () => {
-    it('initializes with isLoading false', () => {
-      const wrapper = mount(NotesManager, {
-        props: { notes: mockNotes, characterId: 1 }
+  describe('store delegation', () => {
+    it('delegates addNote to store', async () => {
+      setupStore()
+      apiFetchMock.mockResolvedValueOnce({ data: { id: 100, category: 'session', category_label: 'Session', title: null, content: 'Test', sort_order: 0, created_at: '', updated_at: '' } })
+
+      const wrapper = await mountSuspended(NotesManager, {
+        props: { notes: {}, characterId: 42 },
+        ...getMountOptions()
       })
-      const vm = wrapper.vm as unknown as { isLoading: boolean }
-      expect(vm.isLoading).toBe(false)
+
+      const vm = wrapper.vm as unknown as {
+        handleSave: (payload: { category: string, content: string }) => Promise<void>
+      }
+
+      await vm.handleSave({ category: 'session', content: 'Test content' })
+
+      expect(apiFetchMock).toHaveBeenCalledWith(
+        '/characters/42/notes',
+        { method: 'POST', body: { category: 'session', content: 'Test content' } }
+      )
+    })
+
+    it('delegates editNote to store', async () => {
+      setupStore()
+      apiFetchMock.mockResolvedValueOnce({ data: { ...mockNotes.custom[0], content: 'Updated' } })
+
+      const wrapper = await mountSuspended(NotesManager, {
+        props: { notes: mockNotes, characterId: 42 },
+        ...getMountOptions()
+      })
+
+      // Set up the edit state
+      const vm = wrapper.vm as unknown as {
+        noteToEdit: CharacterNote
+        handleSave: (payload: { content: string }) => Promise<void>
+      }
+      vm.noteToEdit = mockNotes.custom[0]
+
+      await vm.handleSave({ content: 'Updated content' })
+
+      expect(apiFetchMock).toHaveBeenCalledWith(
+        '/characters/42/notes/1',
+        { method: 'PATCH', body: { content: 'Updated content' } }
+      )
+    })
+
+    it('delegates deleteNote to store', async () => {
+      setupStore()
+      apiFetchMock.mockResolvedValueOnce({})
+
+      const wrapper = await mountSuspended(NotesManager, {
+        props: { notes: mockNotes, characterId: 42 },
+        ...getMountOptions()
+      })
+
+      // Set up the delete state
+      const vm = wrapper.vm as unknown as {
+        noteToDelete: CharacterNote
+        handleDeleteConfirm: () => Promise<void>
+      }
+      vm.noteToDelete = mockNotes.custom[0]
+
+      await vm.handleDeleteConfirm()
+
+      expect(apiFetchMock).toHaveBeenCalledWith(
+        '/characters/42/notes/1',
+        { method: 'DELETE' }
+      )
+    })
+
+    it('shows success toast on successful add', async () => {
+      setupStore()
+      apiFetchMock.mockResolvedValueOnce({ data: { id: 100, category: 'session', category_label: 'Session', title: null, content: 'Test', sort_order: 0, created_at: '', updated_at: '' } })
+
+      const wrapper = await mountSuspended(NotesManager, {
+        props: { notes: {}, characterId: 42 },
+        ...getMountOptions()
+      })
+
+      const vm = wrapper.vm as unknown as {
+        handleSave: (payload: { category: string, content: string }) => Promise<void>
+      }
+
+      await vm.handleSave({ category: 'session', content: 'Test' })
+
+      expect(toastMock.add).toHaveBeenCalledWith(
+        expect.objectContaining({ title: 'Note added', color: 'success' })
+      )
+    })
+
+    it('shows error toast on failed add', async () => {
+      setupStore()
+      apiFetchMock.mockRejectedValueOnce(new Error('Network error'))
+
+      const wrapper = await mountSuspended(NotesManager, {
+        props: { notes: {}, characterId: 42 },
+        ...getMountOptions()
+      })
+
+      const vm = wrapper.vm as unknown as {
+        handleSave: (payload: { category: string, content: string }) => Promise<void>
+      }
+
+      await vm.handleSave({ category: 'session', content: 'Test' })
+
+      expect(toastMock.add).toHaveBeenCalledWith(
+        expect.objectContaining({ title: 'Failed to add note', color: 'error' })
+      )
+    })
+
+    it('emits refresh after successful operation', async () => {
+      setupStore()
+      apiFetchMock.mockResolvedValueOnce({ data: { id: 100, category: 'session', category_label: 'Session', title: null, content: 'Test', sort_order: 0, created_at: '', updated_at: '' } })
+
+      const wrapper = await mountSuspended(NotesManager, {
+        props: { notes: {}, characterId: 42 },
+        ...getMountOptions()
+      })
+
+      const vm = wrapper.vm as unknown as {
+        handleSave: (payload: { category: string, content: string }) => Promise<void>
+      }
+
+      await vm.handleSave({ category: 'session', content: 'Test' })
+
+      expect(wrapper.emitted('refresh')).toBeTruthy()
+    })
+
+    it('emits refresh after failed operation (for rollback)', async () => {
+      setupStore()
+      apiFetchMock.mockRejectedValueOnce(new Error('Network error'))
+
+      const wrapper = await mountSuspended(NotesManager, {
+        props: { notes: {}, characterId: 42 },
+        ...getMountOptions()
+      })
+
+      const vm = wrapper.vm as unknown as {
+        handleSave: (payload: { category: string, content: string }) => Promise<void>
+      }
+
+      await vm.handleSave({ category: 'session', content: 'Test' })
+
+      expect(wrapper.emitted('refresh')).toBeTruthy()
+    })
+  })
+
+  // ===========================================================================
+  // Display Notes Tests
+  // ===========================================================================
+
+  describe('display notes', () => {
+    it('uses displayNotes from store', async () => {
+      const store = setupStore()
+      store.initializeNotes(mockNotes)
+
+      await mountSuspended(NotesManager, {
+        props: { notes: mockNotes, characterId: 1 },
+        ...getMountOptions()
+      })
+
+      // The component should pass displayNotes to NotesPanel
+      // displayNotes should equal notes when no pending changes
+      expect(store.displayNotes).toEqual(mockNotes)
     })
   })
 })

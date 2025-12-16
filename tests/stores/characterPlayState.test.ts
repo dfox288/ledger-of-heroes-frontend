@@ -998,5 +998,452 @@ describe('characterPlayState store', () => {
 
       expect(store.counters).toEqual([])
     })
+
+    it('resets notes', () => {
+      const store = useCharacterPlayStateStore()
+      store.initializeNotes({
+        custom: [{ id: 1, category: 'custom', category_label: 'Custom', title: 'Test', content: 'Content', sort_order: 0, created_at: '', updated_at: '' }]
+      })
+
+      store.$reset()
+
+      expect(store.notes).toEqual({})
+    })
+  })
+
+  // ===========================================================================
+  // NOTES MANAGEMENT
+  // ===========================================================================
+
+  describe('notes management', () => {
+    const mockNotesData = {
+      custom: [
+        { id: 1, category: 'custom', category_label: 'Custom Note', title: 'Session Notes', content: 'We met the dragon.', sort_order: 0, created_at: '2025-01-01T00:00:00Z', updated_at: '2025-01-01T00:00:00Z' }
+      ],
+      personality_trait: [
+        { id: 2, category: 'personality_trait', category_label: 'Personality Trait', title: null, content: 'I help those in need.', sort_order: 0, created_at: '2025-01-01T00:00:00Z', updated_at: '2025-01-01T00:00:00Z' }
+      ]
+    }
+
+    describe('initializeNotes', () => {
+      it('sets notes from grouped data', () => {
+        const store = useCharacterPlayStateStore()
+        store.initializeNotes(mockNotesData)
+
+        expect(store.notes).toEqual(mockNotesData)
+      })
+
+      it('deep copies notes to avoid mutation', () => {
+        const store = useCharacterPlayStateStore()
+        const original = JSON.parse(JSON.stringify(mockNotesData))
+        store.initializeNotes(original)
+
+        // Mutate original
+        original.custom[0].content = 'MUTATED'
+
+        // Store should be unaffected
+        expect(store.notes.custom[0].content).toBe('We met the dragon.')
+      })
+
+      it('clears existing notes on re-initialize', () => {
+        const store = useCharacterPlayStateStore()
+        store.initializeNotes(mockNotesData)
+        store.initializeNotes({ session: [{ id: 99, category: 'session', category_label: 'Session', title: null, content: 'New', sort_order: 0, created_at: '', updated_at: '' }] })
+
+        expect(store.notes.custom).toBeUndefined()
+        expect(store.notes.session).toBeDefined()
+      })
+    })
+
+    describe('displayNotes computed', () => {
+      it('returns notes as-is when no pending changes', () => {
+        const store = useCharacterPlayStateStore()
+        store.initializeNotes(mockNotesData)
+
+        expect(store.displayNotes).toEqual(mockNotesData)
+      })
+
+      it('filters out notes pending deletion', () => {
+        const store = useCharacterPlayStateStore()
+        store.initialize(mockInitialData)
+        store.initializeNotes(mockNotesData)
+
+        // Mark note 1 for deletion (this happens internally during deleteNote)
+        store.pendingNoteDeletes.add(1)
+
+        expect(store.displayNotes.custom).toBeUndefined() // Only had one note, now empty
+        expect(store.displayNotes.personality_trait).toHaveLength(1)
+      })
+
+      it('applies pending edits', () => {
+        const store = useCharacterPlayStateStore()
+        store.initialize(mockInitialData)
+        store.initializeNotes(mockNotesData)
+
+        // Set pending edit
+        store.pendingNoteEdits.set(1, {
+          ...mockNotesData.custom[0],
+          content: 'Updated content!'
+        })
+
+        expect(store.displayNotes.custom[0].content).toBe('Updated content!')
+      })
+
+      it('includes pending creates', () => {
+        const store = useCharacterPlayStateStore()
+        store.initialize(mockInitialData)
+        store.initializeNotes(mockNotesData)
+
+        // Add pending create
+        store.pendingNoteCreates.push({
+          id: -1,
+          category: 'session',
+          category_label: 'Session',
+          title: 'New Note',
+          content: 'Pending content',
+          sort_order: 0,
+          created_at: '',
+          updated_at: ''
+        })
+
+        expect(store.displayNotes.session).toHaveLength(1)
+        expect(store.displayNotes.session[0].title).toBe('New Note')
+      })
+    })
+
+    describe('addNote', () => {
+      beforeEach(() => {
+        mockApiFetch.mockResolvedValue({
+          data: { id: 100, category: 'session', category_label: 'Session', title: 'Test', content: 'API content', sort_order: 0, created_at: '', updated_at: '' }
+        })
+      })
+
+      it('sends POST to API', async () => {
+        const store = useCharacterPlayStateStore()
+        store.initialize(mockInitialData)
+        store.initializeNotes({})
+
+        await store.addNote({ category: 'session', content: 'New note content' })
+
+        expect(mockApiFetch).toHaveBeenCalledWith(
+          '/characters/42/notes',
+          { method: 'POST', body: { category: 'session', content: 'New note content' } }
+        )
+      })
+
+      it('adds optimistic note to pendingNoteCreates', async () => {
+        const store = useCharacterPlayStateStore()
+        store.initialize(mockInitialData)
+        store.initializeNotes({})
+
+        let pendingDuringCall: any[] = []
+        mockApiFetch.mockImplementation(() => {
+          pendingDuringCall = [...store.pendingNoteCreates]
+          return Promise.resolve({ data: { id: 100, category: 'session', category_label: 'Session', title: null, content: 'Test', sort_order: 0, created_at: '', updated_at: '' } })
+        })
+
+        await store.addNote({ category: 'session', content: 'Test' })
+
+        // Should have had a pending note during the call
+        expect(pendingDuringCall).toHaveLength(1)
+        expect(pendingDuringCall[0].id).toBeLessThan(0) // Temp ID
+        expect(pendingDuringCall[0].content).toBe('Test')
+      })
+
+      it('clears pending create after success', async () => {
+        const store = useCharacterPlayStateStore()
+        store.initialize(mockInitialData)
+        store.initializeNotes({})
+
+        await store.addNote({ category: 'session', content: 'Test' })
+
+        expect(store.pendingNoteCreates).toHaveLength(0)
+      })
+
+      it('returns true on success', async () => {
+        const store = useCharacterPlayStateStore()
+        store.initialize(mockInitialData)
+        store.initializeNotes({})
+
+        const result = await store.addNote({ category: 'session', content: 'Test' })
+
+        expect(result).toBe(true)
+      })
+
+      it('returns false on error', async () => {
+        const store = useCharacterPlayStateStore()
+        store.initialize(mockInitialData)
+        store.initializeNotes({})
+
+        mockApiFetch.mockRejectedValueOnce(new Error('Network error'))
+
+        const result = await store.addNote({ category: 'session', content: 'Test' })
+
+        expect(result).toBe(false)
+      })
+
+      it('clears pending create after error', async () => {
+        const store = useCharacterPlayStateStore()
+        store.initialize(mockInitialData)
+        store.initializeNotes({})
+
+        mockApiFetch.mockRejectedValueOnce(new Error('Network error'))
+
+        await store.addNote({ category: 'session', content: 'Test' })
+
+        expect(store.pendingNoteCreates).toHaveLength(0)
+      })
+
+      it('does nothing if no character id', async () => {
+        const store = useCharacterPlayStateStore()
+        // Not initialized
+
+        await store.addNote({ category: 'session', content: 'Test' })
+
+        expect(mockApiFetch).not.toHaveBeenCalled()
+      })
+    })
+
+    describe('editNote', () => {
+      beforeEach(() => {
+        mockApiFetch.mockResolvedValue({
+          data: { id: 1, category: 'custom', category_label: 'Custom', title: 'Updated', content: 'Updated content', sort_order: 0, created_at: '', updated_at: '' }
+        })
+      })
+
+      it('sends PATCH to API', async () => {
+        const store = useCharacterPlayStateStore()
+        store.initialize(mockInitialData)
+        store.initializeNotes(mockNotesData)
+
+        await store.editNote(1, { content: 'Updated content' })
+
+        expect(mockApiFetch).toHaveBeenCalledWith(
+          '/characters/42/notes/1',
+          { method: 'PATCH', body: { content: 'Updated content' } }
+        )
+      })
+
+      it('adds optimistic edit to pendingNoteEdits', async () => {
+        const store = useCharacterPlayStateStore()
+        store.initialize(mockInitialData)
+        store.initializeNotes(mockNotesData)
+
+        let pendingDuringCall: Map<number, any> = new Map()
+        mockApiFetch.mockImplementation(() => {
+          pendingDuringCall = new Map(store.pendingNoteEdits)
+          return Promise.resolve({ data: { ...mockNotesData.custom[0], content: 'Updated' } })
+        })
+
+        await store.editNote(1, { content: 'Updated' })
+
+        // Should have had a pending edit during the call
+        expect(pendingDuringCall.has(1)).toBe(true)
+        expect(pendingDuringCall.get(1)!.content).toBe('Updated')
+      })
+
+      it('clears pending edit after success', async () => {
+        const store = useCharacterPlayStateStore()
+        store.initialize(mockInitialData)
+        store.initializeNotes(mockNotesData)
+
+        await store.editNote(1, { content: 'Updated' })
+
+        expect(store.pendingNoteEdits.has(1)).toBe(false)
+      })
+
+      it('returns true on success', async () => {
+        const store = useCharacterPlayStateStore()
+        store.initialize(mockInitialData)
+        store.initializeNotes(mockNotesData)
+
+        const result = await store.editNote(1, { content: 'Updated' })
+
+        expect(result).toBe(true)
+      })
+
+      it('returns false on error', async () => {
+        const store = useCharacterPlayStateStore()
+        store.initialize(mockInitialData)
+        store.initializeNotes(mockNotesData)
+
+        mockApiFetch.mockRejectedValueOnce(new Error('Network error'))
+
+        const result = await store.editNote(1, { content: 'Updated' })
+
+        expect(result).toBe(false)
+      })
+
+      it('clears pending edit after error', async () => {
+        const store = useCharacterPlayStateStore()
+        store.initialize(mockInitialData)
+        store.initializeNotes(mockNotesData)
+
+        mockApiFetch.mockRejectedValueOnce(new Error('Network error'))
+
+        await store.editNote(1, { content: 'Updated' })
+
+        expect(store.pendingNoteEdits.has(1)).toBe(false)
+      })
+
+      it('returns false if note not found', async () => {
+        const store = useCharacterPlayStateStore()
+        store.initialize(mockInitialData)
+        store.initializeNotes(mockNotesData)
+
+        const result = await store.editNote(999, { content: 'Updated' })
+
+        expect(result).toBe(false)
+        expect(mockApiFetch).not.toHaveBeenCalled()
+      })
+    })
+
+    describe('deleteNote', () => {
+      beforeEach(() => {
+        mockApiFetch.mockResolvedValue({})
+      })
+
+      it('sends DELETE to API', async () => {
+        const store = useCharacterPlayStateStore()
+        store.initialize(mockInitialData)
+        store.initializeNotes(mockNotesData)
+
+        await store.deleteNote(1)
+
+        expect(mockApiFetch).toHaveBeenCalledWith(
+          '/characters/42/notes/1',
+          { method: 'DELETE' }
+        )
+      })
+
+      it('adds note id to pendingNoteDeletes', async () => {
+        const store = useCharacterPlayStateStore()
+        store.initialize(mockInitialData)
+        store.initializeNotes(mockNotesData)
+
+        let pendingDuringCall: Set<number> = new Set()
+        mockApiFetch.mockImplementation(() => {
+          pendingDuringCall = new Set(store.pendingNoteDeletes)
+          return Promise.resolve({})
+        })
+
+        await store.deleteNote(1)
+
+        // Should have had the note marked for deletion during the call
+        expect(pendingDuringCall.has(1)).toBe(true)
+      })
+
+      it('clears pending delete after success', async () => {
+        const store = useCharacterPlayStateStore()
+        store.initialize(mockInitialData)
+        store.initializeNotes(mockNotesData)
+
+        await store.deleteNote(1)
+
+        expect(store.pendingNoteDeletes.has(1)).toBe(false)
+      })
+
+      it('returns true on success', async () => {
+        const store = useCharacterPlayStateStore()
+        store.initialize(mockInitialData)
+        store.initializeNotes(mockNotesData)
+
+        const result = await store.deleteNote(1)
+
+        expect(result).toBe(true)
+      })
+
+      it('returns false on error', async () => {
+        const store = useCharacterPlayStateStore()
+        store.initialize(mockInitialData)
+        store.initializeNotes(mockNotesData)
+
+        mockApiFetch.mockRejectedValueOnce(new Error('Network error'))
+
+        const result = await store.deleteNote(1)
+
+        expect(result).toBe(false)
+      })
+
+      it('clears pending delete after error (rolls back)', async () => {
+        const store = useCharacterPlayStateStore()
+        store.initialize(mockInitialData)
+        store.initializeNotes(mockNotesData)
+
+        mockApiFetch.mockRejectedValueOnce(new Error('Network error'))
+
+        await store.deleteNote(1)
+
+        // Pending delete should be cleared so note reappears
+        expect(store.pendingNoteDeletes.has(1)).toBe(false)
+      })
+
+      it('does nothing if no character id', async () => {
+        const store = useCharacterPlayStateStore()
+        // Not initialized
+
+        await store.deleteNote(1)
+
+        expect(mockApiFetch).not.toHaveBeenCalled()
+      })
+    })
+
+    describe('isUpdatingNotes', () => {
+      it('is false initially', () => {
+        const store = useCharacterPlayStateStore()
+        expect(store.isUpdatingNotes).toBe(false)
+      })
+
+      it('is true during addNote', async () => {
+        const store = useCharacterPlayStateStore()
+        store.initialize(mockInitialData)
+        store.initializeNotes({})
+
+        let loadingDuringCall = false
+        mockApiFetch.mockImplementation(() => {
+          loadingDuringCall = store.isUpdatingNotes
+          return Promise.resolve({ data: { id: 100, category: 'session', category_label: 'Session', title: null, content: 'Test', sort_order: 0, created_at: '', updated_at: '' } })
+        })
+
+        await store.addNote({ category: 'session', content: 'Test' })
+
+        expect(loadingDuringCall).toBe(true)
+        expect(store.isUpdatingNotes).toBe(false)
+      })
+
+      it('is true during editNote', async () => {
+        const store = useCharacterPlayStateStore()
+        store.initialize(mockInitialData)
+        store.initializeNotes(mockNotesData)
+
+        let loadingDuringCall = false
+        mockApiFetch.mockImplementation(() => {
+          loadingDuringCall = store.isUpdatingNotes
+          return Promise.resolve({ data: { ...mockNotesData.custom[0], content: 'Updated' } })
+        })
+
+        await store.editNote(1, { content: 'Updated' })
+
+        expect(loadingDuringCall).toBe(true)
+        expect(store.isUpdatingNotes).toBe(false)
+      })
+
+      it('is true during deleteNote', async () => {
+        const store = useCharacterPlayStateStore()
+        store.initialize(mockInitialData)
+        store.initializeNotes(mockNotesData)
+
+        let loadingDuringCall = false
+        mockApiFetch.mockImplementation(() => {
+          loadingDuringCall = store.isUpdatingNotes
+          return Promise.resolve({})
+        })
+
+        await store.deleteNote(1)
+
+        expect(loadingDuringCall).toBe(true)
+        expect(store.isUpdatingNotes).toBe(false)
+      })
+    })
   })
 })

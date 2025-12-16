@@ -15,7 +15,7 @@
  * @see Issue #584 - Character sheet component refactor
  */
 import { defineStore } from 'pinia'
-import type { CharacterCurrency, CharacterCondition, Counter } from '~/types/character'
+import type { CharacterCurrency, CharacterCondition, CharacterNote, Counter } from '~/types/character'
 import { logger } from '~/utils/logger'
 
 // =============================================================================
@@ -68,6 +68,12 @@ interface DeathSaveUpdateResponse {
 
 interface CurrencyUpdateResponse {
   data: CharacterCurrency
+}
+
+export interface NotePayload {
+  category?: string
+  title?: string | null
+  content: string
 }
 
 // =============================================================================
@@ -140,6 +146,21 @@ export const useCharacterPlayStateStore = defineStore('characterPlayState', () =
   /** Track pending counter updates by slug to prevent race conditions */
   const pendingCounterUpdates = ref<Set<string>>(new Set())
 
+  /** Character notes grouped by category */
+  const notes = ref<Record<string, CharacterNote[]>>({})
+
+  /** Temp ID counter for optimistic note creates */
+  let noteTempIdCounter = -1
+
+  /** Optimistic notes pending API confirmation */
+  const pendingNoteCreates = ref<CharacterNote[]>([])
+
+  /** Note IDs pending deletion */
+  const pendingNoteDeletes = ref<Set<number>>(new Set())
+
+  /** Notes with pending edits (id -> updated note) */
+  const pendingNoteEdits = ref<Map<number, CharacterNote>>(new Map())
+
   /** Loading flags to prevent race conditions */
   const isUpdatingHp = ref(false)
   const isUpdatingCurrency = ref(false)
@@ -147,6 +168,7 @@ export const useCharacterPlayStateStore = defineStore('characterPlayState', () =
   const isUpdatingSpellSlot = ref(false)
   const isUpdatingSpellPreparation = ref(false)
   const isUpdatingConditions = ref(false)
+  const isUpdatingNotes = ref(false)
 
   // ===========================================================================
   // COMPUTED
@@ -154,6 +176,38 @@ export const useCharacterPlayStateStore = defineStore('characterPlayState', () =
 
   /** Can the user interact with the character? (play mode ON and not dead) */
   const canEdit = computed(() => isPlayMode.value && !isDead.value)
+
+  /**
+   * Display notes: merges notes with optimistic updates
+   * - Filters out notes pending deletion
+   * - Applies pending edits
+   * - Adds pending creates
+   */
+  const displayNotes = computed(() => {
+    const result: Record<string, CharacterNote[]> = {}
+
+    // Process existing notes
+    for (const [category, categoryNotes] of Object.entries(notes.value)) {
+      const filteredNotes = categoryNotes
+        .filter(note => !pendingNoteDeletes.value.has(note.id))
+        .map(note => pendingNoteEdits.value.get(note.id) ?? note)
+
+      if (filteredNotes.length > 0) {
+        result[category] = filteredNotes
+      }
+    }
+
+    // Add pending creates
+    for (const note of pendingNoteCreates.value) {
+      const category = note.category
+      if (!result[category]) {
+        result[category] = []
+      }
+      result[category]!.push(note)
+    }
+
+    return result
+  })
 
   // ===========================================================================
   // SPELL SLOT GETTERS
@@ -864,6 +918,146 @@ export const useCharacterPlayStateStore = defineStore('characterPlayState', () =
   }
 
   // ===========================================================================
+  // NOTES ACTIONS
+  // ===========================================================================
+
+  /**
+   * Initialize notes from grouped data
+   *
+   * Call this when character notes load. Deep copies to avoid mutation issues.
+   */
+  function initializeNotes(data: Record<string, CharacterNote[]>) {
+    // Deep copy to avoid mutation
+    notes.value = {}
+    for (const [category, categoryNotes] of Object.entries(data)) {
+      notes.value[category] = categoryNotes.map(note => ({ ...note }))
+    }
+    // Clear any pending state
+    pendingNoteCreates.value = []
+    pendingNoteDeletes.value.clear()
+    pendingNoteEdits.value.clear()
+  }
+
+  /**
+   * Find a note by ID across all categories
+   */
+  function findNote(noteId: number): CharacterNote | undefined {
+    for (const categoryNotes of Object.values(notes.value)) {
+      const found = categoryNotes.find(n => n.id === noteId)
+      if (found) return found
+    }
+    return undefined
+  }
+
+  /**
+   * Add a note (optimistic create)
+   *
+   * Creates optimistic note immediately, calls API, cleans up on completion.
+   * Returns true on success, false on error.
+   */
+  async function addNote(payload: NotePayload): Promise<boolean> {
+    if (!characterId.value) return false
+
+    isUpdatingNotes.value = true
+
+    // Create optimistic note with temp ID
+    const tempId = noteTempIdCounter--
+    const optimisticNote: CharacterNote = {
+      id: tempId,
+      category: payload.category ?? 'session',
+      category_label: payload.category ?? 'Session',
+      title: payload.title ?? null,
+      content: payload.content,
+      sort_order: 0,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString()
+    }
+    pendingNoteCreates.value.push(optimisticNote)
+
+    try {
+      await apiFetch(`/characters/${characterId.value}/notes`, {
+        method: 'POST',
+        body: payload
+      })
+      return true
+    } catch (err) {
+      logger.error('Failed to add note:', err)
+      return false
+    } finally {
+      // Remove optimistic note (page will refresh from server)
+      pendingNoteCreates.value = pendingNoteCreates.value.filter(n => n.id !== tempId)
+      isUpdatingNotes.value = false
+    }
+  }
+
+  /**
+   * Edit a note (optimistic update)
+   *
+   * Applies optimistic edit immediately, calls API, cleans up on completion.
+   * Returns true on success, false on error.
+   */
+  async function editNote(noteId: number, payload: Partial<NotePayload>): Promise<boolean> {
+    if (!characterId.value) return false
+
+    const existingNote = findNote(noteId)
+    if (!existingNote) return false
+
+    isUpdatingNotes.value = true
+
+    // Create optimistic edit
+    const optimisticNote: CharacterNote = {
+      ...existingNote,
+      title: payload.title !== undefined ? payload.title : existingNote.title,
+      content: payload.content !== undefined ? payload.content : existingNote.content
+    }
+    pendingNoteEdits.value.set(noteId, optimisticNote)
+
+    try {
+      await apiFetch(`/characters/${characterId.value}/notes/${noteId}`, {
+        method: 'PATCH',
+        body: payload
+      })
+      return true
+    } catch (err) {
+      logger.error('Failed to edit note:', err)
+      return false
+    } finally {
+      // Clear optimistic edit (page will refresh from server)
+      pendingNoteEdits.value.delete(noteId)
+      isUpdatingNotes.value = false
+    }
+  }
+
+  /**
+   * Delete a note (optimistic delete)
+   *
+   * Removes note from display immediately, calls API, cleans up on completion.
+   * Returns true on success, false on error (note reappears).
+   */
+  async function deleteNote(noteId: number): Promise<boolean> {
+    if (!characterId.value) return false
+
+    isUpdatingNotes.value = true
+
+    // Mark as pending delete (optimistic)
+    pendingNoteDeletes.value.add(noteId)
+
+    try {
+      await apiFetch(`/characters/${characterId.value}/notes/${noteId}`, {
+        method: 'DELETE'
+      })
+      return true
+    } catch (err) {
+      logger.error('Failed to delete note:', err)
+      return false
+    } finally {
+      // Clear pending delete (page will refresh or note reappears)
+      pendingNoteDeletes.value.delete(noteId)
+      isUpdatingNotes.value = false
+    }
+  }
+
+  // ===========================================================================
   // RESET
   // ===========================================================================
 
@@ -914,6 +1108,13 @@ export const useCharacterPlayStateStore = defineStore('characterPlayState', () =
 
     // Reset counters
     counters.value = []
+
+    // Reset notes
+    notes.value = {}
+    pendingNoteCreates.value = []
+    pendingNoteDeletes.value.clear()
+    pendingNoteEdits.value.clear()
+    isUpdatingNotes.value = false
   }
 
   // ===========================================================================
@@ -933,15 +1134,21 @@ export const useCharacterPlayStateStore = defineStore('characterPlayState', () =
     preparationLimit,
     conditions,
     counters,
+    notes,
+    pendingNoteCreates,
+    pendingNoteDeletes,
+    pendingNoteEdits,
     isUpdatingHp,
     isUpdatingCurrency,
     isUpdatingDeathSaves,
     isUpdatingSpellSlot,
     isUpdatingSpellPreparation,
     isUpdatingConditions,
+    isUpdatingNotes,
 
     // Computed
     canEdit,
+    displayNotes,
     preparedSpellCount,
     atPreparationLimit,
 
@@ -973,6 +1180,10 @@ export const useCharacterPlayStateStore = defineStore('characterPlayState', () =
     initializeCounters,
     useCounter,
     restoreCounter,
+    initializeNotes,
+    addNote,
+    editNote,
+    deleteNote,
     $reset
   }
 })

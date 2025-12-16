@@ -134,7 +134,7 @@ describe('ClassResourcesManager', () => {
       const store = setupStore([createCounter({ current: 3 })])
       apiFetchMock.mockResolvedValue({ data: { current: 2 } })
 
-      const wrapper = await mountSuspended(ClassResourcesManager, {
+      await mountSuspended(ClassResourcesManager, {
         props: { editable: true },
         ...getMountOptions()
       })
@@ -178,7 +178,7 @@ describe('ClassResourcesManager', () => {
     })
 
     it('shows error toast on API failure via handleSpend', async () => {
-      const store = setupStore([createCounter({ current: 3 })])
+      setupStore([createCounter({ current: 3 })])
       apiFetchMock.mockRejectedValueOnce({ data: { message: 'No uses remaining' } })
 
       const wrapper = await mountSuspended(ClassResourcesManager, {
