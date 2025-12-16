@@ -20,6 +20,10 @@ const hasSpellSlots = computed(() => {
   return Object.values(slots).some(s => s.max > 0)
 })
 
+const hasCounters = computed(() => {
+  return props.character.counters && props.character.counters.length > 0
+})
+
 const speeds = computed(() => {
   const s = props.character.combat.speeds
   const result: { label: string, value: number }[] = []
@@ -155,7 +159,7 @@ function getSaveColorClass(modifier: number): string {
         </div>
       </div>
 
-      <!-- Spell Slots + Conditions -->
+      <!-- Spell Slots + Class Resources + Conditions -->
       <div>
         <!-- Spell Slots -->
         <div
@@ -166,6 +170,17 @@ function getSaveColorClass(modifier: number): string {
             Spell Slots
           </h4>
           <DmScreenSpellSlotsCompact :slots="character.spell_slots" />
+        </div>
+
+        <!-- Class Resources (Counters) -->
+        <div
+          v-if="hasCounters"
+          class="mb-4"
+        >
+          <h4 class="text-xs font-medium text-neutral-500 uppercase mb-2">
+            Class Resources
+          </h4>
+          <DmScreenCountersCompact :counters="character.counters" />
         </div>
 
         <!-- Conditions -->

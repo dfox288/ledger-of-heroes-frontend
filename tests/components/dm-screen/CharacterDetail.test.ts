@@ -3,6 +3,19 @@ import { describe, it, expect } from 'vitest'
 import { mountSuspended } from '@nuxt/test-utils/runtime'
 import CharacterDetail from '~/components/dm-screen/CharacterDetail.vue'
 import type { DmScreenCharacter } from '~/types/dm-screen'
+import type { Counter } from '~/types/character'
+
+const mockRageCounter: Counter = {
+  id: 1,
+  slug: 'phb:barbarian:rage',
+  name: 'Rage',
+  current: 2,
+  max: 3,
+  reset_on: 'long_rest',
+  source: 'Barbarian',
+  source_type: 'class',
+  unlimited: false
+}
 
 const mockCharacter: DmScreenCharacter = {
   id: 1,
@@ -44,7 +57,8 @@ const mockCharacter: DmScreenCharacter = {
     1: { current: 4, max: 4 },
     2: { current: 2, max: 3 },
     3: { current: 1, max: 2 }
-  }
+  },
+  counters: []
 }
 
 describe('DmScreenCharacterDetail', () => {
@@ -186,6 +200,32 @@ describe('DmScreenCharacterDetail', () => {
         props: { character: noConditions }
       })
       expect(wrapper.text()).toMatch(/no.*condition|none/i)
+    })
+  })
+
+  describe('Counters Section', () => {
+    it('displays counters for characters with class resources', async () => {
+      const withCounters = { ...mockCharacter, counters: [mockRageCounter] }
+      const wrapper = await mountSuspended(CharacterDetail, {
+        props: { character: withCounters }
+      })
+      expect(wrapper.find('[data-testid="counters-container"]').exists()).toBe(true)
+      expect(wrapper.text()).toContain('Rage')
+    })
+
+    it('hides counters section for characters without class resources', async () => {
+      const wrapper = await mountSuspended(CharacterDetail, {
+        props: { character: mockCharacter }
+      })
+      expect(wrapper.find('[data-testid="counters-container"]').exists()).toBe(false)
+    })
+
+    it('shows counters header when counters exist', async () => {
+      const withCounters = { ...mockCharacter, counters: [mockRageCounter] }
+      const wrapper = await mountSuspended(CharacterDetail, {
+        props: { character: withCounters }
+      })
+      expect(wrapper.text()).toContain('Class Resources')
     })
   })
 })
