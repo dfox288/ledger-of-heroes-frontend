@@ -101,6 +101,49 @@ const sortedLevels = computed(() =>
   Object.keys(spellsByLevel.value).map(Number).sort((a, b) => a - b)
 )
 
+// ══════════════════════════════════════════════════════════════
+// PER-CLASS SPELL FILTERING
+// ══════════════════════════════════════════════════════════════
+
+/**
+ * Get spells filtered by class slug
+ */
+function getSpellsForClass(classSlug: string): CharacterSpell[] {
+  return validSpells.value.filter(s => s.class_slug === classSlug)
+}
+
+/**
+ * Get cantrips for a specific class
+ */
+function getCantripsForClass(classSlug: string): CharacterSpell[] {
+  return getSpellsForClass(classSlug).filter(s => s.spell!.level === 0)
+}
+
+/**
+ * Get leveled spells grouped by level for a specific class
+ */
+function getSpellsByLevelForClass(classSlug: string): Record<number, CharacterSpell[]> {
+  const classSpells = getSpellsForClass(classSlug).filter(s => s.spell!.level > 0)
+  const grouped: Record<number, CharacterSpell[]> = {}
+  for (const spell of classSpells) {
+    const level = spell.spell!.level
+    if (!grouped[level]) grouped[level] = []
+    grouped[level].push(spell)
+  }
+  // Sort by spell name within each level
+  for (const level in grouped) {
+    grouped[level]!.sort((a, b) => a.spell!.name.localeCompare(b.spell!.name))
+  }
+  return grouped
+}
+
+/**
+ * Get sorted level keys for a specific class
+ */
+function getSortedLevelsForClass(classSlug: string): number[] {
+  return Object.keys(getSpellsByLevelForClass(classSlug)).map(Number).sort((a, b) => a - b)
+}
+
 // Determine if this is a spellbook caster (wizard)
 const preparationMethod = computed(() =>
   (stats.value as { preparation_method?: string | null } | null)?.preparation_method ?? null
@@ -320,9 +363,9 @@ useSeoMeta({
                   />
                 </div>
 
-                <!-- Spells List (all spells for now - can't filter by class until #715 is done) -->
+                <!-- Spells List (filtered by class) -->
                 <div
-                  v-if="cantrips.length > 0"
+                  v-if="getCantripsForClass(sc.slug).length > 0"
                   class="mt-4"
                 >
                   <h3 class="text-lg font-semibold text-gray-700 dark:text-gray-300 mb-3">
@@ -330,7 +373,7 @@ useSeoMeta({
                   </h3>
                   <div class="space-y-2">
                     <CharacterSheetSpellCard
-                      v-for="spell in cantrips"
+                      v-for="spell in getCantripsForClass(sc.slug)"
                       :key="spell.id"
                       :spell="spell"
                     />
@@ -338,7 +381,7 @@ useSeoMeta({
                 </div>
 
                 <div
-                  v-for="level in sortedLevels"
+                  v-for="level in getSortedLevelsForClass(sc.slug)"
                   :key="level"
                   class="mt-4"
                 >
@@ -347,11 +390,23 @@ useSeoMeta({
                   </h3>
                   <div class="space-y-2">
                     <CharacterSheetSpellCard
-                      v-for="spell in spellsByLevel[level]"
+                      v-for="spell in getSpellsByLevelForClass(sc.slug)[level]"
                       :key="spell.id"
                       :spell="spell"
                     />
                   </div>
+                </div>
+
+                <!-- Empty state for class with no spells -->
+                <div
+                  v-if="getSpellsForClass(sc.slug).length === 0"
+                  class="mt-8 text-center py-8 text-gray-500 dark:text-gray-400"
+                >
+                  <UIcon
+                    name="i-heroicons-sparkles"
+                    class="w-10 h-10 mx-auto mb-3"
+                  />
+                  <p>No {{ sc.name }} spells known yet.</p>
                 </div>
               </template>
 

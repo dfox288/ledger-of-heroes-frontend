@@ -112,9 +112,21 @@ export type CharacterSpellFromAPI = components['schemas']['CharacterSpellResourc
 
 /**
  * Character spell data from API
+ *
+ * Extended with class_slug for multiclass spellcasting support.
+ * The class_slug field identifies which class granted the spell.
+ *
  * @see CharacterSpellResource in OpenAPI spec
+ * @see Issue #631 - Multiclass spellcasting support
  */
-export type CharacterSpell = CharacterSpellFromAPI
+export type CharacterSpell = CharacterSpellFromAPI & {
+  /**
+   * Class slug identifying which class granted this spell
+   * e.g., "phb:wizard", "phb:cleric"
+   * Used for filtering spells by class in multiclass UI
+   */
+  class_slug: string | null
+}
 
 /**
  * Full character data from API with public_id
