@@ -178,17 +178,11 @@ const currentCurrencyDisplay = computed(() => {
 <template>
   <UModal
     :open="open"
+    title="Manage Currency"
+    description="Add, subtract, or set currency values"
     @update:open="emit('update:open', $event)"
     @keydown="handleKeydown"
   >
-    <template #header>
-      <div class="flex items-center justify-between w-full">
-        <h3 class="text-lg font-semibold text-gray-900 dark:text-white">
-          Manage Currency
-        </h3>
-      </div>
-    </template>
-
     <template #body>
       <div class="space-y-4">
         <!-- Current Currency Display -->

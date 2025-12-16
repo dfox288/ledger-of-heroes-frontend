@@ -287,17 +287,11 @@ watch(() => props.open, (isOpen) => {
 <template>
   <UModal
     :open="open"
+    title="Edit Character"
+    description="Update character name, alignment, or portrait"
     @update:open="emit('update:open', $event)"
     @keydown="handleKeydown"
   >
-    <template #header>
-      <div class="flex items-center justify-between w-full">
-        <h3 class="text-lg font-semibold text-gray-900 dark:text-white">
-          Edit Character
-        </h3>
-      </div>
-    </template>
-
     <template #body>
       <div class="space-y-6">
         <!-- Name Input -->
