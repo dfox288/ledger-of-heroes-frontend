@@ -5,6 +5,8 @@
  * Based on GET /api/v1/parties/{id}/stats response.
  */
 
+import type { Counter } from '~/types/character'
+
 export interface CharacterHitPoints {
   current: number
   max: number
@@ -104,6 +106,7 @@ export interface DmScreenCharacter {
   saving_throws: CharacterSavingThrows
   conditions: DmScreenCondition[]
   spell_slots: DmScreenSpellSlots
+  counters: Counter[]
 }
 
 export interface DmScreenPartySummary {

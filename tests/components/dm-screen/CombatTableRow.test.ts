@@ -37,7 +37,8 @@ const mockCharacter: DmScreenCharacter = {
   },
   saving_throws: { STR: 0, DEX: 2, CON: 1, INT: 4, WIS: 2, CHA: -1 },
   conditions: [],
-  spell_slots: { 1: { current: 4, max: 4 } }
+  spell_slots: { 1: { current: 4, max: 4 } },
+  counters: []
 }
 
 describe('DmScreenCombatTableRow', () => {

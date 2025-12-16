@@ -40,6 +40,7 @@ function createMockCharacter(overrides: Partial<DmScreenCharacter> = {}): DmScre
     saving_throws: { STR: 5, DEX: 2, CON: 5, INT: 0, WIS: 1, CHA: -1 },
     conditions: [],
     spell_slots: {},
+    counters: [],
     ...overrides
   }
 }
