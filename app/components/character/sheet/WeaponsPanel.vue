@@ -20,29 +20,11 @@ function isExpanded(index: number): boolean {
 }
 
 /**
- * Calculate total attack bonus for a weapon
- * Formula: ability_modifier + (proficient ? proficiency_bonus : 0) + weapon_attack_bonus
- */
-function calculateAttackBonus(weapon: CharacterWeapon): number {
-  const abilityMod = props.abilityModifiers[weapon.ability_used] ?? 0
-  const profBonus = weapon.is_proficient ? props.proficiencyBonus : 0
-  return abilityMod + profBonus + weapon.attack_bonus
-}
-
-/**
- * Calculate total damage bonus for a weapon
- * Formula: ability_modifier + weapon_damage_bonus
- */
-function calculateDamageBonus(weapon: CharacterWeapon): number {
-  const abilityMod = props.abilityModifiers[weapon.ability_used] ?? 0
-  return abilityMod + weapon.damage_bonus
-}
-
-/**
  * Format damage string (e.g., "1d8+3" or "1d8-1")
+ * Backend pre-computes damage_bonus with all modifiers (ability, fighting style, magic)
  */
 function formatDamage(weapon: CharacterWeapon): string {
-  const bonus = calculateDamageBonus(weapon)
+  const bonus = weapon.damage_bonus
   if (bonus === 0) return weapon.damage_dice
   if (bonus > 0) return `${weapon.damage_dice}+${bonus}`
   return `${weapon.damage_dice}${bonus}` // negative already has minus
@@ -104,7 +86,7 @@ const unarmedAttackBonus = computed(() => {
           </span>
           <div class="flex items-center gap-4">
             <span class="text-sm text-gray-600 dark:text-gray-300">
-              {{ formatModifier(calculateAttackBonus(weapon)) }} to hit
+              {{ formatModifier(weapon.attack_bonus) }} to hit
             </span>
             <span class="text-sm text-gray-600 dark:text-gray-300">
               {{ formatDamage(weapon) }}
