@@ -13,14 +13,6 @@ const emit = defineEmits<{
   close: []
 }>()
 
-// Use local ref for v-model binding (matches other detail modal patterns)
-const isOpen = computed({
-  get: () => props.open,
-  set: (value) => {
-    if (!value) emit('close')
-  }
-})
-
 /**
  * Check if feat has prerequisites
  */
@@ -88,126 +80,123 @@ const grantedProficiencies = computed(() => {
 </script>
 
 <template>
-  <UModal
-    v-model:open="isOpen"
-    :title="feat?.name ?? 'Feat Details'"
+  <CharacterPickerEntityDetailModal
+    :entity="feat"
+    :open="open"
+    fallback-title="Feat Details"
+    @close="emit('close')"
   >
-    <template #body>
+    <div class="space-y-4">
+      <!-- Type Badges -->
+      <div class="flex items-center gap-2 flex-wrap">
+        <UBadge
+          color="feat"
+          variant="subtle"
+          size="md"
+        >
+          Feat
+        </UBadge>
+        <UBadge
+          v-if="isHalfFeat"
+          color="success"
+          variant="subtle"
+          size="md"
+        >
+          Half-Feat
+        </UBadge>
+        <UBadge
+          v-if="!hasPrerequisites"
+          color="info"
+          variant="subtle"
+          size="md"
+        >
+          No Prerequisites
+        </UBadge>
+      </div>
+
+      <!-- Prerequisites -->
       <div
-        v-if="feat"
-        class="space-y-4"
+        v-if="hasPrerequisites"
+        class="bg-warning-50 dark:bg-warning-900/20 rounded-lg p-3"
       >
-        <!-- Type Badges -->
-        <div class="flex items-center gap-2 flex-wrap">
-          <UBadge
-            color="feat"
-            variant="subtle"
-            size="md"
+        <h4 class="font-semibold text-warning-900 dark:text-warning-100 mb-2">
+          Prerequisites
+        </h4>
+        <ul class="space-y-1 text-sm text-warning-700 dark:text-warning-300">
+          <li
+            v-for="(prereq, idx) in prerequisitesList"
+            :key="idx"
           >
-            Feat
-          </UBadge>
-          <UBadge
-            v-if="isHalfFeat"
-            color="success"
-            variant="subtle"
-            size="md"
-          >
-            Half-Feat
-          </UBadge>
-          <UBadge
-            v-if="!hasPrerequisites"
-            color="info"
-            variant="subtle"
-            size="md"
-          >
-            No Prerequisites
-          </UBadge>
-        </div>
+            • {{ prereq }}
+          </li>
+        </ul>
+      </div>
 
-        <!-- Prerequisites -->
+      <!-- Benefits Grid -->
+      <div
+        v-if="abilityModifiers.length > 0 || grantedProficiencies.length > 0"
+        class="grid grid-cols-2 gap-3"
+      >
+        <!-- Ability Score Bonuses -->
         <div
-          v-if="hasPrerequisites"
-          class="bg-warning-50 dark:bg-warning-900/20 rounded-lg p-3"
+          v-if="abilityModifiers.length > 0"
+          class="bg-gray-50 dark:bg-gray-800 rounded-lg p-3"
         >
-          <h4 class="font-semibold text-warning-900 dark:text-warning-100 mb-2">
-            Prerequisites
+          <h4 class="font-semibold text-gray-900 dark:text-gray-100 mb-2 text-sm">
+            Ability Score
           </h4>
-          <ul class="space-y-1 text-sm text-warning-700 dark:text-warning-300">
-            <li
-              v-for="(prereq, idx) in prerequisitesList"
+          <div class="flex flex-wrap gap-2">
+            <UBadge
+              v-for="(mod, idx) in abilityModifiers"
               :key="idx"
+              color="primary"
+              variant="subtle"
+              size="md"
             >
-              • {{ prereq }}
-            </li>
-          </ul>
-        </div>
-
-        <!-- Benefits Grid -->
-        <div
-          v-if="abilityModifiers.length > 0 || grantedProficiencies.length > 0"
-          class="grid grid-cols-2 gap-3"
-        >
-          <!-- Ability Score Bonuses -->
-          <div
-            v-if="abilityModifiers.length > 0"
-            class="bg-gray-50 dark:bg-gray-800 rounded-lg p-3"
-          >
-            <h4 class="font-semibold text-gray-900 dark:text-gray-100 mb-2 text-sm">
-              Ability Score
-            </h4>
-            <div class="flex flex-wrap gap-2">
-              <UBadge
-                v-for="(mod, idx) in abilityModifiers"
-                :key="idx"
-                color="primary"
-                variant="subtle"
-                size="md"
-              >
-                {{ mod.isChoice ? 'Choice' : mod.code }} +{{ mod.value }}
-              </UBadge>
-            </div>
-          </div>
-
-          <!-- Proficiencies -->
-          <div
-            v-if="grantedProficiencies.length > 0"
-            class="bg-gray-50 dark:bg-gray-800 rounded-lg p-3"
-          >
-            <h4 class="font-semibold text-gray-900 dark:text-gray-100 mb-2 text-sm">
-              Proficiencies
-            </h4>
-            <div class="flex flex-wrap gap-2">
-              <UBadge
-                v-for="(prof, idx) in grantedProficiencies"
-                :key="idx"
-                color="secondary"
-                variant="subtle"
-                size="md"
-              >
-                {{ prof }}
-              </UBadge>
-            </div>
+              {{ mod.isChoice ? 'Choice' : mod.code }} +{{ mod.value }}
+            </UBadge>
           </div>
         </div>
 
-        <!-- Description -->
+        <!-- Proficiencies -->
         <div
-          v-if="feat.description"
-          class="prose prose-sm dark:prose-invert max-w-none"
+          v-if="grantedProficiencies.length > 0"
+          class="bg-gray-50 dark:bg-gray-800 rounded-lg p-3"
         >
-          <p class="text-gray-700 dark:text-gray-300 whitespace-pre-line">
-            {{ feat.description }}
-          </p>
-        </div>
-
-        <!-- Source -->
-        <div
-          v-if="feat.sources && feat.sources.length > 0"
-          class="text-sm text-gray-500 dark:text-gray-400"
-        >
-          Source: {{ feat.sources.map(s => s.name || s.code).join(', ') }}
+          <h4 class="font-semibold text-gray-900 dark:text-gray-100 mb-2 text-sm">
+            Proficiencies
+          </h4>
+          <div class="flex flex-wrap gap-2">
+            <UBadge
+              v-for="(prof, idx) in grantedProficiencies"
+              :key="idx"
+              color="secondary"
+              variant="subtle"
+              size="md"
+            >
+              {{ prof }}
+            </UBadge>
+          </div>
         </div>
       </div>
-    </template>
-  </UModal>
+
+      <!-- Description -->
+      <div
+        v-if="feat?.description"
+        class="prose prose-sm dark:prose-invert max-w-none"
+      >
+        <p class="text-gray-700 dark:text-gray-300 whitespace-pre-line">
+          {{ feat.description }}
+        </p>
+      </div>
+
+      <!-- Source -->
+      <div
+        v-if="feat?.sources && feat.sources.length > 0"
+        class="text-sm text-gray-500 dark:text-gray-400"
+      >
+        Source: {{ feat.sources.map(s => s.name || s.code).join(', ') }}
+      </div>
+    </div>
+  </CharacterPickerEntityDetailModal>
 </template>
