@@ -40,6 +40,35 @@ export type CharacterFeature = Omit<components['schemas']['CharacterFeatureResou
 }
 
 /**
+ * Selected optional feature (infusion, invocation, metamagic, etc.)
+ *
+ * Returned in `feature_selections` on CharacterResource.
+ * These are user-selected class features like Artificer infusions,
+ * Warlock invocations, Sorcerer metamagic, etc.
+ *
+ * @see Issue #710 - Backend implementation
+ * @see Issue #712 - Frontend display
+ */
+export interface FeatureSelection {
+  /** Feature display name */
+  feature: string
+  /** Feature slug for linking (e.g., "tce:armor-of-magical-strength") */
+  feature_slug: string
+  /** Feature type for grouping (e.g., "artificer_infusion", "eldritch_invocation") */
+  feature_type: string
+  /** Class name that grants this feature */
+  class: string
+  /** Class slug (e.g., "erlw:artificer") */
+  class_slug: string
+  /** Subclass name if granted by subclass */
+  subclass_name: string | null
+  /** Level when this feature was acquired */
+  level_acquired: number
+  /** Whether this feature is orphaned (class no longer supports it) */
+  is_dangling: boolean
+}
+
+/**
  * Character note from API
  * @see CharacterNoteResource in OpenAPI spec
  */
@@ -135,6 +164,13 @@ export type Character = components['schemas']['CharacterResource'] & {
    * @see Issue #632
    */
   counters?: Counter[]
+
+  /**
+   * Selected optional features (infusions, invocations, metamagic, etc.)
+   * @see Issue #710 - Backend implementation
+   * @see Issue #712 - Frontend display
+   */
+  feature_selections?: FeatureSelection[]
 }
 
 /**
