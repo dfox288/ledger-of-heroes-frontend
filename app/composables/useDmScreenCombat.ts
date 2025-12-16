@@ -153,14 +153,25 @@ export function useDmScreenCombat(
   /**
    * Toggle a positional status (prone/flying) for a combatant
    * If status is present, removes it. If not present, adds it.
+   * Prone and flying are mutually exclusive (D&D 5e: flying while prone = fall)
    */
   function toggleStatus(key: string, status: string): void {
     const currentStatuses = state.value.statuses[key] ?? []
     const index = currentStatuses.indexOf(status)
 
     if (index === -1) {
-      // Add status
-      state.value.statuses[key] = [...currentStatuses, status]
+      // Adding a status - handle mutual exclusivity
+      let newStatuses = [...currentStatuses]
+
+      // Prone and flying are mutually exclusive
+      if (status === 'prone') {
+        newStatuses = newStatuses.filter(s => s !== 'flying')
+      } else if (status === 'flying') {
+        newStatuses = newStatuses.filter(s => s !== 'prone')
+      }
+
+      newStatuses.push(status)
+      state.value.statuses[key] = newStatuses
     } else {
       // Remove status
       const newStatuses = currentStatuses.filter(s => s !== status)

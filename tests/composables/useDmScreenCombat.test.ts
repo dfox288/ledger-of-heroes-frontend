@@ -520,13 +520,14 @@ describe('useDmScreenCombat', () => {
       expect(hasStatus('char_1', 'prone')).toBe(false)
     })
 
-    it('supports multiple statuses for same combatant', () => {
+    it('prone and flying are mutually exclusive', () => {
       const { toggleStatus, hasStatus } = useDmScreenCombat(getPartyId(), mockCharacters, createEmptyMonstersRef())
 
       toggleStatus('char_1', 'prone')
       toggleStatus('char_1', 'flying')
 
-      expect(hasStatus('char_1', 'prone')).toBe(true)
+      // Flying should replace prone (D&D 5e: can't be prone while flying)
+      expect(hasStatus('char_1', 'prone')).toBe(false)
       expect(hasStatus('char_1', 'flying')).toBe(true)
     })
 
@@ -545,16 +546,15 @@ describe('useDmScreenCombat', () => {
       expect(hasStatus('char_1', 'flying')).toBe(false)
     })
 
-    it('getStatuses returns all statuses for a combatant', () => {
+    it('getStatuses returns current statuses for a combatant', () => {
       const { toggleStatus, getStatuses } = useDmScreenCombat(getPartyId(), mockCharacters, createEmptyMonstersRef())
 
       toggleStatus('char_1', 'prone')
-      toggleStatus('char_1', 'flying')
-
+      // Note: flying would replace prone due to mutual exclusivity
+      // So we just test that getStatuses returns the current status
       const statuses = getStatuses('char_1')
       expect(statuses).toContain('prone')
-      expect(statuses).toContain('flying')
-      expect(statuses).toHaveLength(2)
+      expect(statuses).toHaveLength(1)
     })
 
     it('getStatuses returns empty array for combatant without statuses', () => {
@@ -606,6 +606,28 @@ describe('useDmScreenCombat', () => {
       toggleStatus('char_1', 'prone')
       // Empty arrays should be removed from state to keep it clean
       expect(state.value.statuses['char_1']).toBeUndefined()
+    })
+
+    it('removes flying when marking as prone (mutually exclusive)', () => {
+      const { toggleStatus, hasStatus } = useDmScreenCombat(getPartyId(), mockCharacters, createEmptyMonstersRef())
+
+      toggleStatus('char_1', 'flying')
+      expect(hasStatus('char_1', 'flying')).toBe(true)
+
+      toggleStatus('char_1', 'prone')
+      expect(hasStatus('char_1', 'prone')).toBe(true)
+      expect(hasStatus('char_1', 'flying')).toBe(false)
+    })
+
+    it('removes prone when marking as flying (mutually exclusive)', () => {
+      const { toggleStatus, hasStatus } = useDmScreenCombat(getPartyId(), mockCharacters, createEmptyMonstersRef())
+
+      toggleStatus('char_1', 'prone')
+      expect(hasStatus('char_1', 'prone')).toBe(true)
+
+      toggleStatus('char_1', 'flying')
+      expect(hasStatus('char_1', 'flying')).toBe(true)
+      expect(hasStatus('char_1', 'prone')).toBe(false)
     })
   })
 })

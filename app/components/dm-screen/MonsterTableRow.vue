@@ -348,6 +348,9 @@ function handleStatusToggle(status: string, event: Event) {
       <div class="flex items-center justify-center gap-1 mt-1">
         <button
           data-testid="status-prone"
+          role="switch"
+          :aria-pressed="isProne"
+          :aria-label="isProne ? 'Remove prone status' : 'Mark as prone'"
           class="p-1 rounded transition-colors"
           :class="isProne
             ? 'bg-amber-100 dark:bg-amber-900/50 text-amber-600 dark:text-amber-400'
@@ -362,6 +365,9 @@ function handleStatusToggle(status: string, event: Event) {
         </button>
         <button
           data-testid="status-flying"
+          role="switch"
+          :aria-pressed="isFlying"
+          :aria-label="isFlying ? 'Remove flying status' : 'Mark as flying'"
           class="p-1 rounded transition-colors"
           :class="isFlying
             ? 'bg-sky-100 dark:bg-sky-900/50 text-sky-600 dark:text-sky-400'
