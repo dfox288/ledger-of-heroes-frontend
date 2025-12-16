@@ -217,31 +217,19 @@ const isMulticlassSpellcaster = computed(() => spellcastingClasses.value.length 
 const primarySpellcasting = computed(() => spellcastingClasses.value[0] ?? null)
 
 /**
- * Active tab for multiclass view
- * Default to "All Spells" tab (last index) once data loads
- */
-const activeTab = ref(0)
-const hasInitializedTab = ref(false)
-
-// Set default to "All Spells" tab when spellcasting classes are loaded
-watch(spellcastingClasses, (classes) => {
-  if (classes.length > 0 && !hasInitializedTab.value) {
-    // "All Spells" is at index = number of classes (last tab)
-    activeTab.value = classes.length
-    hasInitializedTab.value = true
-  }
-}, { immediate: true })
-
-/**
  * Build tab items for multiclass view
+ * Each item has a `value` for UTabs to track selection
+ *
+ * @see Issue #719 - Default to All Spells tab
  */
 const tabItems = computed(() => {
   const items = spellcastingClasses.value.map(sc => ({
     label: sc.name,
-    slot: sc.slotName
+    slot: sc.slotName,
+    value: sc.slotName // Use slot name as value for UTabs
   }))
   // Add "All Spells" tab at the end
-  items.push({ label: 'All Spells', slot: 'all-spells' })
+  items.push({ label: 'All Spells', slot: 'all-spells', value: 'all-spells' })
   return items
 })
 
@@ -338,8 +326,8 @@ useSeoMeta({
           <!-- ══════════════════════════════════════════════════════════════ -->
           <template v-if="isMulticlassSpellcaster">
             <UTabs
-              v-model="activeTab"
               :items="tabItems"
+              default-value="all-spells"
               class="mt-6"
             >
               <!-- Per-class tabs -->

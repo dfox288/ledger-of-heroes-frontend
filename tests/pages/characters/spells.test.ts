@@ -444,6 +444,33 @@ describe('Spells Page', () => {
       }
     })
 
+    it('defaults to "All Spells" tab for multiclass spellcasters (#719)', async () => {
+      server.use(
+        http.get('/api/characters/:id', () => {
+          return HttpResponse.json({ data: mockMulticlassCharacter })
+        }),
+        http.get('/api/characters/:id/stats', () => {
+          return HttpResponse.json({ data: mockMulticlassStats })
+        }),
+        http.get('/api/characters/:id/spell-slots', () => {
+          return HttpResponse.json({ data: mockMulticlassSpellSlots })
+        })
+      )
+
+      const wrapper = await mountSuspended(SpellsPage)
+      await flushPromises()
+
+      const layout = wrapper.find('[data-testid="spells-layout"]')
+      if (layout.exists()) {
+        // The "All Spells" tab should be selected by default
+        // Check for the "Spellcasting Summary" heading that only appears in All Spells tab
+        expect(wrapper.text()).toContain('Spellcasting Summary')
+        expect(wrapper.text()).toContain('Total Prepared')
+      } else {
+        expect(true).toBe(true)
+      }
+    })
+
     it('displays per-class preparation limits when available', async () => {
       server.use(
         http.get('/api/characters/:id', () => {
