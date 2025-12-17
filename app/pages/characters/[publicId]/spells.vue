@@ -384,6 +384,7 @@ const primarySpellcasting = computed(() => spellcastingClasses.value[0] ?? null)
 /**
  * Build tab items for multiclass view
  * Each item has a `value` for UTabs to track selection
+ * "All Prepared Spells" is first (default) - shows combined prepared spells
  *
  * @see Issue #719 - Default to All Spells tab
  */
@@ -393,8 +394,8 @@ const tabItems = computed(() => {
     slot: sc.slotName,
     value: sc.slotName // Use slot name as value for UTabs
   }))
-  // Add "All Prepared Spells" tab at the end - shows only prepared/ready spells
-  items.push({ label: 'All Prepared Spells', slot: 'all-spells', value: 'all-spells' })
+  // Add "All Prepared Spells" tab at the START - shows only prepared/ready spells
+  items.unshift({ label: 'All Prepared Spells', slot: 'all-spells', value: 'all-spells' })
   return items
 })
 
@@ -448,6 +449,45 @@ function getSpellPreparationMethod(spell: CharacterSpell): PreparationMethod {
     : preparationMethod.value
 }
 
+// ══════════════════════════════════════════════════════════════
+// CROSS-CLASS SPELL PREPARATION TRACKING
+// ══════════════════════════════════════════════════════════════
+
+/**
+ * Map of spell_slug -> class name for spells prepared by each class
+ * Used to show "Already prepared as X" for cross-class duplicates
+ */
+const preparedByClassMap = computed(() => {
+  const map = new Map<string, string>() // spell_slug -> class name
+  for (const spell of validSpells.value) {
+    if (spell.is_prepared && spell.class_slug) {
+      // Extract class name from slug (e.g., "phb:wizard" -> "Wizard")
+      const name = spell.class_slug.split(':')[1] ?? spell.class_slug
+      map.set(spell.spell_slug, name.charAt(0).toUpperCase() + name.slice(1))
+    }
+  }
+  return map
+})
+
+/**
+ * Check if a spell is prepared by a DIFFERENT class than the one passed
+ * @param spellSlug - The spell's slug to check
+ * @param currentClassSlug - The class we're currently viewing
+ * @returns The class name if prepared by another class, null otherwise
+ */
+function getOtherClassPrepared(spellSlug: string, currentClassSlug: string | null): string | null {
+  const preparedClass = preparedByClassMap.value.get(spellSlug)
+  if (!preparedClass) return null
+  // Extract current class name for comparison
+  const currentClassName = currentClassSlug
+    ? (currentClassSlug.split(':')[1] ?? currentClassSlug).charAt(0).toUpperCase() +
+      (currentClassSlug.split(':')[1] ?? currentClassSlug).slice(1)
+    : null
+  // Return null if it's the same class
+  if (preparedClass === currentClassName) return null
+  return preparedClass
+}
+
 /**
  * REACTIVE total prepared count across all classes
  * Computes from store's preparedSpellIds for real-time updates
@@ -458,6 +498,14 @@ const reactiveTotalPreparedCount = computed(() => {
     playStateStore.preparedSpellIds.has(s.id) && !s.is_always_prepared
   ).length
 })
+
+/**
+ * Handle spells changed event from PrepareSpellsView
+ * Refreshes page-level spell data so counters update correctly
+ */
+async function handleSpellsChanged() {
+  await refreshNuxtData(`character-${publicId.value}-spells`)
+}
 
 useSeoMeta({
   title: () => character.value ? `${character.value.name} - Spells` : 'Spells'
@@ -603,17 +651,6 @@ useSeoMeta({
                   </div>
                 </div>
 
-                <!-- Spell Slots (shared) -->
-                <div
-                  v-if="spellSlots?.slots && Object.keys(spellSlots.slots).length > 0 && character"
-                  class="mb-4"
-                >
-                  <CharacterSheetSpellSlotsManager
-                    :character-id="character.id"
-                    :editable="canEdit"
-                  />
-                </div>
-
                 <!-- Prepare Spells View for this class (#723) -->
                 <div
                   v-if="isPrepareSpellsModeFor(sc.slug) && character && hasPerClassLimits"
@@ -628,6 +665,7 @@ useSeoMeta({
                     :prepared-count="getReactivePreparedCount(sc.slug)"
                     :preparation-method="getClassPreparationMethod(sc.slug)"
                     @close="exitPrepareSpellsMode"
+                    @spells-changed="handleSpellsChanged"
                   />
                 </div>
 
@@ -649,6 +687,7 @@ useSeoMeta({
                         :at-prep-limit="isAtClassPreparationLimit(sc.slug)"
                         :character-id="character.id"
                         :editable="canEdit"
+                        :other-class-prepared="getOtherClassPrepared(spell.spell_slug, sc.slug)"
                       />
                     </div>
                   </div>
@@ -670,6 +709,7 @@ useSeoMeta({
                         :at-prep-limit="isAtClassPreparationLimit(sc.slug)"
                         :character-id="character.id"
                         :editable="canEdit"
+                        :other-class-prepared="getOtherClassPrepared(spell.spell_slug, sc.slug)"
                       />
                     </div>
                   </div>
@@ -901,6 +941,7 @@ useSeoMeta({
                 :prepared-count="reactiveTotalPreparedCount"
                 :preparation-method="preparationMethod"
                 @close="exitPrepareSpellsMode"
+                @spells-changed="handleSpellsChanged"
               />
             </div>
 

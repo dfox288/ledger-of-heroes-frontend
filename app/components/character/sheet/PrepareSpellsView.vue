@@ -26,12 +26,13 @@ const props = defineProps<{
 
 const emit = defineEmits<{
   close: []
+  spellsChanged: []
 }>()
 
 const { apiFetch } = useApi()
 const toast = useToast()
 const store = useCharacterPlayStateStore()
-const { preparedSpellIds, isUpdatingSpellPreparation } = storeToRefs(store)
+const { preparedSpellIds, isUpdatingSpellPreparation, canEdit } = storeToRefs(store)
 
 // Spellbook mode (Wizard) vs Prepared mode (Cleric, Druid, Paladin)
 const isSpellbookMode = computed(() => props.preparationMethod === 'spellbook')
@@ -132,10 +133,57 @@ const characterSpellMap = computed(() => {
 })
 
 /**
- * Reactive prepared count from store
+ * Track spells prepared by OTHER classes (for multiclass cross-check)
+ * Used to show "Already prepared as [Class]" indicator and prevent duplicate preparation
+ */
+const otherClassPreparedMap = computed(() => {
+  const map = new Map<string, string>() // spell_slug -> class_slug
+  for (const cs of characterSpellsData.value?.data ?? []) {
+    // Only include spells from OTHER classes that are prepared
+    if (cs.class_slug === props.classSlug) continue
+    if (cs.is_prepared) {
+      map.set(cs.spell_slug, cs.class_slug)
+    }
+  }
+  return map
+})
+
+/**
+ * Check if a spell is prepared by another class
+ */
+function isPreparedByOtherClass(spell: Spell): boolean {
+  return otherClassPreparedMap.value.has(spell.slug)
+}
+
+/**
+ * Get the class that has this spell prepared (for display)
+ */
+function getOtherPreparedClass(spell: Spell): string | null {
+  const classSlug = otherClassPreparedMap.value.get(spell.slug)
+  if (!classSlug) return null
+  // Extract class name from slug (e.g., "phb:wizard" -> "Wizard")
+  const name = classSlug.split(':')[1] ?? classSlug
+  return name.charAt(0).toUpperCase() + name.slice(1)
+}
+
+/**
+ * Reactive prepared count from store - FILTERED BY CURRENT CLASS
+ *
+ * Critical for multiclass support: counts only spells for THIS class,
+ * not all prepared spells across all classes.
+ *
+ * @see Issue #728 - Wizard preparation limit fix for multiclass
  */
 const reactivePreparedCount = computed(() => {
-  return preparedSpellIds.value.size
+  // Count prepared spells that belong to THIS class only
+  let count = 0
+  for (const charSpell of characterSpellMap.value.values()) {
+    // Only count if it's in the prepared set and not always-prepared
+    if (preparedSpellIds.value.has(charSpell.id) && !charSpell.is_always_prepared) {
+      count++
+    }
+  }
+  return count
 })
 
 /**
@@ -145,21 +193,18 @@ const atPrepLimit = computed(() => reactivePreparedCount.value >= props.preparat
 
 /**
  * Filter available spells based on search, level, and hide-prepared
- * - Spellbook mode (Wizard): excludes already learned spells (can only copy new ones)
- * - Prepared mode (Cleric, etc.): shows all class spells (can prepare any)
+ * Both spellbook (Wizard) and prepared (Cleric, etc.) casters see all class spells.
+ * - Spells already in spellbook/list: show preparation toggle
+ * - Spells not yet learned (Wizard only): show "Learn" button
  */
 const filteredSpells = computed(() => {
   let result = availableSpells.value
 
-  // Spellbook mode: exclude already learned spells
-  // Wizards can only copy spells they don't already have
-  if (isSpellbookMode.value) {
-    result = result.filter((s) => {
-      // Exclude already learned spells
-      if (characterSpellMap.value.has(s.slug)) return false
-      return true
-    })
-  }
+  // NOTE: We intentionally do NOT filter out learned spells for wizards anymore.
+  // Wizards need to see their spellbook spells here to toggle preparation,
+  // just like Clerics see their class spells. The template shows:
+  // - Preparation toggle for spells in spellbook
+  // - "Learn" button for spells not yet in spellbook
 
   // Search filter
   if (searchQuery.value) {
@@ -243,6 +288,12 @@ const isAddingSpell = ref(false)
  * Check if spell can be toggled
  */
 function canToggle(spell: Spell): boolean {
+  // Require play mode to be ON (consistent with SpellCard behavior)
+  if (!canEdit.value) return false
+
+  // Can't prepare a spell that's already prepared by another class
+  if (isPreparedByOtherClass(spell)) return false
+
   // Cantrips are always ready
   if (spell.level === 0) return false
 
@@ -291,6 +342,11 @@ async function handleToggle(spell: Spell) {
   const currentlyPrepared = charSpell ? preparedSpellIds.value.has(charSpell.id) : false
   const action = currentlyPrepared ? 'unprepare' : 'prepare'
 
+  // CRITICAL: Save the ID BEFORE API call for unprepare case
+  // After unprepare, the spell might be deleted from characterSpellMap,
+  // so we won't be able to look it up to delete from preparedSpellIds
+  const existingCharSpellId = charSpell?.id
+
   // Check prep limit before preparing (not needed for unpreparing)
   if (action === 'prepare' && atPrepLimit.value) {
     toast.add({
@@ -320,18 +376,26 @@ async function handleToggle(spell: Spell) {
       body: { class_slug: props.classSlug }
     })
 
-    // Refresh character spells to update the map and store
+    // Refresh character spells to update the map
     await refreshNuxtData(`character-${props.characterId}-spells-for-prepare`)
 
-    // Update store's prepared IDs based on refreshed data
-    const updatedCharSpell = characterSpellMap.value.get(spell.slug)
-    if (updatedCharSpell) {
-      if (action === 'prepare') {
+    // Update store's prepared IDs
+    if (action === 'prepare') {
+      // For prepare: get the new ID from refreshed data (spell may have been created)
+      const updatedCharSpell = characterSpellMap.value.get(spell.slug)
+      if (updatedCharSpell) {
         preparedSpellIds.value.add(updatedCharSpell.id)
-      } else {
-        preparedSpellIds.value.delete(updatedCharSpell.id)
+      }
+    } else {
+      // For unprepare: use the ID we saved BEFORE the API call
+      // because the spell might be deleted from characterSpellMap after unprepare
+      if (existingCharSpellId !== undefined) {
+        preparedSpellIds.value.delete(existingCharSpellId)
       }
     }
+
+    // Notify parent that spells changed so it can refresh its data
+    emit('spellsChanged')
   } catch (error) {
     const message = error instanceof Error ? error.message : `Failed to ${action} spell`
     toast.add({
@@ -528,14 +592,16 @@ async function confirmLearnSpell() {
               isSpellPrepared(spell)
                 ? 'border-spell-300 dark:border-spell-700'
                 : 'border-gray-200 dark:border-gray-700',
+              // Cross-class prepared: dim and show as unavailable
+              isPreparedByOtherClass(spell) && level !== 0 && 'opacity-50',
               // Spellbook mode: dim unlearned spells (but clickable to learn)
-              isSpellbookMode && !isInSpellbook(spell) && level !== 0 && 'opacity-60',
+              !isPreparedByOtherClass(spell) && isSpellbookMode && !isInSpellbook(spell) && level !== 0 && 'opacity-60',
               // Prepared mode: grey out spells not in character's spell list (can't toggle)
-              !isSpellbookMode && !isInCharacterSpells(spell) && level !== 0 && 'opacity-30',
+              !isPreparedByOtherClass(spell) && !isSpellbookMode && !isInCharacterSpells(spell) && level !== 0 && 'opacity-30',
               // Dim unprepared at limit
-              isInCharacterSpells(spell) && !isSpellPrepared(spell) && atPrepLimit && level !== 0 && 'opacity-40',
+              !isPreparedByOtherClass(spell) && isInCharacterSpells(spell) && !isSpellPrepared(spell) && atPrepLimit && level !== 0 && 'opacity-40',
               // Slightly dim unprepared (but not at limit)
-              isInCharacterSpells(spell) && !isSpellPrepared(spell) && !atPrepLimit && level !== 0 && 'opacity-70'
+              !isPreparedByOtherClass(spell) && isInCharacterSpells(spell) && !isSpellPrepared(spell) && !atPrepLimit && level !== 0 && 'opacity-70'
             ]"
           >
             <!-- Clickable header for expand/collapse -->
@@ -544,9 +610,21 @@ async function confirmLearnSpell() {
               @click="handleHeaderClick($event, spell.id)"
             >
               <div class="flex items-center gap-2 min-w-0">
+                <!-- Cross-class prepared: show check with tooltip -->
+                <UTooltip
+                  v-if="level !== 0 && isPreparedByOtherClass(spell)"
+                  :text="`Prepared as ${getOtherPreparedClass(spell)}`"
+                >
+                  <UIcon
+                    data-testid="cross-class-prepared-indicator"
+                    name="i-heroicons-check-circle-solid"
+                    class="w-5 h-5 text-gray-400 dark:text-gray-500 flex-shrink-0"
+                  />
+                </UTooltip>
+
                 <!-- Preparation toggle for spells in character's list OR prepared casters -->
                 <button
-                  v-if="level !== 0 && (isInCharacterSpells(spell) || isPreparedMode)"
+                  v-else-if="level !== 0 && (isInCharacterSpells(spell) || isPreparedMode)"
                   :data-testid="`prepare-toggle`"
                   type="button"
                   :disabled="!canToggle(spell)"

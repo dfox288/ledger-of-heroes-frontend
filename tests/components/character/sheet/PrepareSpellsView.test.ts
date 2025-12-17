@@ -84,6 +84,8 @@ function setupStore(characterId = 42) {
     deathSaves: { successes: 0, failures: 0 },
     currency: { pp: 0, gp: 0, ep: 0, sp: 0, cp: 0 }
   })
+  // Enable play mode (required for spell preparation toggles)
+  store.setPlayMode(true)
   // Initialize with Cure Wounds prepared (id: 1001 matches mockCharacterSpells)
   store.initializeSpellPreparation({
     spells: [{ id: 1001, is_prepared: true, is_always_prepared: false }],
@@ -97,44 +99,52 @@ const defaultProps = {
   classSlug: 'phb:cleric',
   maxCastableLevel: 3,
   preparationLimit: 5,
-  preparedCount: 1
+  preparedCount: 1,
+  preparationMethod: 'prepared' as const
 }
 
 // Mock character spells (already in character's spell list)
+// NOTE: class_slug must match classSlug prop for filtering to work
 const mockCharacterSpells = [
   {
     id: 1001, // character_spell ID
     spell_slug: 'phb:cure-wounds',
+    class_slug: 'phb:cleric',
     is_prepared: true,
     is_always_prepared: false
   },
   {
     id: 1002,
     spell_slug: 'phb:bless',
+    class_slug: 'phb:cleric',
     is_prepared: false,
     is_always_prepared: false
   },
   {
     id: 1003,
     spell_slug: 'phb:healing-word',
+    class_slug: 'phb:cleric',
     is_prepared: false,
     is_always_prepared: false
   },
   {
     id: 1004,
     spell_slug: 'phb:spiritual-weapon',
+    class_slug: 'phb:cleric',
     is_prepared: false,
     is_always_prepared: false
   },
   {
     id: 1005,
     spell_slug: 'phb:spirit-guardians',
+    class_slug: 'phb:cleric',
     is_prepared: false,
     is_always_prepared: false
   },
   {
     id: 1006,
     spell_slug: 'phb:sacred-flame',
+    class_slug: 'phb:cleric',
     is_prepared: false,
     is_always_prepared: false
   }
@@ -149,13 +159,17 @@ describe('PrepareSpellsView', () => {
     vi.clearAllMocks()
     setupPinia()
     setupStore()
-    // Default mock response - handles both available-spells and character spells calls
+    // Default mock response - handles both API calls:
+    // 1. Available spells: /spells?filter=... (Meilisearch filtered class spells)
+    // 2. Character spells: /characters/{id}/spells (character's current spells)
     apiFetchMock.mockImplementation((url: string) => {
-      if (url.includes('available-spells')) {
-        return Promise.resolve({ data: mockAvailableSpells })
-      }
-      if (url.includes('/spells')) {
+      // Character spells endpoint - more specific match first
+      if (url.includes('/characters/') && url.includes('/spells')) {
         return Promise.resolve({ data: mockCharacterSpells })
+      }
+      // Available spells endpoint - filtered by class
+      if (url.startsWith('/spells?')) {
+        return Promise.resolve({ data: mockAvailableSpells })
       }
       return Promise.resolve({ data: [] })
     })
@@ -207,28 +221,29 @@ describe('PrepareSpellsView', () => {
   })
 
   describe('API fetching', () => {
-    it('fetches available spells with correct parameters', async () => {
+    it('fetches available spells using Meilisearch filter', async () => {
       await mountSuspended(PrepareSpellsView, {
         props: defaultProps,
         ...getMountOptions()
       })
       await flushPromises()
 
-      // Should call available-spells endpoint
+      // Should call /spells with Meilisearch filter
       expect(apiFetchMock).toHaveBeenCalledWith(
-        expect.stringContaining('/characters/42/available-spells')
+        expect.stringContaining('/spells?filter=')
       )
     })
 
-    it('passes class filter to API', async () => {
+    it('passes class filter to API using class_slugs', async () => {
       await mountSuspended(PrepareSpellsView, {
         props: { ...defaultProps, classSlug: 'phb:druid' },
         ...getMountOptions()
       })
       await flushPromises()
 
+      // Should filter by class_slugs in Meilisearch format
       expect(apiFetchMock).toHaveBeenCalledWith(
-        expect.stringMatching(/class=phb%3Adruid/)
+        expect.stringContaining('class_slugs%3D%22phb%3Adruid%22')
       )
     })
 
@@ -239,8 +254,9 @@ describe('PrepareSpellsView', () => {
       })
       await flushPromises()
 
+      // Should filter by level<=2 in Meilisearch format
       expect(apiFetchMock).toHaveBeenCalledWith(
-        expect.stringContaining('max_level=2')
+        expect.stringContaining('level%3C%3D2')
       )
     })
   })
@@ -310,21 +326,26 @@ describe('PrepareSpellsView', () => {
       expect(cureWoundsCard.find('[data-testid="prepared-indicator"]').exists()).toBe(true)
     })
 
-    it('calls toggleSpellPreparation when toggling', async () => {
-      const store = useCharacterPlayStateStore()
-      const toggleSpy = vi.spyOn(store, 'toggleSpellPreparation').mockResolvedValue()
-
+    it('calls prepare API when toggling an unprepared spell', async () => {
       const wrapper = await mountSuspended(PrepareSpellsView, {
         props: defaultProps,
         ...getMountOptions()
       })
       await flushPromises()
 
+      // Clear mocks to isolate the toggle call
+      apiFetchMock.mockClear()
+
       // Find an unprepared spell (Bless - spell id: 102) and toggle it
       const blessCard = wrapper.find('[data-testid="spell-card-102"]')
       await blessCard.find('[data-testid="prepare-toggle"]').trigger('click')
+      await flushPromises()
 
-      expect(toggleSpy).toHaveBeenCalled()
+      // Should call the prepare endpoint
+      expect(apiFetchMock).toHaveBeenCalledWith(
+        expect.stringContaining('/spells/phb:bless/prepare'),
+        expect.objectContaining({ method: 'PATCH' })
+      )
     })
 
     it('disables prepare toggle when at limit', async () => {
