@@ -122,6 +122,42 @@ const sortedLevels = computed(() =>
 )
 
 // ══════════════════════════════════════════════════════════════
+// PREPARED SPELLS FILTERING (for "All Prepared Spells" tab)
+// ══════════════════════════════════════════════════════════════
+
+/**
+ * Prepared leveled spells - spells that are currently prepared
+ * Includes both manually prepared and always-prepared spells
+ */
+const preparedLeveledSpells = computed(() =>
+  leveledSpells.value.filter(s => s.is_prepared)
+)
+
+/**
+ * Prepared spells grouped by level (for "All Prepared Spells" tab)
+ */
+const preparedSpellsByLevel = computed(() => {
+  const grouped: Record<number, CharacterSpell[]> = {}
+  for (const spell of preparedLeveledSpells.value) {
+    const level = spell.spell!.level
+    if (!grouped[level]) grouped[level] = []
+    grouped[level].push(spell)
+  }
+  // Sort by spell name within each level
+  for (const level in grouped) {
+    grouped[level]!.sort((a, b) => a.spell!.name.localeCompare(b.spell!.name))
+  }
+  return grouped
+})
+
+/**
+ * Sorted level keys for prepared spells only
+ */
+const preparedSortedLevels = computed(() =>
+  Object.keys(preparedSpellsByLevel.value).map(Number).sort((a, b) => a - b)
+)
+
+// ══════════════════════════════════════════════════════════════
 // PER-CLASS SPELL FILTERING
 // ══════════════════════════════════════════════════════════════
 
@@ -357,8 +393,8 @@ const tabItems = computed(() => {
     slot: sc.slotName,
     value: sc.slotName // Use slot name as value for UTabs
   }))
-  // Add "All Spells" tab at the end
-  items.push({ label: 'All Spells', slot: 'all-spells', value: 'all-spells' })
+  // Add "All Prepared Spells" tab at the end - shows only prepared/ready spells
+  items.push({ label: 'All Prepared Spells', slot: 'all-spells', value: 'all-spells' })
   return items
 })
 
@@ -652,7 +688,7 @@ useSeoMeta({
                 </template>
               </template>
 
-              <!-- All Spells Tab -->
+              <!-- All Prepared Spells Tab -->
               <template #all-spells>
                 <!-- Combined Stats Summary -->
                 <div class="p-4 bg-gray-50 dark:bg-gray-800 rounded-lg mb-4">
@@ -710,7 +746,8 @@ useSeoMeta({
                   />
                 </div>
 
-                <!-- All Spells List (read-only - preparation happens in class tabs) -->
+                <!-- All Prepared Spells List (read-only - preparation happens in class tabs) -->
+                <!-- Shows cantrips (always ready) + all prepared leveled spells -->
                 <div
                   v-if="cantrips.length > 0"
                   class="mt-4"
@@ -732,7 +769,7 @@ useSeoMeta({
                 </div>
 
                 <div
-                  v-for="level in sortedLevels"
+                  v-for="level in preparedSortedLevels"
                   :key="level"
                   class="mt-4"
                 >
@@ -741,7 +778,7 @@ useSeoMeta({
                   </h3>
                   <div class="space-y-2">
                     <CharacterSheetSpellCard
-                      v-for="spell in spellsByLevel[level]"
+                      v-for="spell in preparedSpellsByLevel[level]"
                       :key="spell.id"
                       :spell="spell"
                       :preparation-method="getSpellPreparationMethod(spell)"
@@ -754,7 +791,7 @@ useSeoMeta({
 
                 <!-- Empty State -->
                 <div
-                  v-if="validSpells.length === 0"
+                  v-if="cantrips.length === 0 && preparedLeveledSpells.length === 0"
                   class="mt-8 text-center py-12 text-gray-500 dark:text-gray-400"
                 >
                   <UIcon
@@ -762,7 +799,10 @@ useSeoMeta({
                     class="w-12 h-12 mx-auto mb-4"
                   />
                   <p class="text-lg">
-                    No spells known yet.
+                    No spells prepared yet.
+                  </p>
+                  <p class="text-sm mt-2">
+                    Use the class tabs to prepare spells.
                   </p>
                 </div>
               </template>
