@@ -36,6 +36,11 @@ const props = defineProps<{
    * @see Issue #676
    */
   preparationMethod?: PreparationMethod
+  /**
+   * Class name if this spell is prepared by another class (multiclass cross-check)
+   * e.g., "Wizard" if the same spell is prepared as a Wizard spell
+   */
+  otherClassPrepared?: string | null
 }>()
 
 const store = useCharacterPlayStateStore()
@@ -94,12 +99,19 @@ const isPrepared = computed(() => {
 const isAlwaysPrepared = computed(() => props.spell.is_always_prepared || isCantrip.value)
 
 /**
+ * Check if spell is prepared by another class (multiclass cross-check)
+ */
+const isPreparedByOtherClass = computed(() => !!props.otherClassPrepared)
+
+/**
  * Check if this card can toggle preparation
  */
 const canToggle = computed(() => {
   // Known casters don't have preparation toggle
   if (!showPreparationUI.value) return false
   if (!props.editable) return false
+  // Can't toggle a spell prepared by another class
+  if (isPreparedByOtherClass.value) return false
   // Cantrips are always ready - no toggle needed
   if (isCantrip.value) return false
   // Always prepared spells can't be toggled
@@ -148,7 +160,12 @@ async function handlePreparationClick() {
   try {
     // Use store's reactive state for current prepared status
     const currentlyPrepared = store.isSpellPrepared(props.spell.id)
-    await store.toggleSpellPreparation(props.spell.id, currentlyPrepared)
+    await store.toggleSpellPreparation(
+      props.spell.id,
+      currentlyPrepared,
+      props.spell.spell_slug,
+      props.spell.class_slug ?? undefined
+    )
   } catch {
     // Error handling done by store
   }
@@ -189,9 +206,21 @@ function handleExpandClick(event: MouseEvent) {
       <!-- Collapsed Header -->
       <div class="flex items-center justify-between gap-2">
         <div class="flex items-center gap-2 min-w-0">
+          <!-- Cross-class prepared: show gray check with tooltip -->
+          <UTooltip
+            v-if="showPreparationUI && isPreparedByOtherClass"
+            :text="`Prepared as ${props.otherClassPrepared}`"
+          >
+            <UIcon
+              data-testid="cross-class-prepared-indicator"
+              name="i-heroicons-check-circle-solid"
+              class="w-5 h-5 text-gray-400 dark:text-gray-500 flex-shrink-0"
+            />
+          </UTooltip>
+
           <!-- Preparation toggle area (click to toggle preparation) -->
           <button
-            v-if="showPreparationUI"
+            v-else-if="showPreparationUI"
             data-testid="preparation-toggle"
             type="button"
             :class="[

@@ -684,9 +684,20 @@ export const useCharacterPlayStateStore = defineStore('characterPlayState', () =
   /**
    * Toggle spell preparation (optimistic update)
    *
-   * Checks preparation limit before preparing a spell
+   * Uses the /prepare and /unprepare endpoints which accept spell slug.
+   * Checks preparation limit before preparing a spell.
+   *
+   * @param characterSpellId - Numeric ID used for optimistic UI updates
+   * @param currentlyPrepared - Current preparation state
+   * @param spellSlug - Spell slug for API call (e.g., "phb:bless")
+   * @param classSlug - Optional class slug for multiclass characters
    */
-  async function toggleSpellPreparation(characterSpellId: number, currentlyPrepared: boolean): Promise<void> {
+  async function toggleSpellPreparation(
+    characterSpellId: number,
+    currentlyPrepared: boolean,
+    spellSlug: string,
+    classSlug?: string
+  ): Promise<void> {
     if (!characterId.value || isUpdatingSpellPreparation.value) return
 
     const newPreparedState = !currentlyPrepared
@@ -706,9 +717,10 @@ export const useCharacterPlayStateStore = defineStore('characterPlayState', () =
     }
 
     try {
-      await apiFetch(`/characters/${characterId.value}/spells/${characterSpellId}`, {
+      const endpoint = newPreparedState ? 'prepare' : 'unprepare'
+      await apiFetch(`/characters/${characterId.value}/spells/${spellSlug}/${endpoint}`, {
         method: 'PATCH',
-        body: { is_prepared: newPreparedState }
+        body: classSlug ? { class_slug: classSlug } : {}
       })
     } catch (error) {
       // Revert on failure
