@@ -46,23 +46,56 @@ const showLearnDialog = ref(false)
 const spellToLearn = ref<Spell | null>(null)
 const isLearningSpell = ref(false)
 
-// Fetch available spells - different endpoints for spellbook vs prepared
+// Track expanded spell IDs
+const expandedSpellIds = ref<Set<number>>(new Set())
+
+/**
+ * Toggle spell expansion state
+ */
+function toggleExpanded(spellId: number) {
+  if (expandedSpellIds.value.has(spellId)) {
+    expandedSpellIds.value.delete(spellId)
+  } else {
+    expandedSpellIds.value.add(spellId)
+  }
+}
+
+/**
+ * Check if a spell is expanded
+ */
+function isExpanded(spellId: number): boolean {
+  return expandedSpellIds.value.has(spellId)
+}
+
+/**
+ * Handle header click (expand/collapse)
+ * Clicking anywhere on the header row expands/collapses the card
+ * Skip if clicking on interactive elements (buttons, toggles)
+ */
+function handleHeaderClick(event: MouseEvent, spellId: number) {
+  // Don't expand if clicking on buttons (prepare toggle, learn button)
+  const target = event.target as HTMLElement
+  if (target.closest('button')) {
+    return
+  }
+  toggleExpanded(spellId)
+}
+
+// Spellbook vs Prepared mode determines what spells are shown and how they can be toggled
+// - Spellbook (Wizard): Shows all class spells, can LEARN new spells (copy to spellbook)
+// - Prepared (Cleric, Druid, Paladin): Shows all class spells, can PREPARE any of them
+const isPreparedMode = computed(() => props.preparationMethod === 'prepared')
+
+// Fetch available spells - both modes now fetch ALL class spells
 const { data: availableSpellsData, pending, error } = await useAsyncData(
-  `character-${props.characterId}-available-spells-${props.classSlug}-${isSpellbookMode.value ? 'all' : 'known'}`,
+  `character-${props.characterId}-available-spells-${props.classSlug}-lvl${props.maxCastableLevel}`,
   () => {
-    if (isSpellbookMode.value) {
-      // Spellbook mode: fetch ALL class spells up to max level
-      // Use class param + level filter (backend limits per_page to 200)
-      const levelFilter = `level<=${props.maxCastableLevel}`
-      return apiFetch<{ data: Spell[] }>(
-        `/spells?class=${encodeURIComponent(props.classSlug)}&filter=${encodeURIComponent(levelFilter)}&per_page=200`
-      )
-    } else {
-      // Prepared mode: fetch only available spells for this character
-      return apiFetch<{ data: Spell[] }>(
-        `/characters/${props.characterId}/available-spells?max_level=${props.maxCastableLevel}&class=${encodeURIComponent(props.classSlug)}&include_known=true`
-      )
-    }
+    // Both spellbook and prepared casters can access all class spells up to their max level
+    // Exclude cantrips (level 0) since they can't be copied/prepared from this view
+    const filter = `class_slugs="${props.classSlug}" AND level>0 AND level<=${props.maxCastableLevel}`
+    return apiFetch<{ data: Spell[] }>(
+      `/spells?filter=${encodeURIComponent(filter)}&per_page=200`
+    )
   },
   { dedupe: 'defer' }
 )
@@ -108,9 +141,21 @@ const atPrepLimit = computed(() => reactivePreparedCount.value >= props.preparat
 
 /**
  * Filter available spells based on search, level, and hide-prepared
+ * - Spellbook mode (Wizard): excludes already learned spells (can only copy new ones)
+ * - Prepared mode (Cleric, etc.): shows all class spells (can prepare any)
  */
 const filteredSpells = computed(() => {
   let result = availableSpells.value
+
+  // Spellbook mode: exclude already learned spells
+  // Wizards can only copy spells they don't already have
+  if (isSpellbookMode.value) {
+    result = result.filter((s) => {
+      // Exclude already learned spells
+      if (characterSpellMap.value.has(s.slug)) return false
+      return true
+    })
+  }
 
   // Search filter
   if (searchQuery.value) {
@@ -187,6 +232,9 @@ function isInSpellbook(spell: Spell): boolean {
 // Alias for backwards compatibility with prepared caster logic
 const isInCharacterSpells = isInSpellbook
 
+// Track spell being added/prepared (for prepared casters adding new spells)
+const isAddingSpell = ref(false)
+
 /**
  * Check if spell can be toggled
  */
@@ -194,8 +242,25 @@ function canToggle(spell: Spell): boolean {
   // Cantrips are always ready
   if (spell.level === 0) return false
 
+  // Disable during API call
+  if (isUpdatingSpellPreparation.value || isAddingSpell.value) return false
+
   const charSpell = characterSpellMap.value.get(spell.slug)
-  if (!charSpell) return false // Can't toggle if not in character spells (backend limitation)
+
+  // For prepared casters, can toggle any class spell (will add it if not in list)
+  if (isPreparedMode.value) {
+    if (charSpell) {
+      // Can't toggle always-prepared
+      if (charSpell.is_always_prepared) return false
+      // Can always unprepare
+      if (preparedSpellIds.value.has(charSpell.id)) return true
+    }
+    // Can prepare if not at limit
+    return !atPrepLimit.value
+  }
+
+  // For spellbook casters, must be in character spells
+  if (!charSpell) return false
 
   // Can't toggle always-prepared
   if (charSpell.is_always_prepared) return false
@@ -204,17 +269,50 @@ function canToggle(spell: Spell): boolean {
   const currentlyPrepared = preparedSpellIds.value.has(charSpell.id)
   if (!currentlyPrepared && atPrepLimit.value) return false
 
-  // Disable during API call
-  if (isUpdatingSpellPreparation.value) return false
-
   return true
 }
 
 /**
  * Toggle spell preparation
+ * For prepared casters: if spell isn't in character list, add it first
  */
 async function handleToggle(spell: Spell) {
   const charSpell = characterSpellMap.value.get(spell.slug)
+
+  // For prepared casters, add spell to character list if not there yet
+  if (!charSpell && isPreparedMode.value) {
+    isAddingSpell.value = true
+    try {
+      // Add spell to character's spell list (with is_prepared=true)
+      await apiFetch(`/characters/${props.characterId}/spells`, {
+        method: 'POST',
+        body: {
+          spell_slug: spell.slug,
+          class_slug: props.classSlug,
+          is_prepared: true
+        }
+      })
+
+      toast.add({
+        title: `Prepared ${spell.name}`,
+        color: 'success'
+      })
+
+      // Refresh character spells to update the map
+      await refreshNuxtData(`character-${props.characterId}-spells-for-prepare`)
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : 'Failed to prepare spell'
+      toast.add({
+        title: 'Could not prepare spell',
+        description: message,
+        color: 'error'
+      })
+    } finally {
+      isAddingSpell.value = false
+    }
+    return
+  }
+
   if (!charSpell) {
     toast.add({
       title: 'Cannot prepare spell',
@@ -435,11 +533,15 @@ async function confirmLearnSpell() {
               isInCharacterSpells(spell) && !isSpellPrepared(spell) && !atPrepLimit && level !== 0 && 'opacity-70'
             ]"
           >
-            <div class="flex items-center justify-between gap-2">
+            <!-- Clickable header for expand/collapse -->
+            <div
+              class="flex items-center justify-between gap-2 cursor-pointer"
+              @click="handleHeaderClick($event, spell.id)"
+            >
               <div class="flex items-center gap-2 min-w-0">
-                <!-- Preparation toggle -->
+                <!-- Preparation toggle for spells in character's list OR prepared casters -->
                 <button
-                  v-if="level !== 0 && isInCharacterSpells(spell)"
+                  v-if="level !== 0 && (isInCharacterSpells(spell) || isPreparedMode)"
                   :data-testid="`prepare-toggle`"
                   type="button"
                   :disabled="!canToggle(spell)"
@@ -468,7 +570,7 @@ async function confirmLearnSpell() {
                   />
                 </button>
 
-                <!-- Spellbook mode: Learn spell button -->
+                <!-- Spellbook mode: Learn spell button (for spells not yet in spellbook) -->
                 <button
                   v-else-if="level !== 0 && isSpellbookMode"
                   data-testid="learn-spell-button"
@@ -482,17 +584,6 @@ async function confirmLearnSpell() {
                   />
                 </button>
 
-                <!-- Prepared mode: Not in spell list indicator (coming soon) -->
-                <UTooltip
-                  v-else-if="level !== 0"
-                  text="Not yet available - coming soon"
-                >
-                  <UIcon
-                    name="i-heroicons-lock-closed"
-                    class="w-5 h-5 text-gray-300 dark:text-gray-600 flex-shrink-0"
-                  />
-                </UTooltip>
-
                 <!-- Cantrip indicator (always ready) -->
                 <UIcon
                   v-else
@@ -504,7 +595,7 @@ async function confirmLearnSpell() {
                 <span class="font-medium truncate">{{ spell.name }}</span>
               </div>
 
-              <!-- Right side: badges -->
+              <!-- Right side: badges + expand -->
               <div class="flex items-center gap-2 flex-shrink-0">
                 <UBadge
                   v-if="isAlwaysPrepared(spell) || level === 0"
@@ -536,6 +627,53 @@ async function confirmLearnSpell() {
                 <span class="text-sm text-gray-500 dark:text-gray-400">
                   {{ spell.school?.name }}
                 </span>
+
+                <!-- Expand/collapse button -->
+                <button
+                  data-testid="expand-toggle"
+                  type="button"
+                  class="p-1 -m-1 rounded hover:bg-gray-100 dark:hover:bg-gray-700"
+                  @click.stop="toggleExpanded(spell.id)"
+                >
+                  <UIcon
+                    :name="isExpanded(spell.id) ? 'i-heroicons-chevron-up' : 'i-heroicons-chevron-down'"
+                    class="w-5 h-5 text-gray-400"
+                  />
+                </button>
+              </div>
+            </div>
+
+            <!-- Expanded Details -->
+            <div
+              v-if="isExpanded(spell.id)"
+              data-testid="spell-details"
+              class="mt-3 pt-3 border-t border-gray-200 dark:border-gray-700 space-y-2 text-sm"
+            >
+              <div class="grid grid-cols-2 gap-2">
+                <div>
+                  <span class="text-gray-500 dark:text-gray-400">Casting Time</span>
+                  <p class="font-medium">
+                    {{ spell.casting_time }}
+                  </p>
+                </div>
+                <div>
+                  <span class="text-gray-500 dark:text-gray-400">Range</span>
+                  <p class="font-medium">
+                    {{ spell.range }}
+                  </p>
+                </div>
+                <div>
+                  <span class="text-gray-500 dark:text-gray-400">Components</span>
+                  <p class="font-medium">
+                    {{ spell.components }}
+                  </p>
+                </div>
+                <div>
+                  <span class="text-gray-500 dark:text-gray-400">Duration</span>
+                  <p class="font-medium">
+                    {{ spell.duration }}
+                  </p>
+                </div>
               </div>
             </div>
           </div>

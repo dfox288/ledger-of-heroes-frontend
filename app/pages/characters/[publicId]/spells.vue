@@ -275,6 +275,29 @@ const maxCastableLevel = computed(() => {
 })
 
 /**
+ * Get class level for a specific class from character data
+ */
+function getClassLevel(classSlug: string): number {
+  const classEntry = character.value?.classes?.find(
+    (c: { class_slug: string }) => c.class_slug === classSlug
+  )
+  return classEntry?.level ?? 1
+}
+
+/**
+ * Get max spell level a class can LEARN/COPY based on class level
+ * For full casters (wizard, cleric, etc.): ceil(classLevel / 2)
+ * This is different from max castable level (based on multiclass spell slots)
+ *
+ * @see PHB p.114 - Wizard spell slots progression
+ */
+function getClassMaxSpellLevel(classSlug: string): number {
+  const classLevel = getClassLevel(classSlug)
+  // Full caster progression: level 1-2 = 1st, 3-4 = 2nd, 5-6 = 3rd, etc.
+  return Math.min(Math.ceil(classLevel / 2), 9)
+}
+
+/**
  * Get preparation method for a specific class (multiclass support)
  * Falls back to top-level preparation method if not available per-class
  */
@@ -539,7 +562,7 @@ useSeoMeta({
                       icon="i-heroicons-book-open"
                       @click="enterPrepareSpellsMode(sc.slug)"
                     >
-                      {{ getClassPreparationMethod(sc.slug) === 'spellbook' ? 'Manage Spellbook' : 'Prepare Spells' }}
+                      {{ getClassPreparationMethod(sc.slug) === 'spellbook' ? 'Copy Spells' : 'Prepare Spells' }}
                     </UButton>
                   </div>
                 </div>
@@ -564,7 +587,7 @@ useSeoMeta({
                   <CharacterSheetPrepareSpellsView
                     :character-id="character.id"
                     :class-slug="sc.slug"
-                    :max-castable-level="maxCastableLevel"
+                    :max-castable-level="getClassPreparationMethod(sc.slug) === 'known' ? maxCastableLevel : getClassMaxSpellLevel(sc.slug)"
                     :preparation-limit="getClassPreparationLimit(sc.slug)?.limit ?? 0"
                     :prepared-count="getReactivePreparedCount(sc.slug)"
                     :preparation-method="getClassPreparationMethod(sc.slug)"
@@ -578,42 +601,42 @@ useSeoMeta({
                     v-if="getCantripsForClass(sc.slug).length > 0"
                     class="mt-4"
                   >
-                  <h3 class="text-lg font-semibold text-gray-700 dark:text-gray-300 mb-3">
-                    Cantrips
-                  </h3>
-                  <div class="space-y-2">
-                    <CharacterSheetSpellCard
-                      v-for="spell in getCantripsForClass(sc.slug)"
-                      :key="spell.id"
-                      :spell="spell"
-                      :preparation-method="getClassPreparationMethod(sc.slug)"
-                      :at-prep-limit="isAtClassPreparationLimit(sc.slug)"
-                      :character-id="character.id"
-                      :editable="canEdit"
-                    />
+                    <h3 class="text-lg font-semibold text-gray-700 dark:text-gray-300 mb-3">
+                      Cantrips
+                    </h3>
+                    <div class="space-y-2">
+                      <CharacterSheetSpellCard
+                        v-for="spell in getCantripsForClass(sc.slug)"
+                        :key="spell.id"
+                        :spell="spell"
+                        :preparation-method="getClassPreparationMethod(sc.slug)"
+                        :at-prep-limit="isAtClassPreparationLimit(sc.slug)"
+                        :character-id="character.id"
+                        :editable="canEdit"
+                      />
+                    </div>
                   </div>
-                </div>
 
-                <div
-                  v-for="level in getSortedLevelsForClass(sc.slug)"
-                  :key="level"
-                  class="mt-4"
-                >
-                  <h3 class="text-lg font-semibold text-gray-700 dark:text-gray-300 mb-3">
-                    {{ formatSpellLevel(level) }} Level
-                  </h3>
-                  <div class="space-y-2">
-                    <CharacterSheetSpellCard
-                      v-for="spell in getSpellsByLevelForClass(sc.slug)[level]"
-                      :key="spell.id"
-                      :spell="spell"
-                      :preparation-method="getClassPreparationMethod(sc.slug)"
-                      :at-prep-limit="isAtClassPreparationLimit(sc.slug)"
-                      :character-id="character.id"
-                      :editable="canEdit"
-                    />
+                  <div
+                    v-for="level in getSortedLevelsForClass(sc.slug)"
+                    :key="level"
+                    class="mt-4"
+                  >
+                    <h3 class="text-lg font-semibold text-gray-700 dark:text-gray-300 mb-3">
+                      {{ formatSpellLevel(level) }} Level
+                    </h3>
+                    <div class="space-y-2">
+                      <CharacterSheetSpellCard
+                        v-for="spell in getSpellsByLevelForClass(sc.slug)[level]"
+                        :key="spell.id"
+                        :spell="spell"
+                        :preparation-method="getClassPreparationMethod(sc.slug)"
+                        :at-prep-limit="isAtClassPreparationLimit(sc.slug)"
+                        :character-id="character.id"
+                        :editable="canEdit"
+                      />
+                    </div>
                   </div>
-                </div>
 
                   <!-- Empty state for class with no spells -->
                   <div
@@ -807,7 +830,7 @@ useSeoMeta({
                     icon="i-heroicons-book-open"
                     @click="enterPrepareSpellsMode(primarySpellcasting.slug)"
                   >
-                    {{ preparationMethod === 'spellbook' ? 'Manage Spellbook' : 'Prepare Spells' }}
+                    {{ preparationMethod === 'spellbook' ? 'Copy Spells' : 'Prepare Spells' }}
                   </UButton>
                 </div>
               </div>
@@ -833,7 +856,7 @@ useSeoMeta({
               <CharacterSheetPrepareSpellsView
                 :character-id="character.id"
                 :class-slug="primarySpellcasting.slug"
-                :max-castable-level="maxCastableLevel"
+                :max-castable-level="preparationMethod === 'known' ? maxCastableLevel : getClassMaxSpellLevel(primarySpellcasting.slug)"
                 :preparation-limit="spellSlots?.preparation_limit ?? 0"
                 :prepared-count="reactiveTotalPreparedCount"
                 :preparation-method="preparationMethod"
