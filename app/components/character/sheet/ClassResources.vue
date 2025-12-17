@@ -17,8 +17,8 @@ defineProps<{
 }>()
 
 const emit = defineEmits<{
-  spend: [slug: string]
-  restore: [slug: string]
+  spend: [id: number]
+  restore: [id: number]
 }>()
 </script>
 
@@ -34,12 +34,12 @@ const emit = defineEmits<{
     <div class="space-y-3">
       <CharacterSheetClassResourceCounter
         v-for="counter in counters"
-        :key="counter.slug"
+        :key="counter.id"
         :counter="counter"
         :editable="editable"
         :disabled="disabled"
-        @spend="slug => emit('spend', slug)"
-        @restore="slug => emit('restore', slug)"
+        @spend="id => emit('spend', id)"
+        @restore="id => emit('restore', id)"
       />
     </div>
   </div>

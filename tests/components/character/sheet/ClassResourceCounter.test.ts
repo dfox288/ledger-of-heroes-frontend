@@ -4,14 +4,14 @@ import { mountSuspended } from '@nuxt/test-utils/runtime'
 import ClassResourceCounter from '~/components/character/sheet/ClassResourceCounter.vue'
 import type { Counter } from '~/types/character'
 
+// Counter format updated in #725 - uses source_slug instead of source, slug removed (use id for routing)
 const createCounter = (overrides: Partial<Counter> = {}): Counter => ({
   id: 1,
-  slug: 'phb:bard:bardic-inspiration',
   name: 'Bardic Inspiration',
   current: 3,
   max: 5,
   reset_on: 'long_rest',
-  source: 'Bard',
+  source_slug: 'phb:bard',
   source_type: 'class',
   unlimited: false,
   ...overrides
@@ -85,15 +85,16 @@ describe('ClassResourceCounter', () => {
     })
   })
 
+  // Counter routing updated in #725 - now uses numeric ID instead of slug
   describe('Icon Interactions', () => {
-    it('emits spend when filled icon clicked in editable mode', async () => {
+    it('emits spend with counter ID when filled icon clicked in editable mode', async () => {
       const wrapper = await mountSuspended(ClassResourceCounter, {
-        props: { counter: createCounter({ current: 3, max: 5 }), editable: true }
+        props: { counter: createCounter({ id: 1, current: 3, max: 5 }), editable: true }
       })
       const filled = wrapper.find('[data-testid="counter-icon-filled"]')
       await filled.trigger('click')
       expect(wrapper.emitted('spend')).toBeTruthy()
-      expect(wrapper.emitted('spend')![0]).toEqual(['phb:bard:bardic-inspiration'])
+      expect(wrapper.emitted('spend')![0]).toEqual([1]) // Numeric ID
     })
 
     it('does not emit spend when not editable', async () => {
@@ -141,24 +142,24 @@ describe('ClassResourceCounter', () => {
       expect(filled.attributes('tabindex')).toBe('-1')
     })
 
-    it('emits spend on Enter key press', async () => {
+    it('emits spend with counter ID on Enter key press', async () => {
       const wrapper = await mountSuspended(ClassResourceCounter, {
-        props: { counter: createCounter({ current: 3, max: 5 }), editable: true }
+        props: { counter: createCounter({ id: 1, current: 3, max: 5 }), editable: true }
       })
       const filled = wrapper.find('[data-testid="counter-icon-filled"]')
       await filled.trigger('keydown.enter')
       expect(wrapper.emitted('spend')).toBeTruthy()
-      expect(wrapper.emitted('spend')![0]).toEqual(['phb:bard:bardic-inspiration'])
+      expect(wrapper.emitted('spend')![0]).toEqual([1]) // Numeric ID
     })
 
-    it('emits spend on Space key press', async () => {
+    it('emits spend with counter ID on Space key press', async () => {
       const wrapper = await mountSuspended(ClassResourceCounter, {
-        props: { counter: createCounter({ current: 3, max: 5 }), editable: true }
+        props: { counter: createCounter({ id: 1, current: 3, max: 5 }), editable: true }
       })
       const filled = wrapper.find('[data-testid="counter-icon-filled"]')
       await filled.trigger('keydown.space')
       expect(wrapper.emitted('spend')).toBeTruthy()
-      expect(wrapper.emitted('spend')![0]).toEqual(['phb:bard:bardic-inspiration'])
+      expect(wrapper.emitted('spend')![0]).toEqual([1]) // Numeric ID
     })
 
     it('has accessible role and label', async () => {

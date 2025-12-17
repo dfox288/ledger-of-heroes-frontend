@@ -388,17 +388,23 @@ export interface AttunementSlots {
 
 /**
  * Class resource counter (Rage, Ki Points, Bardic Inspiration, etc.)
- * @see Issue #632
+ *
+ * Updated for counter system refactor (#725):
+ * - Counters now stored in dedicated table instead of embedded in features
+ * - Uses numeric `id` for API routing (slug removed)
+ * - `source_slug` identifies the source entity (was `source`)
+ *
+ * @see Issue #632 - Original implementation
+ * @see Issue #725 - Counter system refactor
  */
 export interface Counter {
   id: number
-  slug: string
   name: string
   current: number
   max: number
   reset_on: 'short_rest' | 'long_rest' | null
-  source: string
   source_type: string
+  source_slug: string
   unlimited: boolean
 }
 

@@ -16,8 +16,8 @@ const props = defineProps<{
 }>()
 
 const emit = defineEmits<{
-  spend: [slug: string]
-  restore: [slug: string]
+  spend: [id: number]
+  restore: [id: number]
 }>()
 
 const isInteractive = computed(() => props.editable && !props.disabled)
@@ -51,12 +51,12 @@ const canRestore = computed(() => {
 
 function handleSpend() {
   if (!canSpend.value) return
-  emit('spend', props.counter.slug)
+  emit('spend', props.counter.id)
 }
 
 function handleRestore() {
   if (!canRestore.value) return
-  emit('restore', props.counter.slug)
+  emit('restore', props.counter.id)
 }
 </script>
 

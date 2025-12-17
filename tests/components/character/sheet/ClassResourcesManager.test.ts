@@ -29,14 +29,14 @@ mockNuxtImport('useApi', () => () => ({ apiFetch: apiFetchMock }))
 // FIXTURES
 // =============================================================================
 
+// Counter format updated in #725 - uses source_slug instead of source, slug removed (use id for routing)
 const createCounter = (overrides: Partial<Counter> = {}): Counter => ({
   id: 1,
-  slug: 'phb:bard:bardic-inspiration',
   name: 'Bardic Inspiration',
   current: 3,
   max: 5,
   reset_on: 'long_rest',
-  source: 'Bard',
+  source_slug: 'phb:bard',
   source_type: 'class',
   unlimited: false,
   ...overrides
@@ -129,9 +129,10 @@ describe('ClassResourcesManager', () => {
   // SPEND COUNTER
   // ===========================================================================
 
+  // Counter routing updated in #725 - now uses numeric ID instead of slug
   describe('spend counter', () => {
-    it('calls store.useCounter to spend counter', async () => {
-      const store = setupStore([createCounter({ current: 3 })])
+    it('calls store.useCounter with counter ID to spend counter', async () => {
+      const store = setupStore([createCounter({ id: 1, current: 3 })])
       apiFetchMock.mockResolvedValue({ data: { current: 2 } })
 
       await mountSuspended(ClassResourcesManager, {
@@ -139,17 +140,17 @@ describe('ClassResourcesManager', () => {
         ...getMountOptions()
       })
 
-      // Trigger spend via store action
-      await store.useCounter('phb:bard:bardic-inspiration')
+      // Trigger spend via store action using numeric ID
+      await store.useCounter(1)
 
       expect(apiFetchMock).toHaveBeenCalledWith(
-        '/characters/42/counters/phb%3Abard%3Abardic-inspiration',
+        '/characters/42/counters/1',
         { method: 'PATCH', body: { action: 'use' } }
       )
     })
 
     it('decrements counter value after spend', async () => {
-      const store = setupStore([createCounter({ current: 3 })])
+      const store = setupStore([createCounter({ id: 1, current: 3 })])
       apiFetchMock.mockResolvedValue({ data: { current: 2 } })
 
       await mountSuspended(ClassResourcesManager, {
@@ -157,13 +158,13 @@ describe('ClassResourcesManager', () => {
         ...getMountOptions()
       })
 
-      await store.useCounter('phb:bard:bardic-inspiration')
+      await store.useCounter(1)
 
       expect(store.counters[0].current).toBe(2)
     })
 
     it('rolls back on API failure', async () => {
-      const store = setupStore([createCounter({ current: 3 })])
+      const store = setupStore([createCounter({ id: 1, current: 3 })])
       apiFetchMock.mockRejectedValueOnce({ data: { message: 'No uses remaining' } })
 
       await mountSuspended(ClassResourcesManager, {
@@ -171,14 +172,14 @@ describe('ClassResourcesManager', () => {
         ...getMountOptions()
       })
 
-      await expect(store.useCounter('phb:bard:bardic-inspiration')).rejects.toBeDefined()
+      await expect(store.useCounter(1)).rejects.toBeDefined()
 
       // Counter should be rolled back
       expect(store.counters[0].current).toBe(3)
     })
 
     it('shows error toast on API failure via handleSpend', async () => {
-      setupStore([createCounter({ current: 3 })])
+      setupStore([createCounter({ id: 1, current: 3 })])
       apiFetchMock.mockRejectedValueOnce({ data: { message: 'No uses remaining' } })
 
       const wrapper = await mountSuspended(ClassResourcesManager, {
@@ -186,9 +187,9 @@ describe('ClassResourcesManager', () => {
         ...getMountOptions()
       })
 
-      // Access the component's handleSpend method
-      const vm = wrapper.vm as { handleSpend: (slug: string) => Promise<void> }
-      await vm.handleSpend('phb:bard:bardic-inspiration')
+      // Access the component's handleSpend method - now uses numeric ID
+      const vm = wrapper.vm as { handleSpend: (id: number) => Promise<void> }
+      await vm.handleSpend(1)
 
       expect(toastMock.add).toHaveBeenCalledWith(
         expect.objectContaining({ color: 'error' })
@@ -196,14 +197,14 @@ describe('ClassResourcesManager', () => {
     })
 
     it('does not call API when counter is at 0', async () => {
-      const store = setupStore([createCounter({ current: 0 })])
+      const store = setupStore([createCounter({ id: 1, current: 0 })])
 
       await mountSuspended(ClassResourcesManager, {
         props: { editable: true },
         ...getMountOptions()
       })
 
-      await store.useCounter('phb:bard:bardic-inspiration')
+      await store.useCounter(1)
 
       expect(apiFetchMock).not.toHaveBeenCalled()
     })
@@ -214,8 +215,8 @@ describe('ClassResourcesManager', () => {
   // ===========================================================================
 
   describe('restore counter', () => {
-    it('calls store.restoreCounter to restore counter', async () => {
-      const store = setupStore([createCounter({ current: 3, max: 5 })])
+    it('calls store.restoreCounter with counter ID to restore counter', async () => {
+      const store = setupStore([createCounter({ id: 1, current: 3, max: 5 })])
       apiFetchMock.mockResolvedValue({ data: { current: 4 } })
 
       await mountSuspended(ClassResourcesManager, {
@@ -223,16 +224,16 @@ describe('ClassResourcesManager', () => {
         ...getMountOptions()
       })
 
-      await store.restoreCounter('phb:bard:bardic-inspiration')
+      await store.restoreCounter(1)
 
       expect(apiFetchMock).toHaveBeenCalledWith(
-        '/characters/42/counters/phb%3Abard%3Abardic-inspiration',
+        '/characters/42/counters/1',
         { method: 'PATCH', body: { action: 'restore' } }
       )
     })
 
     it('increments counter value after restore', async () => {
-      const store = setupStore([createCounter({ current: 3, max: 5 })])
+      const store = setupStore([createCounter({ id: 1, current: 3, max: 5 })])
       apiFetchMock.mockResolvedValue({ data: { current: 4 } })
 
       await mountSuspended(ClassResourcesManager, {
@@ -240,13 +241,13 @@ describe('ClassResourcesManager', () => {
         ...getMountOptions()
       })
 
-      await store.restoreCounter('phb:bard:bardic-inspiration')
+      await store.restoreCounter(1)
 
       expect(store.counters[0].current).toBe(4)
     })
 
     it('rolls back on restore API failure', async () => {
-      const store = setupStore([createCounter({ current: 3, max: 5 })])
+      const store = setupStore([createCounter({ id: 1, current: 3, max: 5 })])
       apiFetchMock.mockRejectedValueOnce({ data: { message: 'Already at max' } })
 
       await mountSuspended(ClassResourcesManager, {
@@ -254,21 +255,21 @@ describe('ClassResourcesManager', () => {
         ...getMountOptions()
       })
 
-      await expect(store.restoreCounter('phb:bard:bardic-inspiration')).rejects.toBeDefined()
+      await expect(store.restoreCounter(1)).rejects.toBeDefined()
 
       // Counter should be rolled back
       expect(store.counters[0].current).toBe(3)
     })
 
     it('does not call API when counter is at max', async () => {
-      const store = setupStore([createCounter({ current: 5, max: 5 })])
+      const store = setupStore([createCounter({ id: 1, current: 5, max: 5 })])
 
       await mountSuspended(ClassResourcesManager, {
         props: { editable: true },
         ...getMountOptions()
       })
 
-      await store.restoreCounter('phb:bard:bardic-inspiration')
+      await store.restoreCounter(1)
 
       expect(apiFetchMock).not.toHaveBeenCalled()
     })
@@ -280,7 +281,7 @@ describe('ClassResourcesManager', () => {
 
   describe('store reactivity', () => {
     it('updates display when store counters change', async () => {
-      const store = setupStore([createCounter({ current: 3 })])
+      const store = setupStore([createCounter({ id: 1, current: 3 })])
       apiFetchMock.mockResolvedValue({ data: { current: 2 } })
 
       const wrapper = await mountSuspended(ClassResourcesManager, {
@@ -291,8 +292,8 @@ describe('ClassResourcesManager', () => {
       // Initial state - format is "3/5" not "3 / 5"
       expect(wrapper.text()).toContain('3/5')
 
-      // Update via store
-      await store.useCounter('phb:bard:bardic-inspiration')
+      // Update via store using numeric ID
+      await store.useCounter(1)
 
       // Should reflect new value
       expect(wrapper.text()).toContain('2/5')
@@ -305,7 +306,7 @@ describe('ClassResourcesManager', () => {
 
   describe('race condition prevention', () => {
     it('prevents concurrent spend operations on same counter via store', async () => {
-      const store = setupStore([createCounter({ current: 5 })])
+      const store = setupStore([createCounter({ id: 1, current: 5 })])
 
       let resolveFirst: () => void
       const firstPromise = new Promise<void>((resolve) => {
@@ -318,11 +319,11 @@ describe('ClassResourcesManager', () => {
         ...getMountOptions()
       })
 
-      // Start first spend (doesn't complete yet)
-      const firstSpend = store.useCounter('phb:bard:bardic-inspiration')
+      // Start first spend (doesn't complete yet) using numeric ID
+      const firstSpend = store.useCounter(1)
 
       // Try second spend while first is in progress
-      await store.useCounter('phb:bard:bardic-inspiration')
+      await store.useCounter(1)
 
       // Only one API call should have been made
       expect(apiFetchMock).toHaveBeenCalledTimes(1)
@@ -337,8 +338,8 @@ describe('ClassResourcesManager', () => {
 
     it('allows concurrent operations on different counters', async () => {
       const counters = [
-        createCounter({ slug: 'counter-1', current: 5 }),
-        createCounter({ id: 2, slug: 'counter-2', current: 3 })
+        createCounter({ id: 1, current: 5 }),
+        createCounter({ id: 2, current: 3 })
       ]
       const store = setupStore(counters)
       apiFetchMock.mockResolvedValue({ data: { current: 2 } })
@@ -348,10 +349,10 @@ describe('ClassResourcesManager', () => {
         ...getMountOptions()
       })
 
-      // Both operations should complete
+      // Both operations should complete using numeric IDs
       await Promise.all([
-        store.useCounter('counter-1'),
-        store.useCounter('counter-2')
+        store.useCounter(1),
+        store.useCounter(2)
       ])
 
       // Both calls should have been made
