@@ -873,7 +873,7 @@ export const useCharacterPlayStateStore = defineStore('characterPlayState', () =
    */
   async function useCounter(id: number): Promise<void> {
     const counter = counters.value.find(c => c.id === id)
-    if (!counter || counter.current <= 0) return
+    if (!counter || (!counter.unlimited && counter.current <= 0)) return
     if (!characterId.value) return
     if (pendingCounterUpdates.value.has(id)) return
 
@@ -907,7 +907,8 @@ export const useCharacterPlayStateStore = defineStore('characterPlayState', () =
    */
   async function restoreCounter(id: number): Promise<void> {
     const counter = counters.value.find(c => c.id === id)
-    if (!counter || counter.current >= counter.max) return
+    // Unlimited counters cannot be restored (they have no max)
+    if (!counter || counter.unlimited || counter.current >= counter.max) return
     if (!characterId.value) return
     if (pendingCounterUpdates.value.has(id)) return
 
