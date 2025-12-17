@@ -108,16 +108,20 @@ const availableSpells = computed(() => availableSpellsData.value?.data ?? [])
  */
 const { data: characterSpellsData } = await useAsyncData(
   `character-${props.characterId}-spells-for-prepare`,
-  () => apiFetch<{ data: Array<{ id: number, spell_slug: string, is_prepared: boolean, is_always_prepared: boolean }> }>(
+  () => apiFetch<{ data: Array<{ id: number, spell_slug: string, class_slug: string, is_prepared: boolean, is_always_prepared: boolean }> }>(
     `/characters/${props.characterId}/spells`
   ),
   { dedupe: 'defer' }
 )
 
 // Map spell slugs to character spell data
+// IMPORTANT: Only include spells for the CURRENT class to avoid multiclass confusion
+// e.g., a Wizard/Cleric's Wizard spells shouldn't appear as "known" in the Cleric prepare view
 const characterSpellMap = computed(() => {
   const map = new Map<string, { id: number, is_prepared: boolean, is_always_prepared: boolean }>()
   for (const cs of characterSpellsData.value?.data ?? []) {
+    // Filter by current class - only include spells from this class
+    if (cs.class_slug !== props.classSlug) continue
     map.set(cs.spell_slug, {
       id: cs.id,
       is_prepared: cs.is_prepared,
