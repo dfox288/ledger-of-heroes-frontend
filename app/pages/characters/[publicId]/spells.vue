@@ -480,8 +480,8 @@ function getOtherClassPrepared(spellSlug: string, currentClassSlug: string | nul
   if (!preparedClass) return null
   // Extract current class name for comparison
   const currentClassName = currentClassSlug
-    ? (currentClassSlug.split(':')[1] ?? currentClassSlug).charAt(0).toUpperCase() +
-      (currentClassSlug.split(':')[1] ?? currentClassSlug).slice(1)
+    ? (currentClassSlug.split(':')[1] ?? currentClassSlug).charAt(0).toUpperCase()
+    + (currentClassSlug.split(':')[1] ?? currentClassSlug).slice(1)
     : null
   // Return null if it's the same class
   if (preparedClass === currentClassName) return null
