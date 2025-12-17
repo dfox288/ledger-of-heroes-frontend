@@ -227,11 +227,13 @@ const spellbookPreparedCount = computed(() => {
 const showPreparationUI = computed(() => preparationMethod.value !== 'known')
 
 /**
- * Whether this is a prepared caster (cleric, druid, paladin)
- * These casters can select from the full class spell list
- * @see Issue #723
+ * Can this caster prepare spells? (prepared or spellbook casters)
+ * Known casters (Sorcerer, Warlock, Bard) don't prepare spells.
+ * @see Issue #723, #728
  */
-const isPreparedCaster = computed(() => preparationMethod.value === 'prepared')
+const isPreparedCaster = computed(() =>
+  preparationMethod.value === 'prepared' || preparationMethod.value === 'spellbook'
+)
 
 /**
  * Mode toggle for prepared casters
@@ -528,9 +530,9 @@ useSeoMeta({
                         {{ reactiveTotalPreparedCount }} / {{ spellSlots?.preparation_limit }}
                       </div>
                     </div>
-                    <!-- Prepare Spells button for prepared casters in multiclass (#723) -->
+                    <!-- Prepare Spells button for prepared/spellbook casters in multiclass (#723, #728) -->
                     <UButton
-                      v-if="getClassPreparationMethod(sc.slug) === 'prepared' && !isPrepareSpellsModeFor(sc.slug)"
+                      v-if="getClassPreparationMethod(sc.slug) !== 'known' && !isPrepareSpellsModeFor(sc.slug)"
                       :data-testid="`prepare-spells-button-${sc.slotName}`"
                       variant="soft"
                       color="spell"
@@ -796,7 +798,7 @@ useSeoMeta({
                       {{ reactiveTotalPreparedCount }} / {{ spellSlots?.preparation_limit }}
                     </div>
                   </div>
-                  <!-- Prepare Spells button for prepared casters (#723) -->
+                  <!-- Prepare Spells button for prepared/spellbook casters (#723, #728) -->
                   <UButton
                     v-if="isPreparedCaster && !prepareSpellsMode && primarySpellcasting"
                     data-testid="prepare-spells-button"
@@ -822,7 +824,7 @@ useSeoMeta({
               />
             </div>
 
-            <!-- Prepare Spells View for prepared casters (#723) -->
+            <!-- Prepare Spells View for prepared/spellbook casters (#723, #728) -->
             <div
               v-if="prepareSpellsMode && isPreparedCaster && character && primarySpellcasting"
               data-testid="prepare-spells-view"
