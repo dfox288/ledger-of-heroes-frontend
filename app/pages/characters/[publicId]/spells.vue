@@ -565,6 +565,7 @@ useSeoMeta({
                     :max-castable-level="maxCastableLevel"
                     :preparation-limit="getClassPreparationLimit(sc.slug)?.limit ?? 0"
                     :prepared-count="getReactivePreparedCount(sc.slug)"
+                    :preparation-method="getClassPreparationMethod(sc.slug)"
                     @close="exitPrepareSpellsMode"
                   />
                 </div>
@@ -833,6 +834,7 @@ useSeoMeta({
                 :max-castable-level="maxCastableLevel"
                 :preparation-limit="spellSlots?.preparation_limit ?? 0"
                 :prepared-count="reactiveTotalPreparedCount"
+                :preparation-method="preparationMethod"
                 @close="exitPrepareSpellsMode"
               />
             </div>

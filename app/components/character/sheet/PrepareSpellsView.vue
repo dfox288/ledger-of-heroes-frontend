@@ -1,15 +1,17 @@
 <!-- app/components/character/sheet/PrepareSpellsView.vue -->
 <script setup lang="ts">
 /**
- * Prepare Spells View for Prepared Casters
+ * Prepare Spells View for Prepared Casters and Wizards
  *
- * Shows available class spells for clerics, druids, and paladins to prepare.
- * Fetches from /available-spells endpoint and allows toggling preparation.
+ * For prepared casters (Cleric, Druid, Paladin): Shows available class spells to prepare.
+ * For spellbook casters (Wizard): Shows all class spells - can learn new spells and prepare from spellbook.
  *
  * @see Issue #723 - Prepared caster spell selection
+ * @see Issue #728 - Wizard learn spell feature
  */
 import { storeToRefs } from 'pinia'
 import type { Spell } from '~/types/api/entities'
+import type { PreparationMethod } from '~/types/character'
 import { formatSpellLevel } from '~/composables/useSpellFormatters'
 import { useCharacterPlayStateStore } from '~/stores/characterPlayState'
 
@@ -19,6 +21,7 @@ const props = defineProps<{
   maxCastableLevel: number
   preparationLimit: number
   preparedCount: number
+  preparationMethod: PreparationMethod
 }>()
 
 const emit = defineEmits<{
@@ -30,17 +33,46 @@ const toast = useToast()
 const store = useCharacterPlayStateStore()
 const { preparedSpellIds, isUpdatingSpellPreparation } = storeToRefs(store)
 
+// Spellbook mode (Wizard) vs Prepared mode (Cleric, Druid, Paladin)
+const isSpellbookMode = computed(() => props.preparationMethod === 'spellbook')
+
 // Filter state
 const searchQuery = ref('')
 const selectedLevel = ref<number | null>(null)
 const hidePrepared = ref(false)
 
-// Fetch available spells
+// Learn spell dialog state
+const showLearnDialog = ref(false)
+const spellToLearn = ref<Spell | null>(null)
+const isLearningSpell = ref(false)
+
+/**
+ * Build filter for fetching all class spells (spellbook mode)
+ * Format: classes.slug="phb:wizard" AND level<=3
+ */
+function buildClassSpellFilter(): string {
+  const filters: string[] = []
+  filters.push(`classes.slug="${props.classSlug}"`)
+  filters.push(`level<=${props.maxCastableLevel}`)
+  return filters.join(' AND ')
+}
+
+// Fetch available spells - different endpoints for spellbook vs prepared
 const { data: availableSpellsData, pending, error } = await useAsyncData(
-  `character-${props.characterId}-available-spells-${props.classSlug}`,
-  () => apiFetch<{ data: Spell[] }>(
-    `/characters/${props.characterId}/available-spells?max_level=${props.maxCastableLevel}&class=${encodeURIComponent(props.classSlug)}&include_known=true`
-  ),
+  `character-${props.characterId}-available-spells-${props.classSlug}-${isSpellbookMode.value ? 'all' : 'known'}`,
+  () => {
+    if (isSpellbookMode.value) {
+      // Spellbook mode: fetch ALL wizard spells up to max level
+      return apiFetch<{ data: Spell[] }>(
+        `/spells?filter=${encodeURIComponent(buildClassSpellFilter())}&per_page=500`
+      )
+    } else {
+      // Prepared mode: fetch only available spells for this character
+      return apiFetch<{ data: Spell[] }>(
+        `/characters/${props.characterId}/available-spells?max_level=${props.maxCastableLevel}&class=${encodeURIComponent(props.classSlug)}&include_known=true`
+      )
+    }
+  },
   { dedupe: 'defer' }
 )
 
@@ -155,13 +187,14 @@ function isAlwaysPrepared(spell: Spell): boolean {
 }
 
 /**
- * Check if spell is in character's spell list
- * For prepared casters, only spells granted by domain/subclass are in the list
- * TODO: Backend should support preparing any class spell (#726)
+ * Check if spell is in character's spell list (spellbook for wizards)
  */
-function isInCharacterSpells(spell: Spell): boolean {
+function isInSpellbook(spell: Spell): boolean {
   return characterSpellMap.value.has(spell.slug)
 }
+
+// Alias for backwards compatibility with prepared caster logic
+const isInCharacterSpells = isInSpellbook
 
 /**
  * Check if spell can be toggled
@@ -216,6 +249,78 @@ async function handleToggle(spell: Spell) {
     })
   }
 }
+
+// ══════════════════════════════════════════════════════════════
+// SPELLBOOK MODE: LEARN SPELL
+// ══════════════════════════════════════════════════════════════
+
+/**
+ * Calculate gold cost to learn a spell (50gp per spell level)
+ */
+function getLearnCost(spell: Spell): number {
+  return spell.level * 50
+}
+
+/**
+ * Calculate time to copy a spell (2 hours per spell level)
+ */
+function getLearnTime(spell: Spell): string {
+  const hours = spell.level * 2
+  return `${hours} hour${hours !== 1 ? 's' : ''}`
+}
+
+/**
+ * Open learn spell confirmation dialog
+ */
+function openLearnDialog(spell: Spell) {
+  spellToLearn.value = spell
+  showLearnDialog.value = true
+}
+
+/**
+ * Close learn spell dialog
+ */
+function closeLearnDialog() {
+  showLearnDialog.value = false
+  spellToLearn.value = null
+}
+
+/**
+ * Confirm and learn the spell
+ */
+async function confirmLearnSpell() {
+  if (!spellToLearn.value) return
+
+  isLearningSpell.value = true
+  try {
+    await apiFetch(`/characters/${props.characterId}/spells`, {
+      method: 'POST',
+      body: {
+        spell_slug: spellToLearn.value.slug,
+        class_slug: props.classSlug
+      }
+    })
+
+    toast.add({
+      title: `Added ${spellToLearn.value.name} to spellbook`,
+      color: 'success'
+    })
+
+    // Refresh character spells to update the map
+    await refreshNuxtData(`character-${props.characterId}-spells-for-prepare`)
+
+    closeLearnDialog()
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : 'Failed to learn spell'
+    toast.add({
+      title: 'Could not learn spell',
+      description: message,
+      color: 'error'
+    })
+  } finally {
+    isLearningSpell.value = false
+  }
+}
 </script>
 
 <template>
@@ -249,6 +354,19 @@ async function handleToggle(spell: Spell) {
         v-model:hide-prepared="hidePrepared"
         :max-castable-level="maxCastableLevel"
       />
+    </div>
+
+    <!-- Spellbook cost info banner (Wizard only) -->
+    <div
+      v-if="isSpellbookMode"
+      data-testid="spellbook-cost-banner"
+      class="flex items-center gap-2 p-3 rounded-lg bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 text-amber-800 dark:text-amber-200 text-sm"
+    >
+      <UIcon
+        name="i-heroicons-information-circle"
+        class="w-5 h-5 flex-shrink-0"
+      />
+      <span>Copying a spell costs <strong>50gp per spell level</strong> (2 hours per level to transcribe)</span>
     </div>
 
     <!-- Loading State -->
@@ -314,8 +432,10 @@ async function handleToggle(spell: Spell) {
               isSpellPrepared(spell)
                 ? 'border-spell-300 dark:border-spell-700'
                 : 'border-gray-200 dark:border-gray-700',
-              // Grey out spells not in character's spell list (can't toggle)
-              !isInCharacterSpells(spell) && level !== 0 && 'opacity-30',
+              // Spellbook mode: dim unlearned spells (but clickable to learn)
+              isSpellbookMode && !isInSpellbook(spell) && level !== 0 && 'opacity-60',
+              // Prepared mode: grey out spells not in character's spell list (can't toggle)
+              !isSpellbookMode && !isInCharacterSpells(spell) && level !== 0 && 'opacity-30',
               // Dim unprepared at limit
               isInCharacterSpells(spell) && !isSpellPrepared(spell) && atPrepLimit && level !== 0 && 'opacity-40',
               // Slightly dim unprepared (but not at limit)
@@ -355,7 +475,21 @@ async function handleToggle(spell: Spell) {
                   />
                 </button>
 
-                <!-- Not in spell list indicator (coming soon) -->
+                <!-- Spellbook mode: Learn spell button -->
+                <button
+                  v-else-if="level !== 0 && isSpellbookMode"
+                  data-testid="learn-spell-button"
+                  type="button"
+                  class="flex-shrink-0 p-0.5 -m-0.5 rounded cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700"
+                  @click="openLearnDialog(spell)"
+                >
+                  <UIcon
+                    name="i-heroicons-plus-circle"
+                    class="w-5 h-5 text-spell-500 dark:text-spell-400"
+                  />
+                </button>
+
+                <!-- Prepared mode: Not in spell list indicator (coming soon) -->
                 <UTooltip
                   v-else-if="level !== 0"
                   text="Not yet available - coming soon"
@@ -415,5 +549,45 @@ async function handleToggle(spell: Spell) {
         </div>
       </div>
     </template>
+
+    <!-- Learn Spell Confirmation Dialog -->
+    <UModal v-model:open="showLearnDialog">
+      <template #content>
+        <div class="p-6">
+          <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+            Learn {{ spellToLearn?.name }}?
+          </h3>
+
+          <div class="space-y-2 text-sm text-gray-600 dark:text-gray-400 mb-6">
+            <p>
+              <strong class="text-gray-900 dark:text-white">Cost:</strong>
+              {{ spellToLearn ? getLearnCost(spellToLearn) : 0 }}gp
+              <span class="text-gray-400">(50gp × {{ spellToLearn?.level }} level)</span>
+            </p>
+            <p>
+              <strong class="text-gray-900 dark:text-white">Time:</strong>
+              {{ spellToLearn ? getLearnTime(spellToLearn) : '0 hours' }} to copy
+            </p>
+          </div>
+
+          <div class="flex justify-end gap-3">
+            <UButton
+              variant="ghost"
+              :disabled="isLearningSpell"
+              @click="closeLearnDialog"
+            >
+              Cancel
+            </UButton>
+            <UButton
+              color="primary"
+              :loading="isLearningSpell"
+              @click="confirmLearnSpell"
+            >
+              Learn
+            </UButton>
+          </div>
+        </div>
+      </template>
+    </UModal>
   </div>
 </template>
