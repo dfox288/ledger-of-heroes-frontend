@@ -5,14 +5,14 @@ import CharacterDetail from '~/components/dm-screen/CharacterDetail.vue'
 import type { DmScreenCharacter } from '~/types/dm-screen'
 import type { Counter } from '~/types/character'
 
+// Counter format updated in #725 - uses source_slug instead of source, slug removed
 const mockRageCounter: Counter = {
   id: 1,
-  slug: 'phb:barbarian:rage',
   name: 'Rage',
   current: 2,
   max: 3,
   reset_on: 'long_rest',
-  source: 'Barbarian',
+  source_slug: 'phb:barbarian',
   source_type: 'class',
   unlimited: false
 }

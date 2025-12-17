@@ -122,13 +122,6 @@ watch(searchQuery, () => {
   expandedIds.value = []
 })
 
-/** Format limited uses display */
-function formatUses(feature: CharacterFeature): string | null {
-  if (!feature.has_limited_uses || feature.max_uses === null) return null
-  const remaining = feature.uses_remaining ?? feature.max_uses
-  return `${remaining}/${feature.max_uses}`
-}
-
 /** Get source badge color */
 function getSourceColor(source: string): BadgeColor {
   return SOURCE_CONFIG[source]?.color ?? 'neutral'
@@ -265,16 +258,6 @@ function getSourceLabel(source: string): string {
                   size="xs"
                 >
                   Lvl {{ feature.level_acquired }}
-                </UBadge>
-
-                <!-- Limited Uses Badge -->
-                <UBadge
-                  v-if="feature.has_limited_uses"
-                  color="warning"
-                  variant="subtle"
-                  size="xs"
-                >
-                  {{ formatUses(feature) }}
                 </UBadge>
 
                 <!-- Optional/Chosen Indicator -->

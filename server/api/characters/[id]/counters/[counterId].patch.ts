@@ -6,23 +6,24 @@
  * - "restore": Increments current (recovers one use)
  * - "reset": Sets current to max
  *
- * @example PATCH /api/characters/1/counters/phb:bard:bardic-inspiration { "action": "use" }
+ * @example PATCH /api/characters/1/counters/123 { "action": "use" }
  *
  * @see #632 - Class resources
+ * @see #725 - Counter system refactor (changed from slug to numeric ID)
  */
 const VALID_ACTIONS = ['use', 'restore', 'reset'] as const
 
 export default defineEventHandler(async (event) => {
   const config = useRuntimeConfig()
   const id = getRouterParam(event, 'id')
-  const slug = getRouterParam(event, 'slug')
+  const counterId = getRouterParam(event, 'counterId')
   const body = await readBody(event)
 
   // Validate required parameters
-  if (!id || !slug) {
+  if (!id || !counterId) {
     throw createError({
       statusCode: 400,
-      statusMessage: 'Missing required parameters: id and slug'
+      statusMessage: 'Missing required parameters: id and counterId'
     })
   }
 
@@ -36,7 +37,7 @@ export default defineEventHandler(async (event) => {
 
   try {
     const data = await $fetch(
-      `${config.apiBaseServer}/characters/${id}/counters/${slug}`,
+      `${config.apiBaseServer}/characters/${id}/counters/${counterId}`,
       { method: 'PATCH', body }
     )
     return data

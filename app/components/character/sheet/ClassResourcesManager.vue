@@ -26,16 +26,16 @@ const isDisabled = computed(() => isDead.value)
 /**
  * Check if a counter has a pending update
  */
-function isPending(slug: string): boolean {
-  return store.isUpdatingCounter(slug)
+function isPending(id: number): boolean {
+  return store.isUpdatingCounter(id)
 }
 
 /**
  * Spend a counter use (decrement)
  */
-async function handleSpend(slug: string) {
+async function handleSpend(id: number) {
   try {
-    await store.useCounter(slug)
+    await store.useCounter(id)
   } catch (error: unknown) {
     const err = error as { data?: { message?: string } }
     toast.add({
@@ -48,9 +48,9 @@ async function handleSpend(slug: string) {
 /**
  * Restore a counter use (increment)
  */
-async function handleRestore(slug: string) {
+async function handleRestore(id: number) {
   try {
-    await store.restoreCounter(slug)
+    await store.restoreCounter(id)
   } catch (error: unknown) {
     const err = error as { data?: { message?: string } }
     toast.add({

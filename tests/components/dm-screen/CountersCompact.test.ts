@@ -4,38 +4,36 @@ import { mountSuspended } from '@nuxt/test-utils/runtime'
 import CountersCompact from '~/components/dm-screen/CountersCompact.vue'
 import type { Counter } from '~/types/character'
 
+// Counter format updated in #725 - uses source_slug instead of source, slug removed (use id for routing)
 const mockRage: Counter = {
   id: 1,
-  slug: 'phb:barbarian:rage',
   name: 'Rage',
   current: 2,
   max: 3,
   reset_on: 'long_rest',
-  source: 'Barbarian',
+  source_slug: 'phb:barbarian',
   source_type: 'class',
   unlimited: false
 }
 
 const mockKiPoints: Counter = {
   id: 2,
-  slug: 'phb:monk:ki',
   name: 'Ki Points',
   current: 3,
   max: 5,
   reset_on: 'short_rest',
-  source: 'Monk',
+  source_slug: 'phb:monk',
   source_type: 'class',
   unlimited: false
 }
 
 const mockUnlimited: Counter = {
   id: 3,
-  slug: 'phb:warlock:eldritch',
   name: 'Eldritch Invocations',
   current: 0,
   max: 0,
   reset_on: null,
-  source: 'Warlock',
+  source_slug: 'phb:warlock',
   source_type: 'class',
   unlimited: true
 }

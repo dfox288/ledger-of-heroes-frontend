@@ -143,8 +143,8 @@ export const useCharacterPlayStateStore = defineStore('characterPlayState', () =
   /** Class resource counters (Rage, Ki Points, etc.) */
   const counters = ref<Counter[]>([])
 
-  /** Track pending counter updates by slug to prevent race conditions */
-  const pendingCounterUpdates = ref<Set<string>>(new Set())
+  /** Track pending counter updates by ID to prevent race conditions */
+  const pendingCounterUpdates = ref<Set<number>>(new Set())
 
   /** Character notes grouped by category */
   const notes = ref<Record<string, CharacterNote[]>>({})
@@ -856,11 +856,11 @@ export const useCharacterPlayStateStore = defineStore('characterPlayState', () =
    *
    * Used to prevent race conditions and show loading states in UI.
    *
-   * @param slug - The counter slug to check
+   * @param id - The counter ID to check
    * @returns True if an update is in progress for this counter
    */
-  function isUpdatingCounter(slug: string): boolean {
-    return pendingCounterUpdates.value.has(slug)
+  function isUpdatingCounter(id: number): boolean {
+    return pendingCounterUpdates.value.has(id)
   }
 
   /**
@@ -868,21 +868,23 @@ export const useCharacterPlayStateStore = defineStore('characterPlayState', () =
    *
    * Uses optimistic update - decrements immediately, rolls back on error.
    * Per-counter locking allows concurrent updates to different counters.
+   *
+   * @see Issue #725 - Changed from slug to numeric ID
    */
-  async function useCounter(slug: string): Promise<void> {
-    const counter = counters.value.find(c => c.slug === slug)
-    if (!counter || counter.current <= 0) return
+  async function useCounter(id: number): Promise<void> {
+    const counter = counters.value.find(c => c.id === id)
+    if (!counter || (!counter.unlimited && counter.current <= 0)) return
     if (!characterId.value) return
-    if (pendingCounterUpdates.value.has(slug)) return
+    if (pendingCounterUpdates.value.has(id)) return
 
-    pendingCounterUpdates.value.add(slug)
+    pendingCounterUpdates.value.add(id)
 
     // Optimistic update
     const previousValue = counter.current
     counter.current--
 
     try {
-      await apiFetch(`/characters/${characterId.value}/counters/${encodeURIComponent(slug)}`, {
+      await apiFetch(`/characters/${characterId.value}/counters/${id}`, {
         method: 'PATCH',
         body: { action: 'use' }
       })
@@ -891,7 +893,7 @@ export const useCharacterPlayStateStore = defineStore('characterPlayState', () =
       counter.current = previousValue
       throw error
     } finally {
-      pendingCounterUpdates.value.delete(slug)
+      pendingCounterUpdates.value.delete(id)
     }
   }
 
@@ -900,21 +902,24 @@ export const useCharacterPlayStateStore = defineStore('characterPlayState', () =
    *
    * Uses optimistic update - increments immediately, rolls back on error.
    * Per-counter locking allows concurrent updates to different counters.
+   *
+   * @see Issue #725 - Changed from slug to numeric ID
    */
-  async function restoreCounter(slug: string): Promise<void> {
-    const counter = counters.value.find(c => c.slug === slug)
-    if (!counter || counter.current >= counter.max) return
+  async function restoreCounter(id: number): Promise<void> {
+    const counter = counters.value.find(c => c.id === id)
+    // Unlimited counters cannot be restored (they have no max)
+    if (!counter || counter.unlimited || counter.current >= counter.max) return
     if (!characterId.value) return
-    if (pendingCounterUpdates.value.has(slug)) return
+    if (pendingCounterUpdates.value.has(id)) return
 
-    pendingCounterUpdates.value.add(slug)
+    pendingCounterUpdates.value.add(id)
 
     // Optimistic update
     const previousValue = counter.current
     counter.current++
 
     try {
-      await apiFetch(`/characters/${characterId.value}/counters/${encodeURIComponent(slug)}`, {
+      await apiFetch(`/characters/${characterId.value}/counters/${id}`, {
         method: 'PATCH',
         body: { action: 'restore' }
       })
@@ -923,7 +928,7 @@ export const useCharacterPlayStateStore = defineStore('characterPlayState', () =
       counter.current = previousValue
       throw error
     } finally {
-      pendingCounterUpdates.value.delete(slug)
+      pendingCounterUpdates.value.delete(id)
     }
   }
 

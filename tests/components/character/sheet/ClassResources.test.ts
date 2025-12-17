@@ -4,14 +4,14 @@ import { mountSuspended } from '@nuxt/test-utils/runtime'
 import ClassResources from '~/components/character/sheet/ClassResources.vue'
 import type { Counter } from '~/types/character'
 
+// Counter format updated in #725 - uses source_slug instead of source, slug removed (use id for routing)
 const createCounter = (overrides: Partial<Counter> = {}): Counter => ({
   id: 1,
-  slug: 'phb:bard:bardic-inspiration',
   name: 'Bardic Inspiration',
   current: 3,
   max: 5,
   reset_on: 'long_rest',
-  source: 'Bard',
+  source_slug: 'phb:bard',
   source_type: 'class',
   unlimited: false,
   ...overrides
@@ -34,8 +34,8 @@ describe('ClassResources', () => {
 
   it('renders each counter', async () => {
     const counters = [
-      createCounter({ name: 'Bardic Inspiration', slug: 'phb:bard:bardic-inspiration' }),
-      createCounter({ id: 2, name: 'Ki Points', slug: 'phb:monk:ki', max: 10 })
+      createCounter({ id: 1, name: 'Bardic Inspiration' }),
+      createCounter({ id: 2, name: 'Ki Points', max: 10, source_slug: 'phb:monk' })
     ]
     const wrapper = await mountSuspended(ClassResources, {
       props: { counters }
@@ -44,23 +44,24 @@ describe('ClassResources', () => {
     expect(wrapper.text()).toContain('Ki Points')
   })
 
-  it('emits spend event from child counter', async () => {
+  // Counter routing updated in #725 - now uses numeric ID instead of slug
+  it('emits spend event with counter ID', async () => {
     const wrapper = await mountSuspended(ClassResources, {
-      props: { counters: [createCounter()], editable: true }
+      props: { counters: [createCounter({ id: 1 })], editable: true }
     })
     const icon = wrapper.find('[data-testid="counter-icon-filled"]')
     await icon.trigger('click')
     expect(wrapper.emitted('spend')).toBeTruthy()
-    expect(wrapper.emitted('spend')![0]).toEqual(['phb:bard:bardic-inspiration'])
+    expect(wrapper.emitted('spend')![0]).toEqual([1]) // Numeric ID instead of slug
   })
 
-  it('emits restore event from child counter', async () => {
+  it('emits restore event with counter ID', async () => {
     const wrapper = await mountSuspended(ClassResources, {
-      props: { counters: [createCounter({ max: 10 })], editable: true }
+      props: { counters: [createCounter({ id: 1, max: 10 })], editable: true }
     })
     const incrementBtn = wrapper.find('[data-testid="counter-increment"]')
     await incrementBtn.trigger('click')
     expect(wrapper.emitted('restore')).toBeTruthy()
-    expect(wrapper.emitted('restore')![0]).toEqual(['phb:bard:bardic-inspiration'])
+    expect(wrapper.emitted('restore')![0]).toEqual([1]) // Numeric ID instead of slug
   })
 })

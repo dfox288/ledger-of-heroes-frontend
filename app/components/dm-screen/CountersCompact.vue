@@ -35,10 +35,9 @@ const hasCounters = computed(() => props.counters.length > 0)
 const PIP_DISPLAY_THRESHOLD = 6
 const usePips = (counter: Counter) => !counter.unlimited && counter.max > 0 && counter.max <= PIP_DISPLAY_THRESHOLD
 
-// Get slug for test ID (extract last part of slug)
+// Get test ID from counter name (kebab-case)
 function getTestId(counter: Counter): string {
-  const parts = counter.slug.split(':')
-  return (parts[parts.length - 1] ?? counter.slug).toLowerCase()
+  return counter.name.toLowerCase().replace(/\s+/g, '-')
 }
 
 // Determine if counter is depleted (current = 0, max > 0)
