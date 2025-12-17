@@ -63,8 +63,9 @@ const { data: availableSpellsData, pending, error } = await useAsyncData(
   () => {
     if (isSpellbookMode.value) {
       // Spellbook mode: fetch ALL wizard spells up to max level
+      // Use high per_page to ensure we get all spells (wizard has ~300 spells)
       return apiFetch<{ data: Spell[] }>(
-        `/spells?filter=${encodeURIComponent(buildClassSpellFilter())}&per_page=500`
+        `/spells?filter=${encodeURIComponent(buildClassSpellFilter())}&per_page=999`
       )
     } else {
       // Prepared mode: fetch only available spells for this character
@@ -271,8 +272,10 @@ function getLearnTime(spell: Spell): string {
 
 /**
  * Open learn spell confirmation dialog
+ * Only leveled spells can be learned (cantrips are automatic)
  */
 function openLearnDialog(spell: Spell) {
+  if (spell.level === 0) return // Cantrips can't be learned
   spellToLearn.value = spell
   showLearnDialog.value = true
 }
@@ -306,7 +309,7 @@ async function confirmLearnSpell() {
       color: 'success'
     })
 
-    // Refresh character spells to update the map
+    // Refresh character spells to update the map (makes learned spell toggleable)
     await refreshNuxtData(`character-${props.characterId}-spells-for-prepare`)
 
     closeLearnDialog()
