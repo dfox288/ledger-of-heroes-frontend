@@ -45,7 +45,12 @@ async function handleToggle(spell: CharacterSpell) {
     return
   }
   try {
-    await store.toggleSpellPreparation(spell.id, spell.is_prepared)
+    await store.toggleSpellPreparation(
+      spell.id,
+      spell.is_prepared,
+      spell.spell_slug,
+      spell.class_slug ?? undefined
+    )
   } catch {
     // Error handled by store (shows toast)
   }

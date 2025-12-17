@@ -148,7 +148,12 @@ async function handlePreparationClick() {
   try {
     // Use store's reactive state for current prepared status
     const currentlyPrepared = store.isSpellPrepared(props.spell.id)
-    await store.toggleSpellPreparation(props.spell.id, currentlyPrepared)
+    await store.toggleSpellPreparation(
+      props.spell.id,
+      currentlyPrepared,
+      props.spell.spell_slug,
+      props.spell.class_slug ?? undefined
+    )
   } catch {
     // Error handling done by store
   }

@@ -278,68 +278,69 @@ function canToggle(spell: Spell): boolean {
 
 /**
  * Toggle spell preparation
- * For prepared casters: if spell isn't in character list, add it first
+ *
+ * For prepared casters (Cleric, Druid, Paladin): calls /prepare or /unprepare directly.
+ * Backend handles adding spell to character's spell list if needed.
+ *
+ * For spellbook casters (Wizard): spell must already be in spellbook.
  */
 async function handleToggle(spell: Spell) {
   const charSpell = characterSpellMap.value.get(spell.slug)
 
-  // For prepared casters, add spell to character list if not there yet
-  if (!charSpell && isPreparedMode.value) {
-    isAddingSpell.value = true
-    try {
-      // Add spell to character's spell list (with is_prepared=true)
-      await apiFetch(`/characters/${props.characterId}/spells`, {
-        method: 'POST',
-        body: {
-          spell_slug: spell.slug,
-          class_slug: props.classSlug,
-          is_prepared: true
-        }
-      })
+  // Determine current state and target action
+  const currentlyPrepared = charSpell ? preparedSpellIds.value.has(charSpell.id) : false
+  const action = currentlyPrepared ? 'unprepare' : 'prepare'
 
-      toast.add({
-        title: `Prepared ${spell.name}`,
-        color: 'success'
-      })
-
-      // Refresh character spells to update the map
-      await refreshNuxtData(`character-${props.characterId}-spells-for-prepare`)
-    } catch (error: unknown) {
-      const message = error instanceof Error ? error.message : 'Failed to prepare spell'
-      toast.add({
-        title: 'Could not prepare spell',
-        description: message,
-        color: 'error'
-      })
-    } finally {
-      isAddingSpell.value = false
-    }
-    return
-  }
-
-  if (!charSpell) {
+  // Check prep limit before preparing (not needed for unpreparing)
+  if (action === 'prepare' && atPrepLimit.value) {
     toast.add({
-      title: 'Cannot prepare spell',
-      description: 'This spell is not in your spell list yet.',
+      title: 'Preparation limit reached',
+      description: 'Unprepare a spell first.',
       color: 'warning'
     })
     return
   }
 
-  const currentlyPrepared = preparedSpellIds.value.has(charSpell.id)
+  // For spellbook casters, spell must be in spellbook to toggle
+  if (isSpellbookMode.value && !charSpell) {
+    toast.add({
+      title: 'Cannot prepare spell',
+      description: 'This spell is not in your spellbook yet.',
+      color: 'warning'
+    })
+    return
+  }
+
+  isAddingSpell.value = true
 
   try {
-    await store.toggleSpellPreparation(charSpell.id, currentlyPrepared)
+    // Call prepare/unprepare endpoint directly - backend handles adding spell if needed
+    await apiFetch(`/characters/${props.characterId}/spells/${spell.slug}/${action}`, {
+      method: 'PATCH',
+      body: { class_slug: props.classSlug }
+    })
+
+    // Refresh character spells to update the map and store
+    await refreshNuxtData(`character-${props.characterId}-spells-for-prepare`)
+
+    // Update store's prepared IDs based on refreshed data
+    const updatedCharSpell = characterSpellMap.value.get(spell.slug)
+    if (updatedCharSpell) {
+      if (action === 'prepare') {
+        preparedSpellIds.value.add(updatedCharSpell.id)
+      } else {
+        preparedSpellIds.value.delete(updatedCharSpell.id)
+      }
+    }
   } catch (error) {
-    // Show error feedback to user
-    const message = error instanceof Error ? error.message : 'Failed to update spell'
+    const message = error instanceof Error ? error.message : `Failed to ${action} spell`
     toast.add({
-      title: 'Could not update spell',
-      description: message === 'Preparation limit reached'
-        ? 'You have reached your preparation limit. Unprepare a spell first.'
-        : message,
+      title: `Could not ${action} spell`,
+      description: message,
       color: 'error'
     })
+  } finally {
+    isAddingSpell.value = false
   }
 }
 

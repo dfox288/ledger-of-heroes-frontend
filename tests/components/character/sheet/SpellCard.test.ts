@@ -58,6 +58,7 @@ const mockLeveledSpell: CharacterSpell = {
     ritual: false
   },
   spell_slug: 'phb:fireball',
+  class_slug: 'phb:wizard',
   is_dangling: false,
   preparation_status: 'prepared',
   source: 'class',
@@ -348,7 +349,12 @@ describe('SpellCard', () => {
       // Click the preparation toggle button
       await wrapper.find('[data-testid="preparation-toggle"]').trigger('click')
 
-      expect(toggleSpy).toHaveBeenCalledWith(mockLeveledSpell.id, true)
+      expect(toggleSpy).toHaveBeenCalledWith(
+        mockLeveledSpell.id,
+        true,
+        mockLeveledSpell.spell_slug,
+        mockLeveledSpell.class_slug
+      )
     })
 
     it('clicking expand chevron expands details without toggling preparation', async () => {
@@ -468,7 +474,12 @@ describe('SpellCard', () => {
 
       await wrapper.find('[data-testid="preparation-toggle"]').trigger('click')
 
-      expect(toggleSpy).toHaveBeenCalledWith(mockLeveledSpell.id, true)
+      expect(toggleSpy).toHaveBeenCalledWith(
+        mockLeveledSpell.id,
+        true,
+        mockLeveledSpell.spell_slug,
+        mockLeveledSpell.class_slug
+      )
     })
   })
 
