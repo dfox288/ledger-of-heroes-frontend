@@ -539,7 +539,7 @@ useSeoMeta({
                       icon="i-heroicons-book-open"
                       @click="enterPrepareSpellsMode(sc.slug)"
                     >
-                      Prepare Spells
+                      {{ getClassPreparationMethod(sc.slug) === 'spellbook' ? 'Manage Spellbook' : 'Prepare Spells' }}
                     </UButton>
                   </div>
                 </div>
@@ -807,7 +807,7 @@ useSeoMeta({
                     icon="i-heroicons-book-open"
                     @click="enterPrepareSpellsMode(primarySpellcasting.slug)"
                   >
-                    Prepare Spells
+                    {{ preparationMethod === 'spellbook' ? 'Manage Spellbook' : 'Prepare Spells' }}
                   </UButton>
                 </div>
               </div>

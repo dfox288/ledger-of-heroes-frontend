@@ -46,26 +46,16 @@ const showLearnDialog = ref(false)
 const spellToLearn = ref<Spell | null>(null)
 const isLearningSpell = ref(false)
 
-/**
- * Build filter for fetching all class spells (spellbook mode)
- * Format: classes.slug="phb:wizard" AND level<=3
- */
-function buildClassSpellFilter(): string {
-  const filters: string[] = []
-  filters.push(`classes.slug="${props.classSlug}"`)
-  filters.push(`level<=${props.maxCastableLevel}`)
-  return filters.join(' AND ')
-}
-
 // Fetch available spells - different endpoints for spellbook vs prepared
 const { data: availableSpellsData, pending, error } = await useAsyncData(
   `character-${props.characterId}-available-spells-${props.classSlug}-${isSpellbookMode.value ? 'all' : 'known'}`,
   () => {
     if (isSpellbookMode.value) {
-      // Spellbook mode: fetch ALL wizard spells up to max level
-      // Use high per_page to ensure we get all spells (wizard has ~300 spells)
+      // Spellbook mode: fetch ALL class spells up to max level
+      // Use class param + level filter (backend limits per_page to 200)
+      const levelFilter = `level<=${props.maxCastableLevel}`
       return apiFetch<{ data: Spell[] }>(
-        `/spells?filter=${encodeURIComponent(buildClassSpellFilter())}&per_page=999`
+        `/spells?class=${encodeURIComponent(props.classSlug)}&filter=${encodeURIComponent(levelFilter)}&per_page=200`
       )
     } else {
       // Prepared mode: fetch only available spells for this character
