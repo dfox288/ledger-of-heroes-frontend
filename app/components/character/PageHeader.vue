@@ -32,6 +32,7 @@ import type { EditPayload } from '~/components/character/sheet/EditModal.vue'
 import { storeToRefs } from 'pinia'
 import { logger } from '~/utils/logger'
 import { useCharacterPlayStateStore } from '~/stores/characterPlayState'
+import { useCharacterXp } from '~/composables/useCharacterXp'
 
 const props = withDefaults(defineProps<{
   character: Character
@@ -54,6 +55,42 @@ const emit = defineEmits<{
 const { apiFetch } = useApi()
 const toast = useToast()
 const playStateStore = useCharacterPlayStateStore()
+
+// ============================================================================
+// XP Management (self-contained)
+// ============================================================================
+
+// Computed public_id that stays reactive with character prop
+const characterPublicId = computed(() => props.character.public_id)
+
+// XP composable - fetches and updates XP data
+const {
+  xpData,
+  updateXp
+} = useCharacterXp(characterPublicId)
+
+// XP Edit Modal state
+const showXpEditModal = ref(false)
+const isUpdatingXp = ref(false)
+
+function handleXpEditClick() {
+  showXpEditModal.value = true
+}
+
+async function handleXpUpdate(newXp: number) {
+  if (isUpdatingXp.value) return
+  isUpdatingXp.value = true
+
+  try {
+    await updateXp(newXp)
+    toast.add({ title: 'XP updated', color: 'success' })
+  } catch (err) {
+    logger.error('Failed to update XP:', err)
+    toast.add({ title: 'Failed to update XP', color: 'error' })
+  } finally {
+    isUpdatingXp.value = false
+  }
+}
 
 // ============================================================================
 // Play Mode (via store)
@@ -502,6 +539,14 @@ const actionMenuItems = computed(() => {
             <span v-if="character.background"> &bull; {{ character.background.name }}</span>
             <span v-if="character.alignment"> &bull; {{ character.alignment }}</span>
           </p>
+          <!-- XP Progress Bar (only for complete characters, hidden at max level) -->
+          <CharacterSheetXpBar
+            v-if="character.is_complete"
+            :xp-data="xpData"
+            :is-play-mode="isPlayMode"
+            :character-id="character.public_id"
+            @edit="handleXpEditClick"
+          />
         </div>
       </div>
 
@@ -580,6 +625,14 @@ const actionMenuItems = computed(() => {
     :error="editError"
     @save="handleEditSave"
     @remove-portrait="handleRemovePortrait"
+  />
+
+  <!-- XP Edit Modal -->
+  <CharacterSheetXpEditModal
+    v-model:open="showXpEditModal"
+    :current-xp="xpData?.experience_points ?? 0"
+    :next-level-xp="xpData?.next_level_xp ?? null"
+    @apply="handleXpUpdate"
   />
 </template>
 

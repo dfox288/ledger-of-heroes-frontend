@@ -747,3 +747,22 @@ export interface CharacterWeapon {
   /** Whether character is proficient with this weapon */
   is_proficient: boolean
 }
+
+/**
+ * Character XP data from /characters/{id}/xp endpoint
+ * @see Issue #653 - XP progress display
+ */
+export interface CharacterXpData {
+  /** Current experience points */
+  experience_points: number
+  /** Current character level */
+  level: number
+  /** XP threshold for next level (null at max level) */
+  next_level_xp: number | null
+  /** XP remaining until next level */
+  xp_to_next_level: number
+  /** Progress percentage toward next level (0-100) */
+  xp_progress_percent: number
+  /** Whether character is at max level (20) */
+  is_max_level: boolean
+}
