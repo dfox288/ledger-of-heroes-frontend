@@ -69,7 +69,7 @@ const imagePath = computed(() => {
         :requires-material="spell.components?.includes('M') ?? false"
         :material-components="spell.material_components"
         :material-cost-gp="spell.material_cost_gp ? Number(spell.material_cost_gp) : null"
-        :material-consumed="spell.material_consumed === 'true'"
+        :material-consumed="spell.material_consumed === true"
       />
 
       <!-- Description (Always) -->

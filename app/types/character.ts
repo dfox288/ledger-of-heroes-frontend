@@ -333,7 +333,7 @@ export interface ClassSpellcastingInfo {
  *
  * @see Issue #631 - Multiclass spellcasting support
  */
-export interface CharacterStats extends Omit<CharacterStatsFromAPI, 'ability_scores' | 'saving_throws' | 'spellcasting'> {
+export interface CharacterStats extends Omit<CharacterStatsFromAPI, 'ability_scores' | 'saving_throws' | 'spellcasting' | 'weapons' | 'spell_slots'> {
   ability_scores: Record<AbilityScoreCode, { score: number | null, modifier: number | null }>
   saving_throws: Record<AbilityScoreCode, { modifier: number | null, proficient: boolean, total: number | null } | null>
   /**
@@ -350,7 +350,11 @@ export interface CharacterStats extends Omit<CharacterStatsFromAPI, 'ability_sco
   condition_advantages: ConditionAdvantage[]
   condition_disadvantages: ConditionDisadvantage[]
   condition_immunities: ConditionImmunity[]
+  // Override weapons to use our local type with optional (not all responses include it)
   weapons?: CharacterWeapon[]
+  // Override spell_slots - generated type has incorrect Record<string, never> for slots
+  // Use our local SpellSlotsResponse type which has proper slot structure
+  spell_slots: SpellSlotsResponse | Record<string, number> | number[] | null
 }
 
 // =============================================================================

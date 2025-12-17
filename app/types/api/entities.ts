@@ -32,7 +32,7 @@ export interface Spell extends Omit<SpellFromAPI, 'sources' | 'school'> {
  */
 type ItemFromAPI = components['schemas']['ItemResource']
 
-export interface Item extends Omit<ItemFromAPI, 'sources' | 'item_type' | 'damage_type' | 'modifiers'> {
+export interface Item extends Omit<ItemFromAPI, 'sources' | 'item_type' | 'damage_type' | 'modifiers' | 'equipment_slot'> {
   // Override with our custom types that have better structure
   item_type?: {
     id: number
@@ -45,6 +45,7 @@ export interface Item extends Omit<ItemFromAPI, 'sources' | 'item_type' | 'damag
 
   // Equipment slot assigned by backend (Issue #589)
   // Determines where this item can be equipped on the character
+  // Made optional since not all item responses include this field
   equipment_slot?: string | null
 
   // All other fields inherited from ItemFromAPI
