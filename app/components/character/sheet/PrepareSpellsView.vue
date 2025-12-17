@@ -453,11 +453,14 @@ async function confirmLearnSpell() {
 
   isLearningSpell.value = true
   try {
+    // Use source: 'spellbook' to distinguish copied spells from level-granted spells
+    // This prevents copied spells from counting against level-up spell grants
     await apiFetch(`/characters/${props.characterId}/spells`, {
       method: 'POST',
       body: {
         spell_slug: spellToLearn.value.slug,
-        class_slug: props.classSlug
+        class_slug: props.classSlug,
+        source: 'spellbook'
       }
     })
 
