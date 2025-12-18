@@ -146,6 +146,7 @@ const orderedNotes = computed(() => {
           v-model="searchQuery"
           data-testid="note-search"
           placeholder="Search notes..."
+          aria-label="Search notes"
           icon="i-heroicons-magnifying-glass"
           size="sm"
           class="w-48"
