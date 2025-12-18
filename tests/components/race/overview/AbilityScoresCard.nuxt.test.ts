@@ -1,10 +1,10 @@
 import { describe, it, expect } from 'vitest'
 import { mountSuspended } from '@nuxt/test-utils/runtime'
 import RaceOverviewAbilityScoresCard from '~/components/race/overview/AbilityScoresCard.vue'
-import type { Modifier } from '~/types'
+import type { Modifier, EntityChoice } from '~/types'
 
 describe('RaceOverviewAbilityScoresCard', () => {
-  const createModifier = (abilityCode: string, value: string, isChoice = false, condition: string | null = null): Modifier => ({
+  const createModifier = (abilityCode: string, value: string, condition: string | null = null): Modifier => ({
     id: Math.random(),
     modifier_category: 'ability_score',
     ability_score: {
@@ -15,12 +15,19 @@ describe('RaceOverviewAbilityScoresCard', () => {
       description: `${abilityCode} ability`
     },
     value,
-    is_choice: isChoice,
     condition,
-    choice_count: null,
-    choice_constraint: null,
     level: null
   })
+
+  const createChoice = (value = '+1', quantity = 1, constraint: string | null = null): EntityChoice => ({
+    id: Math.random(),
+    choice_type: 'ability_score',
+    quantity,
+    constraint,
+    description: null,
+    options: [],
+    constraints: { value }
+  } as EntityChoice)
 
   it('renders nothing when modifiers array is empty', async () => {
     const wrapper = await mountSuspended(RaceOverviewAbilityScoresCard, {
@@ -72,20 +79,19 @@ describe('RaceOverviewAbilityScoresCard', () => {
   it('displays "Your choice" for choice-based modifiers', async () => {
     const wrapper = await mountSuspended(RaceOverviewAbilityScoresCard, {
       props: {
-        modifiers: [createModifier('STR', '1', true)]
+        modifiers: [],
+        choices: [createChoice('+1')]
       }
     })
 
     expect(wrapper.text()).toContain('Your choice')
   })
 
-  it('handles mixed fixed and choice modifiers', async () => {
+  it('handles mixed fixed modifiers and choices', async () => {
     const wrapper = await mountSuspended(RaceOverviewAbilityScoresCard, {
       props: {
-        modifiers: [
-          createModifier('DEX', '2', false),
-          createModifier('INT', '1', true)
-        ]
+        modifiers: [createModifier('DEX', '2')],
+        choices: [createChoice('+1')]
       }
     })
 
@@ -99,7 +105,7 @@ describe('RaceOverviewAbilityScoresCard', () => {
   it('displays condition when provided', async () => {
     const wrapper = await mountSuspended(RaceOverviewAbilityScoresCard, {
       props: {
-        modifiers: [createModifier('STR', '1', false, 'When in sunlight')]
+        modifiers: [createModifier('STR', '1', 'When in sunlight')]
       }
     })
 
@@ -174,10 +180,7 @@ describe('RaceOverviewAbilityScoresCard', () => {
       modifier_category: 'ability_score',
       ability_score: undefined,
       value: '2',
-      is_choice: false,
       condition: null,
-      choice_count: null,
-      choice_constraint: null,
       level: null
     }
 
