@@ -106,14 +106,8 @@ const equipmentItems = computed(() => {
             v-for="eq in equipmentItems"
             :key="eq.id"
           >
-            {{ eq.item?.name }}
+            {{ eq.item?.name || eq.description }}
             <span v-if="eq.quantity > 1">(×{{ eq.quantity }})</span>
-            <span
-              v-if="eq.is_choice"
-              class="text-background-500"
-            >
-              [choice]
-            </span>
           </li>
           <li v-if="startingGold">
             {{ startingGold }} gp

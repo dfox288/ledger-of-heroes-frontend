@@ -58,10 +58,9 @@ const aoeText = computed(() => {
 
 /**
  * Check if material is consumed (Issue #53)
- * material_consumed is a string boolean ('true'/'false')
  */
 const isMaterialConsumed = computed(() => {
-  return props.spell.material_consumed === 'true'
+  return props.spell.material_consumed === true
 })
 </script>
 

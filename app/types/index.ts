@@ -24,6 +24,7 @@ export type SpellSchool = components['schemas']['SpellSchoolResource']
 export type SpellEffect = components['schemas']['SpellEffectResource']
 export type SpellSavingThrow = components['schemas']['SavingThrowResource']
 export type CharacterSpell = components['schemas']['CharacterSpellResource']
+export type EntityChoice = components['schemas']['EntityChoiceResource']
 export type { components }
 
 // Search types

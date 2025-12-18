@@ -1,14 +1,18 @@
 <script setup lang="ts">
 import type { components } from '~/types/api/generated'
+import type { EntityChoice } from '~/types'
 
 // Use API ProficiencyResource type - has id: number and proficiency_name: string | null
 type ProficiencyResource = components['schemas']['ProficiencyResource']
 
 interface Props {
   items: ProficiencyResource[]
+  choices?: EntityChoice[]
 }
 
-const props = defineProps<Props>()
+const props = withDefaults(defineProps<Props>(), {
+  choices: () => []
+})
 
 /**
  * Get display name for a proficiency item
@@ -42,59 +46,27 @@ function formatProficiencyType(type: string): string {
 // Define type order for consistent display
 const TYPE_ORDER = ['armor', 'weapon', 'tool', 'saving_throw', 'skill']
 
-// Group all proficiencies by type, then by regular/choice within each type
+// Group all proficiencies by type (all are now "regular" - choices come separately)
 const proficienciesByType = computed(() => {
-  const typeMap = new Map<string, { regular: ProficiencyResource[], choiceGroups: Map<string, ProficiencyResource[]> }>()
+  const typeMap = new Map<string, ProficiencyResource[]>()
 
-  // Group by type first
+  // Group by type
   for (const item of props.items) {
     const type = item.proficiency_type
 
     if (!typeMap.has(type)) {
-      typeMap.set(type, { regular: [], choiceGroups: new Map() })
+      typeMap.set(type, [])
     }
-
-    const typeGroup = typeMap.get(type)!
-
-    if (!item.choice_group) {
-      // Regular proficiency
-      typeGroup.regular.push(item)
-    } else {
-      // Choice-based proficiency
-      if (!typeGroup.choiceGroups.has(item.choice_group)) {
-        typeGroup.choiceGroups.set(item.choice_group, [])
-      }
-      typeGroup.choiceGroups.get(item.choice_group)!.push(item)
-    }
+    typeMap.get(type)!.push(item)
   }
 
-  // Convert to sorted array with formatted choice groups
+  // Convert to sorted array
   const result = Array.from(typeMap.entries())
-    .map(([type, { regular, choiceGroups }]) => {
-      const formattedChoiceGroups = Array.from(choiceGroups.entries())
-        .map(([key, items]) => {
-          // Sort items by choice_option if present
-          const sortedItems = [...items].sort((a, b) => {
-            if (a.choice_option != null && b.choice_option != null) {
-              return a.choice_option - b.choice_option
-            }
-            return 0
-          })
-
-          return {
-            choiceGroup: key,
-            quantity: sortedItems[0]?.quantity || null,
-            items: sortedItems
-          }
-        })
-
-      return {
-        type,
-        typeName: formatProficiencyType(type),
-        regular,
-        choiceGroups: formattedChoiceGroups
-      }
-    })
+    .map(([type, items]) => ({
+      type,
+      typeName: formatProficiencyType(type),
+      items
+    }))
 
   // Sort by defined order, then alphabetically
   return result.sort((a, b) => {
@@ -111,25 +83,27 @@ const proficienciesByType = computed(() => {
   })
 })
 
-// Helper to format choice letters (a, b, c, etc.)
-// Use choice_option if present, otherwise fall back to array index
-const getChoiceLetter = (item: ProficiencyResource, index: number): string => {
-  const optionNum = item.choice_option != null ? item.choice_option - 1 : index
-  return String.fromCharCode(97 + optionNum) // 97 is 'a' in ASCII
-}
+// Filter choices to only show proficiency choices
+const proficiencyChoices = computed(() =>
+  props.choices.filter(c => c.choice_type === 'proficiency')
+)
 
-// Helper to generate choice description
-const getChoiceDescription = (group: { quantity: number | null, items: ProficiencyResource[] }): string => {
-  if (group.quantity && group.quantity > 1) {
-    return `Choose ${group.quantity}:`
+// Helper to generate choice description from EntityChoice
+const getChoiceDescription = (choice: EntityChoice): string => {
+  const profType = choice.proficiency_type
+    ? formatProficiencyType(choice.proficiency_type)
+    : 'proficiency'
+
+  if (choice.quantity > 1) {
+    return `Choose ${choice.quantity} ${profType}${choice.quantity > 1 ? 's' : ''}`
   }
-  return 'Choose one:'
+  return `Choose 1 ${profType}`
 }
 </script>
 
 <template>
   <div
-    v-if="items.length === 0"
+    v-if="items.length === 0 && proficiencyChoices.length === 0"
     class="p-4 text-center text-gray-500 dark:text-gray-400"
   >
     No proficiencies
@@ -149,35 +123,39 @@ const getChoiceDescription = (group: { quantity: number | null, items: Proficien
         {{ typeGroup.typeName }}
       </h4>
 
-      <!-- Regular proficiencies within this type -->
-      <div
-        v-if="typeGroup.regular.length > 0"
-        class="space-y-1"
-      >
+      <!-- Proficiencies within this type -->
+      <div class="space-y-1">
         <div
-          v-for="item in typeGroup.regular"
+          v-for="item in typeGroup.items"
           :key="item.id"
           class="text-gray-700 dark:text-gray-300"
         >
           • {{ getDisplayName(item) }}
         </div>
       </div>
+    </div>
 
-      <!-- Choice-based proficiencies within this type -->
+    <!-- Proficiency choices (from EntityChoice array) -->
+    <div
+      v-if="proficiencyChoices.length > 0"
+      class="space-y-2"
+    >
+      <h4 class="text-sm font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wide">
+        Choices
+      </h4>
       <div
-        v-for="(group, groupIndex) in typeGroup.choiceGroups"
-        :key="groupIndex"
-        class="space-y-1"
+        v-for="choice in proficiencyChoices"
+        :key="`choice-${choice.id}`"
+        class="p-2 rounded bg-info-50 dark:bg-info-900/20 border border-dashed border-info-300 dark:border-info-700"
       >
-        <div class="text-xs text-gray-500 dark:text-gray-400 mb-1">
-          {{ getChoiceDescription(group) }}
+        <div class="text-sm text-info-700 dark:text-info-300">
+          {{ getChoiceDescription(choice) }}
         </div>
         <div
-          v-for="(item, itemIndex) in group.items"
-          :key="item.id"
-          class="text-gray-700 dark:text-gray-300 ml-2"
+          v-if="choice.description"
+          class="text-xs text-gray-600 dark:text-gray-400 mt-1"
         >
-          ({{ getChoiceLetter(item, itemIndex) }}) {{ getDisplayName(item) }}
+          {{ choice.description }}
         </div>
       </div>
     </div>

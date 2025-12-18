@@ -102,7 +102,7 @@ watch(() => choicesByType.value.abilityScores, (choices) => {
   }
 }, { immediate: true })
 
-// Get all racial ability score modifiers
+// Get all racial ability score modifiers (fixed bonuses only)
 const allRacialModifiers = computed(() => {
   const race = effectiveRace.value
   if (!race?.modifiers) return []
@@ -110,15 +110,13 @@ const allRacialModifiers = computed(() => {
 })
 
 // Fixed bonuses have ability_score set (e.g., +2 CHA)
+// Note: All modifiers are now "fixed" - choices are in race.choices array
 const fixedBonuses = computed(() =>
-  allRacialModifiers.value.filter(m => !m.is_choice && m.ability_score)
+  allRacialModifiers.value.filter(m => m.ability_score)
 )
 
-// Choice bonuses require user selection (e.g., Half-Elf's "choose 2 different")
-// Note: These are handled via pending choices API, kept for reference
-const _choiceBonuses = computed(() =>
-  allRacialModifiers.value.filter(m => m.is_choice)
-)
+// Ability score choices are now handled via pending choices API
+// (from race.choices with choice_type === 'ability_score')
 const { nextStep } = useCharacterWizard()
 
 // ══════════════════════════════════════════════════════════════
@@ -424,7 +422,6 @@ defineExpose({
   raceBonuses,
   featBonuses,
   featAbilityModifiers,
-  _choiceBonuses,
   _choicesPending
 })
 

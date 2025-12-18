@@ -1,5 +1,8 @@
 import type { Feat } from '~/types/api/entities'
+import type { components } from '~/types/api/generated'
 import { logger } from '~/utils/logger'
+
+type EntityChoiceResource = components['schemas']['EntityChoiceResource']
 
 /**
  * Ability modifier extracted from feat modifiers
@@ -249,22 +252,31 @@ export function useFeatDetail(slug: Ref<string>) {
   // ─────────────────────────────────────────────────────────────────────────────
 
   /**
-   * Spells granted by this feat (includes both fixed spells and choice placeholders)
+   * Spells granted by this feat (fixed spells with actual spell data)
    */
   const spells = computed(() => entity.value?.spells ?? [])
 
   /**
-   * Spell choices - aggregated groups for player selection
+   * All choices from this feat
+   */
+  const choices = computed<EntityChoiceResource[]>(() =>
+    entity.value?.choices ?? []
+  )
+
+  /**
+   * Spell choices - filtered from choices array
    * (e.g., "Choose 1 Divination or Enchantment spell")
    */
-  const spellChoices = computed(() => entity.value?.spell_choices ?? [])
+  const spellChoices = computed<EntityChoiceResource[]>(() =>
+    choices.value.filter(c => c.choice_type === 'spell')
+  )
 
   /**
    * Does this feat grant any spells (fixed or choice)?
    */
   const hasSpells = computed(() =>
     (entity.value?.spells?.length ?? 0) > 0
-    || (entity.value?.spell_choices?.length ?? 0) > 0
+    || spellChoices.value.length > 0
   )
 
   // ─────────────────────────────────────────────────────────────────────────────
@@ -300,6 +312,7 @@ export function useFeatDetail(slug: Ref<string>) {
 
     // Granted Spells
     spells,
+    choices,
     spellChoices,
     hasSpells,
 

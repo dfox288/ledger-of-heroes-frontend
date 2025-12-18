@@ -1,12 +1,12 @@
 <script setup lang="ts">
 import type { components } from '~/types/api/generated'
+import type { EntityChoice } from '~/types'
 
 type EntitySpellResource = components['schemas']['EntitySpellResource']
-type SpellChoiceResource = components['schemas']['SpellChoiceResource']
 
 interface Props {
   spells: EntitySpellResource[]
-  spellChoices?: SpellChoiceResource[] | null
+  spellChoices?: EntityChoice[]
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -17,10 +17,10 @@ const props = withDefaults(defineProps<Props>(), {
 const { getImagePath } = useEntityImage()
 
 /**
- * Filter out is_choice spells - only show fixed spells with actual spell data
+ * Only show fixed spells with actual spell data
  */
 const fixedSpells = computed(() =>
-  props.spells.filter(s => !s.is_choice && s.spell)
+  props.spells.filter(s => s.spell)
 )
 
 /**
@@ -31,9 +31,11 @@ function getSpellImagePath(slug: string): string | null {
 }
 
 /**
- * Spell choices to display (grouped choices from spell_choices array)
+ * Spell choices to display (filtered from spellChoices prop)
  */
-const spellChoicesToDisplay = computed(() => props.spellChoices ?? [])
+const spellChoicesToDisplay = computed(() =>
+  (props.spellChoices ?? []).filter(c => c.choice_type === 'spell')
+)
 
 /**
  * Format spell level for display
@@ -47,37 +49,31 @@ function getSpellLevelText(level: number): string {
 /**
  * Format spell level for choice card (lowercase for sentence)
  */
-function getSpellLevelLabel(maxLevel: number): string {
-  if (maxLevel === 0) return 'cantrip'
+function getSpellLevelLabel(maxLevel: number | null | undefined): string {
+  if (!maxLevel || maxLevel === 0) return 'cantrip'
   const suffix = ['th', 'st', 'nd', 'rd', 'th', 'th', 'th', 'th', 'th', 'th']
   return `${maxLevel}${suffix[maxLevel]}-level`
 }
 
 /**
- * Build description for spell choice card
+ * Build description for spell choice card using EntityChoice
  */
-function getChoiceDescription(choice: SpellChoiceResource): string {
-  const count = choice.choice_count === 1 ? 'a' : choice.choice_count
-  const levelText = getSpellLevelLabel(choice.max_level)
-  const spellWord = choice.choice_count === 1 ? 'spell' : 'spells'
+function getChoiceDescription(choice: EntityChoice): string {
+  const count = choice.quantity === 1 ? 'a' : choice.quantity
+  const levelText = getSpellLevelLabel(choice.spell_max_level)
+  const spellWord = choice.quantity === 1 ? 'spell' : 'spells'
 
   let desc = `Choose ${count} ${levelText} ${spellWord}`
 
-  // Add school restriction
-  if (choice.allowed_schools && choice.allowed_schools.length > 0) {
-    const schoolNames = choice.allowed_schools.map(s => s.name)
-    if (schoolNames.length === 1) {
-      desc += ` from the ${schoolNames[0]} school`
-    } else if (schoolNames.length === 2) {
-      desc += ` from ${schoolNames[0]} or ${schoolNames[1]}`
-    } else {
-      desc += ` from ${schoolNames.slice(0, -1).join(', ')}, or ${schoolNames.slice(-1)}`
-    }
+  // Add school restriction if present
+  if (choice.spell_school_slug) {
+    desc += ` from the ${choice.spell_school_slug.replace('phb:', '')} school`
   }
 
-  // Add class restriction
-  if (choice.allowed_class) {
-    desc += ` (${choice.allowed_class.name} spell list)`
+  // Add spell list restriction if present
+  if (choice.spell_list_slug) {
+    const listName = choice.spell_list_slug.replace('phb:', '')
+    desc += ` (${listName} spell list)`
   }
 
   return desc
@@ -199,7 +195,7 @@ const shouldRender = computed(() =>
       <!-- Spell Choices (player picks from allowed options) -->
       <div
         v-for="choice in spellChoicesToDisplay"
-        :key="choice.choice_group"
+        :key="`choice-${choice.id}`"
         class="block"
       >
         <UCard
@@ -223,30 +219,25 @@ const shouldRender = computed(() =>
               {{ getChoiceDescription(choice) }}
             </p>
 
-            <!-- Allowed Schools (if any) -->
-            <div
-              v-if="choice.allowed_schools && choice.allowed_schools.length > 0"
-              class="flex flex-wrap gap-1"
-            >
+            <!-- School Restriction (if any) -->
+            <div v-if="choice.spell_school_slug">
               <UBadge
-                v-for="school in choice.allowed_schools"
-                :key="school.id"
                 color="spell"
                 variant="subtle"
                 size="md"
               >
-                {{ school.name }}
+                {{ choice.spell_school_slug.replace('phb:', '') }}
               </UBadge>
             </div>
 
-            <!-- Class Restriction (if any) -->
-            <div v-if="choice.allowed_class">
+            <!-- Spell List Restriction (if any) -->
+            <div v-if="choice.spell_list_slug">
               <UBadge
                 color="warning"
                 variant="subtle"
                 size="md"
               >
-                {{ choice.allowed_class.name }} Spell List
+                {{ choice.spell_list_slug.replace('phb:', '') }} Spell List
               </UBadge>
             </div>
           </div>

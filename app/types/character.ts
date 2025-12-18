@@ -55,17 +55,15 @@ export interface FeatureSelection {
   /** Feature slug for linking (e.g., "tce:armor-of-magical-strength") */
   feature_slug: string
   /** Feature type for grouping (e.g., "artificer_infusion", "eldritch_invocation") */
-  feature_type: string
+  feature_type: string | null
   /** Class name that grants this feature */
-  class: string
+  class: string | null
   /** Class slug (e.g., "erlw:artificer") */
-  class_slug: string
+  class_slug: string | null
   /** Subclass name if granted by subclass */
   subclass_name: string | null
   /** Level when this feature was acquired */
-  level_acquired: number
-  /** Whether this feature is orphaned (class no longer supports it) */
-  is_dangling: boolean
+  level_acquired: number | null
 }
 
 /**

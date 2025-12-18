@@ -127,7 +127,8 @@ function getProficiencyTypeIcon(type: string): string {
 function groupGrantedProficiencies(proficiencies: ProficiencyResource[] | undefined): GrantedProficiencyGroup[] {
   if (!proficiencies) return []
 
-  const granted = proficiencies.filter(p => !p.is_choice)
+  // All proficiencies in the array are now "granted" - choices are in choices array
+  const granted = proficiencies
 
   const grouped = new Map<string, ProficiencyResource[]>()
   for (const prof of granted) {

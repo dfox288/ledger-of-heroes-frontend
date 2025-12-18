@@ -165,25 +165,34 @@ export function useBackgroundDetail(slug: Ref<string>) {
   const languages = computed(() => entity.value?.languages ?? [])
 
   /**
+   * Language choices from background.choices array
+   */
+  const languageChoices = computed(() =>
+    (entity.value?.choices ?? []).filter(c => c.choice_type === 'language')
+  )
+
+  /**
    * Human-readable language display
-   * Handles choice languages like "2 of your choice"
+   * Handles both fixed languages and language choices
    */
   const languageDisplay = computed<string>(() => {
-    if (languages.value.length === 0) return ''
+    const parts: string[] = []
 
-    // Check for choice languages
-    const choiceLanguage = languages.value.find(l => l.is_choice)
-    if (choiceLanguage) {
-      const quantity = choiceLanguage.quantity || 1
-      return quantity === 1 ? '1 of your choice' : `${quantity} of your choice`
+    // Fixed languages (from languages array)
+    const fixedNames = languages.value
+      .filter(l => l.language)
+      .map(l => l.language!.name)
+    if (fixedNames.length > 0) {
+      parts.push(fixedNames.join(', '))
     }
 
-    // Fixed languages
-    const fixedNames = languages.value
-      .filter(l => !l.is_choice && l.language)
-      .map(l => l.language!.name)
+    // Language choices (from choices array)
+    for (const choice of languageChoices.value) {
+      const quantity = choice.quantity || 1
+      parts.push(quantity === 1 ? '1 of your choice' : `${quantity} of your choice`)
+    }
 
-    return fixedNames.join(', ')
+    return parts.join(', ')
   })
 
   // ─────────────────────────────────────────────────────────────────────────────

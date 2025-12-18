@@ -317,13 +317,14 @@ onMounted(async () => {
   }
 })
 
-// Separate equipment by source
+// Get fixed equipment by source
+// Note: All equipment items are now "fixed" - choices are in equipment_choices array
 const classFixedEquipment = computed(() =>
-  selections.value.class?.equipment?.filter(eq => !eq.is_choice) ?? []
+  selections.value.class?.equipment ?? []
 )
 
 const backgroundFixedEquipment = computed(() =>
-  selections.value.background?.equipment?.filter(eq => !eq.is_choice) ?? []
+  selections.value.background?.equipment ?? []
 )
 
 // Get equipment choices by source
@@ -587,34 +588,17 @@ async function handleContinue() {
 
 /**
  * Check if a fixed equipment item has pack contents
- * Checks both direct item contents and choice_items path (for single-item fixed equipment)
  */
 function hasPackContents(item: EntityItemResource): boolean {
-  // Check direct item contents first
-  if (item.item?.contents && item.item.contents.length > 0) {
-    return true
-  }
-  // Check choice_items - if there's exactly one fixed item, check its contents
-  const firstChoiceItem = item.choice_items?.[0]
-  if (item.choice_items?.length === 1 && firstChoiceItem?.item?.contents) {
-    return firstChoiceItem.item.contents.length > 0
-  }
-  return false
+  return (item.item?.contents && item.item.contents.length > 0) ?? false
 }
 
 /**
  * Get pack contents for an item
- * For choice_items structure, contents are in choice_items[0].item.contents
  */
 function getPackContents(item: EntityItemResource): PackContentResource[] {
-  // Check direct item contents first
   if (item.item?.contents && item.item.contents.length > 0) {
     return item.item.contents
-  }
-  // Check choice_items path
-  const firstChoiceItem = item.choice_items?.[0]
-  if (firstChoiceItem?.item?.contents) {
-    return firstChoiceItem.item.contents
   }
   return []
 }
@@ -639,11 +623,9 @@ function isFixedPackExpanded(itemId: number): boolean {
 
 /**
  * Format pack content item display with quantity
- * Handles string quantities from API, with NaN fallback to 1
  */
 function formatPackContentItem(content: PackContentResource): string {
-  const parsed = Number.parseInt(content.quantity, 10)
-  const quantity = Number.isNaN(parsed) ? 1 : parsed
+  const quantity = content.quantity ?? 1
   // item is typed as { [key: string]: unknown } from OpenAPI, cast to access name
   const name = (content.item as { name?: string } | null)?.name ?? 'Unknown'
   if (quantity > 1) {

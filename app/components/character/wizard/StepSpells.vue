@@ -179,8 +179,9 @@ const spellsLimit = computed(() => {
 })
 
 // Race spell data (fixed spells from race selection)
+// Note: All spells in the array are now "fixed" - choices are in choices array
 const fixedRaceSpells = computed(() =>
-  selections.value.race?.spells?.filter(s => !s.is_choice) ?? []
+  selections.value.race?.spells ?? []
 )
 
 // Spell-specific wrappers for composable functions (work with Spell objects)

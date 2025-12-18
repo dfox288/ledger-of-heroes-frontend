@@ -8,6 +8,7 @@ type EntityLanguageResource = components['schemas']['EntityLanguageResource']
 type EntitySenseResource = components['schemas']['EntitySenseResource']
 type EntitySpellResource = components['schemas']['EntitySpellResource']
 type EntityConditionResource = components['schemas']['EntityConditionResource']
+type EntityChoiceResource = components['schemas']['EntityChoiceResource']
 
 /**
  * Composable for race detail pages.
@@ -78,6 +79,18 @@ export function useRaceDetail(slug: Ref<string>) {
     const modifiers = entity.value?.modifiers ?? []
     return modifiers.filter(m => m.modifier_category === 'damage_resistance')
   })
+
+  // ─────────────────────────────────────────────────────────────────────────────
+  // Choices (EntityChoiceResource array)
+  // ─────────────────────────────────────────────────────────────────────────────
+
+  const choices = computed<EntityChoiceResource[]>(() =>
+    entity.value?.choices ?? []
+  )
+
+  const abilityScoreChoices = computed<EntityChoiceResource[]>(() =>
+    choices.value.filter(c => c.choice_type === 'ability_score')
+  )
 
   // ─────────────────────────────────────────────────────────────────────────────
   // Traits (filtered by category)
@@ -156,6 +169,10 @@ export function useRaceDetail(slug: Ref<string>) {
     // Modifiers
     abilityScoreIncreases,
     damageResistances,
+
+    // Choices
+    choices,
+    abilityScoreChoices,
 
     // Traits
     traits,

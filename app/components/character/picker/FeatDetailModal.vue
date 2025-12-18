@@ -52,15 +52,16 @@ const isHalfFeat = computed(() => {
 
 /**
  * Get ability score modifiers
+ * Note: All modifiers are now "fixed" - choices are in feat.choices array
  */
 const abilityModifiers = computed(() => {
   if (!props.feat?.modifiers) return []
   return props.feat.modifiers
     .filter(m => m.modifier_category === 'ability_score')
     .map(m => ({
-      code: m.ability_score?.code || 'Choice',
+      code: m.ability_score?.code || '',
       value: m.value,
-      isChoice: m.is_choice
+      isChoice: false
     }))
 })
 

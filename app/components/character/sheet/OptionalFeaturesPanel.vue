@@ -48,8 +48,8 @@ const filteredFeatures = computed(() => {
   const query = searchQuery.value.toLowerCase()
   return features.filter(f =>
     f.feature.toLowerCase().includes(query)
-    || f.class.toLowerCase().includes(query)
-    || f.feature_type.toLowerCase().includes(query)
+    || (f.class?.toLowerCase().includes(query) ?? false)
+    || (f.feature_type?.toLowerCase().includes(query) ?? false)
   )
 })
 
@@ -67,7 +67,7 @@ const featuresByType = computed(() => {
 
   // Sort each group by level_acquired
   for (const type of Object.keys(grouped)) {
-    grouped[type]?.sort((a, b) => a.level_acquired - b.level_acquired)
+    grouped[type]?.sort((a, b) => (a.level_acquired ?? 0) - (b.level_acquired ?? 0))
   }
 
   return grouped
@@ -217,21 +217,12 @@ watch(searchQuery, () => {
 
                 <!-- Level Badge -->
                 <UBadge
+                  v-if="feature.level_acquired"
                   color="neutral"
                   variant="subtle"
                   size="xs"
                 >
                   Lvl {{ feature.level_acquired }}
-                </UBadge>
-
-                <!-- Dangling Warning -->
-                <UBadge
-                  v-if="feature.is_dangling"
-                  color="warning"
-                  variant="subtle"
-                  size="xs"
-                >
-                  Orphaned
                 </UBadge>
               </div>
             </button>

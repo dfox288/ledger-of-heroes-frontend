@@ -18,6 +18,7 @@ const {
   parentRace,
   inheritedData,
   abilityScoreIncreases,
+  abilityScoreChoices,
   damageResistances,
   speciesTraits,
   descriptionTraits,
@@ -127,8 +128,9 @@ const accordionItems = computed(() => {
 
           <!-- Ability Score Increases Card -->
           <RaceOverviewAbilityScoresCard
-            v-if="abilityScoreIncreases.length > 0"
+            v-if="abilityScoreIncreases.length > 0 || abilityScoreChoices.length > 0"
             :modifiers="abilityScoreIncreases"
+            :choices="abilityScoreChoices"
           />
         </div>
 
