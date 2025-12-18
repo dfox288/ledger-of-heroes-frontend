@@ -3,7 +3,7 @@
  * Do not make direct changes to the file.
  *
  * Generated from: http://localhost:8080/docs/api.json
- * Generated at: 2025-12-17T23:44:12.455Z
+ * Generated at: 2025-12-17T23:56:59.323Z
  *
  * To regenerate: npm run types:sync
  */

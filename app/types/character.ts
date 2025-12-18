@@ -129,60 +129,27 @@ export type CharacterSpell = CharacterSpellFromAPI & {
 }
 
 /**
- * Full character data from API with public_id
+ * Full character data from API
  *
- * The base CharacterResource is extended with public_id which is used
- * for URL-safe, human-readable character identifiers.
+ * Extends CharacterResource with corrected types for fields where
+ * the OpenAPI spec differs from actual API responses.
  *
  * @see CharacterResource in OpenAPI spec
  */
-export type Character = components['schemas']['CharacterResource'] & {
-  /**
-   * URL-safe, human-readable character identifier
-   * Format: {adjective}-{noun}-{suffix} (e.g., "shadow-warden-q3x9")
-   * Used in URLs instead of numeric ID for better UX
-   */
-  public_id: string
-
-  /**
-   * Whether the character is dead
-   *
-   * Set by backend when:
-   * - 3 death save failures
-   * - Massive damage (damage >= max HP while at 0)
-   * - Exhaustion level 6
-   * - Instant death effects
-   *
-   * When true, all play mode controls should be disabled.
-   * Optional for backwards compatibility with older backend versions.
-   * @see Issue #544
-   */
-  is_dead?: boolean
-
+export type Character = Omit<components['schemas']['CharacterResource'], 'counters' | 'senses'> & {
   /**
    * Character senses from race (Darkvision, Blindsight, etc.)
+   * Override: Generated type has slug/range_feet, API returns type/range
    * @see Issue #648
    */
   senses?: CharacterSense[]
 
   /**
-   * Attunement slot usage for magic items
-   * @see Issue #649
-   */
-  attunement_slots?: AttunementSlots
-
-  /**
    * Class resource counters (Rage, Ki Points, Bardic Inspiration, etc.)
+   * Override: Generated type has string, API returns Counter[]
    * @see Issue #632
    */
   counters?: Counter[]
-
-  /**
-   * Selected optional features (infusions, invocations, metamagic, etc.)
-   * @see Issue #710 - Backend implementation
-   * @see Issue #712 - Frontend display
-   */
-  feature_selections?: FeatureSelection[]
 }
 
 /**
