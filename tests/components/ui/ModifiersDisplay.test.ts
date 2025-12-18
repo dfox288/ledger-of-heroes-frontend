@@ -47,18 +47,15 @@ describe('ModifiersDisplay', () => {
     }
   ]
 
-  const choiceModifiers = [
-    {
-      id: 4,
-      modifier_category: 'ability_score',
-      ability_score: null,
-      value: '+1',
-      condition: null,
-      is_choice: true,
-      choice_count: 2,
-      choice_constraint: 'different'
-    }
-  ]
+  // Choice data now passed via separate 'choices' prop using EntityChoice structure
+  const abilityScoreChoice = {
+    id: 4,
+    choice_type: 'ability_score',
+    quantity: 2,
+    constraint: 'different',
+    description: null,
+    options: []
+  }
 
   it('renders nothing when modifiers is empty array', () => {
     const wrapper = mount(ModifiersDisplay, {
@@ -191,10 +188,10 @@ describe('ModifiersDisplay', () => {
     expect(wrapper.text()).toContain('in difficult terrain')
   })
 
-  // NEW TESTS FOR CHOICE MODIFIERS
-  it('displays CHOICE badge for choice modifiers', () => {
+  // TESTS FOR CHOICE MODIFIERS (using new 'choices' prop)
+  it('displays CHOICE badge when choices are provided', () => {
     const wrapper = mount(ModifiersDisplay, {
-      props: { modifiers: choiceModifiers }
+      props: { modifiers: [], choices: [abilityScoreChoice] }
     })
 
     expect(wrapper.text()).toContain('CHOICE')
@@ -202,40 +199,30 @@ describe('ModifiersDisplay', () => {
 
   it('displays choice description with count and constraint', () => {
     const wrapper = mount(ModifiersDisplay, {
-      props: { modifiers: choiceModifiers }
+      props: { modifiers: [], choices: [abilityScoreChoice] }
     })
 
     expect(wrapper.text()).toContain('Choose 2 different ability scores')
   })
 
-  it('displays choice value after description', () => {
-    const wrapper = mount(ModifiersDisplay, {
-      props: { modifiers: choiceModifiers }
-    })
-
-    expect(wrapper.text()).toContain('+1')
-  })
-
   it('handles choice with singular count', () => {
-    const singleChoice = [{
+    const singleChoice = {
       id: 5,
-      modifier_category: 'ability_score',
-      ability_score: null,
-      value: '+2',
-      condition: null,
-      is_choice: true,
-      choice_count: 1,
-      choice_constraint: null
-    }]
+      choice_type: 'ability_score',
+      quantity: 1,
+      constraint: null,
+      description: null,
+      options: []
+    }
 
     const wrapper = mount(ModifiersDisplay, {
-      props: { modifiers: singleChoice }
+      props: { modifiers: [], choices: [singleChoice] }
     })
 
     expect(wrapper.text()).toContain('Choose 1 ability score')
   })
 
-  it('does not show CHOICE badge for fixed modifiers', () => {
+  it('does not show CHOICE badge when only fixed modifiers provided', () => {
     const wrapper = mount(ModifiersDisplay, {
       props: { modifiers: abilityScoreModifiers }
     })
@@ -243,15 +230,14 @@ describe('ModifiersDisplay', () => {
     expect(wrapper.text()).not.toContain('CHOICE')
   })
 
-  it('handles mixed fixed and choice modifiers', () => {
-    const mixed = [...abilityScoreModifiers, ...choiceModifiers]
+  it('handles mixed fixed modifiers and choices', () => {
     const wrapper = mount(ModifiersDisplay, {
-      props: { modifiers: mixed }
+      props: { modifiers: abilityScoreModifiers, choices: [abilityScoreChoice] }
     })
 
     // Fixed modifiers display normally
     expect(wrapper.text()).toContain('Strength (STR): +2')
-    // Choice modifiers show badge and description
+    // Choices show badge and description
     expect(wrapper.text()).toContain('CHOICE')
     expect(wrapper.text()).toContain('Choose 2 different ability scores')
   })

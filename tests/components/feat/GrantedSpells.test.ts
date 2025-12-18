@@ -4,7 +4,7 @@ import FeatGrantedSpells from '~/components/feat/GrantedSpells.vue'
 import type { components } from '~/types/api/generated'
 
 type EntitySpellResource = components['schemas']['EntitySpellResource']
-type SpellChoiceResource = components['schemas']['SpellChoiceResource']
+import type { EntityChoice } from '~/types'
 
 const mockSpells: EntitySpellResource[] = [
   {
@@ -369,19 +369,18 @@ const mockChoiceSpells: EntitySpellResource[] = [
   }
 ]
 
-// Aggregated spell choices (spell_choices array)
-const mockSpellChoices: SpellChoiceResource[] = [
+// Aggregated spell choices (using EntityChoice structure)
+const mockSpellChoices: EntityChoice[] = [
   {
-    choice_group: 'spell_choice_1',
-    choice_count: 1,
-    max_level: 1,
-    is_ritual_only: false,
-    allowed_schools: [
-      { id: 3, code: 'D', name: 'Divination', slug: 'divination', description: null },
-      { id: 4, code: 'EN', name: 'Enchantment', slug: 'enchantment', description: null }
-    ],
-    allowed_class: null
-  }
+    id: 1,
+    choice_type: 'spell',
+    quantity: 1,
+    constraint: null,
+    description: null,
+    options: [],
+    spell_max_level: 1,
+    spell_school_slug: 'phb:divination'
+  } as EntityChoice
 ]
 
 describe('FeatGrantedSpells - Spell Choices', () => {
@@ -419,7 +418,7 @@ describe('FeatGrantedSpells - Spell Choices', () => {
     expect(wrapper.text()).toContain('1st-level')
   })
 
-  it('displays allowed schools in spell choice card', async () => {
+  it('displays school restriction in spell choice card', async () => {
     const wrapper = await mountSuspended(FeatGrantedSpells, {
       props: {
         spells: [mockMistyStepSpell, ...mockChoiceSpells],
@@ -427,9 +426,8 @@ describe('FeatGrantedSpells - Spell Choices', () => {
       }
     })
 
-    // Should show the allowed schools
-    expect(wrapper.text()).toContain('Divination')
-    expect(wrapper.text()).toContain('Enchantment')
+    // Should show the school restriction (from spell_school_slug)
+    expect(wrapper.text()).toContain('divination')
   })
 
   it('does not render spell choice section when spellChoices is empty', async () => {
@@ -446,23 +444,27 @@ describe('FeatGrantedSpells - Spell Choices', () => {
   })
 
   it('handles multiple spell choices (Magic Initiate pattern)', async () => {
-    const multipleChoices: SpellChoiceResource[] = [
+    const multipleChoices: EntityChoice[] = [
       {
-        choice_group: 'cantrip_choice',
-        choice_count: 2,
-        max_level: 0,
-        is_ritual_only: false,
-        allowed_schools: [],
-        allowed_class: { id: 1, slug: 'wizard', name: 'Wizard' }
-      },
+        id: 10,
+        choice_type: 'spell',
+        quantity: 2,
+        constraint: null,
+        description: null,
+        options: [],
+        spell_max_level: 0, // cantrip
+        spell_list_slug: 'phb:wizard'
+      } as EntityChoice,
       {
-        choice_group: 'spell_choice',
-        choice_count: 1,
-        max_level: 1,
-        is_ritual_only: false,
-        allowed_schools: [],
-        allowed_class: { id: 1, slug: 'wizard', name: 'Wizard' }
-      }
+        id: 11,
+        choice_type: 'spell',
+        quantity: 1,
+        constraint: null,
+        description: null,
+        options: [],
+        spell_max_level: 1,
+        spell_list_slug: 'phb:wizard'
+      } as EntityChoice
     ]
 
     const wrapper = await mountSuspended(FeatGrantedSpells, {
@@ -477,16 +479,18 @@ describe('FeatGrantedSpells - Spell Choices', () => {
     expect(wrapper.text()).toContain('1st-level')
   })
 
-  it('displays class restriction when allowed_class is set', async () => {
-    const classRestrictedChoice: SpellChoiceResource[] = [
+  it('displays spell list restriction when spell_list_slug is set', async () => {
+    const classRestrictedChoice: EntityChoice[] = [
       {
-        choice_group: 'spell_choice_1',
-        choice_count: 1,
-        max_level: 1,
-        is_ritual_only: false,
-        allowed_schools: [],
-        allowed_class: { id: 1, slug: 'wizard', name: 'Wizard' }
-      }
+        id: 20,
+        choice_type: 'spell',
+        quantity: 1,
+        constraint: null,
+        description: null,
+        options: [],
+        spell_max_level: 1,
+        spell_list_slug: 'phb:wizard'
+      } as EntityChoice
     ]
 
     const wrapper = await mountSuspended(FeatGrantedSpells, {
@@ -496,7 +500,7 @@ describe('FeatGrantedSpells - Spell Choices', () => {
       }
     })
 
-    expect(wrapper.text()).toContain('Wizard')
+    expect(wrapper.text()).toContain('wizard')
   })
 
   it('renders component when only spellChoices provided (no fixed spells)', async () => {

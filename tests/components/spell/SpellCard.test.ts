@@ -239,7 +239,7 @@ describe('SpellCard', () => {
   })
 
   it('shows consumed badge when material_consumed is true', async () => {
-    const consumedSpell = createMockSpell({ material_consumed: 'true', material_cost_gp: '300' })
+    const consumedSpell = createMockSpell({ material_consumed: true, material_cost_gp: '300' })
     const wrapper = await mountSuspended(SpellCard, {
       props: { spell: consumedSpell }
     })
@@ -256,7 +256,7 @@ describe('SpellCard', () => {
   })
 
   it('shows both cost and consumed together', async () => {
-    const revivifySpell = createMockSpell({ material_cost_gp: '300', material_consumed: 'true' })
+    const revivifySpell = createMockSpell({ material_cost_gp: '300', material_consumed: true })
     const wrapper = await mountSuspended(SpellCard, {
       props: { spell: revivifySpell }
     })
@@ -267,7 +267,7 @@ describe('SpellCard', () => {
   })
 
   it('shows cost badge but not consumed badge when material is not consumed', async () => {
-    const chromaticOrbSpell = createMockSpell({ material_cost_gp: '50', material_consumed: 'false' })
+    const chromaticOrbSpell = createMockSpell({ material_cost_gp: '50', material_consumed: false })
     const wrapper = await mountSuspended(SpellCard, {
       props: { spell: chromaticOrbSpell }
     })
