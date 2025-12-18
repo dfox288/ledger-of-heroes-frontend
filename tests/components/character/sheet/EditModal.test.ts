@@ -13,11 +13,25 @@ import {
 } from '../../../helpers/modalBehavior'
 
 /**
+ * Type for physical description fields
+ */
+interface PhysicalDescription {
+  age: string | null
+  height: string | null
+  weight: string | null
+  eye_color: string | null
+  hair_color: string | null
+  skin_color: string | null
+  deity: string | null
+}
+
+/**
  * Type for accessing EditModal internal state in tests
  */
 interface EditModalVM {
   localName: string
   localAlignment: string | null
+  localPhysicalDescription: PhysicalDescription
   selectedFile: File | null
   isDragging: boolean
   canSave: boolean
@@ -50,7 +64,14 @@ describe('EditModal', () => {
       thumb: 'https://example.com/portrait-thumb.jpg',
       medium: 'https://example.com/portrait-medium.jpg',
       is_uploaded: true
-    }
+    },
+    age: '150',
+    height: '4\'6"',
+    weight: '175 lbs',
+    eye_color: 'Brown',
+    hair_color: 'Black',
+    skin_color: 'Tan',
+    deity: 'Moradin'
   }
 
   const defaultProps = {
@@ -394,7 +415,14 @@ describe('EditModal', () => {
       expect(wrapper.emitted('save')![0]).toEqual([{
         name: 'New Name',
         alignment: 'Chaotic Good',
-        portraitFile: null
+        portraitFile: null,
+        age: '150',
+        height: '4\'6"',
+        weight: '175 lbs',
+        eye_color: 'Brown',
+        hair_color: 'Black',
+        skin_color: 'Tan',
+        deity: 'Moradin'
       }])
     })
 
@@ -521,6 +549,107 @@ describe('EditModal', () => {
 
       const vm = wrapper.vm as unknown as EditModalVM
       vm.localAlignment = 'Neutral Good'
+
+      expect(vm.hasChanges).toBe(true)
+      expect(vm.canSave).toBe(true)
+    })
+  })
+
+  // =========================================================================
+  // Physical Description Tests
+  // =========================================================================
+
+  describe('physical description editing', () => {
+    it('initializes physical description from character prop', async () => {
+      const wrapper = mount(EditModal, {
+        props: defaultProps
+      })
+      await wrapper.setProps({ open: false })
+      await wrapper.setProps({ open: true })
+
+      const vm = wrapper.vm as unknown as EditModalVM
+      expect(vm.localPhysicalDescription.age).toBe('150')
+      expect(vm.localPhysicalDescription.height).toBe('4\'6"')
+      expect(vm.localPhysicalDescription.weight).toBe('175 lbs')
+      expect(vm.localPhysicalDescription.eye_color).toBe('Brown')
+      expect(vm.localPhysicalDescription.hair_color).toBe('Black')
+      expect(vm.localPhysicalDescription.skin_color).toBe('Tan')
+      expect(vm.localPhysicalDescription.deity).toBe('Moradin')
+    })
+
+    it('handles character with null physical description fields', async () => {
+      const charNoPhysical = {
+        ...defaultCharacter,
+        age: null,
+        height: null,
+        weight: null,
+        eye_color: null,
+        hair_color: null,
+        skin_color: null,
+        deity: null
+      }
+      const wrapper = mount(EditModal, {
+        props: { ...defaultProps, character: charNoPhysical }
+      })
+      await wrapper.setProps({ open: false })
+      await wrapper.setProps({ open: true })
+
+      const vm = wrapper.vm as unknown as EditModalVM
+      expect(vm.localPhysicalDescription.age).toBeNull()
+      expect(vm.localPhysicalDescription.deity).toBeNull()
+    })
+
+    it('tracks physical description changes', async () => {
+      const wrapper = mount(EditModal, {
+        props: defaultProps
+      })
+      await wrapper.setProps({ open: false })
+      await wrapper.setProps({ open: true })
+
+      const vm = wrapper.vm as unknown as EditModalVM
+      vm.localPhysicalDescription.age = '200'
+
+      expect(vm.hasChanges).toBe(true)
+    })
+
+    it('includes physical description in save payload', async () => {
+      const wrapper = mount(EditModal, {
+        props: defaultProps
+      })
+      await wrapper.setProps({ open: false })
+      await wrapper.setProps({ open: true })
+
+      const vm = wrapper.vm as unknown as EditModalVM
+      vm.localPhysicalDescription.deity = 'Pelor'
+      vm.handleSave()
+
+      expect(wrapper.emitted('save')).toBeTruthy()
+      const emittedPayload = (wrapper.emitted('save')![0] as [{ age?: string | null, deity?: string | null }])[0]
+      expect(emittedPayload.deity).toBe('Pelor')
+    })
+
+    it('resets physical description when modal opens', async () => {
+      const wrapper = mount(EditModal, {
+        props: { ...defaultProps, open: false }
+      })
+      const vm = wrapper.vm as unknown as EditModalVM
+
+      vm.localPhysicalDescription.deity = 'Changed Deity'
+
+      await wrapper.setProps({ open: true })
+
+      expect(vm.localPhysicalDescription.deity).toBe('Moradin')
+    })
+
+    it('allows clearing physical description fields', async () => {
+      const wrapper = mount(EditModal, {
+        props: defaultProps
+      })
+      await wrapper.setProps({ open: false })
+      await wrapper.setProps({ open: true })
+
+      const vm = wrapper.vm as unknown as EditModalVM
+      vm.localPhysicalDescription.deity = null
 
       expect(vm.hasChanges).toBe(true)
       expect(vm.canSave).toBe(true)

@@ -296,11 +296,29 @@ async function handleEditSave(payload: EditPayload) {
   try {
     const hasNameChange = payload.name !== props.character.name
     const hasAlignmentChange = payload.alignment !== props.character.alignment
+    const hasPhysicalChange =
+      payload.age !== (props.character.age ?? null) ||
+      payload.height !== (props.character.height ?? null) ||
+      payload.weight !== (props.character.weight ?? null) ||
+      payload.eye_color !== (props.character.eye_color ?? null) ||
+      payload.hair_color !== (props.character.hair_color ?? null) ||
+      payload.skin_color !== (props.character.skin_color ?? null) ||
+      payload.deity !== (props.character.deity ?? null)
 
-    if (hasNameChange || hasAlignmentChange) {
+    if (hasNameChange || hasAlignmentChange || hasPhysicalChange) {
       await apiFetch(`/characters/${props.character.id}`, {
         method: 'PATCH',
-        body: { name: payload.name, alignment: payload.alignment }
+        body: {
+          name: payload.name,
+          alignment: payload.alignment,
+          age: payload.age,
+          height: payload.height,
+          weight: payload.weight,
+          eye_color: payload.eye_color,
+          hair_color: payload.hair_color,
+          skin_color: payload.skin_color,
+          deity: payload.deity
+        }
       })
     }
 
@@ -321,7 +339,7 @@ async function handleEditSave(payload: EditPayload) {
     }
 
     const changes: string[] = []
-    if (hasNameChange || hasAlignmentChange) changes.push('details')
+    if (hasNameChange || hasAlignmentChange || hasPhysicalChange) changes.push('details')
     if (payload.portraitFile) changes.push('portrait')
     const toastTitle = changes.length > 1
       ? 'Character details and portrait updated'

@@ -33,6 +33,7 @@ const stepComponents: Record<string, Component> = {
   'equipment': defineAsyncComponent(() => import('~/components/character/wizard/StepEquipment.vue')),
   'spells': defineAsyncComponent(() => import('~/components/character/wizard/StepSpells.vue')),
   'details': defineAsyncComponent(() => import('~/components/character/wizard/StepDetails.vue')),
+  'physical-description': defineAsyncComponent(() => import('~/components/character/wizard/StepPhysicalDescription.vue')),
   'review': defineAsyncComponent(() => import('~/components/character/wizard/StepReview.vue'))
 }
 
