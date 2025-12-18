@@ -25,6 +25,34 @@ const statusText = computed(() =>
 const backgroundImage = computed(() => {
   return props.character.portrait?.medium ?? null
 })
+
+/**
+ * Format class display with levels
+ * Single class: "Level 5 Fighter"
+ * Multiclass: "Level 8: Fighter 5 / Wizard 3" (total level + breakdown)
+ */
+const classDisplay = computed(() => {
+  const classes = props.character.classes
+  if (!classes || classes.length === 0) {
+    return 'No class selected'
+  }
+
+  // Sort: primary first, then by level descending
+  const sorted = [...classes].sort((a, b) => {
+    if (a.is_primary !== b.is_primary) return a.is_primary ? -1 : 1
+    return b.level - a.level
+  })
+
+  const classBreakdown = sorted.map(c => `${c.name} ${c.level}`).join(' / ')
+
+  if (classes.length === 1 && sorted[0]) {
+    // Single class: "Level 5 Fighter"
+    return `Level ${props.character.level} ${sorted[0].name}`
+  }
+
+  // Multiclass: "Level 8: Fighter 5 / Wizard 3"
+  return `Level ${props.character.level}: ${classBreakdown}`
+})
 </script>
 
 <template>
@@ -65,14 +93,7 @@ const backgroundImage = computed(() => {
             name="i-heroicons-shield-check"
             class="w-4 h-4"
           />
-          <span>{{ character.class?.name ?? 'No class selected' }}</span>
-        </div>
-        <div class="flex items-center gap-2">
-          <UIcon
-            name="i-heroicons-arrow-trending-up"
-            class="w-4 h-4"
-          />
-          <span>Level {{ character.level }}</span>
+          <span>{{ classDisplay }}</span>
         </div>
       </div>
 
@@ -87,13 +108,13 @@ const backgroundImage = computed(() => {
               View
             </UButton>
             <UButton
-              v-if="character.level === 1"
+              v-if="character.level === 1 && !character.is_complete"
               :to="`/characters/${character.public_id}/edit`"
               variant="soft"
               color="primary"
               size="sm"
             >
-              {{ character.is_complete ? 'Edit' : 'Continue' }}
+              Continue
             </UButton>
           </div>
           <UButton
