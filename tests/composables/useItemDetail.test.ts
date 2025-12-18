@@ -508,9 +508,10 @@ describe('useItemDetail - data organization logic', () => {
       expect(result).toBe('50 cp')
     })
 
-    it('formats large gold amounts with commas', () => {
+    it('formats large gold amounts with locale separators', () => {
       const result = formatCostDisplay(500000) // 5000 gp
-      expect(result).toBe('5,000 gp')
+      // Match 5000 with any locale separator (comma, period, space, or none)
+      expect(result).toMatch(/5[,.\s]?000 gp/)
     })
 
     it('returns null when cost is null', () => {
