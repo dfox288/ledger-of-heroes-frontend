@@ -96,15 +96,17 @@ watch(character, (char) => {
 }, { immediate: true })
 
 // Initialize spell slots from fetched data (#765)
-watch(slotsData, (data) => {
-  if (data?.data?.slots) {
-    const slotData = Object.entries(data.data.slots).map(([level, slot]) => ({
+// Watch the nested slots property directly to ensure re-initialization on updates
+watch(() => slotsData.value?.data?.slots, (slots) => {
+  if (slots) {
+    const slotData = Object.entries(slots).map(([level, slot]) => ({
       level: parseInt(level),
       total: slot.total,
       spent: slot.spent
     }))
-    const pactMagicData = data.data.pact_magic
-      ? { level: data.data.pact_magic.level, total: data.data.pact_magic.total, spent: data.data.pact_magic.spent }
+    const pactMagic = slotsData.value?.data?.pact_magic
+    const pactMagicData = pactMagic
+      ? { level: pactMagic.level, total: pactMagic.total, spent: pactMagic.spent }
       : null
     playStateStore.initializeSpellSlots(slotData, pactMagicData)
   }

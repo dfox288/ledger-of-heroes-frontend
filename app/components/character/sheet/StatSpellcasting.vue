@@ -29,6 +29,7 @@ function formatModifier(value: number): string {
  */
 function getClassName(slug: string): string {
   const name = slug.split(':')[1] ?? slug
+  if (!name) return 'Unknown'
   return name.charAt(0).toUpperCase() + name.slice(1)
 }
 

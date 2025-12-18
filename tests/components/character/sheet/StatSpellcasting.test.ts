@@ -120,6 +120,50 @@ describe('StatSpellcasting', () => {
     })
   })
 
+  describe('edge cases', () => {
+    it('handles malformed class slug gracefully in multiclass', async () => {
+      // Multiclass with one malformed slug - should display "Unknown" for class name
+      const malformedSlug: Record<string, ClassSpellcastingInfo> = {
+        '': {
+          ability: 'INT',
+          spell_save_dc: 10,
+          spell_attack_bonus: 2
+        },
+        'phb:wizard': {
+          ability: 'INT',
+          spell_save_dc: 14,
+          spell_attack_bonus: 6
+        }
+      }
+
+      const wrapper = await mountSuspended(StatSpellcasting, {
+        props: { spellcasting: malformedSlug }
+      })
+
+      // Should show "Unknown" for empty slug and "Wizard" for valid slug
+      expect(wrapper.text()).toContain('Unknown')
+      expect(wrapper.text()).toContain('Wizard')
+    })
+
+    it('renders single-class with malformed slug without crashing', async () => {
+      const malformedSlug: Record<string, ClassSpellcastingInfo> = {
+        '': {
+          ability: 'INT',
+          spell_save_dc: 10,
+          spell_attack_bonus: 2
+        }
+      }
+
+      const wrapper = await mountSuspended(StatSpellcasting, {
+        props: { spellcasting: malformedSlug }
+      })
+
+      // Should still render the DC and attack bonus
+      expect(wrapper.text()).toContain('10')
+      expect(wrapper.text()).toContain('+2')
+    })
+  })
+
   describe('data-testid', () => {
     it('has correct data-testid attribute', async () => {
       const singleClassSpellcasting: Record<string, ClassSpellcastingInfo> = {
