@@ -388,6 +388,48 @@ describe('characterLevelUp store', () => {
 
       expect(store.hasProficiencyChoices).toBe(true)
     })
+
+    it('computes hasSubclassVariantChoices for multi-level subclass features (#763)', () => {
+      const store = useCharacterLevelUpStore()
+      expect(store.hasSubclassVariantChoices).toBe(false)
+
+      // Totem Warrior L6 choice (Aspect of the Totem)
+      store.pendingChoices = [
+        {
+          id: 'subclass_variant|subclass|phb:barbarian-path-of-the-totem-warrior|6|totem_aspect',
+          type: 'subclass_variant',
+          quantity: 1,
+          source: 'subclass',
+          source_name: 'Path of the Totem Warrior'
+        }
+      ]
+
+      expect(store.hasSubclassVariantChoices).toBe(true)
+    })
+
+    it('distinguishes subclass_variant from subclass choices (#763)', () => {
+      const store = useCharacterLevelUpStore()
+
+      // Regular subclass choice (initial subclass selection)
+      store.pendingChoices = [
+        { id: 'subclass-1', type: 'subclass', quantity: 1, source: 'class', source_name: 'Barbarian' }
+      ]
+      expect(store.hasSubclassChoice).toBe(true)
+      expect(store.hasSubclassVariantChoices).toBe(false)
+
+      // Switch to subclass_variant choice (L6/L14 totem choices)
+      store.pendingChoices = [
+        {
+          id: 'subclass_variant|subclass|phb:barbarian-path-of-the-totem-warrior|6|totem_aspect',
+          type: 'subclass_variant',
+          quantity: 1,
+          source: 'subclass',
+          source_name: 'Path of the Totem Warrior'
+        }
+      ]
+      expect(store.hasSubclassChoice).toBe(false)
+      expect(store.hasSubclassVariantChoices).toBe(true)
+    })
   })
 
   describe('fetchPendingChoices', () => {

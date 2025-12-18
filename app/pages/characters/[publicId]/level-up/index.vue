@@ -136,6 +136,7 @@ async function resumeLevelUp() {
     // Determine first step based on pending choices
     // Note: ASI uses type='ability_score' with subtype='asi_or_feat' per API contract
     const hasSubclass = store.pendingChoices.some(c => c.type === 'subclass')
+    const hasSubclassVariant = store.pendingChoices.some(c => c.type === 'subclass_variant')
     const hasHp = store.pendingChoices.some(c => c.type === 'hit_points')
     const hasAsi = store.pendingChoices.some(
       c => c.type === 'ability_score' && c.subtype === 'asi_or_feat'
@@ -149,6 +150,7 @@ async function resumeLevelUp() {
 
     let firstStep = 'summary'
     if (hasSubclass) firstStep = 'subclass'
+    else if (hasSubclassVariant) firstStep = 'subclass-variant'
     else if (hasHp) firstStep = 'hit-points'
     else if (hasAsi) firstStep = 'asi-feat'
     else if (hasFeature) firstStep = 'feature-choices'

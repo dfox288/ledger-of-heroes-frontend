@@ -39,6 +39,14 @@ function createStepRegistry(store: ReturnType<typeof useCharacterLevelUpStore>):
       shouldSkip: () => !store.hasSubclassChoice
     },
     {
+      // Multi-level subclass variant choices (e.g., Totem Warrior L6/L14) - #763
+      name: 'subclass-variant',
+      label: 'Subclass Feature',
+      icon: 'i-heroicons-sparkles',
+      visible: () => store.hasSubclassVariantChoices,
+      shouldSkip: () => !store.hasSubclassVariantChoices
+    },
+    {
       name: 'hit-points',
       label: 'Hit Points',
       icon: 'i-heroicons-heart',
