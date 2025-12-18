@@ -19,6 +19,7 @@ interface VariantOption {
   name: string
   description?: string
   spells?: string[]
+  spells_label?: string
 }
 
 interface VariantChoice {
@@ -124,18 +125,18 @@ const allVariantsSelected = computed(() => {
   return true
 })
 
-// Get the selected variant option details (for showing spells, etc.)
-const selectedVariantOption = computed<VariantOption | undefined>(() => {
-  if (!variantChoices.value) return undefined
+// Get selected variant option details for each variant (supports multiple variants)
+const selectedVariantDetails = computed<Record<string, VariantOption | undefined>>(() => {
+  if (!variantChoices.value) return {}
 
-  // Get the first variant key (e.g., 'terrain')
-  const variantKey = Object.keys(variantChoices.value)[0]
-  if (!variantKey) return undefined
-
-  const selectedValue = selectedVariants.value[variantKey]
-  if (!selectedValue) return undefined
-
-  return variantChoices.value[variantKey]?.options.find(o => o.value === selectedValue)
+  const details: Record<string, VariantOption | undefined> = {}
+  for (const [key, choice] of Object.entries(variantChoices.value)) {
+    const selectedValue = selectedVariants.value[key]
+    if (selectedValue) {
+      details[key] = choice.options.find(o => o.value === selectedValue)
+    }
+  }
+  return details
 })
 
 // Can proceed?
@@ -347,17 +348,17 @@ onMounted(() => {
           </button>
         </div>
 
-        <!-- Show spells for selected terrain -->
+        <!-- Show spells for selected variant option -->
         <div
-          v-if="selectedVariantOption?.spells && selectedVariantOption.spells.length > 0"
+          v-if="selectedVariantDetails[variantKey]?.spells?.length"
           class="bg-gray-50 dark:bg-gray-800/50 rounded-lg p-4"
         >
           <p class="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-            Circle Spells:
+            {{ selectedVariantDetails[variantKey]?.spells_label || 'Bonus Spells:' }}
           </p>
           <div class="flex flex-wrap gap-2">
             <span
-              v-for="spell in selectedVariantOption.spells"
+              v-for="spell in selectedVariantDetails[variantKey]?.spells"
               :key="spell"
               class="px-2 py-1 bg-white dark:bg-gray-700 rounded text-sm text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-600"
             >

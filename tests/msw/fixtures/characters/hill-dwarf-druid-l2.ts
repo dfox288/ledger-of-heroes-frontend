@@ -154,49 +154,57 @@ const terrainOptions = [
     value: 'arctic',
     name: 'Arctic',
     description: 'You have adapted to the frozen reaches of the world.',
-    spells: ['Hold Person', 'Spike Growth', 'Sleet Storm', 'Slow', 'Freedom of Movement', 'Ice Storm', 'Commune with Nature', 'Cone of Cold']
+    spells: ['Hold Person', 'Spike Growth', 'Sleet Storm', 'Slow', 'Freedom of Movement', 'Ice Storm', 'Commune with Nature', 'Cone of Cold'],
+    spells_label: 'Circle Spells:'
   },
   {
     value: 'coast',
     name: 'Coast',
     description: 'Your magic draws from the power of the sea.',
-    spells: ['Mirror Image', 'Misty Step', 'Water Breathing', 'Water Walk', 'Control Water', 'Freedom of Movement', 'Conjure Elemental', 'Scrying']
+    spells: ['Mirror Image', 'Misty Step', 'Water Breathing', 'Water Walk', 'Control Water', 'Freedom of Movement', 'Conjure Elemental', 'Scrying'],
+    spells_label: 'Circle Spells:'
   },
   {
     value: 'desert',
     name: 'Desert',
     description: 'You are attuned to the harsh beauty of sand and sun.',
-    spells: ['Blur', 'Silence', 'Create Food and Water', 'Protection from Energy', 'Blight', 'Hallucinatory Terrain', 'Insect Plague', 'Wall of Stone']
+    spells: ['Blur', 'Silence', 'Create Food and Water', 'Protection from Energy', 'Blight', 'Hallucinatory Terrain', 'Insect Plague', 'Wall of Stone'],
+    spells_label: 'Circle Spells:'
   },
   {
     value: 'forest',
     name: 'Forest',
     description: 'Your magic is infused with the ancient power of woodlands.',
-    spells: ['Barkskin', 'Spider Climb', 'Call Lightning', 'Plant Growth', 'Divination', 'Freedom of Movement', 'Commune with Nature', 'Tree Stride']
+    spells: ['Barkskin', 'Spider Climb', 'Call Lightning', 'Plant Growth', 'Divination', 'Freedom of Movement', 'Commune with Nature', 'Tree Stride'],
+    spells_label: 'Circle Spells:'
   },
   {
     value: 'grassland',
     name: 'Grassland',
     description: 'You draw power from the open plains and prairies.',
-    spells: ['Invisibility', 'Pass without Trace', 'Daylight', 'Haste', 'Divination', 'Freedom of Movement', 'Dream', 'Insect Plague']
+    spells: ['Invisibility', 'Pass without Trace', 'Daylight', 'Haste', 'Divination', 'Freedom of Movement', 'Dream', 'Insect Plague'],
+    spells_label: 'Circle Spells:'
   },
   {
     value: 'mountain',
     name: 'Mountain',
     description: 'Your connection to stone and sky empowers your magic.',
-    spells: ['Spider Climb', 'Spike Growth', 'Lightning Bolt', 'Meld into Stone', 'Stone Shape', 'Stoneskin', 'Passwall', 'Wall of Stone']
+    spells: ['Spider Climb', 'Spike Growth', 'Lightning Bolt', 'Meld into Stone', 'Stone Shape', 'Stoneskin', 'Passwall', 'Wall of Stone'],
+    spells_label: 'Circle Spells:'
   },
   {
     value: 'swamp',
     name: 'Swamp',
     description: 'You have learned the dark secrets of marshes and bogs.',
-    spells: ['Darkness', 'Melf\'s Acid Arrow', 'Water Walk', 'Stinking Cloud', 'Freedom of Movement', 'Locate Creature', 'Insect Plague', 'Scrying']
+    spells: ['Darkness', 'Melf\'s Acid Arrow', 'Water Walk', 'Stinking Cloud', 'Freedom of Movement', 'Locate Creature', 'Insect Plague', 'Scrying'],
+    spells_label: 'Circle Spells:'
   },
   {
     value: 'underdark',
     name: 'Underdark',
     description: 'Your magic is shaped by the lightless depths below.',
-    spells: ['Spider Climb', 'Web', 'Gaseous Form', 'Stinking Cloud', 'Greater Invisibility', 'Stone Shape', 'Cloudkill', 'Insect Plague']
+    spells: ['Spider Climb', 'Web', 'Gaseous Form', 'Stinking Cloud', 'Greater Invisibility', 'Stone Shape', 'Cloudkill', 'Insect Plague'],
+    spells_label: 'Circle Spells:'
   }
 ]
 
