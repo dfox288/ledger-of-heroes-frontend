@@ -25,6 +25,7 @@ const emit = defineEmits<{
 <template>
   <div
     v-if="counters.length > 0"
+    data-testid="class-resources-manager"
     class="space-y-3 p-4 bg-gray-50 dark:bg-gray-800 rounded-lg"
   >
     <div class="text-sm font-bold text-gray-700 dark:text-gray-300 text-center">
