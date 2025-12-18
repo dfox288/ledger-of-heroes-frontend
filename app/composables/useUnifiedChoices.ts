@@ -3,7 +3,7 @@ import type { components } from '~/types/api/generated'
 type PendingChoice = components['schemas']['PendingChoiceResource']
 type PendingChoicesResponse = { data: components['schemas']['PendingChoicesResource'] }
 
-type ChoiceType = 'proficiency' | 'language' | 'equipment' | 'equipment_mode' | 'spell' | 'subclass' | 'asi_or_feat' | 'optional_feature' | 'expertise' | 'fighting_style' | 'hit_points' | 'ability_score' | 'feat' | 'size'
+type ChoiceType = 'proficiency' | 'language' | 'equipment' | 'equipment_mode' | 'spell' | 'subclass' | 'subclass_variant' | 'asi_or_feat' | 'optional_feature' | 'expertise' | 'fighting_style' | 'hit_points' | 'ability_score' | 'feat' | 'size'
 
 /**
  * Unified choices composable for character creation/advancement
@@ -111,6 +111,8 @@ export function useUnifiedChoices(characterId: Ref<number | null>) {
     equipmentMode: choices.value.find(c => c.type === 'equipment_mode') ?? null,
     spells: choices.value.filter(c => c.type === 'spell'),
     subclass: choices.value.find(c => c.type === 'subclass') ?? null,
+    // Multi-level subclass variant choices (e.g., Totem Warrior L6/L14) - #763
+    subclassVariants: choices.value.filter(c => c.type === 'subclass_variant'),
     // ASI/Feat choices - API returns type='ability_score' with subtype='asi_or_feat' (fixes #690)
     asiOrFeat: choices.value.filter(c => c.type === 'ability_score' && c.subtype === 'asi_or_feat'),
     optionalFeatures: choices.value.filter(c => c.type === 'optional_feature'),

@@ -121,6 +121,11 @@ export const useCharacterLevelUpStore = defineStore('characterLevelUp', () => {
     pendingChoices.value.some(c => c.type === 'proficiency')
   )
 
+  /** Does character have pending subclass variant choices? (e.g., Totem Warrior L6/L14) - #763 */
+  const hasSubclassVariantChoices = computed(() =>
+    pendingChoices.value.some(c => c.type === 'subclass_variant')
+  )
+
   /** Is a level-up in progress? (API called, awaiting choices) */
   const isLevelUpInProgress = computed(() => levelUpResult.value !== null)
 
@@ -261,6 +266,7 @@ export const useCharacterLevelUpStore = defineStore('characterLevelUp', () => {
     needsClassSelection,
     isComplete,
     hasSubclassChoice,
+    hasSubclassVariantChoices,
     hasSpellChoices,
     hasFeatureChoices,
     hasLanguageChoices,

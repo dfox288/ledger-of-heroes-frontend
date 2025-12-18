@@ -22,6 +22,7 @@ const stepComponents: Record<string, Component> = {
   // Level-up specific steps
   'class-selection': defineAsyncComponent(() => import('~/components/character/levelup/StepClassSelection.vue')),
   'subclass': defineAsyncComponent(() => import('~/components/character/levelup/StepSubclassChoice.vue')),
+  'subclass-variant': defineAsyncComponent(() => import('~/components/character/levelup/StepSubclassVariant.vue')),
   'hit-points': defineAsyncComponent(() => import('~/components/character/levelup/StepHitPoints.vue')),
   'summary': defineAsyncComponent(() => import('~/components/character/levelup/StepSummary.vue')),
   // Level-up specific ASI/Feat step - fixes #690 (choice type mismatch)

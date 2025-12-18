@@ -235,6 +235,7 @@ describe('useUnifiedChoices', () => {
         'equipment_mode',
         'spell',
         'subclass',
+        'subclass_variant', // #763: Totem Warrior multi-level choices
         'asi_or_feat',
         'optional_feature',
         'expertise',
@@ -266,6 +267,53 @@ describe('useUnifiedChoices', () => {
 
       expect(grouped.fightingStyles).toHaveLength(1)
       expect(grouped.fightingStyles[0].type).toBe('fighting_style')
+    })
+
+    it('groups subclass_variant choices for multi-level subclass features (#763)', () => {
+      // Totem Warrior L6 choice
+      const totemAspectChoice = {
+        ...mockPendingChoice,
+        id: 'subclass_variant|subclass|phb:barbarian-path-of-the-totem-warrior|6|totem_aspect',
+        type: 'subclass_variant',
+        subtype: 'totem_aspect',
+        quantity: 1,
+        source: 'subclass',
+        source_name: 'Path of the Totem Warrior',
+        level_granted: 6,
+        metadata: {
+          class_slug: 'phb:barbarian',
+          subclass_slug: 'phb:barbarian-path-of-the-totem-warrior',
+          choice_group: 'totem_aspect'
+        }
+      }
+
+      // Totem Warrior L14 choice (can appear at same time during multi-level advancement)
+      const totemAttunementChoice = {
+        ...mockPendingChoice,
+        id: 'subclass_variant|subclass|phb:barbarian-path-of-the-totem-warrior|14|totem_attunement',
+        type: 'subclass_variant',
+        subtype: 'totem_attunement',
+        quantity: 1,
+        source: 'subclass',
+        source_name: 'Path of the Totem Warrior',
+        level_granted: 14,
+        metadata: {
+          class_slug: 'phb:barbarian',
+          subclass_slug: 'phb:barbarian-path-of-the-totem-warrior',
+          choice_group: 'totem_attunement'
+        }
+      }
+
+      const choices = [totemAspectChoice, totemAttunementChoice]
+
+      const grouped = {
+        subclassVariants: choices.filter(c => c.type === 'subclass_variant')
+      }
+
+      expect(grouped.subclassVariants).toHaveLength(2)
+      expect(grouped.subclassVariants[0].type).toBe('subclass_variant')
+      expect(grouped.subclassVariants[0].subtype).toBe('totem_aspect')
+      expect(grouped.subclassVariants[1].subtype).toBe('totem_attunement')
     })
 
     it('groups expertise choices', () => {

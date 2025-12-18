@@ -3,7 +3,7 @@
  * Do not make direct changes to the file.
  *
  * Generated from: http://localhost:8080/docs/api.json
- * Generated at: 2025-12-18T11:51:40.087Z
+ * Generated at: 2025-12-18T12:36:46.455Z
  *
  * To regenerate: npm run types:sync
  */
@@ -6879,6 +6879,10 @@ export interface components {
           subclass: string | null
           level: number
           is_primary: boolean
+          hit_dice_spent: number
+          subclass_choices: {
+            [key: string]: string
+          } | null
         }[]
         spells: {
           spell: string
