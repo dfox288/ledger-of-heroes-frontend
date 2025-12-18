@@ -18,10 +18,11 @@
  */
 
 import { storeToRefs } from 'pinia'
-import type { CharacterSpell, ClassSpellcastingInfo, SpellSlotsResponse, PreparationMethod } from '~/types/character'
+import type { CharacterSpell, SpellSlotsResponse } from '~/types/character'
 import { formatSpellLevel } from '~/composables/useSpellFormatters'
 import { formatModifier } from '~/composables/useCharacterStats'
-import { getClassColor, getClassName } from '~/utils/classColors'
+import { useSpellcastingTabs } from '~/composables/useSpellcastingTabs'
+import { useSpellPreparation } from '~/composables/useSpellPreparation'
 import { logger } from '~/utils/logger'
 
 const route = useRoute()
@@ -122,6 +123,50 @@ const sortedLevels = computed(() =>
 )
 
 // ══════════════════════════════════════════════════════════════
+// MULTICLASS SPELLCASTING & PREPARATION (extracted composables)
+// @see Issue #780
+// ══════════════════════════════════════════════════════════════
+
+// Spellcasting class detection and tab generation
+const {
+  spellcastingClasses,
+  isMulticlassSpellcaster,
+  primarySpellcasting,
+  tabItems
+} = useSpellcastingTabs(stats)
+
+// Spell preparation mode and limit tracking
+const {
+  preparationMethod,
+  isSpellbookCaster,
+  isPreparedCaster,
+  showPreparationUI,
+  prepareSpellsMode,
+  isPrepareSpellsModeFor,
+  enterPrepareSpellsMode,
+  exitPrepareSpellsMode,
+  maxCastableLevel,
+  getClassMaxSpellLevel,
+  hasPerClassLimits,
+  getClassPreparationLimit,
+  getReactivePreparedCount,
+  isAtClassPreparationLimit,
+  reactiveTotalPreparedCount,
+  getClassPreparationMethod,
+  getOtherClassPrepared,
+  spellbookClass,
+  spellbookPreparationLimit,
+  spellbookPreparedCount
+} = useSpellPreparation({
+  stats,
+  spellSlots,
+  spellcastingClasses,
+  validSpells,
+  playStateStore,
+  character
+})
+
+// ══════════════════════════════════════════════════════════════
 // PREPARED SPELLS FILTERING (for "All Prepared Spells" tab)
 // ══════════════════════════════════════════════════════════════
 
@@ -201,30 +246,8 @@ function getSortedLevelsForClass(classSlug: string): number[] {
 }
 
 // ══════════════════════════════════════════════════════════════
-// PREPARATION METHOD UI DIFFERENTIATION (#676)
+// PAGE-SPECIFIC SPELL HELPERS
 // ══════════════════════════════════════════════════════════════
-
-/**
- * Top-level preparation method from character stats
- * Used for single-class display decisions
- */
-const preparationMethod = computed<PreparationMethod>(() =>
-  (stats.value as { preparation_method?: PreparationMethod } | null)?.preparation_method ?? null
-)
-
-/**
- * Whether this is a spellbook caster (wizard) - for spellbook view
- */
-const isSpellbookCaster = computed(() => preparationMethod.value === 'spellbook')
-
-/**
- * Find the spellbook caster class (wizard) for multiclass support
- * Returns the class info for the wizard class, or null if none
- * @see Issue #719 - Wizard preparation limit fix
- */
-const spellbookClass = computed(() =>
-  spellcastingClasses.value.find(sc => sc.info.preparation_method === 'spellbook') ?? null
-)
 
 /**
  * Get spells filtered to spellbook class only (for wizard view)
@@ -236,268 +259,15 @@ const spellbookSpells = computed(() => {
 })
 
 /**
- * Get preparation limit for the spellbook class
- * Falls back to combined limit if per-class not available
- */
-const spellbookPreparationLimit = computed(() => {
-  if (!spellbookClass.value) return spellSlots.value?.preparation_limit ?? 0
-  const perClassLimit = getClassPreparationLimit(spellbookClass.value.slug)
-  return perClassLimit?.limit ?? spellSlots.value?.preparation_limit ?? 0
-})
-
-/**
- * Get prepared count for the spellbook class
- * Falls back to combined count if per-class not available
- */
-const spellbookPreparedCount = computed(() => {
-  if (!spellbookClass.value) return spellSlots.value?.prepared_count ?? 0
-  const perClassLimit = getClassPreparationLimit(spellbookClass.value.slug)
-  return perClassLimit?.prepared ?? spellSlots.value?.prepared_count ?? 0
-})
-
-/**
- * Whether to show preparation UI (counter, toggle) for single-class
- * Known casters don't need preparation - hide these UI elements
- * @see Issue #676
- */
-const showPreparationUI = computed(() => preparationMethod.value !== 'known')
-
-/**
- * Can this caster prepare spells? (prepared or spellbook casters)
- * Known casters (Sorcerer, Warlock, Bard) don't prepare spells.
- * @see Issue #723, #728
- */
-const isPreparedCaster = computed(() =>
-  preparationMethod.value === 'prepared' || preparationMethod.value === 'spellbook'
-)
-
-/**
- * Mode toggle for prepared casters
- * Stores the class slug when in prepare mode, null otherwise
- * Supports both single-class and multiclass prepared casters
- * @see Issue #723
- */
-const prepareSpellsMode = ref<string | null>(null)
-
-/**
- * Check if prepare spells mode is active for a specific class
- */
-function isPrepareSpellsModeFor(classSlug: string): boolean {
-  return prepareSpellsMode.value === classSlug
-}
-
-/**
- * Enter prepare spells mode for a specific class
- */
-function enterPrepareSpellsMode(classSlug: string): void {
-  prepareSpellsMode.value = classSlug
-}
-
-/**
- * Exit prepare spells mode
- */
-function exitPrepareSpellsMode(): void {
-  prepareSpellsMode.value = null
-}
-
-/**
- * Get max castable spell level for this character
- * Based on available spell slots
- */
-const maxCastableLevel = computed(() => {
-  if (!spellSlots.value?.slots) return 1
-  const levels = Object.keys(spellSlots.value.slots).map(Number)
-  return Math.max(...levels, 1)
-})
-
-/**
- * Get class level for a specific class from character data
- */
-function getClassLevel(classSlug: string): number {
-  const classEntry = character.value?.classes?.find(
-    (c: { class_slug: string }) => c.class_slug === classSlug
-  )
-  return classEntry?.level ?? 1
-}
-
-/**
- * Get max spell level a class can LEARN/COPY based on class level
- * For full casters (wizard, cleric, etc.): ceil(classLevel / 2)
- * This is different from max castable level (based on multiclass spell slots)
- *
- * @see PHB p.114 - Wizard spell slots progression
- */
-function getClassMaxSpellLevel(classSlug: string): number {
-  const classLevel = getClassLevel(classSlug)
-  // Full caster progression: level 1-2 = 1st, 3-4 = 2nd, 5-6 = 3rd, etc.
-  return Math.min(Math.ceil(classLevel / 2), 9)
-}
-
-/**
- * Get preparation method for a specific class (multiclass support)
- * Falls back to top-level preparation method if not available per-class
- */
-function getClassPreparationMethod(classSlug: string): PreparationMethod {
-  const classInfo = stats.value?.spellcasting?.[classSlug]
-  return classInfo?.preparation_method ?? preparationMethod.value
-}
-
-// ══════════════════════════════════════════════════════════════
-// MULTICLASS SPELLCASTING SUPPORT
-// ══════════════════════════════════════════════════════════════
-
-/**
- * Extract spellcasting classes from stats
- * Returns array of { slug, info } for each spellcasting class
- */
-interface SpellcastingClass {
-  slug: string
-  slotName: string
-  name: string
-  color: string
-  info: ClassSpellcastingInfo
-}
-
-const spellcastingClasses = computed<SpellcastingClass[]>(() => {
-  const spellcasting = stats.value?.spellcasting
-  if (!spellcasting) return []
-
-  return Object.entries(spellcasting).map(([slug, info]) => ({
-    slug,
-    slotName: slug.replace(':', '-'), // Safe slot name (e.g., "phb-wizard")
-    name: getClassName(slug),
-    color: getClassColor(slug),
-    info
-  }))
-})
-
-/**
- * Is this a multiclass spellcaster? (more than one spellcasting class)
- */
-const isMulticlassSpellcaster = computed(() => spellcastingClasses.value.length > 1)
-
-/**
- * Primary spellcasting class (first entry, for single-class display)
- */
-const primarySpellcasting = computed(() => spellcastingClasses.value[0] ?? null)
-
-/**
- * Build tab items for multiclass view
- * Each item has a `value` for UTabs to track selection
- * "All Prepared Spells" is first (default) - shows combined prepared spells
- *
- * @see Issue #719 - Default to All Spells tab
- */
-const tabItems = computed(() => {
-  const items = spellcastingClasses.value.map(sc => ({
-    label: sc.name,
-    slot: sc.slotName,
-    value: sc.slotName // Use slot name as value for UTabs
-  }))
-  // Add "All Prepared Spells" tab at the START - shows only prepared/ready spells
-  items.unshift({ label: 'All Prepared Spells', slot: 'all-spells', value: 'all-spells' })
-  return items
-})
-
-/**
- * Get per-class preparation limit for a given class slug
- */
-function getClassPreparationLimit(classSlug: string) {
-  return spellSlots.value?.preparation_limits?.[classSlug] ?? null
-}
-
-/**
- * Check if we have per-class preparation limits available
- */
-const hasPerClassLimits = computed(() =>
-  spellSlots.value?.preparation_limits && Object.keys(spellSlots.value.preparation_limits).length > 0
-)
-
-/**
- * Get REACTIVE prepared count for a specific class
- * Computes from store's preparedSpellIds instead of API data for real-time updates
- * @see Issue #719 - Preparation counter reactivity fix
- */
-function getReactivePreparedCount(classSlug: string): number {
-  // Filter spells by class and check if they're in the store's prepared set
-  const classSpells = validSpells.value.filter(s => s.class_slug === classSlug)
-  return classSpells.filter(s =>
-    playStateStore.preparedSpellIds.has(s.id) && !s.is_always_prepared
-  ).length
-}
-
-/**
- * Check if a specific class is at its preparation limit
- * Uses REACTIVE prepared count from store for real-time limit checking
- * @see Issue #718, #719
- */
-function isAtClassPreparationLimit(classSlug: string): boolean {
-  const limit = getClassPreparationLimit(classSlug)
-  if (!limit) return false
-  // Use reactive count instead of API data
-  return getReactivePreparedCount(classSlug) >= limit.limit
-}
-
-/**
  * Get preparation method for a spell based on its class_slug
  * Falls back to top-level preparation method if spell has no class_slug
  * @see Issue #718
  */
-function getSpellPreparationMethod(spell: CharacterSpell): PreparationMethod {
+function getSpellPreparationMethod(spell: CharacterSpell) {
   return spell.class_slug
     ? getClassPreparationMethod(spell.class_slug)
     : preparationMethod.value
 }
-
-// ══════════════════════════════════════════════════════════════
-// CROSS-CLASS SPELL PREPARATION TRACKING
-// ══════════════════════════════════════════════════════════════
-
-/**
- * Map of spell_slug -> class name for spells prepared by each class
- * Used to show "Already prepared as X" for cross-class duplicates
- */
-const preparedByClassMap = computed(() => {
-  const map = new Map<string, string>() // spell_slug -> class name
-  for (const spell of validSpells.value) {
-    if (spell.is_prepared && spell.class_slug) {
-      // Extract class name from slug (e.g., "phb:wizard" -> "Wizard")
-      const name = spell.class_slug.split(':')[1] ?? spell.class_slug
-      map.set(spell.spell_slug, name.charAt(0).toUpperCase() + name.slice(1))
-    }
-  }
-  return map
-})
-
-/**
- * Check if a spell is prepared by a DIFFERENT class than the one passed
- * @param spellSlug - The spell's slug to check
- * @param currentClassSlug - The class we're currently viewing
- * @returns The class name if prepared by another class, null otherwise
- */
-function getOtherClassPrepared(spellSlug: string, currentClassSlug: string | null): string | null {
-  const preparedClass = preparedByClassMap.value.get(spellSlug)
-  if (!preparedClass) return null
-  // Extract current class name for comparison
-  const currentClassName = currentClassSlug
-    ? (currentClassSlug.split(':')[1] ?? currentClassSlug).charAt(0).toUpperCase()
-    + (currentClassSlug.split(':')[1] ?? currentClassSlug).slice(1)
-    : null
-  // Return null if it's the same class
-  if (preparedClass === currentClassName) return null
-  return preparedClass
-}
-
-/**
- * REACTIVE total prepared count across all classes
- * Computes from store's preparedSpellIds for real-time updates
- * @see Issue #719
- */
-const reactiveTotalPreparedCount = computed(() => {
-  return validSpells.value.filter(s =>
-    playStateStore.preparedSpellIds.has(s.id) && !s.is_always_prepared
-  ).length
-})
 
 /**
  * Handle spells changed event from PrepareSpellsView
