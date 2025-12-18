@@ -464,6 +464,8 @@ export interface CharacterSummary {
   race_is_dangling?: boolean
   /** Resolved primary class data (null if dangling) */
   class: { id: number, name: string, slug: string } | null
+  /** All classes with levels (for multiclass display) */
+  classes: { name: string, level: number, is_primary: boolean }[]
   /** Resolved background data (null if dangling) */
   background: { id: number, name: string, slug: string } | null
   /** Background slug reference (always present if background was set) */
