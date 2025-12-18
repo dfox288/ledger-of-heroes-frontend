@@ -218,7 +218,7 @@ function getSourceLabel(source: string): string {
           <UBadge
             :color="getSourceColor(source)"
             variant="subtle"
-            size="xs"
+            size="md"
           >
             {{ featuresBySource[source]?.length ?? 0 }}
           </UBadge>
@@ -235,6 +235,7 @@ function getSourceLabel(source: string): string {
             <button
               type="button"
               :data-testid="`feature-toggle-${feature.id}`"
+              :aria-expanded="isExpanded(feature.id)"
               class="w-full px-4 py-3 flex items-center justify-between text-left hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
               @click="toggleFeature(feature.id)"
             >
@@ -255,7 +256,7 @@ function getSourceLabel(source: string): string {
                   v-if="feature.level_acquired && (source === 'class' || source === 'subclass')"
                   color="neutral"
                   variant="subtle"
-                  size="xs"
+                  size="md"
                 >
                   Lvl {{ feature.level_acquired }}
                 </UBadge>
@@ -265,7 +266,7 @@ function getSourceLabel(source: string): string {
                   v-if="feature.feature?.is_optional === 'true'"
                   color="primary"
                   variant="subtle"
-                  size="xs"
+                  size="md"
                 >
                   Chosen
                 </UBadge>
