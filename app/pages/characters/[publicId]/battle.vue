@@ -10,9 +10,12 @@
  *
  * @see Issue #554 - Battle Tab implementation
  * @see Issue #621 - Consolidated data fetching
+ * @see Issue #764 - ClassResourcesManager for Rage, Ki, etc.
+ * @see Issue #765 - SpellSlotsManager for spellcasters
+ * @see Issue #766 - Spell DC and Attack Bonus display
  */
 
-import type { AbilityScoreCode, CharacterWeapon, CharacterEquipment } from '~/types/character'
+import type { AbilityScoreCode, CharacterWeapon, CharacterEquipment, SpellSlotsResponse } from '~/types/character'
 import { storeToRefs } from 'pinia'
 
 const route = useRoute()
@@ -20,7 +23,7 @@ const publicId = computed(() => route.params.publicId as string)
 const { apiFetch } = useApi()
 
 // Shared character data + play state initialization
-const { character, stats, isSpellcaster, loading, refreshCharacter, playStateStore }
+const { character, stats, isSpellcaster, loading, refreshCharacter, addPendingState, playStateStore }
   = useCharacterSubPage(publicId)
 
 // Fetch equipment data to derive weapons from hand slots
@@ -29,6 +32,16 @@ const { data: equipmentData } = await useAsyncData(
   () => apiFetch<{ data: CharacterEquipment[] }>(`/characters/${publicId.value}/equipment`),
   { dedupe: 'defer' }
 )
+
+// Fetch spell slots for spellcasters (#765)
+const { data: slotsData, pending: slotsPending } = await useAsyncData(
+  `character-${publicId.value}-spell-slots`,
+  () => apiFetch<{ data: SpellSlotsResponse }>(`/characters/${publicId.value}/spell-slots`),
+  { dedupe: 'defer' }
+)
+
+// Register spell slots pending state
+addPendingState(slotsPending)
 
 // Extended equipment type with new weapon fields from backend
 interface EquipmentWithWeaponData extends Omit<CharacterEquipment, 'proficiency_status' | 'item'> {
@@ -64,7 +77,7 @@ const weapons = computed<CharacterWeapon[]>(() => {
 })
 
 // Get reactive state from store
-const { canEdit, hitPoints, conditions } = storeToRefs(playStateStore)
+const { canEdit, hitPoints, conditions, counters } = storeToRefs(playStateStore)
 
 // Fetch conditions into store when character loads (only once)
 const conditionsLoaded = ref(false)
@@ -72,6 +85,30 @@ watch(character, async (char) => {
   if (char && !conditionsLoaded.value) {
     await playStateStore.fetchConditions()
     conditionsLoaded.value = true
+  }
+}, { immediate: true })
+
+// Initialize class resource counters from character data (#764)
+watch(character, (char) => {
+  if (char?.counters) {
+    playStateStore.initializeCounters(char.counters)
+  }
+}, { immediate: true })
+
+// Initialize spell slots from fetched data (#765)
+// Watch the nested slots property directly to ensure re-initialization on updates
+watch(() => slotsData.value?.data?.slots, (slots) => {
+  if (slots) {
+    const slotData = Object.entries(slots).map(([level, slot]) => ({
+      level: parseInt(level),
+      total: slot.total,
+      spent: slot.spent
+    }))
+    const pactMagic = slotsData.value?.data?.pact_magic
+    const pactMagicData = pactMagic
+      ? { level: pactMagic.level, total: pactMagic.total, spent: pactMagic.spent }
+      : null
+    playStateStore.initializeSpellSlots(slotData, pactMagicData)
   }
 }, { immediate: true })
 
@@ -188,6 +225,34 @@ useSeoMeta({
           />
           <CharacterSheetStatProficiencyBonus :bonus="character.proficiency_bonus" />
         </div>
+
+        <!-- Spellcasting Stats Row (Spell DC / Attack Bonus) - Issue #766 -->
+        <CharacterSheetStatSpellcasting
+          v-if="isSpellcaster"
+          :spellcasting="stats.spellcasting"
+          class="mt-4"
+        />
+
+        <!-- Spell Slots (for spellcasters) - Issue #765 -->
+        <ClientOnly>
+          <CharacterSheetSpellSlotsManager
+            v-if="isSpellcaster && character"
+            :character-id="character.id"
+            :editable="canEdit"
+            class="mt-4"
+          />
+        </ClientOnly>
+
+        <!-- Class Resources (Rage, Ki, etc.) - Issue #764 -->
+        <ClientOnly>
+          <div
+            v-if="counters.length > 0"
+            data-testid="class-resources"
+            class="mt-4"
+          >
+            <CharacterSheetClassResourcesManager :editable="canEdit" />
+          </div>
+        </ClientOnly>
 
         <!-- Two Column Layout: Offensive | Defensive -->
         <div class="mt-6 grid md:grid-cols-2 gap-6">
