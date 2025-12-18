@@ -262,23 +262,41 @@ describe('CharacterSheetFeaturesPanel', () => {
 
 describe('CharacterSheetProficienciesPanel', () => {
   const mockProficiencies = [
-    { id: 1, proficiency_type: { name: 'Longsword', category: 'weapons' } },
-    { id: 2, proficiency_type: { name: 'Heavy Armor', category: 'armor' } }
+    { id: 1, proficiency_type: { name: 'Longsword', category: 'weapons' }, proficiency_type_slug: 'weapons:longsword' },
+    { id: 2, proficiency_type: { name: 'Heavy Armor', category: 'armor' }, proficiency_type_slug: 'armor:heavy' },
+    { id: 3, proficiency_type: { name: 'Thieves\' Tools', category: 'tools' }, proficiency_type_slug: 'tools:thieves' }
   ]
 
-  it('displays proficiencies', async () => {
+  it('renders as a card with header', async () => {
+    const wrapper = await mountSuspended(ProficienciesPanel, {
+      props: { proficiencies: mockProficiencies }
+    })
+    // Card styling
+    expect(wrapper.find('.bg-gray-50').exists()).toBe(true)
+    // Header
+    expect(wrapper.text()).toContain('Proficiencies')
+  })
+
+  it('displays proficiencies grouped by category', async () => {
     const wrapper = await mountSuspended(ProficienciesPanel, {
       props: { proficiencies: mockProficiencies }
     })
     expect(wrapper.text()).toContain('Longsword')
     expect(wrapper.text()).toContain('Heavy Armor')
+    expect(wrapper.text()).toContain('Thieves\' Tools')
+    // Category headers
+    expect(wrapper.text()).toContain('weapons')
+    expect(wrapper.text()).toContain('armor')
+    expect(wrapper.text()).toContain('tools')
   })
 
-  it('shows empty state when no proficiencies', async () => {
+  it('does not render when no proficiencies (conditional display)', async () => {
     const wrapper = await mountSuspended(ProficienciesPanel, {
       props: { proficiencies: [] }
     })
-    expect(wrapper.text()).toContain('No proficiencies')
+    // Should not render the card at all when empty
+    expect(wrapper.find('.bg-gray-50').exists()).toBe(false)
+    expect(wrapper.text()).toBe('')
   })
 })
 
@@ -476,7 +494,17 @@ describe('CharacterSheetLanguagesPanel', () => {
     { id: 2, language: { name: 'Elvish' } }
   ]
 
-  it('displays languages as tags', async () => {
+  it('renders as a card with header', async () => {
+    const wrapper = await mountSuspended(LanguagesPanel, {
+      props: { languages: mockLanguages }
+    })
+    // Card styling
+    expect(wrapper.find('.bg-gray-50').exists()).toBe(true)
+    // Header
+    expect(wrapper.text()).toContain('Languages')
+  })
+
+  it('displays languages as badges', async () => {
     const wrapper = await mountSuspended(LanguagesPanel, {
       props: { languages: mockLanguages }
     })
@@ -484,11 +512,13 @@ describe('CharacterSheetLanguagesPanel', () => {
     expect(wrapper.text()).toContain('Elvish')
   })
 
-  it('shows empty state when no languages', async () => {
+  it('does not render when no languages (conditional display)', async () => {
     const wrapper = await mountSuspended(LanguagesPanel, {
       props: { languages: [] }
     })
-    expect(wrapper.text()).toContain('No languages')
+    // Should not render the card at all when empty
+    expect(wrapper.find('.bg-gray-50').exists()).toBe(false)
+    expect(wrapper.text()).toBe('')
   })
 })
 

@@ -311,11 +311,12 @@ describe('CharacterSheetProficienciesPanel', () => {
     expect(wrapper.text()).toContain('Heavy Armor')
   })
 
-  it('shows empty state', async () => {
+  it('does not render when empty (conditional display)', async () => {
     const wrapper = await mountSuspended(ProficienciesPanel, {
       props: { proficiencies: [] }
     })
-    expect(wrapper.text()).toContain('No proficiencies')
+    // Panel should not render when empty
+    expect(wrapper.text()).toBe('')
   })
 })
 
@@ -364,10 +365,11 @@ describe('CharacterSheetLanguagesPanel', () => {
     expect(wrapper.text()).toContain('Dwarvish')
   })
 
-  it('shows empty state', async () => {
+  it('does not render when empty (conditional display)', async () => {
     const wrapper = await mountSuspended(LanguagesPanel, {
       props: { languages: [] }
     })
-    expect(wrapper.text()).toContain('No languages')
+    // Panel should not render when empty
+    expect(wrapper.text()).toBe('')
   })
 })

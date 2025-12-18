@@ -159,13 +159,6 @@ useSeoMeta({
   description: () => `View ${character.value?.name ?? 'character'} - D&D 5e Character Sheet`
 })
 
-// Tab items for bottom section - Proficiencies and Languages only
-// Spells moved to dedicated /spells page
-const tabItems = [
-  { label: 'Proficiencies', slot: 'proficiencies', icon: 'i-heroicons-academic-cap' },
-  { label: 'Languages', slot: 'languages', icon: 'i-heroicons-language' }
-]
-
 // Is this character a spellcaster? (for TabNavigation)
 // Check if spellcasting has any class entries (object keyed by class slug)
 const isSpellcaster = computed(() => {
@@ -269,9 +262,9 @@ const isSpellcaster = computed(() => {
             :condition-immunities="stats.condition_immunities ?? []"
           />
 
-          <!-- Saving Throws and Skills -->
+          <!-- Saving Throws, Death Saves, Languages | Skills, Proficiencies -->
           <div class="grid lg:grid-cols-3 gap-6">
-            <!-- Saving Throws + Death Saves stacked -->
+            <!-- Saving Throws + Death Saves + Languages stacked -->
             <div class="space-y-4">
               <CharacterSheetSavingThrowsList :saving-throws="savingThrows" />
               <CharacterSheetDeathSavesManager
@@ -280,29 +273,19 @@ const isSpellcaster = computed(() => {
                 :initial-is-dead="character.is_dead"
                 :initial-hp-current="stats.hit_points?.current"
               />
+              <CharacterSheetLanguagesPanel :languages="languages" />
             </div>
-            <CharacterSheetSkillsList
-              :skills="skills"
-              :skill-advantages="skillAdvantages"
-              class="lg:col-span-2"
-            />
+            <!-- Skills + Proficiencies stacked -->
+            <div class="lg:col-span-2 space-y-4">
+              <CharacterSheetSkillsList
+                :skills="skills"
+                :skill-advantages="skillAdvantages"
+              />
+              <CharacterSheetProficienciesPanel :proficiencies="proficiencies" />
+            </div>
           </div>
         </div>
       </div>
-
-      <!-- Bottom Tabs -->
-      <UTabs
-        :items="tabItems"
-        class="mt-8"
-      >
-        <template #proficiencies>
-          <CharacterSheetProficienciesPanel :proficiencies="proficiencies" />
-        </template>
-
-        <template #languages>
-          <CharacterSheetLanguagesPanel :languages="languages" />
-        </template>
-      </UTabs>
     </div>
   </div>
 </template>
