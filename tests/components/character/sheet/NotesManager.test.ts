@@ -344,7 +344,7 @@ describe('NotesManager', () => {
       )
     })
 
-    it('emits refresh after successful operation', async () => {
+    it('does not emit refresh after successful operation (#802)', async () => {
       setupStore()
       apiFetchMock.mockResolvedValueOnce({ data: { id: 100, category: 'session', category_label: 'Session', title: null, content: 'Test', sort_order: 0, created_at: '', updated_at: '' } })
 
@@ -359,10 +359,11 @@ describe('NotesManager', () => {
 
       await vm.handleSave({ category: 'session', content: 'Test' })
 
-      expect(wrapper.emitted('refresh')).toBeTruthy()
+      // Refresh should NOT be emitted on success - optimistic updates are source of truth
+      expect(wrapper.emitted('refresh')).toBeFalsy()
     })
 
-    it('emits refresh after failed operation (for rollback)', async () => {
+    it('emits refresh after failed operation (for rollback) (#802)', async () => {
       setupStore()
       apiFetchMock.mockRejectedValueOnce(new Error('Network error'))
 
@@ -377,6 +378,49 @@ describe('NotesManager', () => {
 
       await vm.handleSave({ category: 'session', content: 'Test' })
 
+      // Refresh SHOULD be emitted on failure to resync with server state
+      expect(wrapper.emitted('refresh')).toBeTruthy()
+    })
+
+    it('does not emit refresh after successful delete (#802)', async () => {
+      setupStore()
+      apiFetchMock.mockResolvedValueOnce({})
+
+      const wrapper = await mountSuspended(NotesManager, {
+        props: { notes: mockNotes, characterId: 42 },
+        ...getMountOptions()
+      })
+
+      const vm = wrapper.vm as unknown as {
+        noteToDelete: CharacterNote
+        handleDeleteConfirm: () => Promise<void>
+      }
+      vm.noteToDelete = mockNotes.custom[0]
+
+      await vm.handleDeleteConfirm()
+
+      // Refresh should NOT be emitted on success
+      expect(wrapper.emitted('refresh')).toBeFalsy()
+    })
+
+    it('emits refresh after failed delete (#802)', async () => {
+      setupStore()
+      apiFetchMock.mockRejectedValueOnce(new Error('Network error'))
+
+      const wrapper = await mountSuspended(NotesManager, {
+        props: { notes: mockNotes, characterId: 42 },
+        ...getMountOptions()
+      })
+
+      const vm = wrapper.vm as unknown as {
+        noteToDelete: CharacterNote
+        handleDeleteConfirm: () => Promise<void>
+      }
+      vm.noteToDelete = mockNotes.custom[0]
+
+      await vm.handleDeleteConfirm()
+
+      // Refresh SHOULD be emitted on failure to resync with server state
       expect(wrapper.emitted('refresh')).toBeTruthy()
     })
   })

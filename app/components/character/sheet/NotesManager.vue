@@ -86,6 +86,8 @@ function handleDelete(note: CharacterNote) {
  * Handle save from edit modal
  * Uses optimistic updates via store: closes modal immediately and shows changes
  * while API call happens in background.
+ *
+ * @see Issue #802 - Only emits refresh on failure to resync with server state
  */
 async function handleSave(payload: NotePayload) {
   const isEdit = !!noteToEdit.value
@@ -101,9 +103,9 @@ async function handleSave(payload: NotePayload) {
       toast.add({ title: 'Note updated', color: 'success' })
     } else {
       toast.add({ title: 'Failed to update note', color: 'error' })
+      // Only refresh on failure to resync with server state after rollback
+      emit('refresh')
     }
-    // Refresh ensures server state is authoritative after optimistic update completes
-    emit('refresh')
   } else {
     // CREATE MODE - Delegate to store
     const success = await store.addNote(payload)
@@ -111,9 +113,9 @@ async function handleSave(payload: NotePayload) {
       toast.add({ title: 'Note added', color: 'success' })
     } else {
       toast.add({ title: 'Failed to add note', color: 'error' })
+      // Only refresh on failure to resync with server state after rollback
+      emit('refresh')
     }
-    // Refresh ensures server state is authoritative after optimistic update completes
-    emit('refresh')
   }
 }
 
@@ -121,6 +123,8 @@ async function handleSave(payload: NotePayload) {
  * Handle confirmed deletion
  * Uses optimistic updates via store: closes modal and removes note immediately
  * while API call happens in background.
+ *
+ * @see Issue #802 - Only emits refresh on failure to resync with server state
  */
 async function handleDeleteConfirm() {
   if (!noteToDelete.value) return
@@ -135,9 +139,9 @@ async function handleDeleteConfirm() {
     toast.add({ title: 'Note deleted', color: 'success' })
   } else {
     toast.add({ title: 'Failed to delete note', color: 'error' })
+    // Only refresh on failure to resync with server state after rollback
+    emit('refresh')
   }
-  // Refresh ensures server state is authoritative after optimistic update completes
-  emit('refresh')
 }
 </script>
 

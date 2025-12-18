@@ -9,37 +9,16 @@
  *
  * Categories requiring title: backstory, custom
  * Categories not requiring title: personality_trait, ideal, bond, flaw
+ *
+ * @see Issue #803 - Categories extracted to shared constant
  */
 import type { CharacterNote } from '~/types/character'
-
-/** Constant for custom category selection value */
-const CUSTOM_CATEGORY_VALUE = '__custom__' as const
-
-/**
- * Predefined note categories - common D&D note types
- * Users can also create custom categories via the "Custom..." option
- */
-const CATEGORIES = [
-  // Character traits (from background)
-  { value: 'personality_trait', label: 'Personality Trait', requiresTitle: false },
-  { value: 'ideal', label: 'Ideal', requiresTitle: false },
-  { value: 'bond', label: 'Bond', requiresTitle: false },
-  { value: 'flaw', label: 'Flaw', requiresTitle: false },
-  // Character background
-  { value: 'backstory', label: 'Backstory', requiresTitle: true },
-  { value: 'appearance', label: 'Appearance', requiresTitle: false },
-  // Campaign & session tracking
-  { value: 'campaign', label: 'Campaign', requiresTitle: true },
-  { value: 'session', label: 'Session', requiresTitle: true },
-  { value: 'quest', label: 'Quest', requiresTitle: true },
-  // World building
-  { value: 'npc', label: 'NPC', requiresTitle: true },
-  { value: 'location', label: 'Location', requiresTitle: true },
-  { value: 'lore', label: 'Lore', requiresTitle: true },
-  { value: 'item', label: 'Item', requiresTitle: true },
-  // Custom - shows text input for user-defined category
-  { value: CUSTOM_CATEGORY_VALUE, label: 'Custom...', requiresTitle: true }
-]
+import {
+  NOTE_CATEGORIES,
+  CUSTOM_CATEGORY_VALUE,
+  categoryRequiresTitle,
+  isPredefinedCategory
+} from '~/utils/noteCategories'
 
 /** Convert string to snake_case for custom categories */
 function toSnakeCase(str: string): string {
@@ -85,9 +64,7 @@ const isCustomCategory = computed(() => localCategory.value === CUSTOM_CATEGORY_
 
 /** Computed: Whether current category requires a title */
 const requiresTitle = computed(() => {
-  if (isCustomCategory.value) return true
-  const cat = CATEGORIES.find(c => c.value === localCategory.value)
-  return cat?.requiresTitle ?? false
+  return categoryRequiresTitle(localCategory.value)
 })
 
 /** Computed: The actual category value to send to API */
@@ -153,9 +130,10 @@ function handleKeydown(event: KeyboardEvent) {
 function initializeState() {
   if (props.note) {
     // Edit mode - populate from note
-    // Check if category is in predefined list, otherwise treat as custom
-    const isPredefined = CATEGORIES.some(c => c.value === props.note!.category)
-    if (isPredefined) {
+    // Check if category is in predefined list, otherwise treat as custom.
+    // isPredefinedCategory returns false for both CUSTOM_CATEGORY_VALUE marker
+    // and user-defined custom categories (e.g., "party_members"), so both hit else branch.
+    if (isPredefinedCategory(props.note.category)) {
       localCategory.value = props.note.category
       customCategoryName.value = ''
     } else {
@@ -212,7 +190,7 @@ watch(open, (isOpen) => {
             id="note-category"
             v-model="localCategory"
             data-testid="category-select"
-            :items="CATEGORIES"
+            :items="NOTE_CATEGORIES"
             value-key="value"
             :disabled="loading"
             class="w-full"

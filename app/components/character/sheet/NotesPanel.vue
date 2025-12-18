@@ -1,6 +1,7 @@
 <!-- app/components/character/sheet/NotesPanel.vue -->
 <script setup lang="ts">
 import type { CharacterNote } from '~/types/character'
+import { getCategoryOrder } from '~/utils/noteCategories'
 
 /**
  * Notes panel for character sheet
@@ -11,6 +12,8 @@ import type { CharacterNote } from '~/types/character'
  * Features:
  * - Categories display in D&D character sheet order (#798)
  * - Search functionality for title and content (#799)
+ *
+ * @see Issue #803 - Category ordering uses shared constant
  *
  * Emits events for add/edit/delete actions to be handled by parent (NotesManager).
  */
@@ -25,40 +28,6 @@ const emit = defineEmits<{
   edit: [note: CharacterNote]
   delete: [note: CharacterNote]
 }>()
-
-// =============================================================================
-// Category Ordering (#798)
-// =============================================================================
-
-/**
- * Category display order following D&D character sheet conventions
- *
- * Order:
- * 1. Character traits (personality, ideal, bond, flaw)
- * 2. Character description (backstory, appearance)
- * 3. Gameplay notes (campaign, session, quest)
- * 4. World-building (npc, location, lore, item)
- * 5. Custom categories (alphabetical)
- */
-const CATEGORY_ORDER: Record<string, number> = {
-  // Character traits
-  personality_trait: 1,
-  ideal: 2,
-  bond: 3,
-  flaw: 4,
-  // Character description
-  backstory: 5,
-  appearance: 6,
-  // Gameplay notes
-  campaign: 7,
-  session: 8,
-  quest: 9,
-  // World-building
-  npc: 10,
-  location: 11,
-  lore: 12,
-  item: 13
-}
 
 // =============================================================================
 // Search Functionality (#799)
@@ -108,10 +77,10 @@ const orderedNotes = computed(() => {
   const entries = Object.entries(filteredNotes.value)
     .filter(([_, notes]) => notes.length > 0)
 
-  // Sort entries by category order
+  // Sort entries by category order (uses shared constant)
   entries.sort((a, b) => {
-    const orderA = CATEGORY_ORDER[a[0]] ?? 99
-    const orderB = CATEGORY_ORDER[b[0]] ?? 99
+    const orderA = getCategoryOrder(a[0])
+    const orderB = getCategoryOrder(b[0])
 
     // If both are custom categories (order 99), sort alphabetically
     if (orderA === 99 && orderB === 99) {
