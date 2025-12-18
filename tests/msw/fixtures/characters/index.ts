@@ -16,4 +16,5 @@ export { variantHumanFighterL1 } from './variant-human-fighter-l1'
 // Higher Levels - Level-Up Wizard
 export { humanFighterL3 } from './human-fighter-l3' // Subclass selection (Fighter)
 export { highElfWizardL2 } from './high-elf-wizard-l2' // Subclass selection (Wizard)
+export { hillDwarfDruidL2 } from './hill-dwarf-druid-l2' // Subclass + variant_choices (Druid)
 export { halflingRogueL4 } from './halfling-rogue-l4' // ASI/Feat choice
