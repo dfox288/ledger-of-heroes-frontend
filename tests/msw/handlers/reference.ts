@@ -72,7 +72,8 @@ const classes = [
   }
 ]
 
-const backgrounds = [
+// Background list items (minimal data for list pages)
+const backgroundListItems = [
   {
     id: 1,
     name: 'Acolyte',
@@ -88,6 +89,39 @@ const backgrounds = [
     sources: [{ code: 'PHB', name: 'Player\'s Handbook' }]
   }
 ]
+
+// Full background detail (for detail pages)
+const backgroundDetails: Record<string, object> = {
+  'phb:acolyte': {
+    id: 1,
+    name: 'Acolyte',
+    slug: 'phb:acolyte',
+    description: 'You have spent your life as a acolyte. This background provides unique skills and experiences.',
+    feature_name: 'Acolyte Expertise',
+    feature_description: 'As a acolyte, you have a special ability that sets you apart. You can call upon your expertise to gain advantage in relevant situations.',
+    proficiencies: [
+      { id: 1, proficiency_type: 'skill', skill: { id: 1, name: 'Investigation', ability_score: { id: 4, code: 'INT', name: 'Intelligence' } } },
+      { id: 2, proficiency_type: 'skill', skill: { id: 2, name: 'Insight', ability_score: { id: 5, code: 'WIS', name: 'Wisdom' } } }
+    ],
+    languages: [],
+    choices: [
+      { id: 1, choice_type: 'language', quantity: 2, constraint: null, description: null, options: [] }
+    ],
+    equipment: [
+      { id: 1, item_id: 100, quantity: 1, item: { name: 'Holy Symbol' } }
+    ],
+    starting_gold: 15,
+    traits: [
+      { id: 1, name: 'Description', category: null, text: 'You have spent your life as a acolyte. This background provides unique skills and experiences.' },
+      { id: 2, name: 'Suggested Characteristics', category: 'Personality Traits', text: 'Use these tables to create your character personality.', data_table: { dice: 'd8', rows: [{ roll: 1, text: 'I am always calm, no matter the situation.' }, { roll: 2, text: 'I love a good mystery or puzzle.' }] } },
+      { id: 3, name: 'Suggested Characteristics', category: 'Ideals', text: null, data_table: { dice: 'd6', rows: [{ roll: 1, text: 'Knowledge. Learning is the greatest pursuit. (Neutral)' }, { roll: 2, text: 'Justice. The guilty must be punished. (Lawful)' }] } },
+      { id: 4, name: 'Suggested Characteristics', category: 'Bonds', text: null, data_table: { dice: 'd6', rows: [{ roll: 1, text: 'I have a mentor who taught me everything.' }] } },
+      { id: 5, name: 'Suggested Characteristics', category: 'Flaws', text: null, data_table: { dice: 'd6', rows: [{ roll: 1, text: 'I am easily distracted by shiny objects.' }] } }
+    ],
+    sources: [{ code: 'PHB', name: 'Player\'s Handbook' }],
+    tags: []
+  }
+}
 
 export const referenceHandlers = [
   // Sources
@@ -161,12 +195,12 @@ export const referenceHandlers = [
     const url = new URL(request.url)
     const filter = url.searchParams.get('filter')
 
-    let filtered = backgrounds
+    let filtered = backgroundListItems
     if (filter) {
       const sourceMatch = filter.match(/sources\.code IN \[([^\]]+)\]/)
       if (sourceMatch) {
         const allowedSources = sourceMatch[1].split(',').map(s => s.trim().replace(/"/g, ''))
-        filtered = backgrounds.filter(b =>
+        filtered = backgroundListItems.filter(b =>
           b.sources.some(s => allowedSources.includes(s.code))
         )
       }
@@ -179,9 +213,18 @@ export const referenceHandlers = [
   }),
 
   http.get(`${API_BASE}/backgrounds/:slug`, ({ params }) => {
-    const bg = backgrounds.find(b => b.slug === params.slug || b.id === Number(params.slug))
-    if (bg) {
-      return HttpResponse.json({ data: bg })
+    const slug = params.slug as string
+    // Support both 'acolyte' and 'phb:acolyte' formats
+    const normalizedSlug = slug.includes(':') ? slug : `phb:${slug}`
+
+    // Try full detail first, fall back to list item
+    const detail = backgroundDetails[normalizedSlug]
+    if (detail) {
+      return HttpResponse.json({ data: detail })
+    }
+    const listItem = backgroundListItems.find(b => b.slug === normalizedSlug || b.id === Number(slug))
+    if (listItem) {
+      return HttpResponse.json({ data: listItem })
     }
     return HttpResponse.json({ error: 'Background not found' }, { status: 404 })
   }),
