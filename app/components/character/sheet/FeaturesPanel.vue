@@ -34,8 +34,11 @@ const SOURCE_CONFIG: Record<string, { label: string, color: BadgeColor, order: n
 /** Search query */
 const searchQuery = ref('')
 
-/** Expanded feature IDs - using array for proper Vue reactivity */
-const expandedIds = ref<number[]>([])
+/**
+ * Expanded feature IDs - using Set for O(1) lookup performance
+ * @see Issue #801 - Converted from array to Set
+ */
+const expandedIds = ref(new Set<number>())
 
 /** Filter features by search query */
 const filteredFeatures = computed(() => {
@@ -86,40 +89,39 @@ const totalCount = computed(() => props.features?.length ?? 0)
 /** Filtered count */
 const filteredCount = computed(() => filteredFeatures.value.length)
 
-/** Check if a feature is expanded */
+/** Check if a feature is expanded - O(1) with Set */
 function isExpanded(featureId: number): boolean {
-  return expandedIds.value.includes(featureId)
+  return expandedIds.value.has(featureId)
 }
 
-/** Toggle a single feature */
+/** Toggle a single feature - uses Set.add/delete for O(1) operations */
 function toggleFeature(featureId: number) {
-  const index = expandedIds.value.indexOf(featureId)
-  if (index >= 0) {
-    expandedIds.value.splice(index, 1)
+  if (expandedIds.value.has(featureId)) {
+    expandedIds.value.delete(featureId)
   } else {
-    expandedIds.value.push(featureId)
+    expandedIds.value.add(featureId)
   }
 }
 
 /** Expand all features */
 function expandAll() {
-  expandedIds.value = filteredFeatures.value.map(f => f.id)
+  expandedIds.value = new Set(filteredFeatures.value.map(f => f.id))
 }
 
 /** Collapse all features */
 function collapseAll() {
-  expandedIds.value = []
+  expandedIds.value = new Set()
 }
 
-/** Check if all are expanded */
+/** Check if all are expanded - O(n) with Set.has() instead of O(n²) with array.includes() */
 const allExpanded = computed(() => {
   if (filteredFeatures.value.length === 0) return false
-  return filteredFeatures.value.every(f => expandedIds.value.includes(f.id))
+  return filteredFeatures.value.every(f => expandedIds.value.has(f.id))
 })
 
 /** Clear expansion state when search changes */
 watch(searchQuery, () => {
-  expandedIds.value = []
+  expandedIds.value = new Set()
 })
 
 /** Get source badge color */
