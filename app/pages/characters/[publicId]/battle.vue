@@ -198,6 +198,8 @@ useSeoMeta({
               :weapons="weapons"
               :proficiency-bonus="character.proficiency_bonus"
               :ability-modifiers="abilityModifiers"
+              :unarmed-strike="stats.unarmed_strike"
+              :improvised-weapon="stats.improvised_weapon"
             />
 
             <!-- Saving Throws + Death Saves side by side -->

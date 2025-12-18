@@ -1,11 +1,15 @@
 <!-- app/components/character/sheet/WeaponsPanel.vue -->
 <script setup lang="ts">
-import type { CharacterWeapon, AbilityScoreCode } from '~/types/character'
+import type { CharacterWeapon, AbilityScoreCode, BasicAttack } from '~/types/character'
 
 const props = defineProps<{
   weapons: CharacterWeapon[]
   proficiencyBonus: number
   abilityModifiers: Record<AbilityScoreCode, number>
+  /** Backend-calculated unarmed strike (optional, falls back to computed) */
+  unarmedStrike?: BasicAttack | null
+  /** Backend-calculated improvised weapon (optional) */
+  improvisedWeapon?: BasicAttack | null
 }>()
 
 // Track which weapons are expanded (using Record for native Vue reactivity)
@@ -38,22 +42,45 @@ function formatModifier(value: number): string {
 }
 
 /**
- * Calculate unarmed strike damage (1 + STR modifier)
- * Follows same formatting as weapon damage (formatDamage)
+ * Format damage for basic attacks (unarmed/improvised)
+ * Handles both dice-based (1d6+3) and flat damage (1+2)
  */
-const unarmedDamage = computed(() => {
-  const strMod = props.abilityModifiers.STR ?? 0
-  if (strMod === 0) return '1'
-  if (strMod > 0) return `1+${strMod}`
-  return `1${strMod}` // Negative mod already includes minus sign (e.g., "1-2")
-})
+function formatBasicAttackDamage(attack: BasicAttack): string {
+  const bonus = attack.damage_bonus
+
+  // If no dice (basic unarmed strike), it's flat 1 + modifier
+  if (!attack.damage_dice) {
+    if (bonus === 0) return '1'
+    if (bonus > 0) return `1+${bonus}`
+    return `1${bonus}` // Negative already has minus
+  }
+
+  // Dice-based damage (monk, fighting style, improvised)
+  if (bonus === 0) return attack.damage_dice
+  if (bonus > 0) return `${attack.damage_dice}+${bonus}`
+  return `${attack.damage_dice}${bonus}`
+}
 
 /**
- * Calculate unarmed strike attack bonus (STR + proficiency)
+ * Computed unarmed strike - uses backend data if available, otherwise fallback
  */
-const unarmedAttackBonus = computed(() => {
+const effectiveUnarmedStrike = computed<BasicAttack>(() => {
+  // Use backend data if provided
+  if (props.unarmedStrike) {
+    return props.unarmedStrike
+  }
+
+  // Fallback to computed values (for backwards compatibility)
   const strMod = props.abilityModifiers.STR ?? 0
-  return strMod + props.proficiencyBonus
+  return {
+    name: 'Unarmed Strike',
+    attack_bonus: strMod + props.proficiencyBonus,
+    damage_dice: null, // Basic unarmed is flat damage
+    damage_bonus: strMod,
+    damage_type: 'bludgeoning',
+    ability_used: 'STR',
+    source: null
+  }
 })
 </script>
 
@@ -131,22 +158,63 @@ const unarmedAttackBonus = computed(() => {
       </div>
     </div>
 
-    <!-- Divider before unarmed -->
+    <!-- Divider before basic attacks -->
     <div
       v-if="weapons.length > 0"
       class="border-t border-gray-200 dark:border-gray-700 my-3"
     />
 
-    <!-- Unarmed Strike (always shown) -->
-    <div class="flex items-center justify-between p-3 text-gray-600 dark:text-gray-400">
-      <span class="font-medium">Unarmed Strike</span>
-      <div class="flex items-center gap-4">
-        <span class="text-sm">
-          {{ formatModifier(unarmedAttackBonus) }} to hit
-        </span>
-        <span class="text-sm">
-          {{ unarmedDamage }}
-        </span>
+    <!-- Basic Attacks Section -->
+    <div class="space-y-2">
+      <!-- Unarmed Strike (always shown) -->
+      <div class="flex items-center justify-between p-3 text-gray-600 dark:text-gray-400 bg-gray-100/50 dark:bg-gray-700/30 rounded-lg">
+        <div class="flex flex-col">
+          <span class="font-medium">{{ effectiveUnarmedStrike.name }}</span>
+          <span
+            v-if="effectiveUnarmedStrike.damage_type"
+            class="text-xs text-gray-500 dark:text-gray-500"
+          >
+            {{ effectiveUnarmedStrike.damage_type }}
+          </span>
+        </div>
+        <div class="flex items-center gap-4">
+          <span class="text-sm">
+            {{ formatModifier(effectiveUnarmedStrike.attack_bonus) }} to hit
+          </span>
+          <span class="text-sm">
+            {{ formatBasicAttackDamage(effectiveUnarmedStrike) }}
+          </span>
+        </div>
+      </div>
+
+      <!-- Improvised Weapon (only if provided by backend) -->
+      <div
+        v-if="improvisedWeapon"
+        class="flex items-center justify-between p-3 text-gray-600 dark:text-gray-400 bg-gray-100/50 dark:bg-gray-700/30 rounded-lg"
+      >
+        <div class="flex flex-col">
+          <span class="font-medium">{{ improvisedWeapon.name }}</span>
+          <span
+            v-if="improvisedWeapon.damage_type"
+            class="text-xs text-gray-500 dark:text-gray-500"
+          >
+            {{ improvisedWeapon.damage_type }}
+          </span>
+          <span
+            v-else
+            class="text-xs text-gray-500 dark:text-gray-500 italic"
+          >
+            DM determines type
+          </span>
+        </div>
+        <div class="flex items-center gap-4">
+          <span class="text-sm">
+            {{ formatModifier(improvisedWeapon.attack_bonus) }} to hit
+          </span>
+          <span class="text-sm">
+            {{ formatBasicAttackDamage(improvisedWeapon) }}
+          </span>
+        </div>
       </div>
     </div>
 

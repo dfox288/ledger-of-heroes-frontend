@@ -298,7 +298,7 @@ export interface ClassSpellcastingInfo {
  *
  * @see Issue #631 - Multiclass spellcasting support
  */
-export interface CharacterStats extends Omit<CharacterStatsFromAPI, 'ability_scores' | 'saving_throws' | 'spellcasting' | 'weapons' | 'spell_slots'> {
+export interface CharacterStats extends Omit<CharacterStatsFromAPI, 'ability_scores' | 'saving_throws' | 'spellcasting' | 'weapons' | 'spell_slots' | 'unarmed_strike' | 'improvised_weapon'> {
   ability_scores: Record<AbilityScoreCode, { score: number | null, modifier: number | null }>
   saving_throws: Record<AbilityScoreCode, { modifier: number | null, proficient: boolean, total: number | null } | null>
   /**
@@ -320,6 +320,18 @@ export interface CharacterStats extends Omit<CharacterStatsFromAPI, 'ability_sco
   // Override spell_slots - generated type has incorrect Record<string, never> for slots
   // Use our local SpellSlotsResponse type which has proper slot structure
   spell_slots: SpellSlotsResponse | Record<string, number> | number[] | null
+  /**
+   * Backend-calculated unarmed strike stats
+   * Includes proficiency, considers Monk Martial Arts, feats, etc.
+   * @see Issue #751
+   */
+  unarmed_strike?: BasicAttack | null
+  /**
+   * Backend-calculated improvised weapon stats
+   * No proficiency, 1d4 damage, DM determines damage type
+   * @see Issue #751
+   */
+  improvised_weapon?: BasicAttack | null
 }
 
 // =============================================================================
@@ -715,6 +727,29 @@ export interface CharacterWeapon {
   ability_used: AbilityScoreCode
   /** Whether character is proficient with this weapon */
   is_proficient: boolean
+}
+
+/**
+ * Basic attack data from character stats endpoint
+ * Used for unarmed strike and improvised weapon display
+ *
+ * @see Issue #751 - Backend calculation for basic attacks
+ */
+export interface BasicAttack {
+  /** Attack name (e.g., "Unarmed Strike", "Improvised Weapon") */
+  name: string
+  /** Pre-computed attack bonus (ability mod + proficiency if applicable) */
+  attack_bonus: number
+  /** Damage dice (null for flat damage like basic unarmed strike) */
+  damage_dice: string | null
+  /** Damage bonus (ability modifier) */
+  damage_bonus: number
+  /** Damage type (e.g., "bludgeoning", null if DM determines) */
+  damage_type: string | null
+  /** Ability used for the attack (e.g., "STR", "DEX") */
+  ability_used: string
+  /** Source of special rules (e.g., "Martial Arts", null for basic) */
+  source: string | null
 }
 
 /**
