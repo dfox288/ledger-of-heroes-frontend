@@ -786,6 +786,14 @@ useSeoMeta({
                   />
                 </div>
 
+                <!-- Class Resources (Sorcery Points, etc.) - Issue #789 -->
+                <div
+                  v-if="character?.counters?.length"
+                  class="mb-4"
+                >
+                  <CharacterSheetClassResourcesManager :editable="canEdit" />
+                </div>
+
                 <!-- All Prepared Spells List (read-only - preparation happens in class tabs) -->
                 <!-- Shows cantrips (always ready) + all prepared leveled spells -->
                 <div
@@ -925,6 +933,14 @@ useSeoMeta({
                 :character-id="character.id"
                 :editable="canEdit"
               />
+            </div>
+
+            <!-- Class Resources (Sorcery Points, etc.) - Issue #789 -->
+            <div
+              v-if="character?.counters?.length"
+              class="mt-6"
+            >
+              <CharacterSheetClassResourcesManager :editable="canEdit" />
             </div>
 
             <!-- Prepare Spells View for prepared/spellbook casters (#723, #728) -->
