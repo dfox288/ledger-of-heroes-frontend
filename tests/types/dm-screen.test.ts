@@ -11,7 +11,7 @@ describe('DmScreen Types', () => {
       id: 1,
       public_id: 'brave-mage-3aBc',
       name: 'Gandalf',
-      level: 5,
+      total_level: 5,
       class_name: 'Wizard',
       hit_points: { current: 28, max: 35, temp: 0 },
       armor_class: 15,

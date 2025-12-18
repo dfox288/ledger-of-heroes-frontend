@@ -10,7 +10,7 @@ function createMockCharacter(overrides: Partial<DmScreenCharacter> = {}): DmScre
     id: 1,
     public_id: 'test-char',
     name: 'Test Character',
-    level: 5,
+    total_level: 5,
     class_name: 'Fighter',
     hit_points: { current: 40, max: 50, temp: 0 },
     armor_class: 16,
@@ -145,10 +145,10 @@ describe('DmScreenPartySummary', () => {
   describe('Average Party Level (APL)', () => {
     it('displays APL when characters are provided', async () => {
       const characters = [
-        createMockCharacter({ id: 1, level: 5 }),
-        createMockCharacter({ id: 2, level: 5 }),
-        createMockCharacter({ id: 3, level: 4 }),
-        createMockCharacter({ id: 4, level: 6 })
+        createMockCharacter({ id: 1, total_level: 5 }),
+        createMockCharacter({ id: 2, total_level: 5 }),
+        createMockCharacter({ id: 3, total_level: 4 }),
+        createMockCharacter({ id: 4, total_level: 6 })
       ]
       const wrapper = await mountSuspended(PartySummary, {
         props: { summary: mockSummary, characters }
@@ -160,9 +160,9 @@ describe('DmScreenPartySummary', () => {
 
     it('rounds APL to nearest integer', async () => {
       const characters = [
-        createMockCharacter({ id: 1, level: 5 }),
-        createMockCharacter({ id: 2, level: 6 }),
-        createMockCharacter({ id: 3, level: 7 })
+        createMockCharacter({ id: 1, total_level: 5 }),
+        createMockCharacter({ id: 2, total_level: 6 }),
+        createMockCharacter({ id: 3, total_level: 7 })
       ]
       const wrapper = await mountSuspended(PartySummary, {
         props: { summary: mockSummary, characters }

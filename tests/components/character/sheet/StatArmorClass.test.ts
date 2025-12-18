@@ -4,6 +4,11 @@ import { describe, it, expect } from 'vitest'
 import { mountSuspended } from '@nuxt/test-utils/runtime'
 import StatArmorClass from '~/components/character/sheet/StatArmorClass.vue'
 
+// Helper to create ability score format
+function abilityScore(score: number, modifier: number) {
+  return { score, modifier }
+}
+
 // Test fixtures
 const mockArmoredCharacter = {
   classes: [{ class: { slug: 'phb:fighter' } }],
@@ -11,25 +16,53 @@ const mockArmoredCharacter = {
     armor: { name: 'Chain Mail', armor_class: '16' },
     shield: null
   },
-  modifiers: { STR: 2, DEX: 1, CON: 2, INT: 0, WIS: 1, CHA: 0 }
+  ability_scores: {
+    STR: abilityScore(14, 2),
+    DEX: abilityScore(12, 1),
+    CON: abilityScore(14, 2),
+    INT: abilityScore(10, 0),
+    WIS: abilityScore(12, 1),
+    CHA: abilityScore(10, 0)
+  }
 }
 
 const mockBarbarianCharacter = {
   classes: [{ class: { slug: 'phb:barbarian' } }],
   equipped: { armor: null, shield: null },
-  modifiers: { STR: 2, DEX: 2, CON: 3, INT: 0, WIS: 1, CHA: -1 }
+  ability_scores: {
+    STR: abilityScore(14, 2),
+    DEX: abilityScore(14, 2),
+    CON: abilityScore(16, 3),
+    INT: abilityScore(10, 0),
+    WIS: abilityScore(12, 1),
+    CHA: abilityScore(8, -1)
+  }
 }
 
 const mockMonkCharacter = {
   classes: [{ class: { slug: 'phb:monk' } }],
   equipped: { armor: null, shield: null },
-  modifiers: { STR: 0, DEX: 3, CON: 1, INT: 0, WIS: 2, CHA: 0 }
+  ability_scores: {
+    STR: abilityScore(10, 0),
+    DEX: abilityScore(16, 3),
+    CON: abilityScore(12, 1),
+    INT: abilityScore(10, 0),
+    WIS: abilityScore(14, 2),
+    CHA: abilityScore(10, 0)
+  }
 }
 
 const mockWizardCharacter = {
   classes: [{ class: { slug: 'phb:wizard' } }],
   equipped: { armor: null, shield: null },
-  modifiers: { STR: -1, DEX: 2, CON: 1, INT: 3, WIS: 1, CHA: 0 }
+  ability_scores: {
+    STR: abilityScore(8, -1),
+    DEX: abilityScore(14, 2),
+    CON: abilityScore(12, 1),
+    INT: abilityScore(16, 3),
+    WIS: abilityScore(12, 1),
+    CHA: abilityScore(10, 0)
+  }
 }
 
 const mockShieldOnlyCharacter = {
@@ -38,7 +71,14 @@ const mockShieldOnlyCharacter = {
     armor: null,
     shield: { name: 'Shield', armor_class: '2' }
   },
-  modifiers: { STR: -1, DEX: 2, CON: 1, INT: 3, WIS: 1, CHA: 0 }
+  ability_scores: {
+    STR: abilityScore(8, -1),
+    DEX: abilityScore(14, 2),
+    CON: abilityScore(12, 1),
+    INT: abilityScore(16, 3),
+    WIS: abilityScore(12, 1),
+    CHA: abilityScore(10, 0)
+  }
 }
 
 describe('StatArmorClass', () => {
@@ -162,10 +202,10 @@ describe('StatArmorClass', () => {
       expect(vm.tooltipText).toContain('Unarmored')
     })
 
-    it('handles missing modifiers', async () => {
-      const noModifiers = { ...mockWizardCharacter, modifiers: null }
+    it('handles missing ability_scores', async () => {
+      const noAbilityScores = { ...mockWizardCharacter, ability_scores: null }
       const wrapper = await mountSuspended(StatArmorClass, {
-        props: { armorClass: 10, character: noModifiers }
+        props: { armorClass: 10, character: noAbilityScores }
       })
       const vm = wrapper.vm as any
       expect(vm.tooltipText).toContain('Unarmored')

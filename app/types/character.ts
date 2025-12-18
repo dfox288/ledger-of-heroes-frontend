@@ -486,7 +486,7 @@ export interface CharacterSummary {
   id: number
   public_id: string
   name: string
-  level: number
+  total_level: number
   is_complete: boolean
   /** Resolved race data (null if dangling) */
   race: { id: number, name: string, slug: string } | null

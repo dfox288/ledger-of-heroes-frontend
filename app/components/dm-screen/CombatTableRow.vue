@@ -118,7 +118,7 @@ function handleStatusToggle(status: string, event: Event) {
             {{ character.name }}
           </div>
           <div class="text-xs text-neutral-500">
-            {{ character.class_name }} {{ character.level }}
+            {{ character.class_name }} {{ character.total_level }}
           </div>
         </div>
       </div>

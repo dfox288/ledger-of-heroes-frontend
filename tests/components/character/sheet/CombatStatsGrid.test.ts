@@ -16,6 +16,11 @@ import { setActivePinia, createPinia } from 'pinia'
 import CombatStatsGrid from '~/components/character/sheet/CombatStatsGrid.vue'
 import { useCharacterPlayStateStore } from '~/stores/characterPlayState'
 
+// Helper to create ability score format
+function abilityScore(score: number, modifier: number) {
+  return { score, modifier }
+}
+
 // Character with Barbarian class (has Unarmored Defense: 10 + DEX + CON)
 const mockBarbarianCharacter = {
   id: 1,
@@ -37,13 +42,13 @@ const mockBarbarianCharacter = {
     armor: null,
     shield: null
   },
-  modifiers: {
-    STR: 2,
-    DEX: 2,
-    CON: 3,
-    INT: 0,
-    WIS: 1,
-    CHA: -1
+  ability_scores: {
+    STR: abilityScore(14, 2),
+    DEX: abilityScore(14, 2),
+    CON: abilityScore(16, 3),
+    INT: abilityScore(10, 0),
+    WIS: abilityScore(12, 1),
+    CHA: abilityScore(8, -1)
   }
 }
 
@@ -68,13 +73,13 @@ const mockArmoredCharacter = {
     armor: { id: '123', name: 'Chain Mail', armor_class: '16' },
     shield: null
   },
-  modifiers: {
-    STR: 2,
-    DEX: 1,
-    CON: 2,
-    INT: 0,
-    WIS: 1,
-    CHA: 0
+  ability_scores: {
+    STR: abilityScore(14, 2),
+    DEX: abilityScore(12, 1),
+    CON: abilityScore(14, 2),
+    INT: abilityScore(10, 0),
+    WIS: abilityScore(12, 1),
+    CHA: abilityScore(10, 0)
   }
 }
 

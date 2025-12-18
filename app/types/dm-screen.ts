@@ -94,7 +94,7 @@ export interface DmScreenCharacter {
   id: number
   public_id: string
   name: string
-  level: number
+  total_level: number
   class_name: string
   hit_points: CharacterHitPoints
   armor_class: number

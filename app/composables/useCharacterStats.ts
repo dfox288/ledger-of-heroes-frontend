@@ -102,7 +102,7 @@ export function useCharacterStats(characterId: Ref<number | null>) {
   const passivePerception = computed(() => stats.value?.passive_perception ?? 10)
 
   /** Character level */
-  const level = computed(() => stats.value?.level ?? 1)
+  const level = computed(() => stats.value?.total_level ?? 1)
 
   // ══════════════════════════════════════════════════════════════
   // COMPUTED: Ability Scores

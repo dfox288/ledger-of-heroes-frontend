@@ -48,7 +48,7 @@ defineEmits<{
               {{ character.name }}
             </NuxtLink>
             <div class="text-sm text-gray-500 dark:text-gray-400">
-              {{ character.class_name }} &middot; Level {{ character.level }}
+              {{ character.class_name }} &middot; Level {{ character.total_level }}
             </div>
           </div>
 

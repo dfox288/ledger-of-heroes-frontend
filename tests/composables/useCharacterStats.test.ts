@@ -35,7 +35,7 @@ describe('useCharacterStats', () => {
   describe('computed display values', () => {
     const mockStats = {
       character_id: 1,
-      level: 1,
+      total_level: 1,
       proficiency_bonus: 2,
       ability_scores: {
         STR: { score: 14, modifier: 2 },
@@ -108,7 +108,7 @@ describe('useCharacterStats', () => {
   describe('null/missing data handling', () => {
     const emptyStats = {
       character_id: 1,
-      level: 1,
+      total_level: 1,
       proficiency_bonus: 2,
       ability_scores: {
         STR: { score: 10, modifier: 0 },

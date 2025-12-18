@@ -3,7 +3,7 @@
  * Do not make direct changes to the file.
  *
  * Generated from: http://localhost:8080/docs/api.json
- * Generated at: 2025-12-18T22:02:46.940Z
+ * Generated at: 2025-12-18T22:59:36.522Z
  *
  * To regenerate: npm run types:sync
  */
@@ -7163,7 +7163,7 @@ export interface components {
             id: number;
             public_id: string;
             name: string;
-            level: number;
+            total_level: number;
             race: {
                 [key: string]: unknown;
             } | null;
@@ -7496,7 +7496,7 @@ export interface components {
         /** CharacterStatsResource */
         CharacterStatsResource: {
             character_id: number;
-            level: number;
+            total_level: number;
             proficiency_bonus: number;
             /** @description Ability scores keyed by code (STR, DEX, etc.) */
             ability_scores: {
@@ -8639,7 +8639,7 @@ export interface components {
             id: number;
             public_id: string;
             name: string;
-            level: number;
+            total_level: number;
             class_name: string | null;
             portrait: {
                 thumb: string;
@@ -8650,7 +8650,7 @@ export interface components {
             id: number;
             public_id: string;
             name: string;
-            level: number;
+            total_level: number;
             class_name: string | null;
             hit_points: {
                 current: number | null;

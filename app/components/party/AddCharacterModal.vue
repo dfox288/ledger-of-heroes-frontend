@@ -154,7 +154,7 @@ watch(open, (isOpen) => {
                 {{ character.name }}
               </div>
               <div class="text-sm text-gray-500 dark:text-gray-400">
-                {{ character.class_name }} {{ character.level }}
+                {{ character.class_name }} {{ character.total_level }}
               </div>
               <!-- Party indicator -->
               <div

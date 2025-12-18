@@ -47,11 +47,11 @@ const classDisplay = computed(() => {
 
   if (classes.length === 1 && sorted[0]) {
     // Single class: "Level 5 Fighter"
-    return `Level ${props.character.level} ${sorted[0].name}`
+    return `Level ${props.character.total_level} ${sorted[0].name}`
   }
 
   // Multiclass: "Level 8: Fighter 5 / Wizard 3"
-  return `Level ${props.character.level}: ${classBreakdown}`
+  return `Level ${props.character.total_level}: ${classBreakdown}`
 })
 </script>
 
@@ -108,7 +108,7 @@ const classDisplay = computed(() => {
               View
             </UButton>
             <UButton
-              v-if="character.level === 1 && !character.is_complete"
+              v-if="character.total_level === 1 && !character.is_complete"
               :to="`/characters/${character.public_id}/edit`"
               variant="soft"
               color="primary"

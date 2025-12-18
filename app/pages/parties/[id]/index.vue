@@ -111,7 +111,7 @@ async function openAddModal() {
       public_id: c.public_id,
       name: c.name,
       class_name: c.class?.name || 'Unknown',
-      level: c.level,
+      total_level: c.total_level,
       portrait: c.portrait?.thumb ? { thumb: c.portrait.thumb } : null,
       parties: []
     }))

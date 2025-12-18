@@ -61,25 +61,17 @@ describe('Character Detail Page', () => {
     id: 1,
     public_id: 'shadow-warden-q3x9',
     name: 'Thorin Ironforge',
-    level: 3,
+    total_level: 3,
     experience_points: 900,
     is_complete: true,
     validation_status: { is_complete: true, missing: [] },
     ability_scores: {
-      STR: 16,
-      DEX: 12,
-      CON: 14,
-      INT: 10,
-      WIS: 13,
-      CHA: 8
-    },
-    modifiers: {
-      STR: 3,
-      DEX: 1,
-      CON: 2,
-      INT: 0,
-      WIS: 1,
-      CHA: -1
+      STR: { score: 16, modifier: 3 },
+      DEX: { score: 12, modifier: 1 },
+      CON: { score: 14, modifier: 2 },
+      INT: { score: 10, modifier: 0 },
+      WIS: { score: 13, modifier: 1 },
+      CHA: { score: 8, modifier: -1 }
     },
     proficiency_bonus: 2,
     max_hit_points: 28,

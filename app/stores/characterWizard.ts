@@ -829,20 +829,20 @@ export const useCharacterWizardStore = defineStore('characterWizard', () => {
           classes?: Array<{ subclass?: { id: number, name: string, slug: string } }>
           ability_score_method?: AbilityMethod
           ability_scores?: {
-            STR: number | null
-            DEX: number | null
-            CON: number | null
-            INT: number | null
-            WIS: number | null
-            CHA: number | null
+            STR: { score: number | null, modifier: number | null }
+            DEX: { score: number | null, modifier: number | null }
+            CON: { score: number | null, modifier: number | null }
+            INT: { score: number | null, modifier: number | null }
+            WIS: { score: number | null, modifier: number | null }
+            CHA: { score: number | null, modifier: number | null }
           }
           base_ability_scores?: {
-            STR: number | null
-            DEX: number | null
-            CON: number | null
-            INT: number | null
-            WIS: number | null
-            CHA: number | null
+            STR: { score: number | null, modifier: number | null }
+            DEX: { score: number | null, modifier: number | null }
+            CON: { score: number | null, modifier: number | null }
+            INT: { score: number | null, modifier: number | null }
+            WIS: { score: number | null, modifier: number | null }
+            CHA: { score: number | null, modifier: number | null }
           }
         }
       }>(`/characters/${charPublicId}`)
@@ -871,12 +871,12 @@ export const useCharacterWizardStore = defineStore('characterWizard', () => {
       if (response.data.base_ability_scores) {
         const scores = response.data.base_ability_scores
         selections.value.abilityScores = {
-          strength: scores.STR ?? 10,
-          dexterity: scores.DEX ?? 10,
-          constitution: scores.CON ?? 10,
-          intelligence: scores.INT ?? 10,
-          wisdom: scores.WIS ?? 10,
-          charisma: scores.CHA ?? 10
+          strength: scores.STR?.score ?? 10,
+          dexterity: scores.DEX?.score ?? 10,
+          constitution: scores.CON?.score ?? 10,
+          intelligence: scores.INT?.score ?? 10,
+          wisdom: scores.WIS?.score ?? 10,
+          charisma: scores.CHA?.score ?? 10
         }
       }
 

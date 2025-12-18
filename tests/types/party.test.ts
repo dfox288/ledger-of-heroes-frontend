@@ -22,7 +22,7 @@ describe('Party Types', () => {
       public_id: 'brave-falcon-x7Kp',
       name: 'Thorin Ironforge',
       class_name: 'Fighter',
-      level: 5,
+      total_level: 5,
       portrait: { thumb: '/images/portrait.jpg' },
       parties: [{ id: 1, name: 'Dragon Heist' }]
     }

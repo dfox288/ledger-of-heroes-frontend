@@ -18,19 +18,24 @@ interface CharacterClass {
   class?: { slug?: string } | null
 }
 
-interface CharacterModifiers {
-  STR?: number | null
-  DEX?: number | null
-  CON?: number | null
-  INT?: number | null
-  WIS?: number | null
-  CHA?: number | null
+interface AbilityScoreData {
+  score: number | null
+  modifier: number | null
+}
+
+interface CharacterAbilityScores {
+  STR?: AbilityScoreData
+  DEX?: AbilityScoreData
+  CON?: AbilityScoreData
+  INT?: AbilityScoreData
+  WIS?: AbilityScoreData
+  CHA?: AbilityScoreData
 }
 
 interface CharacterData {
   classes?: CharacterClass[] | null
   equipped?: CharacterEquipped | null
-  modifiers?: CharacterModifiers | null
+  ability_scores?: CharacterAbilityScores | null
 }
 
 const props = defineProps<{
@@ -87,8 +92,8 @@ const hasShield = computed(() => {
  */
 const tooltipText = computed(() => {
   const ac = props.armorClass
-  const mods = props.character.modifiers
-  const dexMod = formatMod(mods?.DEX)
+  const abilityScores = props.character.ability_scores
+  const dexMod = formatMod(abilityScores?.DEX?.modifier)
 
   // Shield suffix - used for both armored and unarmored cases
   const shieldSuffix = hasShield.value
@@ -102,12 +107,12 @@ const tooltipText = computed(() => {
 
   // Unarmored - check for special class features
   if (unarmoredDefenseClass.value === 'barbarian') {
-    const conMod = formatMod(mods?.CON)
+    const conMod = formatMod(abilityScores?.CON?.modifier)
     return `Unarmored Defense: 10 + DEX (${dexMod}) + CON (${conMod})${shieldSuffix} = ${ac}`
   }
 
   if (unarmoredDefenseClass.value === 'monk') {
-    const wisMod = formatMod(mods?.WIS)
+    const wisMod = formatMod(abilityScores?.WIS?.modifier)
     return `Unarmored Defense: 10 + DEX (${dexMod}) + WIS (${wisMod})${shieldSuffix} = ${ac}`
   }
 

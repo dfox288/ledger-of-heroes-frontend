@@ -8,7 +8,7 @@ export interface PartyCharacter {
   public_id: string
   name: string
   class_name: string
-  level: number
+  total_level: number
   portrait: { thumb: string } | null
   /** Other parties this character belongs to */
   parties?: { id: number, name: string }[]

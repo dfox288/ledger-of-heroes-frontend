@@ -10,7 +10,7 @@ const mockCharacters: PartyCharacter[] = [
     public_id: 'brave-falcon-x7Kp',
     name: 'Thorin Ironforge',
     class_name: 'Fighter',
-    level: 5,
+    total_level: 5,
     portrait: null,
     parties: []
   },
@@ -19,7 +19,7 @@ const mockCharacters: PartyCharacter[] = [
     public_id: 'swift-hawk-y8Lq',
     name: 'Elara Moonwhisper',
     class_name: 'Wizard',
-    level: 5,
+    total_level: 5,
     portrait: { thumb: '/images/elara.jpg' },
     parties: []
   }

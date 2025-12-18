@@ -31,7 +31,7 @@ const hasCharacters = computed(() => props.characters.length > 0)
 // Average Party Level (APL)
 const averagePartyLevel = computed(() => {
   if (!hasCharacters.value) return 0
-  const totalLevels = props.characters.reduce((sum, c) => sum + c.level, 0)
+  const totalLevels = props.characters.reduce((sum, c) => sum + c.total_level, 0)
   return Math.round(totalLevels / props.characters.length)
 })
 
