@@ -300,13 +300,13 @@ function handleSave() {
     name: localName.value.trim(),
     alignment: localAlignment.value,
     portraitFile: selectedFile.value,
-    age: localPhysicalDescription.value.age,
-    height: localPhysicalDescription.value.height,
-    weight: localPhysicalDescription.value.weight,
-    eye_color: localPhysicalDescription.value.eye_color,
-    hair_color: localPhysicalDescription.value.hair_color,
-    skin_color: localPhysicalDescription.value.skin_color,
-    deity: localPhysicalDescription.value.deity
+    age: localPhysicalDescription.value.age?.trim() || null,
+    height: localPhysicalDescription.value.height?.trim() || null,
+    weight: localPhysicalDescription.value.weight?.trim() || null,
+    eye_color: localPhysicalDescription.value.eye_color?.trim() || null,
+    hair_color: localPhysicalDescription.value.hair_color?.trim() || null,
+    skin_color: localPhysicalDescription.value.skin_color?.trim() || null,
+    deity: localPhysicalDescription.value.deity?.trim() || null
   })
 }
 

@@ -297,13 +297,13 @@ async function handleEditSave(payload: EditPayload) {
     const hasNameChange = payload.name !== props.character.name
     const hasAlignmentChange = payload.alignment !== props.character.alignment
     const hasPhysicalChange =
-      payload.age !== (props.character.age ?? null) ||
-      payload.height !== (props.character.height ?? null) ||
-      payload.weight !== (props.character.weight ?? null) ||
-      payload.eye_color !== (props.character.eye_color ?? null) ||
-      payload.hair_color !== (props.character.hair_color ?? null) ||
-      payload.skin_color !== (props.character.skin_color ?? null) ||
-      payload.deity !== (props.character.deity ?? null)
+      (payload.age ?? null) !== (props.character.age ?? null) ||
+      (payload.height ?? null) !== (props.character.height ?? null) ||
+      (payload.weight ?? null) !== (props.character.weight ?? null) ||
+      (payload.eye_color ?? null) !== (props.character.eye_color ?? null) ||
+      (payload.hair_color ?? null) !== (props.character.hair_color ?? null) ||
+      (payload.skin_color ?? null) !== (props.character.skin_color ?? null) ||
+      (payload.deity ?? null) !== (props.character.deity ?? null)
 
     if (hasNameChange || hasAlignmentChange || hasPhysicalChange) {
       await apiFetch(`/characters/${props.character.id}`, {

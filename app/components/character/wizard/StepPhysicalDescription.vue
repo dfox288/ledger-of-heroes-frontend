@@ -26,49 +26,49 @@ const toast = useToast()
 const age = computed({
   get: () => store.selections.physicalDescription.age || '',
   set: (value: string) => {
-    store.selections.physicalDescription.age = value || null
+    store.selections.physicalDescription.age = value?.trim() || null
   }
 })
 
 const height = computed({
   get: () => store.selections.physicalDescription.height || '',
   set: (value: string) => {
-    store.selections.physicalDescription.height = value || null
+    store.selections.physicalDescription.height = value?.trim() || null
   }
 })
 
 const weight = computed({
   get: () => store.selections.physicalDescription.weight || '',
   set: (value: string) => {
-    store.selections.physicalDescription.weight = value || null
+    store.selections.physicalDescription.weight = value?.trim() || null
   }
 })
 
 const eyeColor = computed({
   get: () => store.selections.physicalDescription.eye_color || '',
   set: (value: string) => {
-    store.selections.physicalDescription.eye_color = value || null
+    store.selections.physicalDescription.eye_color = value?.trim() || null
   }
 })
 
 const hairColor = computed({
   get: () => store.selections.physicalDescription.hair_color || '',
   set: (value: string) => {
-    store.selections.physicalDescription.hair_color = value || null
+    store.selections.physicalDescription.hair_color = value?.trim() || null
   }
 })
 
 const skinColor = computed({
   get: () => store.selections.physicalDescription.skin_color || '',
   set: (value: string) => {
-    store.selections.physicalDescription.skin_color = value || null
+    store.selections.physicalDescription.skin_color = value?.trim() || null
   }
 })
 
 const deity = computed({
   get: () => store.selections.physicalDescription.deity || '',
   set: (value: string) => {
-    store.selections.physicalDescription.deity = value || null
+    store.selections.physicalDescription.deity = value?.trim() || null
   }
 })
 
