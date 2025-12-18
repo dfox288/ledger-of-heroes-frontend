@@ -36,6 +36,8 @@ const searchQuery = ref('')
 
 /**
  * Expanded feature IDs - using Set for O(1) lookup performance
+ * Note: Vue 3.2+ (included in Nuxt 4) has native Set reactivity support.
+ * Set.add/delete/clear trigger reactive updates automatically.
  * @see Issue #801 - Converted from array to Set
  */
 const expandedIds = ref(new Set<number>())

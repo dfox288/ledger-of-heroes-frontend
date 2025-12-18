@@ -130,7 +130,9 @@ function handleKeydown(event: KeyboardEvent) {
 function initializeState() {
   if (props.note) {
     // Edit mode - populate from note
-    // Check if category is in predefined list, otherwise treat as custom
+    // Check if category is in predefined list, otherwise treat as custom.
+    // isPredefinedCategory returns false for both CUSTOM_CATEGORY_VALUE marker
+    // and user-defined custom categories (e.g., "party_members"), so both hit else branch.
     if (isPredefinedCategory(props.note.category)) {
       localCategory.value = props.note.category
       customCategoryName.value = ''

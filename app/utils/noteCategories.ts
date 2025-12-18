@@ -89,14 +89,8 @@ export function categoryRequiresTitle(category: string): boolean {
 
 /**
  * Check if a category value is in the predefined list
+ * Returns false for CUSTOM_CATEGORY_VALUE and user-defined custom categories
  */
 export function isPredefinedCategory(category: string): boolean {
   return NOTE_CATEGORIES.some(c => c.value === category && c.value !== CUSTOM_CATEGORY_VALUE)
-}
-
-/**
- * Get categories for dropdown/select (excludes internal __custom__ marker)
- */
-export function getSelectableCategories() {
-  return NOTE_CATEGORIES
 }
