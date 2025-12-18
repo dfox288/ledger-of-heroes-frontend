@@ -32,18 +32,173 @@ If there's a handoff for you:
 3. After absorbing the context, delete that handoff section from the file
 4. Start work on the related issue
 
-## Create an Issue
+---
+
+## GitHub Issue Labels
+
+All issues are created in the shared repo: `dfox288/ledger-of-heroes`
+
+### Team Assignment (Required - pick one)
+
+| Label | Use When |
+|-------|----------|
+| `frontend` | Work is frontend-only |
+| `backend` | Work is backend-only |
+| `both` | Requires changes in both repos |
+
+### Issue Type (Required - pick one)
+
+| Label | Use When |
+|-------|----------|
+| `bug` | Something isn't working correctly |
+| `feature` | New functionality or enhancement |
+| `refactor` | Code improvement without behavior change |
+| `api-contract` | API design or contract discussion |
+| `data-issue` | Missing or incorrect seed/fixture data |
+| `performance` | Performance improvement needed |
+| `testing` | Test-related work |
+| `coverage` | Test coverage improvements |
+| `ux` | User experience improvements |
+| `cleanup` | Code cleanup, dead code removal |
+
+### Source (Required when creating issues)
+
+| Label | Use When |
+|-------|----------|
+| `from:frontend` | Issue discovered by frontend agent |
+| `from:backend` | Issue discovered by backend agent |
+| `from:manual-testing` | Found during manual testing |
+
+### Priority (Optional)
+
+| Label | Use When |
+|-------|----------|
+| `p0` | Critical - fix immediately, blocks release |
+| `p1` | High priority - fix this sprint |
+| `p2` | Medium priority - schedule soon |
+| `p3` | Low priority - backlog |
+
+Alternative priority labels (equivalent):
+- `priority:high` = `p1`
+- `priority:medium` = `p2`
+
+### Status/Workflow (Optional)
+
+| Label | Use When |
+|-------|----------|
+| `blocked` | Blocked by dependency or decision |
+| `needs-discussion` | Needs team discussion before work |
+| `breaking-change` | Backend change requires frontend updates |
+| `tracking` | Organizational/tracking issue |
+| `epic` | Large feature spanning multiple issues |
+
+### Domain (Optional)
+
+| Label | Use When |
+|-------|----------|
+| `character` | Character management features |
+| `api` | Backend API changes |
+| `quality` | Code quality improvements |
+
+---
+
+## Creating Issues
+
+### Bug Report
 
 ```bash
-# When you discover an API problem or need backend changes
-gh issue create --repo dfox288/ledger-of-heroes --title "Brief description" --label "backend,bug,from:frontend" --body "Details here"
+gh issue create --repo dfox288/ledger-of-heroes \
+  --title "fix: Brief description of the bug" \
+  --label "frontend,bug,from:frontend" \
+  --body "$(cat <<'EOF'
+## Problem
+What's broken and how to reproduce it.
+
+## Expected Behavior
+What should happen instead.
+
+## Files
+- `path/to/affected/file.vue`
+
+## Acceptance Criteria
+- [ ] Bug is fixed
+- [ ] Tests added/updated
+EOF
+)"
 ```
 
-## Labels to Use
+### Feature Request
 
-- **Assignee:** `frontend`, `backend`, `both`
-- **Type:** `bug`, `feature`, `api-contract`, `data-issue`, `performance`
-- **Source:** `from:frontend`, `from:backend`, `from:manual-testing`
+```bash
+gh issue create --repo dfox288/ledger-of-heroes \
+  --title "feat: Brief description of the feature" \
+  --label "frontend,feature,from:frontend" \
+  --body "$(cat <<'EOF'
+## Summary
+What feature to add and why.
+
+## Proposed Solution
+How to implement it.
+
+## Files
+- `path/to/files/to/change.vue`
+
+## Acceptance Criteria
+- [ ] Feature implemented
+- [ ] Tests added
+EOF
+)"
+```
+
+### Refactoring
+
+```bash
+gh issue create --repo dfox288/ledger-of-heroes \
+  --title "refactor: Brief description" \
+  --label "frontend,refactor,from:frontend" \
+  --body "$(cat <<'EOF'
+## Summary
+What to refactor and why.
+
+## Current State
+How code works now.
+
+## Proposed Changes
+What to change.
+
+## Files
+- `path/to/file.vue`
+
+## Acceptance Criteria
+- [ ] Code refactored
+- [ ] No behavior changes
+- [ ] Tests pass
+EOF
+)"
+```
+
+### Backend Request (requires handoff)
+
+```bash
+gh issue create --repo dfox288/ledger-of-heroes \
+  --title "feat: Brief description" \
+  --label "backend,feature,from:frontend" \
+  --body "$(cat <<'EOF'
+## Summary
+What the frontend needs from the backend.
+
+## API Contract
+Expected endpoint, request/response shape.
+
+## Frontend Blocked On
+Which components are waiting for this.
+EOF
+)"
+```
+
+**After creating a backend issue, ALWAYS write a handoff** (see below).
+
+---
 
 ## Write Handoffs (when creating backend work)
 
@@ -95,10 +250,33 @@ curl "http://localhost:8080/api/v1/endpoint?filter=..."
 - What the frontend expects to receive
 - Which components are blocked waiting for the fix
 
-## Close When Fixed
+---
+
+## Closing Issues
 
 Issues close automatically when PR merges if the PR body contains `Closes #N`. For manual closure:
 
 ```bash
 gh issue close 42 --repo dfox288/ledger-of-heroes --comment "Fixed in PR #123"
+```
+
+---
+
+## Quick Reference
+
+```bash
+# List frontend issues
+gh issue list --repo dfox288/ledger-of-heroes --label frontend
+
+# List all open issues
+gh issue list --repo dfox288/ledger-of-heroes
+
+# View specific issue
+gh issue view 123 --repo dfox288/ledger-of-heroes
+
+# Add label to existing issue
+gh issue edit 123 --repo dfox288/ledger-of-heroes --add-label "p1"
+
+# List available labels
+gh label list --repo dfox288/ledger-of-heroes
 ```
