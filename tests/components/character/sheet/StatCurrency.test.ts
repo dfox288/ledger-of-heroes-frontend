@@ -73,8 +73,8 @@ describe('StatCurrency', () => {
       const wrapper = await mountSuspended(StatCurrency, {
         props: { currency: { pp: 0, gp: 10000, ep: 0, sp: 0, cp: 0 } }
       })
-      // toLocaleString should add commas for 10,000
-      expect(wrapper.text()).toContain('10,000')
+      // toLocaleString adds locale-appropriate separators (comma, period, space, or none)
+      expect(wrapper.text()).toMatch(/10[,.\s]?000/)
     })
   })
 

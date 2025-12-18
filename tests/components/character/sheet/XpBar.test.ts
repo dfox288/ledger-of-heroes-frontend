@@ -233,8 +233,9 @@ describe('CharacterSheetXpBar', () => {
         }
       })
 
-      expect(wrapper.text()).toContain('225,000')
-      expect(wrapper.text()).toContain('265,000')
+      // Match with any locale separator (comma, period, space, or none)
+      expect(wrapper.text()).toMatch(/225[,.\s]?000/)
+      expect(wrapper.text()).toMatch(/265[,.\s]?000/)
     })
   })
 })

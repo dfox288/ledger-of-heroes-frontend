@@ -71,9 +71,9 @@ describe('CurrencyCard', () => {
       props: { currency: richCurrency }
     })
 
-    // Should format with commas (or locale-appropriate separators)
-    expect(wrapper.text()).toContain('1,000')
-    expect(wrapper.text()).toContain('25,000')
+    // Should format with locale-appropriate separators (comma, period, space, or none)
+    expect(wrapper.text()).toMatch(/1[,.\s]?000/)
+    expect(wrapper.text()).toMatch(/25[,.\s]?000/)
   })
 
   it('has correct test ids for each currency', async () => {
