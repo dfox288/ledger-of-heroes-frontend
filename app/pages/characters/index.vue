@@ -7,9 +7,43 @@ import { logger } from '~/utils/logger'
 /**
  * Character List Page
  *
- * Displays user's characters with search and pagination.
+ * Displays user's characters with search, filters, and pagination.
  * Uses useEntityList composable following the pattern of other entity pages.
  */
+
+// ============================================================================
+// Filters
+// ============================================================================
+
+/** Status filter: 'all' | 'complete' | 'draft' */
+const statusFilter = ref<'all' | 'complete' | 'draft'>('all')
+
+/** Class filter (null = all classes) */
+const classFilter = ref<string | null>(null)
+
+/** Status filter options */
+const statusOptions = [
+  { label: 'All', value: 'all' },
+  { label: 'Complete', value: 'complete' },
+  { label: 'Draft', value: 'draft' }
+]
+
+/** Build query params from filter state */
+const filterQuery = computed(() => {
+  const params: Record<string, string> = {}
+
+  // Status filter (backend expects 'complete' or 'draft')
+  if (statusFilter.value !== 'all') {
+    params.status = statusFilter.value
+  }
+
+  // Class filter (backend expects class slug like 'phb:fighter')
+  if (classFilter.value) {
+    params.class = classFilter.value
+  }
+
+  return params
+})
 
 // Use entity list composable for pagination and search
 const {
@@ -21,12 +55,12 @@ const {
   loading,
   error,
   refresh,
-  clearFilters,
-  hasActiveFilters
+  clearFilters: clearEntityFilters,
+  hasActiveFilters: hasEntityFilters
 } = useEntityList({
   endpoint: '/characters',
   cacheKey: 'characters-list',
-  queryBuilder: computed(() => ({})), // No custom filters (just search + pagination)
+  queryBuilder: filterQuery,
   perPage: 15, // Characters per page
   seo: {
     title: 'Your Characters - D&D 5e Compendium',
@@ -34,9 +68,47 @@ const {
   }
 })
 
+/** Check if any filters are active (including our custom ones) */
+const hasActiveFilters = computed(() =>
+  hasEntityFilters.value || statusFilter.value !== 'all' || classFilter.value !== null
+)
+
+/** Clear all filters including custom ones */
+function clearFilters() {
+  statusFilter.value = 'all'
+  classFilter.value = null
+  clearEntityFilters()
+}
+
+/** Fetch base classes from API for class filter dropdown */
+const { apiFetch } = useApi()
+
+interface ClassOption {
+  id: number
+  name: string
+  slug: string
+}
+
+const { data: classesData } = await useAsyncData(
+  'character-filter-classes',
+  () => apiFetch<{ data: ClassOption[] }>('/classes?filter=is_base_class=true&per_page=50'),
+  { dedupe: 'defer' }
+)
+
+/** Filter out sidekick classes and format for dropdown with "All" option */
+const classOptions = computed((): Array<{ label: string, value: string | null }> => {
+  const options: Array<{ label: string, value: string | null }> = [{ label: 'All Classes', value: null }]
+  if (classesData.value?.data) {
+    const classes = classesData.value.data
+      .filter(cls => !cls.name.includes('Sidekick'))
+      .map(cls => ({ label: cls.name, value: cls.slug }))
+    options.push(...classes)
+  }
+  return options
+})
+
 const characters = computed(() => data.value as CharacterSummary[])
 const perPage = 15
-const { apiFetch } = useApi()
 const toast = useToast()
 
 // Delete character by publicId
@@ -168,8 +240,8 @@ async function handleImport(importData: ImportData) {
       </div>
     </div>
 
-    <!-- Search Input -->
-    <div class="mb-6">
+    <!-- Search and Filters -->
+    <div class="mb-6 space-y-4">
       <UInput
         v-model="searchQuery"
         placeholder="Search characters..."
@@ -189,6 +261,26 @@ async function handleImport(importData: ImportData) {
           />
         </template>
       </UInput>
+
+      <!-- Filters Row -->
+      <div class="flex flex-wrap gap-3">
+        <!-- Status Filter -->
+        <USelectMenu
+          v-model="statusFilter"
+          :items="statusOptions"
+          value-key="value"
+          class="w-32"
+        />
+
+        <!-- Class Filter -->
+        <USelectMenu
+          v-if="classOptions.length > 1"
+          v-model="classFilter"
+          :items="classOptions"
+          value-key="value"
+          class="w-40"
+        />
+      </div>
     </div>
 
     <!-- List States (Loading, Error, Empty, Results) -->

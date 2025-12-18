@@ -45,7 +45,7 @@ const classDisplay = computed(() => {
 
   const classBreakdown = sorted.map(c => `${c.name} ${c.level}`).join(' / ')
 
-  if (classes.length === 1) {
+  if (classes.length === 1 && sorted[0]) {
     // Single class: "Level 5 Fighter"
     return `Level ${props.character.level} ${sorted[0].name}`
   }
@@ -108,13 +108,13 @@ const classDisplay = computed(() => {
               View
             </UButton>
             <UButton
-              v-if="character.level === 1"
+              v-if="character.level === 1 && !character.is_complete"
               :to="`/characters/${character.public_id}/edit`"
               variant="soft"
               color="primary"
               size="sm"
             >
-              {{ character.is_complete ? 'Edit' : 'Continue' }}
+              Continue
             </UButton>
           </div>
           <UButton
