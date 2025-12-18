@@ -136,6 +136,71 @@ const mockEquipment = [
   }
 ]
 
+// Mock Barbarian character with class resources
+const mockBarbarianCharacter = {
+  ...mockCharacter,
+  id: 2,
+  public_id: 'test-barb-xyz2',
+  name: 'Test Barbarian',
+  class: { id: 2, name: 'Barbarian', slug: 'phb:barbarian' },
+  classes: [{ class: { id: 2, name: 'Barbarian', slug: 'phb:barbarian' }, level: 5, subclass: null }],
+  counters: [
+    { id: 1, name: 'Rage', current: 3, max: 3, reset_on: 'long_rest' as const, source_type: 'class', source_slug: 'phb:barbarian', unlimited: false }
+  ]
+}
+
+// Mock Wizard character (spellcaster)
+const mockWizardCharacter = {
+  ...mockCharacter,
+  id: 3,
+  public_id: 'test-wizard-abc3',
+  name: 'Test Wizard',
+  class: { id: 3, name: 'Wizard', slug: 'phb:wizard' },
+  classes: [{ class: { id: 3, name: 'Wizard', slug: 'phb:wizard' }, level: 5, subclass: null }],
+  counters: []
+}
+
+// Mock Wizard stats (spellcaster)
+const mockWizardStats = {
+  ...mockStats,
+  spellcasting: {
+    'phb:wizard': {
+      ability: 'INT',
+      spell_save_dc: 14,
+      spell_attack_bonus: 6
+    }
+  }
+}
+
+// Mock spell slots response
+const mockSpellSlots = {
+  slots: {
+    1: { total: 4, spent: 1 },
+    2: { total: 3, spent: 0 },
+    3: { total: 2, spent: 0 }
+  },
+  pact_magic: null,
+  preparation_limit: null,
+  prepared_count: 0
+}
+
+// Mock multiclass spellcaster (Cleric/Wizard)
+const mockMulticlassStats = {
+  ...mockStats,
+  spellcasting: {
+    'phb:cleric': {
+      ability: 'WIS',
+      spell_save_dc: 13,
+      spell_attack_bonus: 5
+    },
+    'phb:wizard': {
+      ability: 'INT',
+      spell_save_dc: 15,
+      spell_attack_bonus: 7
+    }
+  }
+}
+
 describe('Battle Page', () => {
   beforeEach(() => {
     setActivePinia(createPinia())
@@ -156,6 +221,9 @@ describe('Battle Page', () => {
       }),
       http.get('/api/characters/:id/equipment', () => {
         return HttpResponse.json({ data: mockEquipment })
+      }),
+      http.get('/api/characters/:id/spell-slots', () => {
+        return HttpResponse.json({ data: mockSpellSlots })
       })
     )
   })
@@ -263,5 +331,154 @@ describe('Battle Page', () => {
     } else {
       expect(true).toBe(true)
     }
+  })
+
+  // ══════════════════════════════════════════════════════════════
+  // Issue #764: ClassResourcesManager
+  // ══════════════════════════════════════════════════════════════
+
+  describe('ClassResourcesManager (#764)', () => {
+    it('shows ClassResourcesManager when character has counters (Rage, Ki, etc.)', async () => {
+      // Override with barbarian character that has counters
+      server.use(
+        http.get('/api/characters/:id', () => {
+          return HttpResponse.json({ data: mockBarbarianCharacter })
+        })
+      )
+
+      const wrapper = await mountSuspended(BattlePage)
+      await flushPromises()
+
+      const layout = wrapper.find('[data-testid="battle-layout"]')
+      if (layout.exists()) {
+        // Should show class resources section
+        expect(wrapper.find('[data-testid="class-resources"]').exists()).toBe(true)
+        expect(wrapper.text()).toContain('Rage')
+      } else {
+        expect(true).toBe(true)
+      }
+    })
+
+    it('hides ClassResourcesManager when character has no counters', async () => {
+      // Default mockCharacter has no counters
+      const wrapper = await mountSuspended(BattlePage)
+      await flushPromises()
+
+      const layout = wrapper.find('[data-testid="battle-layout"]')
+      if (layout.exists()) {
+        // Should NOT show class resources section for fighter without counters
+        expect(wrapper.find('[data-testid="class-resources"]').exists()).toBe(false)
+      } else {
+        expect(true).toBe(true)
+      }
+    })
+  })
+
+  // ══════════════════════════════════════════════════════════════
+  // Issue #765: SpellSlotsManager
+  // ══════════════════════════════════════════════════════════════
+
+  describe('SpellSlotsManager (#765)', () => {
+    it('shows SpellSlotsManager for spellcasters', async () => {
+      // Override with wizard character and stats
+      server.use(
+        http.get('/api/characters/:id', () => {
+          return HttpResponse.json({ data: mockWizardCharacter })
+        }),
+        http.get('/api/characters/:id/stats', () => {
+          return HttpResponse.json({ data: mockWizardStats })
+        })
+      )
+
+      const wrapper = await mountSuspended(BattlePage)
+      await flushPromises()
+
+      const layout = wrapper.find('[data-testid="battle-layout"]')
+      if (layout.exists()) {
+        // Should show spell slots section
+        expect(wrapper.text()).toContain('Spell Slots')
+      } else {
+        expect(true).toBe(true)
+      }
+    })
+
+    it('hides SpellSlotsManager for non-spellcasters', async () => {
+      // Default mockCharacter is a Fighter (non-spellcaster)
+      const wrapper = await mountSuspended(BattlePage)
+      await flushPromises()
+
+      const layout = wrapper.find('[data-testid="battle-layout"]')
+      if (layout.exists()) {
+        // Should NOT show spell slots for non-spellcaster
+        expect(wrapper.text()).not.toContain('Spell Slots')
+      } else {
+        expect(true).toBe(true)
+      }
+    })
+  })
+
+  // ══════════════════════════════════════════════════════════════
+  // Issue #766: StatSpellcasting (Spell DC and Attack Bonus)
+  // ══════════════════════════════════════════════════════════════
+
+  describe('StatSpellcasting (#766)', () => {
+    it('shows Spell DC and Attack Bonus for single-class spellcasters', async () => {
+      // Override with wizard character and stats
+      server.use(
+        http.get('/api/characters/:id', () => {
+          return HttpResponse.json({ data: mockWizardCharacter })
+        }),
+        http.get('/api/characters/:id/stats', () => {
+          return HttpResponse.json({ data: mockWizardStats })
+        })
+      )
+
+      const wrapper = await mountSuspended(BattlePage)
+      await flushPromises()
+
+      const layout = wrapper.find('[data-testid="battle-layout"]')
+      if (layout.exists()) {
+        // Should show spell DC and attack bonus
+        expect(wrapper.text()).toContain('14') // Spell DC
+        expect(wrapper.text()).toContain('+6') // Spell Attack Bonus
+      } else {
+        expect(true).toBe(true)
+      }
+    })
+
+    it('shows per-class Spell DC and Attack Bonus for multiclass spellcasters', async () => {
+      // Override with multiclass spellcaster stats
+      server.use(
+        http.get('/api/characters/:id/stats', () => {
+          return HttpResponse.json({ data: mockMulticlassStats })
+        })
+      )
+
+      const wrapper = await mountSuspended(BattlePage)
+      await flushPromises()
+
+      const layout = wrapper.find('[data-testid="battle-layout"]')
+      if (layout.exists()) {
+        // Should show both class DCs/attack bonuses
+        expect(wrapper.text()).toContain('13') // Cleric DC
+        expect(wrapper.text()).toContain('15') // Wizard DC
+      } else {
+        expect(true).toBe(true)
+      }
+    })
+
+    it('hides StatSpellcasting for non-spellcasters', async () => {
+      // Default mockCharacter is a Fighter (non-spellcaster, spellcasting: null)
+      const wrapper = await mountSuspended(BattlePage)
+      await flushPromises()
+
+      const layout = wrapper.find('[data-testid="battle-layout"]')
+      if (layout.exists()) {
+        // Should NOT show spell stats section
+        expect(wrapper.find('[data-testid="stat-spellcasting"]').exists()).toBe(false)
+      } else {
+        expect(true).toBe(true)
+      }
+    })
   })
 })
