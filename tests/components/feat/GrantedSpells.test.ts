@@ -2,9 +2,9 @@ import { describe, it, expect } from 'vitest'
 import { mountSuspended } from '@nuxt/test-utils/runtime'
 import FeatGrantedSpells from '~/components/feat/GrantedSpells.vue'
 import type { components } from '~/types/api/generated'
+import type { EntityChoice } from '~/types'
 
 type EntitySpellResource = components['schemas']['EntitySpellResource']
-import type { EntityChoice } from '~/types'
 
 const mockSpells: EntitySpellResource[] = [
   {
