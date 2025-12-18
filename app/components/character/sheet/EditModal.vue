@@ -26,6 +26,16 @@ const ALIGNMENTS = [
   'Unaligned'
 ] as const
 
+interface PhysicalDescription {
+  age: string | null
+  height: string | null
+  weight: string | null
+  eye_color: string | null
+  hair_color: string | null
+  skin_color: string | null
+  deity: string | null
+}
+
 interface CharacterData {
   id: number
   name: string
@@ -42,12 +52,27 @@ interface CharacterData {
      */
     is_uploaded: boolean
   } | null
+  /** Physical description fields (all optional) */
+  age?: string | null
+  height?: string | null
+  weight?: string | null
+  eye_color?: string | null
+  hair_color?: string | null
+  skin_color?: string | null
+  deity?: string | null
 }
 
 export interface EditPayload {
   name: string
   alignment: string | null
   portraitFile: File | null
+  age: string | null
+  height: string | null
+  weight: string | null
+  eye_color: string | null
+  hair_color: string | null
+  skin_color: string | null
+  deity: string | null
 }
 
 const props = defineProps<{
@@ -68,6 +93,17 @@ const localName = ref('')
 
 /** Local state for alignment selection */
 const localAlignment = ref<string | null>(null)
+
+/** Local state for physical description */
+const localPhysicalDescription = ref<PhysicalDescription>({
+  age: null,
+  height: null,
+  weight: null,
+  eye_color: null,
+  hair_color: null,
+  skin_color: null,
+  deity: null
+})
 
 /** Selected file for portrait upload */
 const selectedFile = ref<File | null>(null)
@@ -119,10 +155,27 @@ const alignmentChanged = computed(() => {
 })
 
 /**
+ * Check if any physical description field has changed
+ */
+const physicalDescriptionChanged = computed(() => {
+  const pd = localPhysicalDescription.value
+  const char = props.character
+  return (
+    pd.age !== (char?.age ?? null) ||
+    pd.height !== (char?.height ?? null) ||
+    pd.weight !== (char?.weight ?? null) ||
+    pd.eye_color !== (char?.eye_color ?? null) ||
+    pd.hair_color !== (char?.hair_color ?? null) ||
+    pd.skin_color !== (char?.skin_color ?? null) ||
+    pd.deity !== (char?.deity ?? null)
+  )
+})
+
+/**
  * Whether any changes have been made
  */
 const hasChanges = computed(() => {
-  return nameChanged.value || alignmentChanged.value || selectedFile.value !== null
+  return nameChanged.value || alignmentChanged.value || physicalDescriptionChanged.value || selectedFile.value !== null
 })
 
 /**
@@ -246,7 +299,14 @@ function handleSave() {
   emit('save', {
     name: localName.value.trim(),
     alignment: localAlignment.value,
-    portraitFile: selectedFile.value
+    portraitFile: selectedFile.value,
+    age: localPhysicalDescription.value.age?.trim() || null,
+    height: localPhysicalDescription.value.height?.trim() || null,
+    weight: localPhysicalDescription.value.weight?.trim() || null,
+    eye_color: localPhysicalDescription.value.eye_color?.trim() || null,
+    hair_color: localPhysicalDescription.value.hair_color?.trim() || null,
+    skin_color: localPhysicalDescription.value.skin_color?.trim() || null,
+    deity: localPhysicalDescription.value.deity?.trim() || null
   })
 }
 
@@ -273,6 +333,15 @@ watch(open, (isOpen) => {
   if (isOpen && props.character) {
     localName.value = props.character.name
     localAlignment.value = props.character.alignment
+    localPhysicalDescription.value = {
+      age: props.character.age ?? null,
+      height: props.character.height ?? null,
+      weight: props.character.weight ?? null,
+      eye_color: props.character.eye_color ?? null,
+      hair_color: props.character.hair_color ?? null,
+      skin_color: props.character.skin_color ?? null,
+      deity: props.character.deity ?? null
+    }
     selectedFile.value = null
     fileError.value = null
     isDragging.value = false
@@ -328,6 +397,107 @@ watch(open, (isOpen) => {
             :disabled="loading"
             class="w-full"
           />
+        </div>
+
+        <!-- Physical Description Section -->
+        <div class="space-y-4">
+          <h4 class="text-sm font-medium text-gray-700 dark:text-gray-300">
+            Physical Description
+          </h4>
+
+          <!-- Appearance Row -->
+          <div class="grid grid-cols-3 gap-3">
+            <div>
+              <label class="block text-xs text-gray-500 dark:text-gray-400 mb-1">Age</label>
+              <UInput
+                v-model="localPhysicalDescription.age"
+                data-testid="age-input"
+                type="text"
+                placeholder="25"
+                maxlength="50"
+                :disabled="loading"
+                size="sm"
+              />
+            </div>
+            <div>
+              <label class="block text-xs text-gray-500 dark:text-gray-400 mb-1">Height</label>
+              <UInput
+                v-model="localPhysicalDescription.height"
+                data-testid="height-input"
+                type="text"
+                placeholder="5'10&quot;"
+                maxlength="50"
+                :disabled="loading"
+                size="sm"
+              />
+            </div>
+            <div>
+              <label class="block text-xs text-gray-500 dark:text-gray-400 mb-1">Weight</label>
+              <UInput
+                v-model="localPhysicalDescription.weight"
+                data-testid="weight-input"
+                type="text"
+                placeholder="180 lbs"
+                maxlength="50"
+                :disabled="loading"
+                size="sm"
+              />
+            </div>
+          </div>
+
+          <!-- Features Row -->
+          <div class="grid grid-cols-3 gap-3">
+            <div>
+              <label class="block text-xs text-gray-500 dark:text-gray-400 mb-1">Eye Color</label>
+              <UInput
+                v-model="localPhysicalDescription.eye_color"
+                data-testid="eye-color-input"
+                type="text"
+                placeholder="Blue"
+                maxlength="50"
+                :disabled="loading"
+                size="sm"
+              />
+            </div>
+            <div>
+              <label class="block text-xs text-gray-500 dark:text-gray-400 mb-1">Hair Color</label>
+              <UInput
+                v-model="localPhysicalDescription.hair_color"
+                data-testid="hair-color-input"
+                type="text"
+                placeholder="Brown"
+                maxlength="50"
+                :disabled="loading"
+                size="sm"
+              />
+            </div>
+            <div>
+              <label class="block text-xs text-gray-500 dark:text-gray-400 mb-1">Skin Color</label>
+              <UInput
+                v-model="localPhysicalDescription.skin_color"
+                data-testid="skin-color-input"
+                type="text"
+                placeholder="Fair"
+                maxlength="50"
+                :disabled="loading"
+                size="sm"
+              />
+            </div>
+          </div>
+
+          <!-- Deity Row -->
+          <div>
+            <label class="block text-xs text-gray-500 dark:text-gray-400 mb-1">Deity</label>
+            <UInput
+              v-model="localPhysicalDescription.deity"
+              data-testid="deity-input"
+              type="text"
+              placeholder="Pelor, None, etc."
+              maxlength="150"
+              :disabled="loading"
+              size="sm"
+            />
+          </div>
         </div>
 
         <!-- Portrait Section -->

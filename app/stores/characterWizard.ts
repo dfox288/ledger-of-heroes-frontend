@@ -42,6 +42,16 @@ export interface Subclass {
   source?: { code: string, name: string }
 }
 
+export interface PhysicalDescription {
+  age: string | null
+  height: string | null
+  weight: string | null
+  eye_color: string | null
+  hair_color: string | null
+  skin_color: string | null
+  deity: string | null
+}
+
 export interface WizardSelections {
   race: Race | null
   subrace: Race | null
@@ -52,6 +62,7 @@ export interface WizardSelections {
   abilityMethod: AbilityMethod
   name: string
   alignment: CharacterAlignment | null
+  physicalDescription: PhysicalDescription
 }
 
 // Note: PendingChoices interface removed - choices are now managed by useUnifiedChoices composable
@@ -93,6 +104,18 @@ function defaultAbilityScores(): AbilityScores {
   }
 }
 
+function defaultPhysicalDescription(): PhysicalDescription {
+  return {
+    age: null,
+    height: null,
+    weight: null,
+    eye_color: null,
+    hair_color: null,
+    skin_color: null,
+    deity: null
+  }
+}
+
 function defaultSelections(): WizardSelections {
   return {
     race: null,
@@ -103,7 +126,8 @@ function defaultSelections(): WizardSelections {
     abilityScores: defaultAbilityScores(),
     abilityMethod: 'standard_array',
     name: '',
-    alignment: null
+    alignment: null,
+    physicalDescription: defaultPhysicalDescription()
   }
 }
 
@@ -719,6 +743,41 @@ export const useCharacterWizardStore = defineStore('characterWizard', () => {
     }
   }
 
+  /**
+   * Save character physical description (age, height, weight, colors, deity)
+   * All fields are optional and nullable.
+   */
+  async function savePhysicalDescription(description: PhysicalDescription): Promise<void> {
+    if (!characterId.value) return
+
+    isLoading.value = true
+    error.value = null
+
+    try {
+      await apiFetch(`/characters/${characterId.value}`, {
+        method: 'PATCH',
+        body: {
+          age: description.age,
+          height: description.height,
+          weight: description.weight,
+          eye_color: description.eye_color,
+          hair_color: description.hair_color,
+          skin_color: description.skin_color,
+          deity: description.deity
+        }
+      })
+
+      selections.value.physicalDescription = { ...description }
+
+      await syncWithBackend()
+    } catch (err) {
+      error.value = err instanceof Error ? err.message : 'Failed to save physical description'
+      throw err
+    } finally {
+      isLoading.value = false
+    }
+  }
+
   // Note: Save pending choices methods removed - choices are now managed by useUnifiedChoices composable
   // The following methods were removed:
   // - saveProficiencyChoices, saveLanguageChoices, saveEquipmentChoices, saveSpellChoices
@@ -942,6 +1001,7 @@ export const useCharacterWizardStore = defineStore('characterWizard', () => {
     selectBackground,
     saveAbilityScores,
     saveDetails,
+    savePhysicalDescription,
 
     // Note: Pending choice actions removed - use useUnifiedChoices composable instead
     // Removed: toggleProficiencyChoice, toggleLanguageChoice, setEquipmentChoice, toggleSpellChoice

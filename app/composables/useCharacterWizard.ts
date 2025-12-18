@@ -115,6 +115,12 @@ function createStepRegistry(store: ReturnType<typeof useCharacterWizardStore>): 
       visible: () => true
     },
     {
+      name: 'physical-description',
+      label: 'Physical',
+      icon: 'i-heroicons-identification',
+      visible: () => true
+    },
+    {
       name: 'review',
       label: 'Review',
       icon: 'i-heroicons-check-circle',
