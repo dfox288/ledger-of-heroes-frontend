@@ -345,7 +345,7 @@ function handleExpandClick(event: MouseEvent) {
         data-testid="spell-description"
         class="pt-2 border-t border-gray-100 dark:border-gray-700/50"
       >
-        <p class="text-gray-700 dark:text-gray-300 whitespace-pre-line">
+        <p class="text-gray-700 dark:text-gray-300 whitespace-pre-line max-h-48 overflow-y-auto">
           {{ spellData.description }}
         </p>
 
@@ -370,6 +370,7 @@ function handleExpandClick(event: MouseEvent) {
           <UIcon
             name="i-heroicons-arrow-top-right-on-square"
             class="w-4 h-4"
+            aria-hidden="true"
           />
         </NuxtLink>
       </div>
