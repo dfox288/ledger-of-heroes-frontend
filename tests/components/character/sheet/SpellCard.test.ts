@@ -636,4 +636,104 @@ describe('SpellCard', () => {
       })
     })
   })
+
+  // ==========================================================================
+  // SPELL DESCRIPTION TESTS (Issue #782)
+  // ==========================================================================
+
+  describe('spell description display', () => {
+    // Mock spell with description field (will be added to CharacterSpellResource)
+    const mockSpellWithDescription: CharacterSpell = {
+      ...mockLeveledSpell,
+      spell: {
+        ...mockLeveledSpell.spell!,
+        description: 'A bright streak flashes from your pointing finger to a point you choose within range and then blossoms with a low roar into an explosion of flame.'
+      }
+    }
+
+    const mockSpellWithHigherLevels: CharacterSpell = {
+      ...mockLeveledSpell,
+      spell: {
+        ...mockLeveledSpell.spell!,
+        description: 'A bright streak flashes from your pointing finger.',
+        higher_levels: 'When you cast this spell using a spell slot of 4th level or higher, the damage increases by 1d6 for each slot level above 3rd.'
+      }
+    }
+
+    describe('description section', () => {
+      it('does not show description when collapsed', async () => {
+        const wrapper = await mountSuspended(SpellCard, {
+          props: { spell: mockSpellWithDescription }
+        })
+
+        expect(wrapper.text()).not.toContain('A bright streak flashes')
+      })
+
+      it('shows description when expanded and description is available', async () => {
+        const wrapper = await mountSuspended(SpellCard, {
+          props: { spell: mockSpellWithDescription }
+        })
+
+        await wrapper.find('[data-testid="expand-toggle"]').trigger('click')
+
+        expect(wrapper.text()).toContain('A bright streak flashes')
+      })
+
+      it('does not show description section when description is not available', async () => {
+        const wrapper = await mountSuspended(SpellCard, {
+          props: { spell: mockLeveledSpell }
+        })
+
+        await wrapper.find('[data-testid="expand-toggle"]').trigger('click')
+
+        // Should not have description section when no description
+        expect(wrapper.find('[data-testid="spell-description"]').exists()).toBe(false)
+      })
+
+      it('shows "At Higher Levels" when available', async () => {
+        const wrapper = await mountSuspended(SpellCard, {
+          props: { spell: mockSpellWithHigherLevels }
+        })
+
+        await wrapper.find('[data-testid="expand-toggle"]').trigger('click')
+
+        expect(wrapper.text()).toContain('At Higher Levels')
+        expect(wrapper.text()).toContain('damage increases by 1d6')
+      })
+
+      it('does not show "At Higher Levels" when not available', async () => {
+        const wrapper = await mountSuspended(SpellCard, {
+          props: { spell: mockSpellWithDescription }
+        })
+
+        await wrapper.find('[data-testid="expand-toggle"]').trigger('click')
+
+        expect(wrapper.text()).not.toContain('At Higher Levels')
+      })
+    })
+
+    describe('view full details link', () => {
+      it('shows link to compendium spell page when expanded', async () => {
+        const wrapper = await mountSuspended(SpellCard, {
+          props: { spell: mockLeveledSpell }
+        })
+
+        await wrapper.find('[data-testid="expand-toggle"]').trigger('click')
+
+        const link = wrapper.find('[data-testid="spell-compendium-link"]')
+        expect(link.exists()).toBe(true)
+        expect(link.attributes('href')).toBe('/spells/phb:fireball')
+      })
+
+      it('shows "View Full Details" text', async () => {
+        const wrapper = await mountSuspended(SpellCard, {
+          props: { spell: mockLeveledSpell }
+        })
+
+        await wrapper.find('[data-testid="expand-toggle"]').trigger('click')
+
+        expect(wrapper.text()).toContain('View Full Details')
+      })
+    })
+  })
 })

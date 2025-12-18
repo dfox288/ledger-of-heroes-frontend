@@ -309,8 +309,9 @@ function handleExpandClick(event: MouseEvent) {
     <div
       v-if="isExpanded"
       data-testid="spell-details"
-      class="mt-3 pt-3 border-t border-gray-200 dark:border-gray-700 space-y-2 text-sm"
+      class="mt-3 pt-3 border-t border-gray-200 dark:border-gray-700 space-y-3 text-sm"
     >
+      <!-- Casting Stats Grid -->
       <div class="grid grid-cols-2 gap-2">
         <div>
           <span class="text-gray-500 dark:text-gray-400">Casting Time</span>
@@ -336,6 +337,41 @@ function handleExpandClick(event: MouseEvent) {
             {{ spellData.duration }}
           </p>
         </div>
+      </div>
+
+      <!-- Spell Description (Issue #782) -->
+      <div
+        v-if="spellData.description"
+        data-testid="spell-description"
+        class="pt-2 border-t border-gray-100 dark:border-gray-700/50"
+      >
+        <p class="text-gray-700 dark:text-gray-300 whitespace-pre-line">
+          {{ spellData.description }}
+        </p>
+
+        <!-- At Higher Levels -->
+        <div
+          v-if="spellData.higher_levels"
+          class="mt-2"
+        >
+          <span class="font-semibold text-gray-900 dark:text-gray-100">At Higher Levels.</span>
+          <span class="text-gray-700 dark:text-gray-300"> {{ spellData.higher_levels }}</span>
+        </div>
+      </div>
+
+      <!-- View Full Details Link -->
+      <div class="pt-2 border-t border-gray-100 dark:border-gray-700/50">
+        <NuxtLink
+          :to="`/spells/${spellData.slug}`"
+          data-testid="spell-compendium-link"
+          class="inline-flex items-center gap-1 text-spell-600 dark:text-spell-400 hover:text-spell-700 dark:hover:text-spell-300 transition-colors"
+        >
+          <span>View Full Details</span>
+          <UIcon
+            name="i-heroicons-arrow-top-right-on-square"
+            class="w-4 h-4"
+          />
+        </NuxtLink>
       </div>
     </div>
   </div>

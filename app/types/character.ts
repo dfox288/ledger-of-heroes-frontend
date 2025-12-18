@@ -109,21 +109,53 @@ export type CharacterEquipment = components['schemas']['CharacterEquipmentResour
 export type CharacterSpellFromAPI = components['schemas']['CharacterSpellResource']
 
 /**
+ * Nested spell data in CharacterSpell
+ *
+ * Extended from API type to include optional description fields
+ * that will be added when backend implements Issue #782.
+ */
+export interface CharacterSpellData {
+  id: number
+  name: string
+  slug: string
+  level: number
+  school: string
+  casting_time: string
+  range: string
+  components: string
+  duration: string
+  concentration: boolean
+  ritual: boolean
+  /** Full spell description text (optional until backend adds) */
+  description?: string
+  /** "At Higher Levels" text for upcastable spells */
+  higher_levels?: string | null
+}
+
+/**
  * Character spell data from API
  *
- * Extended with class_slug for multiclass spellcasting support.
- * The class_slug field identifies which class granted the spell.
+ * Extended with:
+ * - class_slug for multiclass spellcasting support
+ * - Optional description/higher_levels for inline spell details
  *
  * @see CharacterSpellResource in OpenAPI spec
  * @see Issue #631 - Multiclass spellcasting support
+ * @see Issue #782 - Spell description in expanded cards
  */
-export type CharacterSpell = CharacterSpellFromAPI & {
+export type CharacterSpell = Omit<CharacterSpellFromAPI, 'spell'> & {
   /**
    * Class slug identifying which class granted this spell
    * e.g., "phb:wizard", "phb:cleric"
    * Used for filtering spells by class in multiclass UI
    */
   class_slug: string | null
+
+  /**
+   * Nested spell data with optional description fields
+   * Null if the spell reference is dangling (sourcebook removed)
+   */
+  spell: CharacterSpellData | null
 }
 
 /**
