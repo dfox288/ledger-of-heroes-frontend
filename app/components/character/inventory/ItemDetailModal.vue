@@ -198,9 +198,10 @@ const versatileDamage = computed(() => {
 })
 const armorClass = computed(() => fullItemData.value?.armor_class ?? minimalItemData.value?.armor_class ?? null)
 const properties = computed(() => {
-  // Prefer inline equipment data
-  if (equipmentItemData.value?.properties?.length) {
-    return equipmentItemData.value.properties
+  // Prefer inline equipment data if it has properties
+  const inlineProps = equipmentItemData.value?.properties
+  if (inlineProps && inlineProps.length > 0) {
+    return inlineProps
   }
   // Fallback to fetched data
   return fullItemData.value?.properties ?? []
@@ -214,14 +215,15 @@ const range = computed(() => {
   // Prefer inline equipment data (new format: object)
   const equipRange = equipmentItemData.value?.range
   if (equipRange) {
-    if (equipRange.long) return `${equipRange.normal}/${equipRange.long} ft`
+    // Use != null to handle long === 0 correctly
+    if (equipRange.long != null && equipRange.long > 0) return `${equipRange.normal}/${equipRange.long} ft`
     return `${equipRange.normal} ft`
   }
   // Fallback to fetched data (old format: separate fields)
   const normal = fullItemData.value?.range_normal
   const long = fullItemData.value?.range_long
   if (!normal) return null
-  if (long) return `${normal}/${long} ft`
+  if (long != null && long > 0) return `${normal}/${long} ft`
   return `${normal} ft`
 })
 
@@ -452,7 +454,11 @@ const isCustomItem = computed(() => {
           </span>
         </div>
 
-        <!-- Charges Section -->
+        <!-- Charges Section
+             Static mode shows max charges from item data.
+             Interactive mode (with +/- buttons) is ready for when backend Phase 3
+             adds current_charges tracking to the CharacterEquipment response.
+        -->
         <div
           v-if="hasChargeInfo || hasInteractiveCharges"
           class="bg-spell-50 dark:bg-spell-900/20 rounded-lg p-3"
@@ -460,7 +466,7 @@ const isCustomItem = computed(() => {
           <div class="flex items-center justify-between">
             <div class="flex items-center gap-2">
               <span class="font-semibold text-gray-900 dark:text-gray-100">Charges:</span>
-              <!-- Interactive mode -->
+              <!-- Interactive mode (enabled when backend provides charges.current) -->
               <template v-if="hasInteractiveCharges">
                 <UButton
                   data-testid="charge-decrement"
