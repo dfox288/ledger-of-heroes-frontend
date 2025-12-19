@@ -227,8 +227,9 @@ const range = computed(() => {
   return `${normal} ft`
 })
 
-// Armor properties (reserved for future armor display)
-const _armorType = computed(() => equipmentItemData.value?.armor_type ?? null)
+// Armor properties (tested but not yet displayed in template)
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+const armorType = computed(() => equipmentItemData.value?.armor_type ?? null)
 
 const maxDexBonus = computed(() => {
   const bonus = equipmentItemData.value?.max_dex_bonus
@@ -238,8 +239,9 @@ const maxDexBonus = computed(() => {
   return `+${bonus} max`
 })
 
-// Magic item properties (reserved for magic item styling)
-const _isMagic = computed(() => equipmentItemData.value?.is_magic ?? false)
+// Magic item properties (tested but not yet displayed in template)
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+const isMagic = computed(() => equipmentItemData.value?.is_magic ?? false)
 const magicBonus = computed(() => equipmentItemData.value?.magic_bonus ?? null)
 
 // Charge properties (static display from item data)
