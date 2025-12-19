@@ -1449,4 +1449,85 @@ describe('characterPlayState store', () => {
       })
     })
   })
+
+  // ===========================================================================
+  // CONCENTRATION TRACKING
+  // @see Issue #783, #792
+  // ===========================================================================
+
+  describe('concentration tracking', () => {
+    const mockConcentration = {
+      spellId: 123,
+      spellName: 'Bless',
+      spellSlug: 'phb:bless'
+    }
+
+    describe('initial state', () => {
+      it('starts with null concentration', () => {
+        const store = useCharacterPlayStateStore()
+        expect(store.activeConcentration).toBeNull()
+      })
+
+      it('starts with isConcentrating as false', () => {
+        const store = useCharacterPlayStateStore()
+        expect(store.isConcentrating).toBe(false)
+      })
+    })
+
+    describe('setConcentration', () => {
+      it('sets active concentration', () => {
+        const store = useCharacterPlayStateStore()
+        store.setConcentration(mockConcentration)
+        expect(store.activeConcentration).toEqual(mockConcentration)
+      })
+
+      it('replaces existing concentration', () => {
+        const store = useCharacterPlayStateStore()
+        store.setConcentration(mockConcentration)
+
+        const newSpell = { spellId: 456, spellName: 'Hold Person', spellSlug: 'phb:hold-person' }
+        store.setConcentration(newSpell)
+
+        expect(store.activeConcentration).toEqual(newSpell)
+      })
+
+      it('sets isConcentrating to true', () => {
+        const store = useCharacterPlayStateStore()
+        store.setConcentration(mockConcentration)
+        expect(store.isConcentrating).toBe(true)
+      })
+    })
+
+    describe('clearConcentration', () => {
+      it('clears active concentration', () => {
+        const store = useCharacterPlayStateStore()
+        store.setConcentration(mockConcentration)
+        store.clearConcentration()
+        expect(store.activeConcentration).toBeNull()
+      })
+
+      it('sets isConcentrating to false', () => {
+        const store = useCharacterPlayStateStore()
+        store.setConcentration(mockConcentration)
+        store.clearConcentration()
+        expect(store.isConcentrating).toBe(false)
+      })
+
+      it('is safe to call when not concentrating', () => {
+        const store = useCharacterPlayStateStore()
+        expect(() => store.clearConcentration()).not.toThrow()
+        expect(store.activeConcentration).toBeNull()
+      })
+    })
+
+    describe('$reset', () => {
+      it('clears concentration on reset', () => {
+        const store = useCharacterPlayStateStore()
+        store.setConcentration(mockConcentration)
+        store.$reset()
+        expect(store.activeConcentration).toBeNull()
+        expect(store.isConcentrating).toBe(false)
+      })
+    })
+  })
 })

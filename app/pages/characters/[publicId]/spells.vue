@@ -33,8 +33,8 @@ const { apiFetch } = useApi()
 const { character, stats, isSpellcaster, loading, refreshCharacter, addPendingState, playStateStore }
   = useCharacterSubPage(publicId)
 
-// Get canEdit from store for interactive components
-const { canEdit } = storeToRefs(playStateStore)
+// Get canEdit and concentration state from store for interactive components
+const { canEdit, activeConcentration } = storeToRefs(playStateStore)
 
 // Fetch spells data (page-specific)
 // dedupe: 'defer' prevents "incompatible handler" warning when navigating to/from overview
@@ -277,6 +277,32 @@ async function handleSpellsChanged() {
   await refreshNuxtData(`character-${publicId.value}-spells`)
 }
 
+// ══════════════════════════════════════════════════════════════
+// CONCENTRATION TRACKING
+// @see Issue #783, #792
+// ══════════════════════════════════════════════════════════════
+
+/**
+ * Handle concentrate event from SpellCard
+ * Sets or clears concentration based on current state
+ */
+function handleConcentrate(spell: { spellId: number, spellName: string, spellSlug: string }) {
+  if (activeConcentration.value?.spellId === spell.spellId) {
+    // Already concentrating on this spell - clear it
+    playStateStore.clearConcentration()
+  } else {
+    // Set concentration on new spell (auto-clears previous)
+    playStateStore.setConcentration(spell)
+  }
+}
+
+/**
+ * Handle clear concentration from ConcentrationIndicator
+ */
+function handleClearConcentration() {
+  playStateStore.clearConcentration()
+}
+
 useSeoMeta({
   title: () => character.value ? `${character.value.name} - Spells` : 'Spells'
 })
@@ -379,6 +405,14 @@ useSeoMeta({
                           {{ sc.info.ability }}
                         </div>
                       </div>
+                      <!-- Concentration Indicator - only show on first class tab (#783, #792) -->
+                      <CharacterSheetConcentrationIndicator
+                        v-if="spellcastingClasses[0]?.slug === sc.slug"
+                        :concentration="activeConcentration"
+                        :can-edit="canEdit"
+                        @clear="handleClearConcentration"
+                        @view-spell="(slug) => navigateTo(`/spells/${slug}`)"
+                      />
                     </div>
                     <!-- Per-Class Preparation Counter (hidden for known casters #676) -->
                     <!-- Uses reactive count from store for real-time updates #719 -->
@@ -458,6 +492,8 @@ useSeoMeta({
                         :character-id="character.id"
                         :editable="canEdit"
                         :other-class-prepared="getOtherClassPrepared(spell.spell_slug, sc.slug)"
+                        :active-concentration="activeConcentration"
+                        @concentrate="handleConcentrate"
                       />
                     </div>
                   </div>
@@ -480,6 +516,8 @@ useSeoMeta({
                         :character-id="character.id"
                         :editable="canEdit"
                         :other-class-prepared="getOtherClassPrepared(spell.spell_slug, sc.slug)"
+                        :active-concentration="activeConcentration"
+                        @concentrate="handleConcentrate"
                       />
                     </div>
                   </div>
@@ -582,6 +620,8 @@ useSeoMeta({
                       :at-prep-limit="!!spell.class_slug && isAtClassPreparationLimit(spell.class_slug)"
                       :character-id="character.id"
                       :editable="false"
+                      :active-concentration="activeConcentration"
+                      @concentrate="handleConcentrate"
                     />
                   </div>
                 </div>
@@ -603,6 +643,8 @@ useSeoMeta({
                       :at-prep-limit="!!spell.class_slug && isAtClassPreparationLimit(spell.class_slug)"
                       :character-id="character.id"
                       :editable="false"
+                      :active-concentration="activeConcentration"
+                      @concentrate="handleConcentrate"
                     />
                   </div>
                 </div>
@@ -660,6 +702,13 @@ useSeoMeta({
                       {{ primarySpellcasting?.info.ability }}
                     </div>
                   </div>
+                  <!-- Concentration Indicator (#783, #792) -->
+                  <CharacterSheetConcentrationIndicator
+                    :concentration="activeConcentration"
+                    :can-edit="canEdit"
+                    @clear="handleClearConcentration"
+                    @view-spell="(slug) => navigateTo(`/spells/${slug}`)"
+                  />
                 </div>
 
                 <!-- Preparation Counter + Prepare Button (hidden for known casters #676) -->
@@ -761,6 +810,10 @@ useSeoMeta({
                     :key="spell.id"
                     :spell="spell"
                     :preparation-method="preparationMethod"
+                    :character-id="character.id"
+                    :editable="canEdit"
+                    :active-concentration="activeConcentration"
+                    @concentrate="handleConcentrate"
                   />
                 </div>
               </div>
@@ -780,6 +833,10 @@ useSeoMeta({
                     :key="spell.id"
                     :spell="spell"
                     :preparation-method="preparationMethod"
+                    :character-id="character.id"
+                    :editable="canEdit"
+                    :active-concentration="activeConcentration"
+                    @concentrate="handleConcentrate"
                   />
                 </div>
               </div>

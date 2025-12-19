@@ -77,9 +77,9 @@ const deity = computed({
  */
 const hasAnyData = computed(() => {
   const pd = store.selections.physicalDescription
-  return pd.age || pd.height || pd.weight ||
-         pd.eye_color || pd.hair_color || pd.skin_color ||
-         pd.deity
+  return pd.age || pd.height || pd.weight
+    || pd.eye_color || pd.hair_color || pd.skin_color
+    || pd.deity
 })
 
 /**
@@ -125,7 +125,10 @@ async function handleSkip() {
       </h3>
       <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <!-- Age -->
-        <UFormField label="Age" help="e.g., 25, Unknown, Ageless">
+        <UFormField
+          label="Age"
+          help="e.g., 25, Unknown, Ageless"
+        >
           <UInput
             v-model="age"
             data-testid="age-input"
@@ -136,7 +139,10 @@ async function handleSkip() {
         </UFormField>
 
         <!-- Height -->
-        <UFormField label="Height" help="e.g., 5'10&quot;, 178cm">
+        <UFormField
+          label="Height"
+          help="e.g., 5'10&quot;, 178cm"
+        >
           <UInput
             v-model="height"
             data-testid="height-input"
@@ -147,7 +153,10 @@ async function handleSkip() {
         </UFormField>
 
         <!-- Weight -->
-        <UFormField label="Weight" help="e.g., 180 lbs, 82 kg">
+        <UFormField
+          label="Weight"
+          help="e.g., 180 lbs, 82 kg"
+        >
           <UInput
             v-model="weight"
             data-testid="weight-input"
@@ -177,7 +186,10 @@ async function handleSkip() {
         </UFormField>
 
         <!-- Hair Color -->
-        <UFormField label="Hair Color" help="Hair, fur, or scales">
+        <UFormField
+          label="Hair Color"
+          help="Hair, fur, or scales"
+        >
           <UInput
             v-model="hairColor"
             data-testid="hair-color-input"
@@ -188,7 +200,10 @@ async function handleSkip() {
         </UFormField>
 
         <!-- Skin Color -->
-        <UFormField label="Skin Color" help="Skin, scales, or hide">
+        <UFormField
+          label="Skin Color"
+          help="Skin, scales, or hide"
+        >
           <UInput
             v-model="skinColor"
             data-testid="skin-color-input"
@@ -205,7 +220,10 @@ async function handleSkip() {
       <h3 class="text-lg font-semibold text-gray-800 dark:text-gray-200">
         Faith
       </h3>
-      <UFormField label="Deity" help="Religious affiliation (optional)">
+      <UFormField
+        label="Deity"
+        help="Religious affiliation (optional)"
+      >
         <UInput
           v-model="deity"
           data-testid="deity-input"

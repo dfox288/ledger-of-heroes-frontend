@@ -15,6 +15,7 @@
  */
 
 import type { CharacterSpell, PreparationMethod } from '~/types/character'
+import type { ConcentrationState } from '~/stores/characterPlayState'
 import { formatSpellLevel } from '~/composables/useSpellFormatters'
 import { useCharacterPlayStateStore } from '~/stores/characterPlayState'
 import { storeToRefs } from 'pinia'
@@ -41,6 +42,15 @@ const props = defineProps<{
    * e.g., "Wizard" if the same spell is prepared as a Wizard spell
    */
   otherClassPrepared?: string | null
+  /**
+   * Current active concentration state (if concentrating on any spell)
+   * @see Issue #783, #792
+   */
+  activeConcentration?: ConcentrationState | null
+}>()
+
+const emit = defineEmits<{
+  concentrate: [spell: ConcentrationState]
 }>()
 
 const store = useCharacterPlayStateStore()
@@ -102,6 +112,53 @@ const isAlwaysPrepared = computed(() => props.spell.is_always_prepared || isCant
  * Check if spell is prepared by another class (multiclass cross-check)
  */
 const isPreparedByOtherClass = computed(() => !!props.otherClassPrepared)
+
+// =========================================================================
+// CONCENTRATION STATE
+// @see Issue #783, #792
+// =========================================================================
+
+/**
+ * Whether this spell requires concentration
+ */
+const isConcentrationSpell = computed(() => spellData.value?.concentration === true)
+
+/**
+ * Whether we're currently concentrating on THIS spell
+ */
+const isConcentratingOnThis = computed(() =>
+  props.activeConcentration?.spellId === props.spell.id
+)
+
+/**
+ * Whether we're concentrating on a DIFFERENT spell (for warning display)
+ */
+const isConcentratingOnOther = computed(() =>
+  props.activeConcentration != null
+  && props.activeConcentration.spellId !== props.spell.id
+)
+
+/**
+ * Show concentrate button when:
+ * - Spell requires concentration
+ * - Card is expanded
+ * - Character is in play mode (editable)
+ */
+const showConcentrateButton = computed(() =>
+  isConcentrationSpell.value && isExpanded.value && props.editable
+)
+
+/**
+ * Handle concentrate button click
+ */
+function handleConcentrate() {
+  if (!spellData.value) return
+  emit('concentrate', {
+    spellId: props.spell.id,
+    spellName: spellData.value.name,
+    spellSlug: spellData.value.slug
+  })
+}
 
 /**
  * Check if this card can toggle preparation
@@ -357,6 +414,29 @@ function handleExpandClick(event: MouseEvent) {
           <span class="font-semibold text-gray-900 dark:text-gray-100">At Higher Levels.</span>
           <span class="text-gray-700 dark:text-gray-300"> {{ spellData.higher_levels }}</span>
         </div>
+      </div>
+
+      <!-- Concentration Button (Issue #783, #792) -->
+      <div
+        v-if="showConcentrateButton"
+        class="pt-2 border-t border-gray-100 dark:border-gray-700/50 flex items-center gap-3"
+      >
+        <UButton
+          data-testid="concentrate-btn"
+          :color="isConcentratingOnThis ? 'primary' : 'neutral'"
+          :variant="isConcentratingOnThis ? 'solid' : 'outline'"
+          size="sm"
+          @click.stop="handleConcentrate"
+        >
+          {{ isConcentratingOnThis ? 'End Concentration' : 'Concentrate' }}
+        </UButton>
+        <span
+          v-if="isConcentratingOnOther && activeConcentration"
+          data-testid="concentration-warning"
+          class="text-sm text-amber-600 dark:text-amber-400"
+        >
+          Will end {{ activeConcentration.spellName }}
+        </span>
       </div>
 
       <!-- View Full Details Link -->

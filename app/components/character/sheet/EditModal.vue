@@ -161,13 +161,13 @@ const physicalDescriptionChanged = computed(() => {
   const pd = localPhysicalDescription.value
   const char = props.character
   return (
-    pd.age !== (char?.age ?? null) ||
-    pd.height !== (char?.height ?? null) ||
-    pd.weight !== (char?.weight ?? null) ||
-    pd.eye_color !== (char?.eye_color ?? null) ||
-    pd.hair_color !== (char?.hair_color ?? null) ||
-    pd.skin_color !== (char?.skin_color ?? null) ||
-    pd.deity !== (char?.deity ?? null)
+    pd.age !== (char?.age ?? null)
+    || pd.height !== (char?.height ?? null)
+    || pd.weight !== (char?.weight ?? null)
+    || pd.eye_color !== (char?.eye_color ?? null)
+    || pd.hair_color !== (char?.hair_color ?? null)
+    || pd.skin_color !== (char?.skin_color ?? null)
+    || pd.deity !== (char?.deity ?? null)
   )
 })
 

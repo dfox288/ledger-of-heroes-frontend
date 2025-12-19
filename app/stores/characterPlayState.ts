@@ -49,6 +49,16 @@ export interface CurrencyDelta {
   cp?: string
 }
 
+/**
+ * Active spell concentration state
+ * @see Issue #783, #792
+ */
+export interface ConcentrationState {
+  spellId: number // CharacterSpell ID for lookup
+  spellName: string // Display name
+  spellSlug: string // For opening detail modal
+}
+
 interface HpUpdateResponse {
   data: {
     current_hit_points: number
@@ -161,6 +171,21 @@ export const useCharacterPlayStateStore = defineStore('characterPlayState', () =
   /** Notes with pending edits (id -> updated note) */
   const pendingNoteEdits = ref<Map<number, CharacterNote>>(new Map())
 
+  /**
+   * Active spell concentration
+   * Tracks which concentration spell the character is currently maintaining.
+   * Stored in cookie for SSR hydration and persistence across page refresh.
+   * @see Issue #783, #792
+   */
+  const concentrationCookie = useCookie<ConcentrationState | null>('character-concentration', {
+    default: () => null,
+    watch: true
+  })
+  const activeConcentration = computed({
+    get: () => concentrationCookie.value,
+    set: (val: ConcentrationState | null) => { concentrationCookie.value = val }
+  })
+
   /** Loading flags to prevent race conditions */
   const isUpdatingHp = ref(false)
   const isUpdatingCurrency = ref(false)
@@ -176,6 +201,9 @@ export const useCharacterPlayStateStore = defineStore('characterPlayState', () =
 
   /** Can the user interact with the character? (play mode ON and not dead) */
   const canEdit = computed(() => isPlayMode.value && !isDead.value)
+
+  /** Is the character currently concentrating on a spell? */
+  const isConcentrating = computed(() => activeConcentration.value !== null)
 
   /**
    * Display notes: merges notes with optimistic updates
@@ -1092,6 +1120,30 @@ export const useCharacterPlayStateStore = defineStore('characterPlayState', () =
   }
 
   // ===========================================================================
+  // CONCENTRATION TRACKING
+  // @see Issue #783, #792
+  // ===========================================================================
+
+  /**
+   * Set active concentration on a spell
+   *
+   * Replaces any existing concentration (D&D rule: only one at a time).
+   */
+  function setConcentration(spell: ConcentrationState | null): void {
+    activeConcentration.value = spell
+  }
+
+  /**
+   * Clear active concentration
+   *
+   * Call when concentration ends (damage, another spell, voluntary end).
+   */
+  function clearConcentration(): void {
+    activeConcentration.value = null
+  }
+
+
+  // ===========================================================================
   // RESET
   // ===========================================================================
 
@@ -1136,6 +1188,7 @@ export const useCharacterPlayStateStore = defineStore('characterPlayState', () =
     spellSlots.value.clear()
     preparedSpellIds.value.clear()
     preparationLimit.value = null
+    activeConcentration.value = null
 
     // Reset conditions
     conditions.value = []
@@ -1172,6 +1225,7 @@ export const useCharacterPlayStateStore = defineStore('characterPlayState', () =
     pendingNoteCreates,
     pendingNoteDeletes,
     pendingNoteEdits,
+    activeConcentration,
     isUpdatingHp,
     isUpdatingCurrency,
     isUpdatingDeathSaves,
@@ -1182,6 +1236,7 @@ export const useCharacterPlayStateStore = defineStore('characterPlayState', () =
 
     // Computed
     canEdit,
+    isConcentrating,
     displayNotes,
     preparedSpellCount,
     atPreparationLimit,
@@ -1219,6 +1274,8 @@ export const useCharacterPlayStateStore = defineStore('characterPlayState', () =
     addNote,
     editNote,
     deleteNote,
+    setConcentration,
+    clearConcentration,
     $reset
   }
 })

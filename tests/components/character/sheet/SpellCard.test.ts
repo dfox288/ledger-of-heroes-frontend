@@ -735,5 +735,125 @@ describe('SpellCard', () => {
         expect(wrapper.text()).toContain('View Full Details')
       })
     })
+
+    // =========================================================================
+    // CONCENTRATION BUTTON
+    // @see Issue #783, #792
+    // =========================================================================
+
+    describe('concentration button', () => {
+      it('shows concentrate button for concentration spells when editable and expanded', async () => {
+        const wrapper = await mountSuspended(SpellCard, {
+          props: {
+            spell: mockConcentrationSpell,
+            editable: true
+          }
+        })
+
+        await wrapper.find('[data-testid="expand-toggle"]').trigger('click')
+
+        const btn = wrapper.find('[data-testid="concentrate-btn"]')
+        expect(btn.exists()).toBe(true)
+      })
+
+      it('hides concentrate button for non-concentration spells', async () => {
+        const wrapper = await mountSuspended(SpellCard, {
+          props: {
+            spell: mockLeveledSpell, // Not a concentration spell
+            editable: true
+          }
+        })
+
+        await wrapper.find('[data-testid="expand-toggle"]').trigger('click')
+
+        const btn = wrapper.find('[data-testid="concentrate-btn"]')
+        expect(btn.exists()).toBe(false)
+      })
+
+      it('hides concentrate button when not editable', async () => {
+        const wrapper = await mountSuspended(SpellCard, {
+          props: {
+            spell: mockConcentrationSpell,
+            editable: false
+          }
+        })
+
+        await wrapper.find('[data-testid="expand-toggle"]').trigger('click')
+
+        const btn = wrapper.find('[data-testid="concentrate-btn"]')
+        expect(btn.exists()).toBe(false)
+      })
+
+      it('hides concentrate button when collapsed', async () => {
+        const wrapper = await mountSuspended(SpellCard, {
+          props: {
+            spell: mockConcentrationSpell,
+            editable: true
+          }
+        })
+
+        // Don't expand
+        const btn = wrapper.find('[data-testid="concentrate-btn"]')
+        expect(btn.exists()).toBe(false)
+      })
+
+      it('emits concentrate event when button clicked', async () => {
+        const wrapper = await mountSuspended(SpellCard, {
+          props: {
+            spell: mockConcentrationSpell,
+            editable: true
+          }
+        })
+
+        await wrapper.find('[data-testid="expand-toggle"]').trigger('click')
+        await wrapper.find('[data-testid="concentrate-btn"]').trigger('click')
+
+        expect(wrapper.emitted('concentrate')).toBeTruthy()
+        expect(wrapper.emitted('concentrate')![0]).toEqual([{
+          spellId: mockConcentrationSpell.id,
+          spellName: mockConcentrationSpell.spell!.name,
+          spellSlug: mockConcentrationSpell.spell!.slug
+        }])
+      })
+
+      it('shows "End Concentration" when already concentrating on this spell', async () => {
+        const wrapper = await mountSuspended(SpellCard, {
+          props: {
+            spell: mockConcentrationSpell,
+            editable: true,
+            activeConcentration: {
+              spellId: mockConcentrationSpell.id,
+              spellName: 'Hold Person',
+              spellSlug: 'phb:hold-person'
+            }
+          }
+        })
+
+        await wrapper.find('[data-testid="expand-toggle"]').trigger('click')
+
+        const btn = wrapper.find('[data-testid="concentrate-btn"]')
+        expect(btn.text()).toMatch(/end/i)
+      })
+
+      it('shows warning when concentrating on different spell', async () => {
+        const wrapper = await mountSuspended(SpellCard, {
+          props: {
+            spell: mockConcentrationSpell,
+            editable: true,
+            activeConcentration: {
+              spellId: 999, // Different spell
+              spellName: 'Bless',
+              spellSlug: 'phb:bless'
+            }
+          }
+        })
+
+        await wrapper.find('[data-testid="expand-toggle"]').trigger('click')
+
+        const warning = wrapper.find('[data-testid="concentration-warning"]')
+        expect(warning.exists()).toBe(true)
+        expect(warning.text()).toContain('Bless')
+      })
+    })
   })
 })

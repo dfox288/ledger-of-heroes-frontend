@@ -61,7 +61,7 @@ function createMockStats(spellcasting: Record<string, ClassSpellcastingInfo> | n
 // Helper to create mock spell slots response
 function createMockSpellSlots(overrides: Partial<SpellSlotsResponse> = {}): SpellSlotsResponse {
   return {
-    slots: { '1': { total: 4, spent: 0 }, '2': { total: 3, spent: 0 }, '3': { total: 2, spent: 0 } },
+    slots: { 1: { total: 4, spent: 0 }, 2: { total: 3, spent: 0 }, 3: { total: 2, spent: 0 } },
     pact_magic: null,
     preparation_limit: 8,
     prepared_count: 3,
@@ -335,7 +335,7 @@ describe('useSpellPreparation', () => {
       const { maxCastableLevel } = useSpellPreparation({
         stats: ref(createMockStats({ 'phb:wizard': createSpellcastingInfo() }, 'spellbook')),
         spellSlots: ref(createMockSpellSlots({
-          slots: { '1': { total: 4, spent: 0 }, '2': { total: 3, spent: 0 }, '5': { total: 1, spent: 0 } }
+          slots: { 1: { total: 4, spent: 0 }, 2: { total: 3, spent: 0 }, 5: { total: 1, spent: 0 } }
         })),
         spellcastingClasses: computed(() => [createSpellcastingClass('phb:wizard')]),
         validSpells: computed(() => []),
