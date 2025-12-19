@@ -7,7 +7,7 @@
  * @see Issue #780 - Extract multiclass spellcasting logic to composables
  */
 
-import type { Ref, ComputedRef } from 'vue'
+import type { Ref } from 'vue'
 import type { CharacterStats, ClassSpellcastingInfo } from '~/types/character'
 import { getClassColor, getClassName } from '~/utils/classColors'
 

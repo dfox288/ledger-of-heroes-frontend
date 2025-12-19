@@ -9,7 +9,6 @@ import {
   mockEquipmentMultiple,
   mockHitPoints,
   mockProficiencies,
-  mockChoiceGroup1,
   mockMultipleChoiceGroups
 } from '#tests/fixtures/equipment'
 

@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { ref, computed } from 'vue'
+import { ref } from 'vue'
 import { useSpellcastingTabs } from '~/composables/useSpellcastingTabs'
 import type { CharacterStats, ClassSpellcastingInfo } from '~/types/character'
 

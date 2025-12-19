@@ -9,7 +9,7 @@
 
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { mountSuspended, mockNuxtImport } from '@nuxt/test-utils/runtime'
-import { flushPromises } from '@vue/test-utils'
+import { flushPromises, type VueWrapper } from '@vue/test-utils'
 import { setActivePinia, createPinia } from 'pinia'
 import StepSubclassChoice from '~/components/character/levelup/StepSubclassChoice.vue'
 
@@ -23,7 +23,7 @@ mockNuxtImport('useToast', () => () => mockToast)
 
 // Mock useUnifiedChoices - needs to return reactive values that update
 const mockFetchChoices = vi.fn()
-let choicesByTypeValue: Record<string, any> = {}
+let choicesByTypeValue: Record<string, unknown> = {}
 
 mockNuxtImport('useUnifiedChoices', () => () => ({
   choicesByType: computed(() => choicesByTypeValue),
@@ -39,8 +39,8 @@ mockNuxtImport('useCharacterLevelUpStore', () => () => ({
 }))
 
 // Helper to find continue button
-function findContinueButton(wrapper: any) {
-  return wrapper.findAll('button').find((b: any) => b.text().includes('Continue'))
+function findContinueButton(wrapper: VueWrapper) {
+  return wrapper.findAll('button').find(b => b.text().includes('Continue'))
 }
 
 // ════════════════════════════════════════════════════════════════
