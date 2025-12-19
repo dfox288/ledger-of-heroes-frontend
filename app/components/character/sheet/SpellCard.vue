@@ -114,6 +114,31 @@ const isAlwaysPrepared = computed(() => props.spell.is_always_prepared || isCant
 const isPreparedByOtherClass = computed(() => !!props.otherClassPrepared)
 
 // =========================================================================
+// CANTRIP DAMAGE SCALING
+// @see Issue #809
+// =========================================================================
+
+/**
+ * Get scaled damage string for cantrips (e.g., "2d10 fire")
+ * Returns null if no damage effect or not a cantrip with scaled_effects
+ */
+const scaledDamage = computed(() => {
+  if (!props.spell.scaled_effects?.length) return null
+  const dmg = props.spell.scaled_effects.find(e => e.effect_type === 'damage')
+  if (!dmg) return null
+  return `${dmg.dice_formula} ${dmg.damage_type.toLowerCase()}`
+})
+
+/**
+ * Label for cantrip damage/utility display
+ * Shows scaled damage (e.g., "2d10 fire") or "Utility" for non-damage cantrips
+ */
+const cantripLabel = computed(() => {
+  if (!isCantrip.value) return null
+  return scaledDamage.value ?? 'Utility'
+})
+
+// =========================================================================
 // CONCENTRATION STATE
 // @see Issue #783, #792
 // =========================================================================
@@ -342,9 +367,14 @@ function handleExpandClick(event: MouseEvent) {
             Ritual
           </UBadge>
 
-          <!-- Level/School -->
+          <!-- Level/School (with cantrip damage scaling - Issue #809) -->
           <span class="text-sm text-gray-500 dark:text-gray-400">
-            {{ formatSpellLevel(spellData.level) }} {{ spellData.school }}
+            <template v-if="isCantrip && cantripLabel">
+              {{ cantripLabel }} &bull; Cantrip {{ spellData.school }}
+            </template>
+            <template v-else>
+              {{ formatSpellLevel(spellData.level) }} {{ spellData.school }}
+            </template>
           </span>
 
           <!-- Expand/collapse button (separate from card click) -->
@@ -392,6 +422,13 @@ function handleExpandClick(event: MouseEvent) {
           <span class="text-gray-500 dark:text-gray-400">Duration</span>
           <p class="font-medium">
             {{ spellData.duration }}
+          </p>
+        </div>
+        <!-- Cantrip Damage (Issue #809) -->
+        <div v-if="isCantrip && cantripLabel">
+          <span class="text-gray-500 dark:text-gray-400">Damage</span>
+          <p class="font-medium">
+            {{ cantripLabel }}
           </p>
         </div>
       </div>
