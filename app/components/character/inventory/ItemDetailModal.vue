@@ -187,6 +187,9 @@ const damageType = computed(() => {
   // Fallback to fetched data
   return fullItemData.value?.damage_type?.name ?? null
 })
+const versatileDamage = computed(() => {
+  return equipmentItemData.value?.versatile_damage ?? fullItemData.value?.versatile_damage ?? null
+})
 const armorClass = computed(() => fullItemData.value?.armor_class ?? minimalItemData.value?.armor_class ?? null)
 const properties = computed(() => fullItemData.value?.properties ?? [])
 const requiresAttunement = computed(() => fullItemData.value?.requires_attunement ?? minimalItemData.value?.requires_attunement ?? false)
@@ -332,6 +335,10 @@ const isCustomItem = computed(() => {
           <div v-if="damageText">
             <span class="font-semibold text-gray-900 dark:text-gray-100">Damage:</span>
             <span class="ml-1 text-gray-600 dark:text-gray-400">{{ damageText }}</span>
+          </div>
+          <div v-if="versatileDamage">
+            <span class="font-semibold text-gray-900 dark:text-gray-100">Versatile:</span>
+            <span class="ml-1 text-gray-600 dark:text-gray-400">{{ versatileDamage }}</span>
           </div>
           <div v-if="armorClass">
             <span class="font-semibold text-gray-900 dark:text-gray-100">AC:</span>

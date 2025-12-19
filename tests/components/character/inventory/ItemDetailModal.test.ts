@@ -319,5 +319,27 @@ describe('ItemDetailModal', () => {
       // Verify damageText computed uses equipment inline data (not API data)
       expect((wrapper.vm as unknown as { damageText: string | null }).damageText).toContain('Slashing')
     })
+
+    it('displays versatile damage when present', async () => {
+      const versatileWeapon: CharacterEquipment = {
+        ...mockWeapon,
+        item: {
+          ...mockWeapon.item,
+          damage_dice: '1d8',
+          versatile_damage: '1d10'
+        }
+      }
+
+      // Mock API to return full item data
+      mockApiFetch.mockResolvedValue({ data: mockFullItemData })
+
+      const wrapper = await mountSuspended(ItemDetailModal, {
+        props: { open: true, item: versatileWeapon }
+      })
+      await flushPromises()
+
+      // Verify versatileDamage computed uses equipment inline data
+      expect((wrapper.vm as unknown as { versatileDamage: string | null }).versatileDamage).toBe('1d10')
+    })
   })
 })
