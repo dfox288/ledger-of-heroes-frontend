@@ -130,6 +130,13 @@ export interface CharacterSpellData {
   description?: string
   /** "At Higher Levels" text for upcastable spells */
   higher_levels?: string | null
+  // Combat fields (Issue #808)
+  /** Saving throw ability code (e.g., "DEX", "WIS") */
+  saving_throw?: string
+  /** Attack type: "melee", "ranged", or "none" */
+  attack_type?: string
+  /** Damage types (e.g., ["Fire", "Cold"]) */
+  damage_types?: string[]
 }
 
 /**

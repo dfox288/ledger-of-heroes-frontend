@@ -143,6 +143,54 @@ const cantripLabel = computed(() => {
 })
 
 // =========================================================================
+// SPELL COMBAT FIELDS
+// @see Issue #808
+// =========================================================================
+
+/**
+ * Combat mechanic: "Ranged Attack", "Melee Attack", "DEX Save", or null
+ * Attack and saving throw are mutually exclusive in D&D 5e
+ */
+const combatMechanic = computed(() => {
+  if (!spellData.value) return null
+
+  // Check attack type first
+  const attackType = spellData.value.attack_type
+  if (attackType && attackType !== 'none') {
+    return `${attackType.charAt(0).toUpperCase() + attackType.slice(1)} Attack`
+  }
+
+  // Check saving throw
+  const save = spellData.value.saving_throw
+  if (save) {
+    return `${save} Save`
+  }
+
+  return null
+})
+
+/**
+ * Unified damage display:
+ * - Cantrips: use scaled_effects (e.g., "2d10 fire" or "Utility")
+ * - Leveled spells: use damage_types (e.g., "Fire, Cold")
+ */
+const damageDisplay = computed(() => {
+  if (!spellData.value) return null
+
+  // Cantrips: use scaled_effects
+  if (isCantrip.value) {
+    return cantripLabel.value
+  }
+
+  // Leveled spells: use damage_types
+  if (spellData.value.damage_types?.length) {
+    return spellData.value.damage_types.join(', ')
+  }
+
+  return null
+})
+
+// =========================================================================
 // CONCENTRATION STATE
 // @see Issue #783, #792
 // =========================================================================
@@ -428,11 +476,18 @@ function handleExpandClick(event: MouseEvent) {
             {{ spellData.duration }}
           </p>
         </div>
-        <!-- Cantrip Damage (Issue #809) -->
-        <div v-if="isCantrip && cantripLabel">
+        <!-- Combat Mechanic (Issue #808) -->
+        <div v-if="combatMechanic">
+          <span class="text-gray-500 dark:text-gray-400">Mechanic</span>
+          <p class="font-medium">
+            {{ combatMechanic }}
+          </p>
+        </div>
+        <!-- Damage: cantrip scaled (Issue #809) or leveled spell types (Issue #808) -->
+        <div v-if="damageDisplay">
           <span class="text-gray-500 dark:text-gray-400">Damage</span>
           <p class="font-medium">
-            {{ cantripLabel }}
+            {{ damageDisplay }}
           </p>
         </div>
       </div>

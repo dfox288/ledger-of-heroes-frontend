@@ -96,6 +96,124 @@ const mockUtilityCantrip: CharacterSpell = {
   scaled_effects: []
 }
 
+// Ranged attack cantrip with combat fields (Issue #808)
+const mockRangedAttackCantrip: CharacterSpell = {
+  id: 12,
+  spell: {
+    id: 112,
+    name: 'Fire Bolt',
+    slug: 'phb:fire-bolt',
+    level: 0,
+    school: 'Evocation',
+    casting_time: '1 action',
+    range: '120 feet',
+    components: 'V, S',
+    duration: 'Instantaneous',
+    concentration: false,
+    ritual: false,
+    attack_type: 'ranged',
+    saving_throw: '',
+    damage_types: ['Fire']
+  },
+  spell_slug: 'phb:fire-bolt',
+  is_dangling: false,
+  preparation_status: 'known',
+  source: 'class',
+  level_acquired: 1,
+  is_prepared: false,
+  is_always_prepared: false,
+  scaled_effects: [
+    { effect_type: 'damage', dice_formula: '2d10', damage_type: 'Fire' }
+  ]
+}
+
+// Saving throw spell with combat fields (Issue #808)
+const mockSaveSpell: CharacterSpell = {
+  id: 13,
+  spell: {
+    id: 113,
+    name: 'Fireball',
+    slug: 'phb:fireball',
+    level: 3,
+    school: 'Evocation',
+    casting_time: '1 action',
+    range: '150 feet',
+    components: 'V, S, M',
+    duration: 'Instantaneous',
+    concentration: false,
+    ritual: false,
+    attack_type: 'none',
+    saving_throw: 'DEX',
+    damage_types: ['Fire']
+  },
+  spell_slug: 'phb:fireball',
+  is_dangling: false,
+  preparation_status: 'prepared',
+  source: 'class',
+  level_acquired: 5,
+  is_prepared: true,
+  is_always_prepared: false
+}
+
+// Multiple damage types spell (Issue #808)
+const mockMultiDamageSpell: CharacterSpell = {
+  id: 14,
+  spell: {
+    id: 114,
+    name: 'Chromatic Orb',
+    slug: 'phb:chromatic-orb',
+    level: 1,
+    school: 'Evocation',
+    casting_time: '1 action',
+    range: '90 feet',
+    components: 'V, S, M',
+    duration: 'Instantaneous',
+    concentration: false,
+    ritual: false,
+    attack_type: 'ranged',
+    saving_throw: '',
+    damage_types: ['Acid', 'Cold', 'Fire', 'Lightning', 'Poison', 'Thunder']
+  },
+  spell_slug: 'phb:chromatic-orb',
+  is_dangling: false,
+  preparation_status: 'prepared',
+  source: 'class',
+  level_acquired: 1,
+  is_prepared: true,
+  is_always_prepared: false
+}
+
+// Melee attack spell (Issue #808)
+const mockMeleeAttackSpell: CharacterSpell = {
+  id: 15,
+  spell: {
+    id: 115,
+    name: 'Shocking Grasp',
+    slug: 'phb:shocking-grasp',
+    level: 0,
+    school: 'Evocation',
+    casting_time: '1 action',
+    range: 'Touch',
+    components: 'V, S',
+    duration: 'Instantaneous',
+    concentration: false,
+    ritual: false,
+    attack_type: 'melee',
+    saving_throw: '',
+    damage_types: ['Lightning']
+  },
+  spell_slug: 'phb:shocking-grasp',
+  is_dangling: false,
+  preparation_status: 'known',
+  source: 'class',
+  level_acquired: 1,
+  is_prepared: false,
+  is_always_prepared: false,
+  scaled_effects: [
+    { effect_type: 'damage', dice_formula: '2d8', damage_type: 'Lightning' }
+  ]
+}
+
 const mockLeveledSpell: CharacterSpell = {
   id: 2,
   spell: {
@@ -974,16 +1092,115 @@ describe('SpellCard', () => {
         expect(wrapper.text()).toContain('Utility')
       })
 
-      it('does not show Damage row for leveled spells', async () => {
+      it('does not show scaled dice Damage for leveled spells without damage_types', async () => {
         const wrapper = await mountSuspended(SpellCard, {
           props: { spell: mockLeveledSpell }
         })
 
         await wrapper.find('[data-testid="expand-toggle"]').trigger('click')
 
-        // Should have other stats but not a Damage row
+        // Should have other stats but not scaled dice damage
         expect(wrapper.text()).toContain('Casting Time')
-        expect(wrapper.text()).not.toMatch(/Damage\s+\d+d\d+/)
+        expect(wrapper.text()).not.toMatch(/\d+d\d+/)
+      })
+    })
+  })
+
+  // ==========================================================================
+  // SPELL COMBAT FIELDS TESTS (Issue #808)
+  // ==========================================================================
+
+  describe('spell combat fields', () => {
+    describe('mechanic display', () => {
+      it('shows "Ranged Attack" for ranged attack spells', async () => {
+        const wrapper = await mountSuspended(SpellCard, {
+          props: { spell: mockRangedAttackCantrip }
+        })
+
+        await wrapper.find('[data-testid="expand-toggle"]').trigger('click')
+
+        expect(wrapper.text()).toContain('Mechanic')
+        expect(wrapper.text()).toContain('Ranged Attack')
+      })
+
+      it('shows "Melee Attack" for melee attack spells', async () => {
+        const wrapper = await mountSuspended(SpellCard, {
+          props: { spell: mockMeleeAttackSpell }
+        })
+
+        await wrapper.find('[data-testid="expand-toggle"]').trigger('click')
+
+        expect(wrapper.text()).toContain('Mechanic')
+        expect(wrapper.text()).toContain('Melee Attack')
+      })
+
+      it('shows "DEX Save" for saving throw spells', async () => {
+        const wrapper = await mountSuspended(SpellCard, {
+          props: { spell: mockSaveSpell }
+        })
+
+        await wrapper.find('[data-testid="expand-toggle"]').trigger('click')
+
+        expect(wrapper.text()).toContain('Mechanic')
+        expect(wrapper.text()).toContain('DEX Save')
+      })
+
+      it('does not show Mechanic row for utility spells', async () => {
+        const wrapper = await mountSuspended(SpellCard, {
+          props: { spell: mockUtilityCantrip }
+        })
+
+        await wrapper.find('[data-testid="expand-toggle"]').trigger('click')
+
+        expect(wrapper.text()).not.toContain('Mechanic')
+      })
+    })
+
+    describe('damage types display', () => {
+      it('shows single damage type for leveled spells', async () => {
+        const wrapper = await mountSuspended(SpellCard, {
+          props: { spell: mockSaveSpell }
+        })
+
+        await wrapper.find('[data-testid="expand-toggle"]').trigger('click')
+
+        expect(wrapper.text()).toContain('Damage')
+        expect(wrapper.text()).toContain('Fire')
+      })
+
+      it('shows multiple damage types comma-separated', async () => {
+        const wrapper = await mountSuspended(SpellCard, {
+          props: { spell: mockMultiDamageSpell }
+        })
+
+        await wrapper.find('[data-testid="expand-toggle"]').trigger('click')
+
+        expect(wrapper.text()).toContain('Damage')
+        expect(wrapper.text()).toContain('Acid, Cold, Fire, Lightning, Poison, Thunder')
+      })
+
+      it('shows scaled dice for cantrips instead of damage_types', async () => {
+        const wrapper = await mountSuspended(SpellCard, {
+          props: { spell: mockRangedAttackCantrip }
+        })
+
+        await wrapper.find('[data-testid="expand-toggle"]').trigger('click')
+
+        // Should show scaled dice "2d10 fire", not just "Fire" from damage_types
+        expect(wrapper.text()).toContain('Damage')
+        expect(wrapper.text()).toContain('2d10 fire')
+      })
+    })
+
+    describe('collapsed view', () => {
+      it('does not show Mechanic in collapsed view', async () => {
+        const wrapper = await mountSuspended(SpellCard, {
+          props: { spell: mockSaveSpell }
+        })
+
+        // Don't expand
+        expect(wrapper.text()).not.toContain('Mechanic')
+        expect(wrapper.text()).not.toContain('DEX Save')
       })
     })
   })
