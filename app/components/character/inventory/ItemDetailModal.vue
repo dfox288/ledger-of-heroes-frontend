@@ -212,6 +212,17 @@ const range = computed(() => {
   return `${normal} ft`
 })
 
+// Armor properties
+const armorType = computed(() => equipmentItemData.value?.armor_type ?? null)
+
+const maxDexBonus = computed(() => {
+  const bonus = equipmentItemData.value?.max_dex_bonus
+  // null means unlimited (light armor), don't display
+  if (bonus === null || bonus === undefined) return null
+  if (bonus === 0) return 'None'
+  return `+${bonus} max`
+})
+
 // Full damage text with type
 const damageText = computed(() => {
   if (!damage.value) return null
@@ -354,6 +365,10 @@ const isCustomItem = computed(() => {
           <div v-if="range">
             <span class="font-semibold text-gray-900 dark:text-gray-100">Range:</span>
             <span class="ml-1 text-gray-600 dark:text-gray-400">{{ range }}</span>
+          </div>
+          <div v-if="maxDexBonus">
+            <span class="font-semibold text-gray-900 dark:text-gray-100">DEX Bonus:</span>
+            <span class="ml-1 text-gray-600 dark:text-gray-400">{{ maxDexBonus }}</span>
           </div>
         </div>
 

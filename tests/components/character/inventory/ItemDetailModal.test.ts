@@ -365,5 +365,100 @@ describe('ItemDetailModal', () => {
       // Verify range computed uses equipment inline data
       expect((wrapper.vm as unknown as { range: string | null }).range).toBe('150/600 ft')
     })
+
+    it('displays armor type badge', async () => {
+      const armor: CharacterEquipment = {
+        id: 10,
+        item: {
+          name: 'Chain Mail',
+          item_type: 'Heavy Armor',
+          armor_class: 16,
+          armor_type: 'heavy',
+          max_dex_bonus: 0,
+          stealth_disadvantage: true,
+          strength_requirement: 13
+        },
+        item_slug: 'phb:chain-mail',
+        is_dangling: 'false',
+        custom_name: null,
+        custom_description: null,
+        quantity: 1,
+        equipped: true,
+        location: 'armor'
+      }
+
+      // Mock API to return full item data
+      mockApiFetch.mockResolvedValue({ data: mockFullItemData })
+
+      const wrapper = await mountSuspended(ItemDetailModal, {
+        props: { open: true, item: armor }
+      })
+      await flushPromises()
+
+      // Verify armorType computed uses equipment inline data
+      expect((wrapper.vm as unknown as { armorType: string | null }).armorType).toBe('heavy')
+    })
+
+    it('displays DEX bonus cap for medium armor', async () => {
+      const mediumArmor: CharacterEquipment = {
+        id: 11,
+        item: {
+          name: 'Breastplate',
+          item_type: 'Medium Armor',
+          armor_class: 14,
+          armor_type: 'medium',
+          max_dex_bonus: 2
+        },
+        item_slug: 'phb:breastplate',
+        is_dangling: 'false',
+        custom_name: null,
+        custom_description: null,
+        quantity: 1,
+        equipped: false,
+        location: 'backpack'
+      }
+
+      // Mock API to return full item data
+      mockApiFetch.mockResolvedValue({ data: mockFullItemData })
+
+      const wrapper = await mountSuspended(ItemDetailModal, {
+        props: { open: true, item: mediumArmor }
+      })
+      await flushPromises()
+
+      // Verify maxDexBonus computed formats correctly for medium armor
+      expect((wrapper.vm as unknown as { maxDexBonus: string | null }).maxDexBonus).toBe('+2 max')
+    })
+
+    it('displays DEX bonus none for heavy armor', async () => {
+      const heavyArmor: CharacterEquipment = {
+        id: 12,
+        item: {
+          name: 'Plate',
+          item_type: 'Heavy Armor',
+          armor_class: 18,
+          armor_type: 'heavy',
+          max_dex_bonus: 0
+        },
+        item_slug: 'phb:plate',
+        is_dangling: 'false',
+        custom_name: null,
+        custom_description: null,
+        quantity: 1,
+        equipped: false,
+        location: 'backpack'
+      }
+
+      // Mock API to return full item data
+      mockApiFetch.mockResolvedValue({ data: mockFullItemData })
+
+      const wrapper = await mountSuspended(ItemDetailModal, {
+        props: { open: true, item: heavyArmor }
+      })
+      await flushPromises()
+
+      // Verify maxDexBonus computed formats correctly for heavy armor (0 = "None")
+      expect((wrapper.vm as unknown as { maxDexBonus: string | null }).maxDexBonus).toBe('None')
+    })
   })
 })
