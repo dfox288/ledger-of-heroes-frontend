@@ -121,6 +121,10 @@ const isPreparedByOtherClass = computed(() => !!props.otherClassPrepared)
 /**
  * Get scaled damage string for cantrips (e.g., "2d10 fire")
  * Returns null if no damage effect or not a cantrip with scaled_effects
+ *
+ * Note: Uses first damage effect. No current D&D 5e cantrips have multiple
+ * damage types, so this is safe. If multi-damage cantrips are added later,
+ * this would need to display all damage types.
  */
 const scaledDamage = computed(() => {
   if (!props.spell.scaled_effects?.length) return null
