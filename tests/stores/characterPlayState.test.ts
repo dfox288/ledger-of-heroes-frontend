@@ -1520,25 +1520,6 @@ describe('characterPlayState store', () => {
       })
     })
 
-    describe('isConcentratingOn', () => {
-      it('returns true when concentrating on specified spell', () => {
-        const store = useCharacterPlayStateStore()
-        store.setConcentration(mockConcentration)
-        expect(store.isConcentratingOn(123)).toBe(true)
-      })
-
-      it('returns false when concentrating on different spell', () => {
-        const store = useCharacterPlayStateStore()
-        store.setConcentration(mockConcentration)
-        expect(store.isConcentratingOn(456)).toBe(false)
-      })
-
-      it('returns false when not concentrating', () => {
-        const store = useCharacterPlayStateStore()
-        expect(store.isConcentratingOn(123)).toBe(false)
-      })
-    })
-
     describe('$reset', () => {
       it('clears concentration on reset', () => {
         const store = useCharacterPlayStateStore()

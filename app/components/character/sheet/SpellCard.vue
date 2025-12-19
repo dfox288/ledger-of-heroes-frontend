@@ -134,8 +134,7 @@ const isConcentratingOnThis = computed(() =>
  * Whether we're concentrating on a DIFFERENT spell (for warning display)
  */
 const isConcentratingOnOther = computed(() =>
-  props.activeConcentration !== null
-  && props.activeConcentration !== undefined
+  props.activeConcentration != null
   && props.activeConcentration.spellId !== props.spell.id
 )
 

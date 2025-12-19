@@ -67,6 +67,18 @@ describe('ConcentrationIndicator', () => {
       expect(wrapper.emitted('viewSpell')).toBeTruthy()
       expect(wrapper.emitted('viewSpell')![0]).toEqual(['phb:bless'])
     })
+
+    it('has accessible aria-label on spell link', async () => {
+      const wrapper = await mountSuspended(ConcentrationIndicator, {
+        props: {
+          concentration: mockConcentration,
+          canEdit: false
+        }
+      })
+
+      const spellLink = wrapper.find('[data-testid="concentration-spell-link"]')
+      expect(spellLink.attributes('aria-label')).toBe('View Bless details')
+    })
   })
 
   describe('clear button (play mode)', () => {
@@ -106,6 +118,18 @@ describe('ConcentrationIndicator', () => {
       await clearBtn.trigger('click')
 
       expect(wrapper.emitted('clear')).toBeTruthy()
+    })
+
+    it('has accessible aria-label on clear button', async () => {
+      const wrapper = await mountSuspended(ConcentrationIndicator, {
+        props: {
+          concentration: mockConcentration,
+          canEdit: true
+        }
+      })
+
+      const clearBtn = wrapper.find('[data-testid="concentration-clear-btn"]')
+      expect(clearBtn.attributes('aria-label')).toBe('End concentration')
     })
   })
 })

@@ -47,6 +47,7 @@ function handleClear() {
       <button
         data-testid="concentration-spell-link"
         class="text-lg font-semibold text-primary-600 dark:text-primary-400 hover:underline cursor-pointer"
+        :aria-label="`View ${concentration.spellName} details`"
         @click="handleSpellClick"
       >
         {{ concentration.spellName }}
@@ -57,6 +58,7 @@ function handleClear() {
       data-testid="concentration-clear-btn"
       class="p-1 text-gray-400 hover:text-red-500 transition-colors"
       title="End concentration"
+      aria-label="End concentration"
       @click="handleClear"
     >
       <UIcon

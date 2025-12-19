@@ -181,7 +181,7 @@ export function useSpellPreparation(options: UseSpellPreparationOptions) {
   /**
    * Get per-class preparation limit for a given class slug
    */
-  function getClassPreparationLimit(classSlug: string): { limit: number; prepared: number } | null {
+  function getClassPreparationLimit(classSlug: string): { limit: number, prepared: number } | null {
     return spellSlots.value?.preparation_limits?.[classSlug] ?? null
   }
 

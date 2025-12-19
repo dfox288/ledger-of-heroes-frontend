@@ -174,9 +174,17 @@ export const useCharacterPlayStateStore = defineStore('characterPlayState', () =
   /**
    * Active spell concentration
    * Tracks which concentration spell the character is currently maintaining.
+   * Stored in cookie for SSR hydration and persistence across page refresh.
    * @see Issue #783, #792
    */
-  const activeConcentration = ref<ConcentrationState | null>(null)
+  const concentrationCookie = useCookie<ConcentrationState | null>('character-concentration', {
+    default: () => null,
+    watch: true
+  })
+  const activeConcentration = computed({
+    get: () => concentrationCookie.value,
+    set: (val: ConcentrationState | null) => { concentrationCookie.value = val }
+  })
 
   /** Loading flags to prevent race conditions */
   const isUpdatingHp = ref(false)
@@ -1134,14 +1142,6 @@ export const useCharacterPlayStateStore = defineStore('characterPlayState', () =
     activeConcentration.value = null
   }
 
-  /**
-   * Check if concentrating on a specific spell
-   *
-   * @param spellId - The CharacterSpell ID to check
-   */
-  function isConcentratingOn(spellId: number): boolean {
-    return activeConcentration.value?.spellId === spellId
-  }
 
   // ===========================================================================
   // RESET
@@ -1247,7 +1247,6 @@ export const useCharacterPlayStateStore = defineStore('characterPlayState', () =
     canRestoreSlot,
     isSpellPrepared,
     isUpdatingCounter,
-    isConcentratingOn,
 
     // Actions
     initialize,

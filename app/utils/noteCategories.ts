@@ -51,20 +51,20 @@ export const NOTE_CATEGORIES: NoteCategoryItem[] = [
 ]
 
 /** Type for predefined note category values */
-export type NoteCategoryValue =
-  | 'personality_trait'
-  | 'ideal'
-  | 'bond'
-  | 'flaw'
-  | 'backstory'
-  | 'appearance'
-  | 'campaign'
-  | 'session'
-  | 'quest'
-  | 'npc'
-  | 'location'
-  | 'lore'
-  | 'item'
+export type NoteCategoryValue
+  = | 'personality_trait'
+    | 'ideal'
+    | 'bond'
+    | 'flaw'
+    | 'backstory'
+    | 'appearance'
+    | 'campaign'
+    | 'session'
+    | 'quest'
+    | 'npc'
+    | 'location'
+    | 'lore'
+    | 'item'
 
 /** Type for all category values including custom */
 export type NoteCategory = NoteCategoryValue | typeof CUSTOM_CATEGORY_VALUE
