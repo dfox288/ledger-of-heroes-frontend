@@ -642,5 +642,46 @@ describe('ItemDetailModal', () => {
       // But hasChargeInfo should still be true (static display)
       expect((wrapper.vm as unknown as { hasChargeInfo: boolean }).hasChargeInfo).toBe(true)
     })
+
+    it('displays properties from equipment inline data', async () => {
+      const weaponWithProps: CharacterEquipment = {
+        ...mockWeapon,
+        item: {
+          ...mockWeapon.item,
+          properties: [
+            { id: 1, code: 'F', name: 'Finesse', description: 'Can use DEX for attack/damage' },
+            { id: 2, code: 'L', name: 'Light', description: 'Good for dual wielding' }
+          ]
+        }
+      }
+
+      // Mock API to return empty properties (to verify equipment data is preferred)
+      mockApiFetch.mockResolvedValue({ data: { ...mockFullItemData, properties: [] } })
+
+      const wrapper = await mountSuspended(ItemDetailModal, {
+        props: { open: true, item: weaponWithProps }
+      })
+      await flushPromises()
+
+      // Verify properties computed uses equipment inline data
+      const props = (wrapper.vm as unknown as { properties: Array<{ name: string }> }).properties
+      expect(props.map(p => p.name)).toContain('Finesse')
+      expect(props.map(p => p.name)).toContain('Light')
+    })
+
+    it('falls back to fetched properties when equipment data has none', async () => {
+      // Mock API to return properties
+      mockApiFetch.mockResolvedValue({ data: mockFullItemData })
+
+      const wrapper = await mountSuspended(ItemDetailModal, {
+        props: { open: true, item: mockWeapon }
+      })
+      await flushPromises()
+
+      // Verify properties computed falls back to fetched data
+      const props = (wrapper.vm as unknown as { properties: Array<{ name: string }> }).properties
+      expect(props.map(p => p.name)).toContain('Versatile')
+      expect(props.map(p => p.name)).toContain('Martial')
+    })
   })
 })

@@ -196,7 +196,14 @@ const versatileDamage = computed(() => {
   return equipmentItemData.value?.versatile_damage ?? fullItemData.value?.versatile_damage ?? null
 })
 const armorClass = computed(() => fullItemData.value?.armor_class ?? minimalItemData.value?.armor_class ?? null)
-const properties = computed(() => fullItemData.value?.properties ?? [])
+const properties = computed(() => {
+  // Prefer inline equipment data
+  if (equipmentItemData.value?.properties?.length) {
+    return equipmentItemData.value.properties
+  }
+  // Fallback to fetched data
+  return fullItemData.value?.properties ?? []
+})
 const requiresAttunement = computed(() => fullItemData.value?.requires_attunement ?? minimalItemData.value?.requires_attunement ?? false)
 const stealthDisadvantage = computed(() => fullItemData.value?.stealth_disadvantage ?? false)
 const strMinimum = computed(() => fullItemData.value?.strength_requirement ?? null)
