@@ -1,4 +1,6 @@
 // app/composables/useCharacterStats.ts
+import type { Ref } from 'vue'
+import type { CharacterStats, AbilityScoreCode } from '~/types/character'
 import { logger } from '~/utils/logger'
 import { getPrimarySpellcasting } from '~/utils/classColors'
 import { formatModifier } from '~/utils/formatModifier'
@@ -23,8 +25,6 @@ export { formatModifier }
  *   refresh
  * } = useCharacterStats(characterId)
  */
-import type { Ref } from 'vue'
-import type { CharacterStats, AbilityScoreCode } from '~/types/character'
 
 export interface AbilityScoreDisplay {
   code: AbilityScoreCode
