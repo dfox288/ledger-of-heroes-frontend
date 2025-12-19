@@ -341,5 +341,29 @@ describe('ItemDetailModal', () => {
       // Verify versatileDamage computed uses equipment inline data
       expect((wrapper.vm as unknown as { versatileDamage: string | null }).versatileDamage).toBe('1d10')
     })
+
+    it('displays range for ranged weapons', async () => {
+      const rangedWeapon: CharacterEquipment = {
+        ...mockWeapon,
+        item: {
+          name: 'Longbow',
+          item_type: 'Ranged Weapon',
+          damage_dice: '1d8',
+          range: { normal: 150, long: 600 }
+        },
+        item_slug: 'phb:longbow'
+      }
+
+      // Mock API to return full item data (without range, to verify equipment data is preferred)
+      mockApiFetch.mockResolvedValue({ data: mockFullItemData })
+
+      const wrapper = await mountSuspended(ItemDetailModal, {
+        props: { open: true, item: rangedWeapon }
+      })
+      await flushPromises()
+
+      // Verify range computed uses equipment inline data
+      expect((wrapper.vm as unknown as { range: string | null }).range).toBe('150/600 ft')
+    })
   })
 })

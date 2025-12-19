@@ -198,6 +198,13 @@ const strMinimum = computed(() => fullItemData.value?.strength_requirement ?? nu
 
 // Range for ranged weapons
 const range = computed(() => {
+  // Prefer inline equipment data (new format: object)
+  const equipRange = equipmentItemData.value?.range
+  if (equipRange) {
+    if (equipRange.long) return `${equipRange.normal}/${equipRange.long} ft`
+    return `${equipRange.normal} ft`
+  }
+  // Fallback to fetched data (old format: separate fields)
   const normal = fullItemData.value?.range_normal
   const long = fullItemData.value?.range_long
   if (!normal) return null
