@@ -521,5 +521,54 @@ describe('ItemDetailModal', () => {
       // Verify magicBonus computed returns null for non-magic items
       expect((wrapper.vm as unknown as { magicBonus: number | null }).magicBonus).toBeNull()
     })
+
+    it('displays static charge info when charges_max present', async () => {
+      const wand: CharacterEquipment = {
+        id: 20,
+        item: {
+          name: 'Wand of Magic Missiles',
+          item_type: 'Wand',
+          is_magic: true,
+          rarity: 'uncommon',
+          charges_max: 7,
+          recharge_formula: '1d6+1',
+          recharge_timing: 'dawn'
+        },
+        item_slug: 'dmg:wand-of-magic-missiles',
+        is_dangling: 'false',
+        custom_name: null,
+        custom_description: null,
+        quantity: 1,
+        equipped: false,
+        location: 'backpack'
+      }
+
+      // Mock API to return full item data
+      mockApiFetch.mockResolvedValue({ data: mockFullItemData })
+
+      const wrapper = await mountSuspended(ItemDetailModal, {
+        props: { open: true, item: wand }
+      })
+      await flushPromises()
+
+      // Verify charge-related computed properties
+      expect((wrapper.vm as unknown as { chargesMax: number | null }).chargesMax).toBe(7)
+      expect((wrapper.vm as unknown as { rechargeFormula: string | null }).rechargeFormula).toBe('1d6+1')
+      expect((wrapper.vm as unknown as { rechargeTiming: string | null }).rechargeTiming).toBe('dawn')
+      expect((wrapper.vm as unknown as { hasChargeInfo: boolean }).hasChargeInfo).toBe(true)
+    })
+
+    it('does not display charge info when charges_max is null', async () => {
+      // Mock API to return full item data
+      mockApiFetch.mockResolvedValue({ data: mockFullItemData })
+
+      const wrapper = await mountSuspended(ItemDetailModal, {
+        props: { open: true, item: mockWeapon }
+      })
+      await flushPromises()
+
+      // Verify hasChargeInfo is false for items without charges
+      expect((wrapper.vm as unknown as { hasChargeInfo: boolean }).hasChargeInfo).toBe(false)
+    })
   })
 })

@@ -227,6 +227,12 @@ const maxDexBonus = computed(() => {
 const isMagic = computed(() => equipmentItemData.value?.is_magic ?? false)
 const magicBonus = computed(() => equipmentItemData.value?.magic_bonus ?? null)
 
+// Charge properties (static display)
+const chargesMax = computed(() => equipmentItemData.value?.charges_max ?? null)
+const rechargeFormula = computed(() => equipmentItemData.value?.recharge_formula ?? null)
+const rechargeTiming = computed(() => equipmentItemData.value?.recharge_timing ?? null)
+const hasChargeInfo = computed(() => chargesMax.value !== null)
+
 // Full damage text with type
 const damageText = computed(() => {
   if (!damage.value) return null
@@ -409,6 +415,23 @@ const isCustomItem = computed(() => {
             />
             Requires Strength {{ strMinimum }}
           </span>
+        </div>
+
+        <!-- Charges Section (Static) -->
+        <div
+          v-if="hasChargeInfo"
+          class="bg-spell-50 dark:bg-spell-900/20 rounded-lg p-3"
+        >
+          <div class="flex items-center gap-2">
+            <span class="font-semibold text-gray-900 dark:text-gray-100">Max Charges:</span>
+            <span class="text-gray-600 dark:text-gray-400">{{ chargesMax }}</span>
+          </div>
+          <div
+            v-if="rechargeFormula || rechargeTiming"
+            class="text-sm text-gray-500 dark:text-gray-400 mt-1"
+          >
+            Recharges {{ rechargeFormula }}<span v-if="rechargeTiming"> at {{ rechargeTiming }}</span>
+          </div>
         </div>
 
         <!-- Description -->
