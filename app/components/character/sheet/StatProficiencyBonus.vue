@@ -6,15 +6,11 @@
  * Simple stat card showing the character's proficiency bonus.
  * Reusable across character sheet and other contexts.
  */
+import { formatModifier } from '~/utils/formatModifier'
 
 defineProps<{
   bonus: number | null
 }>()
-
-function formatModifier(value: number | null): string {
-  if (value === null) return '—'
-  return value >= 0 ? `+${value}` : `${value}`
-}
 </script>
 
 <template>

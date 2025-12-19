@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import type { components } from '~/types/api/generated'
+import { ordinal } from '~/utils/ordinal'
 
 type LevelProgression = components['schemas']['ClassLevelProgressionResource']
 
@@ -28,7 +29,7 @@ const hasSpellsKnown = computed(() =>
 
 // Check which spell level columns should be shown (hide if all 0)
 const showSpellLevel = (level: number) => {
-  const key = `spell_slots_${level === 1 ? '1st' : level === 2 ? '2nd' : level === 3 ? '3rd' : `${level}th`}` as keyof LevelProgression
+  const key = `spell_slots_${ordinal(level)}` as keyof LevelProgression
   return props.levelProgression.some((prog) => {
     const value = prog[key]
     return value !== null && value !== 0
@@ -45,14 +46,6 @@ const visibleSpellLevels = computed(() => {
   return levels
 })
 
-// Helper to format spell level ordinals
-const ordinalSuffix = (n: number): string => {
-  if (n === 1) return '1st'
-  if (n === 2) return '2nd'
-  if (n === 3) return '3rd'
-  return `${n}th`
-}
-
 // Helper to display null values as em dash
 const displayValue = (value: number | null): string => {
   if (value === null) return '—'
@@ -61,7 +54,7 @@ const displayValue = (value: number | null): string => {
 
 // Get spell slot value for a given level
 const getSpellSlot = (progression: LevelProgression, level: number): number | null => {
-  const key = `spell_slots_${ordinalSuffix(level)}` as keyof LevelProgression
+  const key = `spell_slots_${ordinal(level)}` as keyof LevelProgression
   return progression[key] as number | null
 }
 
@@ -82,7 +75,7 @@ const columns = computed(() => {
   for (const spellLevel of visibleSpellLevels.value) {
     cols.push({
       key: `spell_level_${spellLevel}`,
-      label: ordinalSuffix(spellLevel),
+      label: ordinal(spellLevel),
       align: 'center' as const
     })
   }

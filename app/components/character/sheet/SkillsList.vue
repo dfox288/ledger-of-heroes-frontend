@@ -1,15 +1,12 @@
 <!-- app/components/character/sheet/SkillsList.vue -->
 <script setup lang="ts">
 import type { CharacterSkill, SkillAdvantage } from '~/types/character'
+import { formatModifier } from '~/utils/formatModifier'
 
 const props = defineProps<{
   skills: CharacterSkill[]
   skillAdvantages?: SkillAdvantage[]
 }>()
-
-function formatModifier(mod: number): string {
-  return mod >= 0 ? `+${mod}` : `${mod}`
-}
 
 /**
  * Map of skill slugs to their advantages for O(1) lookup
@@ -73,7 +70,7 @@ function getAdvantage(slug: string): SkillAdvantage | undefined {
           <UBadge
             color="success"
             variant="subtle"
-            size="xs"
+            size="md"
             data-testid="minimum-roll-badge"
             :aria-label="`Guaranteed minimum result: ${skill.minimum_total}`"
           >

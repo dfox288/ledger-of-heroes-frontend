@@ -1,6 +1,10 @@
 // app/composables/useCharacterStats.ts
 import { logger } from '~/utils/logger'
 import { getPrimarySpellcasting } from '~/utils/classColors'
+import { formatModifier } from '~/utils/formatModifier'
+
+// Re-export for backward compatibility
+export { formatModifier }
 
 /**
  * Composable for fetching and displaying character stats
@@ -54,15 +58,6 @@ const ABILITY_NAMES: Record<AbilityScoreCode, string> = {
   INT: 'Intelligence',
   WIS: 'Wisdom',
   CHA: 'Charisma'
-}
-
-/**
- * Format a modifier number for display
- * Positive: +2, Zero: +0, Negative: -1, Null: —
- */
-export function formatModifier(mod: number | null | undefined): string {
-  if (mod == null) return '—'
-  return mod >= 0 ? `+${mod}` : `${mod}`
 }
 
 export function useCharacterStats(characterId: Ref<number | null>) {

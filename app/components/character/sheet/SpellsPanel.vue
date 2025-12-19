@@ -15,6 +15,7 @@ import { storeToRefs } from 'pinia'
 import type { CharacterSpell, CharacterStats } from '~/types/character'
 import { useCharacterPlayStateStore } from '~/stores/characterPlayState'
 import { getPrimarySpellcasting } from '~/utils/classColors'
+import { formatModifier } from '~/utils/formatModifier'
 
 const props = defineProps<{
   spells: CharacterSpell[]
@@ -33,10 +34,6 @@ const leveledSpells = computed(() => validSpells.value.filter(s => s.spell!.leve
 
 // Extract primary spellcasting info (for multiclass, uses first class)
 const primarySpellcasting = computed(() => getPrimarySpellcasting(props.stats.spellcasting))
-
-function formatModifier(value: number): string {
-  return value >= 0 ? `+${value}` : `${value}`
-}
 </script>
 
 <template>

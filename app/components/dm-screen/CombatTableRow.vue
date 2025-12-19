@@ -1,6 +1,7 @@
 <!-- app/components/dm-screen/CombatTableRow.vue -->
 <script setup lang="ts">
 import type { DmScreenCharacter } from '~/types/dm-screen'
+import { formatModifier } from '~/utils/formatModifier'
 
 interface Props {
   character: DmScreenCharacter
@@ -39,10 +40,6 @@ const initEdit = useInlineEdit<string>({
     return !isNaN(parsed) && parsed >= -10 && parsed <= 50
   }
 })
-
-function formatModifier(mod: number): string {
-  return mod >= 0 ? `+${mod}` : `${mod}`
-}
 
 const isHighAc = computed(() => props.character.armor_class >= 17)
 const hasDeathSaves = computed(() =>

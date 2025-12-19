@@ -1,6 +1,7 @@
 <!-- app/components/character/sheet/WeaponsPanel.vue -->
 <script setup lang="ts">
 import type { CharacterWeapon, AbilityScoreCode, BasicAttack } from '~/types/character'
+import { formatModifier } from '~/utils/formatModifier'
 
 const props = defineProps<{
   weapons: CharacterWeapon[]
@@ -32,13 +33,6 @@ function formatDamage(weapon: CharacterWeapon): string {
   if (bonus === 0) return weapon.damage_dice
   if (bonus > 0) return `${weapon.damage_dice}+${bonus}`
   return `${weapon.damage_dice}${bonus}` // negative already has minus
-}
-
-/**
- * Format modifier with + sign
- */
-function formatModifier(value: number): string {
-  return value >= 0 ? `+${value}` : `${value}`
 }
 
 /**

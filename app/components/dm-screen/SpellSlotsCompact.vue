@@ -1,19 +1,13 @@
 <!-- app/components/dm-screen/SpellSlotsCompact.vue -->
 <script setup lang="ts">
 import type { DmScreenSpellSlots } from '~/types/dm-screen'
+import { ordinal } from '~/utils/ordinal'
 
 interface Props {
   slots: DmScreenSpellSlots
 }
 
 const props = defineProps<Props>()
-
-function ordinal(n: number): string {
-  const suffixes: Record<number, string> = { 1: 'st', 2: 'nd', 3: 'rd' }
-  const v = n % 100
-  const suffix = (v >= 11 && v <= 13) ? 'th' : (suffixes[n % 10] ?? 'th')
-  return n + suffix
-}
 
 const validSlots = computed(() => {
   if (!props.slots || typeof props.slots !== 'object') return []
