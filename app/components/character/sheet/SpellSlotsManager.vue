@@ -10,6 +10,7 @@
  */
 import { storeToRefs } from 'pinia'
 import { useCharacterPlayStateStore } from '~/stores/characterPlayState'
+import { ordinal } from '~/utils/ordinal'
 
 const props = defineProps<{
   characterId: number
@@ -18,23 +19,6 @@ const props = defineProps<{
 
 const store = useCharacterPlayStateStore()
 const { spellSlots, isUpdatingSpellSlot } = storeToRefs(store)
-
-/**
- * Convert spell level to ordinal (1st, 2nd, 3rd, etc.)
- * Note: Level 0 = cantrips, which don't use spell slots.
- * Backend should never send level 0 in slot data.
- */
-function ordinal(level: number): string {
-  // Cantrips (level 0) don't have slots - this shouldn't happen,
-  // but handle gracefully just in case
-  if (level === 0) return 'Ctrp'
-
-  const suffixes = ['th', 'st', 'nd', 'rd']
-  const value = level % 100
-  const v = value - 20
-  const suffix = (v >= 0 && v < 10 && suffixes[v]) || suffixes[value] || 'th'
-  return level + suffix
-}
 
 /**
  * Check if interactions are disabled (not editable or updating)

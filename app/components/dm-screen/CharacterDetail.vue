@@ -1,6 +1,7 @@
 <!-- app/components/dm-screen/CharacterDetail.vue -->
 <script setup lang="ts">
 import type { DmScreenCharacter } from '~/types/dm-screen'
+import { formatModifier } from '~/utils/formatModifier'
 
 interface Props {
   character: DmScreenCharacter
@@ -9,10 +10,6 @@ interface Props {
 const props = defineProps<Props>()
 
 type SavingThrowKey = 'STR' | 'DEX' | 'CON' | 'INT' | 'WIS' | 'CHA'
-
-function formatModifier(mod: number): string {
-  return mod >= 0 ? `+${mod}` : `${mod}`
-}
 
 const hasSpellSlots = computed(() => {
   const slots = props.character.spell_slots

@@ -12,17 +12,11 @@
  * @see Issue #766 - Add Spell DC and Attack Bonus to battle page
  */
 import type { ClassSpellcastingInfo } from '~/types/character'
+import { formatModifier } from '~/utils/formatModifier'
 
 const props = defineProps<{
   spellcasting: Record<string, ClassSpellcastingInfo> | null
 }>()
-
-/**
- * Format attack bonus with proper sign
- */
-function formatModifier(value: number): string {
-  return value >= 0 ? `+${value}` : `${value}`
-}
 
 /**
  * Extract class name from slug (e.g., "phb:wizard" -> "Wizard")

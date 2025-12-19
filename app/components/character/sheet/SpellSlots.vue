@@ -7,22 +7,12 @@
  * Handles warlock pact magic slots separately if present.
  * Only shows levels that have slots.
  */
+import { ordinal } from '~/utils/ordinal'
 
 const props = defineProps<{
   spellSlots: number[] | Record<string, number>
   pactSlots?: { count: number, level: number } | null
 }>()
-
-/**
- * Convert spell level to ordinal (1st, 2nd, 3rd, etc.)
- */
-function ordinal(level: number): string {
-  const suffixes = ['th', 'st', 'nd', 'rd']
-  const value = level % 100
-  const v = value - 20
-  const suffix = (v >= 0 && v < 10 && suffixes[v]) || suffixes[value] || 'th'
-  return level + suffix
-}
 
 /**
  * Get sorted list of spell levels that have slots

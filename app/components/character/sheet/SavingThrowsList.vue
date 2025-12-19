@@ -1,14 +1,11 @@
 <!-- app/components/character/sheet/SavingThrowsList.vue -->
 <script setup lang="ts">
 import type { CharacterSavingThrow } from '~/types/character'
+import { formatModifier } from '~/utils/formatModifier'
 
 defineProps<{
   savingThrows: CharacterSavingThrow[]
 }>()
-
-function formatModifier(mod: number): string {
-  return mod >= 0 ? `+${mod}` : `${mod}`
-}
 </script>
 
 <template>

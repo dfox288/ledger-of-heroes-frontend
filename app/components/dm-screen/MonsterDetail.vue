@@ -1,17 +1,13 @@
 <!-- app/components/dm-screen/MonsterDetail.vue -->
 <script setup lang="ts">
 import type { EncounterMonster } from '~/types/dm-screen'
+import { formatModifier } from '~/utils/formatModifier'
 
 interface Props {
   monster: EncounterMonster
 }
 
 const props = defineProps<Props>()
-
-function formatModifier(mod: number | null): string {
-  if (mod === null) return '—'
-  return mod >= 0 ? `+${mod}` : `${mod}`
-}
 
 const speeds = computed(() => {
   const s = props.monster.monster.speed

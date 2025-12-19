@@ -1,20 +1,13 @@
 <!-- app/components/character/sheet/AbilityScoreBlock.vue -->
 <script setup lang="ts">
 import type { CharacterStats, AbilityScoreCode } from '~/types/character'
+import { formatModifier } from '~/utils/formatModifier'
 
 defineProps<{
   stats: CharacterStats
 }>()
 
 const abilities: AbilityScoreCode[] = ['STR', 'DEX', 'CON', 'INT', 'WIS', 'CHA']
-
-/**
- * Format modifier with sign
- */
-function formatModifier(mod: number | null): string {
-  if (mod === null) return '—'
-  return mod >= 0 ? `+${mod}` : `${mod}`
-}
 </script>
 
 <template>
