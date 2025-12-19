@@ -24,6 +24,7 @@ interface FullItemData {
   armor_class?: number
   damage_dice?: string
   damage_type?: { name: string }
+  versatile_damage?: string
   properties?: Array<{ name: string, description?: string }>
   cost_cp?: number
   rarity?: string

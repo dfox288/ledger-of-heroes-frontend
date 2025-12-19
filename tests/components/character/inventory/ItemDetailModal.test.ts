@@ -683,5 +683,64 @@ describe('ItemDetailModal', () => {
       expect(props.map(p => p.name)).toContain('Versatile')
       expect(props.map(p => p.name)).toContain('Martial')
     })
+
+    it('displays full magic weapon with all new fields', async () => {
+      const fullMagicWeapon: CharacterEquipment = {
+        id: 100,
+        item: {
+          name: 'Flametongue Longsword',
+          item_type: 'Melee Weapon',
+          damage_dice: '1d8',
+          damage_type: 'Slashing',
+          versatile_damage: '1d10',
+          properties: [
+            { id: 1, code: 'V', name: 'Versatile', description: 'Can be used with two hands' }
+          ],
+          is_magic: true,
+          magic_bonus: 2,
+          rarity: 'rare',
+          requires_attunement: true
+        },
+        item_slug: 'dmg:flametongue-longsword',
+        is_dangling: 'false',
+        custom_name: null,
+        custom_description: null,
+        quantity: 1,
+        equipped: true,
+        location: 'main_hand'
+      }
+
+      // Mock API to return minimal data (component should use inline equipment data)
+      mockApiFetch.mockResolvedValue({
+        data: {
+          ...mockFullItemData,
+          properties: [] // Empty to verify equipment inline data is used
+        }
+      })
+
+      const wrapper = await mountSuspended(ItemDetailModal, {
+        props: { open: true, item: fullMagicWeapon }
+      })
+      await flushPromises()
+
+      // Verify all new fields are accessible via computed properties
+      const vm = wrapper.vm as unknown as {
+        damageText: string | null
+        versatileDamage: string | null
+        magicBonus: number | null
+        isMagic: boolean
+        properties: Array<{ name: string }>
+      }
+
+      // Damage type included in damageText
+      expect(vm.damageText).toContain('Slashing')
+      // Versatile damage
+      expect(vm.versatileDamage).toBe('1d10')
+      // Magic bonus
+      expect(vm.magicBonus).toBe(2)
+      expect(vm.isMagic).toBe(true)
+      // Properties from equipment data
+      expect(vm.properties.map(p => p.name)).toContain('Versatile')
+    })
   })
 })

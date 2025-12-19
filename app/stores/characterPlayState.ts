@@ -1142,7 +1142,6 @@ export const useCharacterPlayStateStore = defineStore('characterPlayState', () =
     activeConcentration.value = null
   }
 
-
   // ===========================================================================
   // RESET
   // ===========================================================================
