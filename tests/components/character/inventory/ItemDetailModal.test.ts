@@ -570,5 +570,77 @@ describe('ItemDetailModal', () => {
       // Verify hasChargeInfo is false for items without charges
       expect((wrapper.vm as unknown as { hasChargeInfo: boolean }).hasChargeInfo).toBe(false)
     })
+
+    it('displays interactive charge controls when charges.current available', async () => {
+      const wandWithCharges = {
+        id: 21,
+        item: {
+          name: 'Wand of Magic Missiles',
+          item_type: 'Wand',
+          is_magic: true
+        },
+        item_slug: 'dmg:wand-of-magic-missiles',
+        is_dangling: 'false',
+        custom_name: null,
+        custom_description: null,
+        quantity: 1,
+        equipped: false,
+        location: 'backpack',
+        // Top-level charges object (backend Phase 3)
+        charges: {
+          current: 5,
+          max: 7,
+          recharge_formula: '1d6+1',
+          recharge_timing: 'dawn'
+        }
+      } as CharacterEquipment
+
+      // Mock API to return full item data
+      mockApiFetch.mockResolvedValue({ data: mockFullItemData })
+
+      const wrapper = await mountSuspended(ItemDetailModal, {
+        props: { open: true, item: wandWithCharges }
+      })
+      await flushPromises()
+
+      // Verify interactive charge computed properties
+      expect((wrapper.vm as unknown as { hasInteractiveCharges: boolean }).hasInteractiveCharges).toBe(true)
+      expect((wrapper.vm as unknown as { currentCharges: number | null }).currentCharges).toBe(5)
+      expect((wrapper.vm as unknown as { displayChargesMax: number | null }).displayChargesMax).toBe(7)
+    })
+
+    it('hides interactive controls when charges.current is null', async () => {
+      const wandStaticOnly: CharacterEquipment = {
+        id: 22,
+        item: {
+          name: 'Wand of Magic Missiles',
+          item_type: 'Wand',
+          is_magic: true,
+          charges_max: 7,
+          recharge_formula: '1d6+1',
+          recharge_timing: 'dawn'
+        },
+        item_slug: 'dmg:wand-of-magic-missiles',
+        is_dangling: 'false',
+        custom_name: null,
+        custom_description: null,
+        quantity: 1,
+        equipped: false,
+        location: 'backpack'
+      }
+
+      // Mock API to return full item data
+      mockApiFetch.mockResolvedValue({ data: mockFullItemData })
+
+      const wrapper = await mountSuspended(ItemDetailModal, {
+        props: { open: true, item: wandStaticOnly }
+      })
+      await flushPromises()
+
+      // Verify hasInteractiveCharges is false (no top-level charges object)
+      expect((wrapper.vm as unknown as { hasInteractiveCharges: boolean }).hasInteractiveCharges).toBe(false)
+      // But hasChargeInfo should still be true (static display)
+      expect((wrapper.vm as unknown as { hasChargeInfo: boolean }).hasChargeInfo).toBe(true)
+    })
   })
 })

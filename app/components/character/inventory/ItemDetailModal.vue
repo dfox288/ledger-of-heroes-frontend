@@ -69,6 +69,11 @@ interface Props {
 
 const props = defineProps<Props>()
 
+defineEmits<{
+  'decrement-charge': []
+  'increment-charge': []
+}>()
+
 const open = defineModel<boolean>('open', { default: false })
 
 const { apiFetch } = useApi()
@@ -227,11 +232,33 @@ const maxDexBonus = computed(() => {
 const isMagic = computed(() => equipmentItemData.value?.is_magic ?? false)
 const magicBonus = computed(() => equipmentItemData.value?.magic_bonus ?? null)
 
-// Charge properties (static display)
+// Charge properties (static display from item data)
 const chargesMax = computed(() => equipmentItemData.value?.charges_max ?? null)
 const rechargeFormula = computed(() => equipmentItemData.value?.recharge_formula ?? null)
 const rechargeTiming = computed(() => equipmentItemData.value?.recharge_timing ?? null)
 const hasChargeInfo = computed(() => chargesMax.value !== null)
+
+// Interactive charges (top-level charges object, backend Phase 3)
+interface ChargesData {
+  current: number | null
+  max: number
+  recharge_formula: string | null
+  recharge_timing: string | null
+}
+
+const chargesObject = computed(() => (props.item as { charges?: ChargesData } | null)?.charges ?? null)
+
+const hasInteractiveCharges = computed(() =>
+  chargesObject.value !== null && chargesObject.value.current !== null
+)
+
+const currentCharges = computed(() => chargesObject.value?.current ?? null)
+const maxChargesFromObject = computed(() => chargesObject.value?.max ?? null)
+
+// Use charges object if available, otherwise fall back to item fields
+const displayChargesMax = computed(() => maxChargesFromObject.value ?? chargesMax.value)
+const displayRechargeFormula = computed(() => chargesObject.value?.recharge_formula ?? rechargeFormula.value)
+const displayRechargeTiming = computed(() => chargesObject.value?.recharge_timing ?? rechargeTiming.value)
 
 // Full damage text with type
 const damageText = computed(() => {
@@ -417,20 +444,47 @@ const isCustomItem = computed(() => {
           </span>
         </div>
 
-        <!-- Charges Section (Static) -->
+        <!-- Charges Section -->
         <div
-          v-if="hasChargeInfo"
+          v-if="hasChargeInfo || hasInteractiveCharges"
           class="bg-spell-50 dark:bg-spell-900/20 rounded-lg p-3"
         >
-          <div class="flex items-center gap-2">
-            <span class="font-semibold text-gray-900 dark:text-gray-100">Max Charges:</span>
-            <span class="text-gray-600 dark:text-gray-400">{{ chargesMax }}</span>
+          <div class="flex items-center justify-between">
+            <div class="flex items-center gap-2">
+              <span class="font-semibold text-gray-900 dark:text-gray-100">Charges:</span>
+              <!-- Interactive mode -->
+              <template v-if="hasInteractiveCharges">
+                <UButton
+                  data-testid="charge-decrement"
+                  size="xs"
+                  variant="ghost"
+                  icon="i-heroicons-minus"
+                  :disabled="currentCharges === 0"
+                  @click="$emit('decrement-charge')"
+                />
+                <span class="text-gray-600 dark:text-gray-400 min-w-[3rem] text-center">
+                  {{ currentCharges }} / {{ displayChargesMax }}
+                </span>
+                <UButton
+                  data-testid="charge-increment"
+                  size="xs"
+                  variant="ghost"
+                  icon="i-heroicons-plus"
+                  :disabled="currentCharges === displayChargesMax"
+                  @click="$emit('increment-charge')"
+                />
+              </template>
+              <!-- Static mode -->
+              <template v-else>
+                <span class="text-gray-600 dark:text-gray-400">{{ displayChargesMax }} max</span>
+              </template>
+            </div>
           </div>
           <div
-            v-if="rechargeFormula || rechargeTiming"
+            v-if="displayRechargeFormula || displayRechargeTiming"
             class="text-sm text-gray-500 dark:text-gray-400 mt-1"
           >
-            Recharges {{ rechargeFormula }}<span v-if="rechargeTiming"> at {{ rechargeTiming }}</span>
+            Recharges {{ displayRechargeFormula }}<span v-if="displayRechargeTiming"> at {{ displayRechargeTiming }}</span>
           </div>
         </div>
 
