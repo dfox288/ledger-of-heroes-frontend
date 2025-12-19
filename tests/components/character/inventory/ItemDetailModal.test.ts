@@ -460,5 +460,66 @@ describe('ItemDetailModal', () => {
       // Verify maxDexBonus computed formats correctly for heavy armor (0 = "None")
       expect((wrapper.vm as unknown as { maxDexBonus: string | null }).maxDexBonus).toBe('None')
     })
+
+    it('displays magic bonus badge for magic weapons', async () => {
+      const magicWeapon: CharacterEquipment = {
+        ...mockWeapon,
+        item: {
+          ...mockWeapon.item,
+          is_magic: true,
+          magic_bonus: 1,
+          rarity: 'uncommon'
+        }
+      }
+
+      // Mock API to return full item data
+      mockApiFetch.mockResolvedValue({ data: mockFullItemData })
+
+      const wrapper = await mountSuspended(ItemDetailModal, {
+        props: { open: true, item: magicWeapon }
+      })
+      await flushPromises()
+
+      // Verify magicBonus computed returns the value
+      expect((wrapper.vm as unknown as { magicBonus: number | null }).magicBonus).toBe(1)
+      // Verify isMagic computed returns true
+      expect((wrapper.vm as unknown as { isMagic: boolean }).isMagic).toBe(true)
+    })
+
+    it('displays +2 magic bonus correctly', async () => {
+      const magicWeapon: CharacterEquipment = {
+        ...mockWeapon,
+        item: {
+          ...mockWeapon.item,
+          is_magic: true,
+          magic_bonus: 2,
+          rarity: 'rare'
+        }
+      }
+
+      // Mock API to return full item data
+      mockApiFetch.mockResolvedValue({ data: mockFullItemData })
+
+      const wrapper = await mountSuspended(ItemDetailModal, {
+        props: { open: true, item: magicWeapon }
+      })
+      await flushPromises()
+
+      // Verify magicBonus computed returns the value
+      expect((wrapper.vm as unknown as { magicBonus: number | null }).magicBonus).toBe(2)
+    })
+
+    it('does not display magic bonus badge for non-magic items', async () => {
+      // Mock API to return full item data
+      mockApiFetch.mockResolvedValue({ data: mockFullItemData })
+
+      const wrapper = await mountSuspended(ItemDetailModal, {
+        props: { open: true, item: mockWeapon }
+      })
+      await flushPromises()
+
+      // Verify magicBonus computed returns null for non-magic items
+      expect((wrapper.vm as unknown as { magicBonus: number | null }).magicBonus).toBeNull()
+    })
   })
 })

@@ -223,6 +223,10 @@ const maxDexBonus = computed(() => {
   return `+${bonus} max`
 })
 
+// Magic item properties
+const isMagic = computed(() => equipmentItemData.value?.is_magic ?? false)
+const magicBonus = computed(() => equipmentItemData.value?.magic_bonus ?? null)
+
 // Full damage text with type
 const damageText = computed(() => {
   if (!damage.value) return null
@@ -333,6 +337,14 @@ const isCustomItem = computed(() => {
             size="md"
           >
             {{ locationText }}
+          </UBadge>
+          <UBadge
+            v-if="magicBonus"
+            color="spell"
+            variant="subtle"
+            size="md"
+          >
+            +{{ magicBonus }}
           </UBadge>
         </div>
 
