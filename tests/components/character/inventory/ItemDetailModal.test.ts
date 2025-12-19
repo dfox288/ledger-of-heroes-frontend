@@ -297,4 +297,450 @@ describe('ItemDetailModal', () => {
       expect((wrapper.vm as unknown as { isCustomItem: boolean }).isCustomItem).toBe(true)
     })
   })
+
+  describe('equipment inline data', () => {
+    it('displays damage type from equipment item data', async () => {
+      const weaponWithDamageType: CharacterEquipment = {
+        ...mockWeapon,
+        item: {
+          ...mockWeapon.item,
+          damage_type: 'Slashing'
+        }
+      }
+
+      // Mock API to return full item data (will be ignored for damage type)
+      mockApiFetch.mockResolvedValue({ data: mockFullItemData })
+
+      const wrapper = await mountSuspended(ItemDetailModal, {
+        props: { open: true, item: weaponWithDamageType }
+      })
+      await flushPromises()
+
+      // Verify damageText computed uses equipment inline data (not API data)
+      expect((wrapper.vm as unknown as { damageText: string | null }).damageText).toContain('Slashing')
+    })
+
+    it('displays versatile damage when present', async () => {
+      const versatileWeapon: CharacterEquipment = {
+        ...mockWeapon,
+        item: {
+          ...mockWeapon.item,
+          damage_dice: '1d8',
+          versatile_damage: '1d10'
+        }
+      }
+
+      // Mock API to return full item data
+      mockApiFetch.mockResolvedValue({ data: mockFullItemData })
+
+      const wrapper = await mountSuspended(ItemDetailModal, {
+        props: { open: true, item: versatileWeapon }
+      })
+      await flushPromises()
+
+      // Verify versatileDamage computed uses equipment inline data
+      expect((wrapper.vm as unknown as { versatileDamage: string | null }).versatileDamage).toBe('1d10')
+    })
+
+    it('displays range for ranged weapons', async () => {
+      const rangedWeapon: CharacterEquipment = {
+        ...mockWeapon,
+        item: {
+          name: 'Longbow',
+          item_type: 'Ranged Weapon',
+          damage_dice: '1d8',
+          range: { normal: 150, long: 600 }
+        },
+        item_slug: 'phb:longbow'
+      }
+
+      // Mock API to return full item data (without range, to verify equipment data is preferred)
+      mockApiFetch.mockResolvedValue({ data: mockFullItemData })
+
+      const wrapper = await mountSuspended(ItemDetailModal, {
+        props: { open: true, item: rangedWeapon }
+      })
+      await flushPromises()
+
+      // Verify range computed uses equipment inline data
+      expect((wrapper.vm as unknown as { range: string | null }).range).toBe('150/600 ft')
+    })
+
+    it('displays armor type badge', async () => {
+      const armor: CharacterEquipment = {
+        id: 10,
+        item: {
+          name: 'Chain Mail',
+          item_type: 'Heavy Armor',
+          armor_class: 16,
+          armor_type: 'heavy',
+          max_dex_bonus: 0,
+          stealth_disadvantage: true,
+          strength_requirement: 13
+        },
+        item_slug: 'phb:chain-mail',
+        is_dangling: 'false',
+        custom_name: null,
+        custom_description: null,
+        quantity: 1,
+        equipped: true,
+        location: 'armor'
+      }
+
+      // Mock API to return full item data
+      mockApiFetch.mockResolvedValue({ data: mockFullItemData })
+
+      const wrapper = await mountSuspended(ItemDetailModal, {
+        props: { open: true, item: armor }
+      })
+      await flushPromises()
+
+      // Verify armorType computed uses equipment inline data
+      expect((wrapper.vm as unknown as { armorType: string | null }).armorType).toBe('heavy')
+    })
+
+    it('displays DEX bonus cap for medium armor', async () => {
+      const mediumArmor: CharacterEquipment = {
+        id: 11,
+        item: {
+          name: 'Breastplate',
+          item_type: 'Medium Armor',
+          armor_class: 14,
+          armor_type: 'medium',
+          max_dex_bonus: 2
+        },
+        item_slug: 'phb:breastplate',
+        is_dangling: 'false',
+        custom_name: null,
+        custom_description: null,
+        quantity: 1,
+        equipped: false,
+        location: 'backpack'
+      }
+
+      // Mock API to return full item data
+      mockApiFetch.mockResolvedValue({ data: mockFullItemData })
+
+      const wrapper = await mountSuspended(ItemDetailModal, {
+        props: { open: true, item: mediumArmor }
+      })
+      await flushPromises()
+
+      // Verify maxDexBonus computed formats correctly for medium armor
+      expect((wrapper.vm as unknown as { maxDexBonus: string | null }).maxDexBonus).toBe('+2 max')
+    })
+
+    it('displays DEX bonus none for heavy armor', async () => {
+      const heavyArmor: CharacterEquipment = {
+        id: 12,
+        item: {
+          name: 'Plate',
+          item_type: 'Heavy Armor',
+          armor_class: 18,
+          armor_type: 'heavy',
+          max_dex_bonus: 0
+        },
+        item_slug: 'phb:plate',
+        is_dangling: 'false',
+        custom_name: null,
+        custom_description: null,
+        quantity: 1,
+        equipped: false,
+        location: 'backpack'
+      }
+
+      // Mock API to return full item data
+      mockApiFetch.mockResolvedValue({ data: mockFullItemData })
+
+      const wrapper = await mountSuspended(ItemDetailModal, {
+        props: { open: true, item: heavyArmor }
+      })
+      await flushPromises()
+
+      // Verify maxDexBonus computed formats correctly for heavy armor (0 = "None")
+      expect((wrapper.vm as unknown as { maxDexBonus: string | null }).maxDexBonus).toBe('None')
+    })
+
+    it('displays magic bonus badge for magic weapons', async () => {
+      const magicWeapon: CharacterEquipment = {
+        ...mockWeapon,
+        item: {
+          ...mockWeapon.item,
+          is_magic: true,
+          magic_bonus: 1,
+          rarity: 'uncommon'
+        }
+      }
+
+      // Mock API to return full item data
+      mockApiFetch.mockResolvedValue({ data: mockFullItemData })
+
+      const wrapper = await mountSuspended(ItemDetailModal, {
+        props: { open: true, item: magicWeapon }
+      })
+      await flushPromises()
+
+      // Verify magicBonus computed returns the value
+      expect((wrapper.vm as unknown as { magicBonus: number | null }).magicBonus).toBe(1)
+      // Verify isMagic computed returns true
+      expect((wrapper.vm as unknown as { isMagic: boolean }).isMagic).toBe(true)
+    })
+
+    it('displays +2 magic bonus correctly', async () => {
+      const magicWeapon: CharacterEquipment = {
+        ...mockWeapon,
+        item: {
+          ...mockWeapon.item,
+          is_magic: true,
+          magic_bonus: 2,
+          rarity: 'rare'
+        }
+      }
+
+      // Mock API to return full item data
+      mockApiFetch.mockResolvedValue({ data: mockFullItemData })
+
+      const wrapper = await mountSuspended(ItemDetailModal, {
+        props: { open: true, item: magicWeapon }
+      })
+      await flushPromises()
+
+      // Verify magicBonus computed returns the value
+      expect((wrapper.vm as unknown as { magicBonus: number | null }).magicBonus).toBe(2)
+    })
+
+    it('does not display magic bonus badge for non-magic items', async () => {
+      // Mock API to return full item data
+      mockApiFetch.mockResolvedValue({ data: mockFullItemData })
+
+      const wrapper = await mountSuspended(ItemDetailModal, {
+        props: { open: true, item: mockWeapon }
+      })
+      await flushPromises()
+
+      // Verify magicBonus computed returns null for non-magic items
+      expect((wrapper.vm as unknown as { magicBonus: number | null }).magicBonus).toBeNull()
+    })
+
+    it('displays static charge info when charges_max present', async () => {
+      const wand: CharacterEquipment = {
+        id: 20,
+        item: {
+          name: 'Wand of Magic Missiles',
+          item_type: 'Wand',
+          is_magic: true,
+          rarity: 'uncommon',
+          charges_max: 7,
+          recharge_formula: '1d6+1',
+          recharge_timing: 'dawn'
+        },
+        item_slug: 'dmg:wand-of-magic-missiles',
+        is_dangling: 'false',
+        custom_name: null,
+        custom_description: null,
+        quantity: 1,
+        equipped: false,
+        location: 'backpack'
+      }
+
+      // Mock API to return full item data
+      mockApiFetch.mockResolvedValue({ data: mockFullItemData })
+
+      const wrapper = await mountSuspended(ItemDetailModal, {
+        props: { open: true, item: wand }
+      })
+      await flushPromises()
+
+      // Verify charge-related computed properties
+      expect((wrapper.vm as unknown as { chargesMax: number | null }).chargesMax).toBe(7)
+      expect((wrapper.vm as unknown as { rechargeFormula: string | null }).rechargeFormula).toBe('1d6+1')
+      expect((wrapper.vm as unknown as { rechargeTiming: string | null }).rechargeTiming).toBe('dawn')
+      expect((wrapper.vm as unknown as { hasChargeInfo: boolean }).hasChargeInfo).toBe(true)
+    })
+
+    it('does not display charge info when charges_max is null', async () => {
+      // Mock API to return full item data
+      mockApiFetch.mockResolvedValue({ data: mockFullItemData })
+
+      const wrapper = await mountSuspended(ItemDetailModal, {
+        props: { open: true, item: mockWeapon }
+      })
+      await flushPromises()
+
+      // Verify hasChargeInfo is false for items without charges
+      expect((wrapper.vm as unknown as { hasChargeInfo: boolean }).hasChargeInfo).toBe(false)
+    })
+
+    it('displays interactive charge controls when charges.current available', async () => {
+      const wandWithCharges = {
+        id: 21,
+        item: {
+          name: 'Wand of Magic Missiles',
+          item_type: 'Wand',
+          is_magic: true
+        },
+        item_slug: 'dmg:wand-of-magic-missiles',
+        is_dangling: 'false',
+        custom_name: null,
+        custom_description: null,
+        quantity: 1,
+        equipped: false,
+        location: 'backpack',
+        // Top-level charges object (backend Phase 3)
+        charges: {
+          current: 5,
+          max: 7,
+          recharge_formula: '1d6+1',
+          recharge_timing: 'dawn'
+        }
+      } as CharacterEquipment
+
+      // Mock API to return full item data
+      mockApiFetch.mockResolvedValue({ data: mockFullItemData })
+
+      const wrapper = await mountSuspended(ItemDetailModal, {
+        props: { open: true, item: wandWithCharges }
+      })
+      await flushPromises()
+
+      // Verify interactive charge computed properties
+      expect((wrapper.vm as unknown as { hasInteractiveCharges: boolean }).hasInteractiveCharges).toBe(true)
+      expect((wrapper.vm as unknown as { currentCharges: number | null }).currentCharges).toBe(5)
+      expect((wrapper.vm as unknown as { displayChargesMax: number | null }).displayChargesMax).toBe(7)
+    })
+
+    it('hides interactive controls when charges.current is null', async () => {
+      const wandStaticOnly: CharacterEquipment = {
+        id: 22,
+        item: {
+          name: 'Wand of Magic Missiles',
+          item_type: 'Wand',
+          is_magic: true,
+          charges_max: 7,
+          recharge_formula: '1d6+1',
+          recharge_timing: 'dawn'
+        },
+        item_slug: 'dmg:wand-of-magic-missiles',
+        is_dangling: 'false',
+        custom_name: null,
+        custom_description: null,
+        quantity: 1,
+        equipped: false,
+        location: 'backpack'
+      }
+
+      // Mock API to return full item data
+      mockApiFetch.mockResolvedValue({ data: mockFullItemData })
+
+      const wrapper = await mountSuspended(ItemDetailModal, {
+        props: { open: true, item: wandStaticOnly }
+      })
+      await flushPromises()
+
+      // Verify hasInteractiveCharges is false (no top-level charges object)
+      expect((wrapper.vm as unknown as { hasInteractiveCharges: boolean }).hasInteractiveCharges).toBe(false)
+      // But hasChargeInfo should still be true (static display)
+      expect((wrapper.vm as unknown as { hasChargeInfo: boolean }).hasChargeInfo).toBe(true)
+    })
+
+    it('displays properties from equipment inline data', async () => {
+      const weaponWithProps: CharacterEquipment = {
+        ...mockWeapon,
+        item: {
+          ...mockWeapon.item,
+          properties: [
+            { id: 1, code: 'F', name: 'Finesse', description: 'Can use DEX for attack/damage' },
+            { id: 2, code: 'L', name: 'Light', description: 'Good for dual wielding' }
+          ]
+        }
+      }
+
+      // Mock API to return empty properties (to verify equipment data is preferred)
+      mockApiFetch.mockResolvedValue({ data: { ...mockFullItemData, properties: [] } })
+
+      const wrapper = await mountSuspended(ItemDetailModal, {
+        props: { open: true, item: weaponWithProps }
+      })
+      await flushPromises()
+
+      // Verify properties computed uses equipment inline data
+      const props = (wrapper.vm as unknown as { properties: Array<{ name: string }> }).properties
+      expect(props.map(p => p.name)).toContain('Finesse')
+      expect(props.map(p => p.name)).toContain('Light')
+    })
+
+    it('falls back to fetched properties when equipment data has none', async () => {
+      // Mock API to return properties
+      mockApiFetch.mockResolvedValue({ data: mockFullItemData })
+
+      const wrapper = await mountSuspended(ItemDetailModal, {
+        props: { open: true, item: mockWeapon }
+      })
+      await flushPromises()
+
+      // Verify properties computed falls back to fetched data
+      const props = (wrapper.vm as unknown as { properties: Array<{ name: string }> }).properties
+      expect(props.map(p => p.name)).toContain('Versatile')
+      expect(props.map(p => p.name)).toContain('Martial')
+    })
+
+    it('displays full magic weapon with all new fields', async () => {
+      const fullMagicWeapon: CharacterEquipment = {
+        id: 100,
+        item: {
+          name: 'Flametongue Longsword',
+          item_type: 'Melee Weapon',
+          damage_dice: '1d8',
+          damage_type: 'Slashing',
+          versatile_damage: '1d10',
+          properties: [
+            { id: 1, code: 'V', name: 'Versatile', description: 'Can be used with two hands' }
+          ],
+          is_magic: true,
+          magic_bonus: 2,
+          rarity: 'rare',
+          requires_attunement: true
+        },
+        item_slug: 'dmg:flametongue-longsword',
+        is_dangling: 'false',
+        custom_name: null,
+        custom_description: null,
+        quantity: 1,
+        equipped: true,
+        location: 'main_hand'
+      }
+
+      // Mock API to return minimal data (component should use inline equipment data)
+      mockApiFetch.mockResolvedValue({
+        data: {
+          ...mockFullItemData,
+          properties: [] // Empty to verify equipment inline data is used
+        }
+      })
+
+      const wrapper = await mountSuspended(ItemDetailModal, {
+        props: { open: true, item: fullMagicWeapon }
+      })
+      await flushPromises()
+
+      // Verify all new fields are accessible via computed properties
+      const vm = wrapper.vm as unknown as {
+        damageText: string | null
+        versatileDamage: string | null
+        magicBonus: number | null
+        isMagic: boolean
+        properties: Array<{ name: string }>
+      }
+
+      // Damage type included in damageText
+      expect(vm.damageText).toContain('Slashing')
+      // Versatile damage
+      expect(vm.versatileDamage).toBe('1d10')
+      // Magic bonus
+      expect(vm.magicBonus).toBe(2)
+      expect(vm.isMagic).toBe(true)
+      // Properties from equipment data
+      expect(vm.properties.map(p => p.name)).toContain('Versatile')
+    })
+  })
 })

@@ -24,6 +24,7 @@ interface FullItemData {
   armor_class?: number
   damage_dice?: string
   damage_type?: { name: string }
+  versatile_damage?: string
   properties?: Array<{ name: string, description?: string }>
   cost_cp?: number
   rarity?: string
@@ -34,11 +35,45 @@ interface FullItemData {
   strength_requirement?: number
 }
 
+// Equipment item data (inline from /characters/{id}/equipment response)
+interface EquipmentItemData {
+  name?: string
+  slug?: string
+  weight?: string
+  item_type?: string
+  armor_class?: number
+  damage_dice?: string
+  requires_attunement?: boolean
+  // NEW: Weapon fields
+  damage_type?: string
+  versatile_damage?: string
+  properties?: Array<{ id: number, code: string, name: string, description?: string }>
+  range?: { normal: number, long: number } | null
+  // NEW: Armor fields
+  armor_type?: 'light' | 'medium' | 'heavy' | null
+  max_dex_bonus?: number | null
+  stealth_disadvantage?: boolean | null
+  strength_requirement?: number | null
+  // NEW: Magic item fields
+  is_magic?: boolean
+  rarity?: string | null
+  magic_bonus?: number | null
+  // NEW: Charge capacity
+  charges_max?: number | null
+  recharge_formula?: string | null
+  recharge_timing?: string | null
+}
+
 interface Props {
   item: CharacterEquipment | null
 }
 
 const props = defineProps<Props>()
+
+defineEmits<{
+  'decrement-charge': []
+  'increment-charge': []
+}>()
 
 const open = defineModel<boolean>('open', { default: false })
 
@@ -87,6 +122,9 @@ const minimalItemData = computed(() => props.item?.item as {
   damage_dice?: string
   requires_attunement?: boolean
 } | null)
+
+// Equipment item data (inline from equipment response)
+const equipmentItemData = computed(() => props.item?.item as EquipmentItemData | null)
 
 // Display name - prefer custom name, then full data, then minimal
 const displayName = computed(() => {
@@ -144,22 +182,93 @@ const costGp = computed(() => {
 })
 
 // Combat stats
-const damage = computed(() => fullItemData.value?.damage_dice ?? minimalItemData.value?.damage_dice ?? null)
-const damageType = computed(() => fullItemData.value?.damage_type?.name ?? null)
+const damage = computed(() => {
+  return equipmentItemData.value?.damage_dice ?? fullItemData.value?.damage_dice ?? minimalItemData.value?.damage_dice ?? null
+})
+const damageType = computed(() => {
+  // Prefer inline equipment data
+  if (equipmentItemData.value?.damage_type) {
+    return equipmentItemData.value.damage_type
+  }
+  // Fallback to fetched data
+  return fullItemData.value?.damage_type?.name ?? null
+})
+const versatileDamage = computed(() => {
+  return equipmentItemData.value?.versatile_damage ?? fullItemData.value?.versatile_damage ?? null
+})
 const armorClass = computed(() => fullItemData.value?.armor_class ?? minimalItemData.value?.armor_class ?? null)
-const properties = computed(() => fullItemData.value?.properties ?? [])
+const properties = computed(() => {
+  // Prefer inline equipment data if it has properties
+  const inlineProps = equipmentItemData.value?.properties
+  if (inlineProps && inlineProps.length > 0) {
+    return inlineProps
+  }
+  // Fallback to fetched data
+  return fullItemData.value?.properties ?? []
+})
 const requiresAttunement = computed(() => fullItemData.value?.requires_attunement ?? minimalItemData.value?.requires_attunement ?? false)
 const stealthDisadvantage = computed(() => fullItemData.value?.stealth_disadvantage ?? false)
 const strMinimum = computed(() => fullItemData.value?.strength_requirement ?? null)
 
 // Range for ranged weapons
 const range = computed(() => {
+  // Prefer inline equipment data (new format: object)
+  const equipRange = equipmentItemData.value?.range
+  if (equipRange) {
+    // Use != null to handle long === 0 correctly
+    if (equipRange.long != null && equipRange.long > 0) return `${equipRange.normal}/${equipRange.long} ft`
+    return `${equipRange.normal} ft`
+  }
+  // Fallback to fetched data (old format: separate fields)
   const normal = fullItemData.value?.range_normal
   const long = fullItemData.value?.range_long
   if (!normal) return null
-  if (long) return `${normal}/${long} ft`
+  if (long != null && long > 0) return `${normal}/${long} ft`
   return `${normal} ft`
 })
+
+// Armor properties
+const armorType = computed(() => equipmentItemData.value?.armor_type ?? null)
+
+const maxDexBonus = computed(() => {
+  const bonus = equipmentItemData.value?.max_dex_bonus
+  // null means unlimited (light armor), don't display
+  if (bonus === null || bonus === undefined) return null
+  if (bonus === 0) return 'None'
+  return `+${bonus} max`
+})
+
+// Magic item properties
+const isMagic = computed(() => equipmentItemData.value?.is_magic ?? false)
+const magicBonus = computed(() => equipmentItemData.value?.magic_bonus ?? null)
+
+// Charge properties (static display from item data)
+const chargesMax = computed(() => equipmentItemData.value?.charges_max ?? null)
+const rechargeFormula = computed(() => equipmentItemData.value?.recharge_formula ?? null)
+const rechargeTiming = computed(() => equipmentItemData.value?.recharge_timing ?? null)
+const hasChargeInfo = computed(() => chargesMax.value !== null)
+
+// Interactive charges (top-level charges object, backend Phase 3)
+interface ChargesData {
+  current: number | null
+  max: number
+  recharge_formula: string | null
+  recharge_timing: string | null
+}
+
+const chargesObject = computed(() => (props.item as { charges?: ChargesData } | null)?.charges ?? null)
+
+const hasInteractiveCharges = computed(() =>
+  chargesObject.value !== null && chargesObject.value.current !== null
+)
+
+const currentCharges = computed(() => chargesObject.value?.current ?? null)
+const maxChargesFromObject = computed(() => chargesObject.value?.max ?? null)
+
+// Use charges object if available, otherwise fall back to item fields
+const displayChargesMax = computed(() => maxChargesFromObject.value ?? chargesMax.value)
+const displayRechargeFormula = computed(() => chargesObject.value?.recharge_formula ?? rechargeFormula.value)
+const displayRechargeTiming = computed(() => chargesObject.value?.recharge_timing ?? rechargeTiming.value)
 
 // Full damage text with type
 const damageText = computed(() => {
@@ -272,6 +381,14 @@ const isCustomItem = computed(() => {
           >
             {{ locationText }}
           </UBadge>
+          <UBadge
+            v-if="magicBonus"
+            color="spell"
+            variant="subtle"
+            size="md"
+          >
+            +{{ magicBonus }}
+          </UBadge>
         </div>
 
         <!-- Stats Grid -->
@@ -292,6 +409,10 @@ const isCustomItem = computed(() => {
             <span class="font-semibold text-gray-900 dark:text-gray-100">Damage:</span>
             <span class="ml-1 text-gray-600 dark:text-gray-400">{{ damageText }}</span>
           </div>
+          <div v-if="versatileDamage">
+            <span class="font-semibold text-gray-900 dark:text-gray-100">Versatile:</span>
+            <span class="ml-1 text-gray-600 dark:text-gray-400">{{ versatileDamage }}</span>
+          </div>
           <div v-if="armorClass">
             <span class="font-semibold text-gray-900 dark:text-gray-100">AC:</span>
             <span class="ml-1 text-gray-600 dark:text-gray-400">{{ armorClass }}</span>
@@ -299,6 +420,10 @@ const isCustomItem = computed(() => {
           <div v-if="range">
             <span class="font-semibold text-gray-900 dark:text-gray-100">Range:</span>
             <span class="ml-1 text-gray-600 dark:text-gray-400">{{ range }}</span>
+          </div>
+          <div v-if="maxDexBonus">
+            <span class="font-semibold text-gray-900 dark:text-gray-100">DEX Bonus:</span>
+            <span class="ml-1 text-gray-600 dark:text-gray-400">{{ maxDexBonus }}</span>
           </div>
         </div>
 
@@ -327,6 +452,54 @@ const isCustomItem = computed(() => {
             />
             Requires Strength {{ strMinimum }}
           </span>
+        </div>
+
+        <!-- Charges Section
+             Static mode shows max charges from item data.
+             Interactive mode (with +/- buttons) is ready for when backend Phase 3
+             adds current_charges tracking to the CharacterEquipment response.
+        -->
+        <div
+          v-if="hasChargeInfo || hasInteractiveCharges"
+          class="bg-spell-50 dark:bg-spell-900/20 rounded-lg p-3"
+        >
+          <div class="flex items-center justify-between">
+            <div class="flex items-center gap-2">
+              <span class="font-semibold text-gray-900 dark:text-gray-100">Charges:</span>
+              <!-- Interactive mode (enabled when backend provides charges.current) -->
+              <template v-if="hasInteractiveCharges">
+                <UButton
+                  data-testid="charge-decrement"
+                  size="xs"
+                  variant="ghost"
+                  icon="i-heroicons-minus"
+                  :disabled="currentCharges === 0"
+                  @click="$emit('decrement-charge')"
+                />
+                <span class="text-gray-600 dark:text-gray-400 min-w-[3rem] text-center">
+                  {{ currentCharges }} / {{ displayChargesMax }}
+                </span>
+                <UButton
+                  data-testid="charge-increment"
+                  size="xs"
+                  variant="ghost"
+                  icon="i-heroicons-plus"
+                  :disabled="currentCharges === displayChargesMax"
+                  @click="$emit('increment-charge')"
+                />
+              </template>
+              <!-- Static mode -->
+              <template v-else>
+                <span class="text-gray-600 dark:text-gray-400">{{ displayChargesMax }} max</span>
+              </template>
+            </div>
+          </div>
+          <div
+            v-if="displayRechargeFormula || displayRechargeTiming"
+            class="text-sm text-gray-500 dark:text-gray-400 mt-1"
+          >
+            Recharges {{ displayRechargeFormula }}<span v-if="displayRechargeTiming"> at {{ displayRechargeTiming }}</span>
+          </div>
         </div>
 
         <!-- Description -->
