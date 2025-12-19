@@ -297,4 +297,27 @@ describe('ItemDetailModal', () => {
       expect((wrapper.vm as unknown as { isCustomItem: boolean }).isCustomItem).toBe(true)
     })
   })
+
+  describe('equipment inline data', () => {
+    it('displays damage type from equipment item data', async () => {
+      const weaponWithDamageType: CharacterEquipment = {
+        ...mockWeapon,
+        item: {
+          ...mockWeapon.item,
+          damage_type: 'Slashing'
+        }
+      }
+
+      // Mock API to return full item data (will be ignored for damage type)
+      mockApiFetch.mockResolvedValue({ data: mockFullItemData })
+
+      const wrapper = await mountSuspended(ItemDetailModal, {
+        props: { open: true, item: weaponWithDamageType }
+      })
+      await flushPromises()
+
+      // Verify damageText computed uses equipment inline data (not API data)
+      expect((wrapper.vm as unknown as { damageText: string | null }).damageText).toContain('Slashing')
+    })
+  })
 })

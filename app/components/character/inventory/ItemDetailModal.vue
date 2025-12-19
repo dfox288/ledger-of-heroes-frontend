@@ -34,6 +34,35 @@ interface FullItemData {
   strength_requirement?: number
 }
 
+// Equipment item data (inline from /characters/{id}/equipment response)
+interface EquipmentItemData {
+  name?: string
+  slug?: string
+  weight?: string
+  item_type?: string
+  armor_class?: number
+  damage_dice?: string
+  requires_attunement?: boolean
+  // NEW: Weapon fields
+  damage_type?: string
+  versatile_damage?: string
+  properties?: Array<{ id: number, code: string, name: string, description?: string }>
+  range?: { normal: number, long: number } | null
+  // NEW: Armor fields
+  armor_type?: 'light' | 'medium' | 'heavy' | null
+  max_dex_bonus?: number | null
+  stealth_disadvantage?: boolean | null
+  strength_requirement?: number | null
+  // NEW: Magic item fields
+  is_magic?: boolean
+  rarity?: string | null
+  magic_bonus?: number | null
+  // NEW: Charge capacity
+  charges_max?: number | null
+  recharge_formula?: string | null
+  recharge_timing?: string | null
+}
+
 interface Props {
   item: CharacterEquipment | null
 }
@@ -87,6 +116,9 @@ const minimalItemData = computed(() => props.item?.item as {
   damage_dice?: string
   requires_attunement?: boolean
 } | null)
+
+// Equipment item data (inline from equipment response)
+const equipmentItemData = computed(() => props.item?.item as EquipmentItemData | null)
 
 // Display name - prefer custom name, then full data, then minimal
 const displayName = computed(() => {
@@ -144,8 +176,17 @@ const costGp = computed(() => {
 })
 
 // Combat stats
-const damage = computed(() => fullItemData.value?.damage_dice ?? minimalItemData.value?.damage_dice ?? null)
-const damageType = computed(() => fullItemData.value?.damage_type?.name ?? null)
+const damage = computed(() => {
+  return equipmentItemData.value?.damage_dice ?? fullItemData.value?.damage_dice ?? minimalItemData.value?.damage_dice ?? null
+})
+const damageType = computed(() => {
+  // Prefer inline equipment data
+  if (equipmentItemData.value?.damage_type) {
+    return equipmentItemData.value.damage_type
+  }
+  // Fallback to fetched data
+  return fullItemData.value?.damage_type?.name ?? null
+})
 const armorClass = computed(() => fullItemData.value?.armor_class ?? minimalItemData.value?.armor_class ?? null)
 const properties = computed(() => fullItemData.value?.properties ?? [])
 const requiresAttunement = computed(() => fullItemData.value?.requires_attunement ?? minimalItemData.value?.requires_attunement ?? false)
