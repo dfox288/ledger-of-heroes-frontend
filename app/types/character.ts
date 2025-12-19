@@ -133,17 +133,30 @@ export interface CharacterSpellData {
 }
 
 /**
+ * Scaled spell effect for cantrips
+ * Pre-calculated damage at character's current level
+ * @see Issue #809 - Cantrip damage scaling
+ */
+export interface ScaledSpellEffect {
+  effect_type: string // "damage"
+  dice_formula: string // "2d10"
+  damage_type: string // "Fire"
+}
+
+/**
  * Character spell data from API
  *
  * Extended with:
  * - class_slug for multiclass spellcasting support
  * - Optional description/higher_levels for inline spell details
+ * - scaled_effects for cantrip damage at character level
  *
  * @see CharacterSpellResource in OpenAPI spec
  * @see Issue #631 - Multiclass spellcasting support
  * @see Issue #782 - Spell description in expanded cards
+ * @see Issue #809 - Cantrip damage scaling
  */
-export type CharacterSpell = Omit<CharacterSpellFromAPI, 'spell'> & {
+export type CharacterSpell = Omit<CharacterSpellFromAPI, 'spell' | 'scaled_effects'> & {
   /**
    * Class slug identifying which class granted this spell
    * e.g., "phb:wizard", "phb:cleric"
@@ -156,6 +169,13 @@ export type CharacterSpell = Omit<CharacterSpellFromAPI, 'spell'> & {
    * Null if the spell reference is dangling (sourcebook removed)
    */
   spell: CharacterSpellData | null
+
+  /**
+   * Pre-calculated spell effects at character's current level
+   * Used for cantrip damage scaling (e.g., Fire Bolt 2d10 at level 5+)
+   * @see Issue #809
+   */
+  scaled_effects?: ScaledSpellEffect[]
 }
 
 /**

@@ -42,6 +42,60 @@ const mockCantrip: CharacterSpell = {
   is_always_prepared: false
 }
 
+// Cantrip with scaled damage (level 5+ character)
+const mockDamageCantrip: CharacterSpell = {
+  id: 10,
+  spell: {
+    id: 110,
+    name: 'Fire Bolt',
+    slug: 'phb:fire-bolt',
+    level: 0,
+    school: 'Evocation',
+    casting_time: '1 action',
+    range: '120 feet',
+    components: 'V, S',
+    duration: 'Instantaneous',
+    concentration: false,
+    ritual: false
+  },
+  spell_slug: 'phb:fire-bolt',
+  is_dangling: false,
+  preparation_status: 'known',
+  source: 'class',
+  level_acquired: 1,
+  is_prepared: false,
+  is_always_prepared: false,
+  scaled_effects: [
+    { effect_type: 'damage', dice_formula: '2d10', damage_type: 'Fire' }
+  ]
+}
+
+// Utility cantrip without damage
+const mockUtilityCantrip: CharacterSpell = {
+  id: 11,
+  spell: {
+    id: 111,
+    name: 'Mage Hand',
+    slug: 'phb:mage-hand',
+    level: 0,
+    school: 'Conjuration',
+    casting_time: '1 action',
+    range: '30 feet',
+    components: 'V, S',
+    duration: '1 minute',
+    concentration: false,
+    ritual: false
+  },
+  spell_slug: 'phb:mage-hand',
+  is_dangling: false,
+  preparation_status: 'known',
+  source: 'class',
+  level_acquired: 1,
+  is_prepared: false,
+  is_always_prepared: false,
+  scaled_effects: []
+}
+
 const mockLeveledSpell: CharacterSpell = {
   id: 2,
   spell: {
@@ -853,6 +907,83 @@ describe('SpellCard', () => {
         const warning = wrapper.find('[data-testid="concentration-warning"]')
         expect(warning.exists()).toBe(true)
         expect(warning.text()).toContain('Bless')
+      })
+    })
+  })
+
+  // ==========================================================================
+  // CANTRIP DAMAGE SCALING TESTS (Issue #809)
+  // ==========================================================================
+
+  describe('cantrip damage scaling', () => {
+    describe('collapsed view', () => {
+      it('shows scaled damage before school for damage cantrips', async () => {
+        const wrapper = await mountSuspended(SpellCard, {
+          props: { spell: mockDamageCantrip }
+        })
+
+        // Should show "2d10 fire • Cantrip Evocation"
+        expect(wrapper.text()).toContain('2d10 fire')
+        expect(wrapper.text()).toContain('Cantrip')
+        expect(wrapper.text()).toContain('Evocation')
+      })
+
+      it('shows "Utility" for cantrips without damage', async () => {
+        const wrapper = await mountSuspended(SpellCard, {
+          props: { spell: mockUtilityCantrip }
+        })
+
+        // Should show "Utility • Cantrip Conjuration"
+        expect(wrapper.text()).toContain('Utility')
+        expect(wrapper.text()).toContain('Cantrip')
+        expect(wrapper.text()).toContain('Conjuration')
+      })
+
+      it('does not change leveled spell display', async () => {
+        const wrapper = await mountSuspended(SpellCard, {
+          props: { spell: mockLeveledSpell }
+        })
+
+        // Should still show "Level 3 Evocation" (not damage info)
+        expect(wrapper.text()).toContain('3rd')
+        expect(wrapper.text()).toContain('Evocation')
+        expect(wrapper.text()).not.toContain('Utility')
+      })
+    })
+
+    describe('expanded view', () => {
+      it('shows Damage row with scaled damage for damage cantrips', async () => {
+        const wrapper = await mountSuspended(SpellCard, {
+          props: { spell: mockDamageCantrip }
+        })
+
+        await wrapper.find('[data-testid="expand-toggle"]').trigger('click')
+
+        expect(wrapper.text()).toContain('Damage')
+        expect(wrapper.text()).toContain('2d10 fire')
+      })
+
+      it('shows Damage row with "Utility" for utility cantrips', async () => {
+        const wrapper = await mountSuspended(SpellCard, {
+          props: { spell: mockUtilityCantrip }
+        })
+
+        await wrapper.find('[data-testid="expand-toggle"]').trigger('click')
+
+        expect(wrapper.text()).toContain('Damage')
+        expect(wrapper.text()).toContain('Utility')
+      })
+
+      it('does not show Damage row for leveled spells', async () => {
+        const wrapper = await mountSuspended(SpellCard, {
+          props: { spell: mockLeveledSpell }
+        })
+
+        await wrapper.find('[data-testid="expand-toggle"]').trigger('click')
+
+        // Should have other stats but not a Damage row
+        expect(wrapper.text()).toContain('Casting Time')
+        expect(wrapper.text()).not.toMatch(/Damage\s+\d+d\d+/)
       })
     })
   })
