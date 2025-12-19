@@ -36,37 +36,104 @@ describe('EncumbranceBar', () => {
     expect(wrapper.text()).toContain('lbs')
   })
 
-  it('shows green bar when under 66% capacity', async () => {
+  // D&D 5e Encumbrance thresholds (PHB p.176):
+  // - Green (OK): 0-33% of carrying capacity (under STR × 5)
+  // - Yellow (Encumbered): 33-66% (STR × 5 to STR × 10) - Speed -10ft
+  // - Red (Heavily Encumbered): 66%+ (over STR × 10) - Speed -20ft, disadvantage
+
+  it('shows green bar when under 33% capacity (not encumbered)', async () => {
     localStorageMock.store['encumbrance-tracking-test-123'] = 'true'
 
+    // 45/150 = 30% - under 33% threshold
     const wrapper = await mountSuspended(EncumbranceBar, {
-      props: { currentWeight: 50, carryingCapacity: 150, publicId: 'test-123' }
+      props: { currentWeight: 45, carryingCapacity: 150, publicId: 'test-123' }
     })
 
     const bar = wrapper.find('[data-testid="encumbrance-fill"]')
     expect(bar.classes()).toContain('bg-success')
   })
 
-  it('shows yellow bar when between 67-99% capacity', async () => {
+  it('shows yellow bar when between 33-66% capacity (encumbered)', async () => {
     localStorageMock.store['encumbrance-tracking-test-123'] = 'true'
 
+    // 75/150 = 50% - between 33% and 66%
     const wrapper = await mountSuspended(EncumbranceBar, {
-      props: { currentWeight: 120, carryingCapacity: 150, publicId: 'test-123' }
+      props: { currentWeight: 75, carryingCapacity: 150, publicId: 'test-123' }
     })
 
     const bar = wrapper.find('[data-testid="encumbrance-fill"]')
     expect(bar.classes()).toContain('bg-warning')
   })
 
-  it('shows red bar when at or over capacity', async () => {
+  it('shows red bar when at or over 66% capacity (heavily encumbered)', async () => {
     localStorageMock.store['encumbrance-tracking-test-123'] = 'true'
 
+    // 100/150 = 66.67% - over 66% threshold
     const wrapper = await mountSuspended(EncumbranceBar, {
-      props: { currentWeight: 160, carryingCapacity: 150, publicId: 'test-123' }
+      props: { currentWeight: 100, carryingCapacity: 150, publicId: 'test-123' }
     })
 
     const bar = wrapper.find('[data-testid="encumbrance-fill"]')
     expect(bar.classes()).toContain('bg-error')
+  })
+
+  it('shows yellow at exactly 33% threshold', async () => {
+    localStorageMock.store['encumbrance-tracking-test-123'] = 'true'
+
+    // 49.5/150 = 33% exactly
+    const wrapper = await mountSuspended(EncumbranceBar, {
+      props: { currentWeight: 49.5, carryingCapacity: 150, publicId: 'test-123' }
+    })
+
+    const bar = wrapper.find('[data-testid="encumbrance-fill"]')
+    expect(bar.classes()).toContain('bg-warning')
+  })
+
+  it('shows red at exactly 66% threshold', async () => {
+    localStorageMock.store['encumbrance-tracking-test-123'] = 'true'
+
+    // 99/150 = 66% exactly
+    const wrapper = await mountSuspended(EncumbranceBar, {
+      props: { currentWeight: 99, carryingCapacity: 150, publicId: 'test-123' }
+    })
+
+    const bar = wrapper.find('[data-testid="encumbrance-fill"]')
+    expect(bar.classes()).toContain('bg-error')
+  })
+
+  it('displays "Encumbered" status label when between 33-66%', async () => {
+    localStorageMock.store['encumbrance-tracking-test-123'] = 'true'
+
+    const wrapper = await mountSuspended(EncumbranceBar, {
+      props: { currentWeight: 75, carryingCapacity: 150, publicId: 'test-123' }
+    })
+
+    const status = wrapper.find('[data-testid="encumbrance-status"]')
+    expect(status.exists()).toBe(true)
+    expect(status.text()).toBe('Encumbered')
+  })
+
+  it('displays "Heavily Encumbered" status label when over 66%', async () => {
+    localStorageMock.store['encumbrance-tracking-test-123'] = 'true'
+
+    const wrapper = await mountSuspended(EncumbranceBar, {
+      props: { currentWeight: 100, carryingCapacity: 150, publicId: 'test-123' }
+    })
+
+    const status = wrapper.find('[data-testid="encumbrance-status"]')
+    expect(status.exists()).toBe(true)
+    expect(status.text()).toBe('Heavily Encumbered')
+  })
+
+  it('does not display status label when under 33%', async () => {
+    localStorageMock.store['encumbrance-tracking-test-123'] = 'true'
+
+    const wrapper = await mountSuspended(EncumbranceBar, {
+      props: { currentWeight: 30, carryingCapacity: 150, publicId: 'test-123' }
+    })
+
+    const status = wrapper.find('[data-testid="encumbrance-status"]')
+    expect(status.exists()).toBe(false)
   })
 
   it('persists toggle state to localStorage', async () => {
