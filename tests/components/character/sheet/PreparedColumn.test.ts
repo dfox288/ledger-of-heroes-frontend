@@ -100,4 +100,35 @@ describe('PreparedColumn', () => {
     await wrapper.find('[data-testid="spellbook-card"]').trigger('click')
     expect(wrapper.emitted('toggle')).toBeFalsy()
   })
+
+  describe('empty state (#793)', () => {
+    it('shows empty state when no spells are prepared', async () => {
+      const wrapper = await mountSuspended(PreparedColumn, {
+        props: { spells: [], preparedCount: 0, preparationLimit: 8 }
+      })
+      expect(wrapper.text()).toContain('No spells prepared')
+    })
+
+    it('has testid on empty state container (#795)', async () => {
+      const wrapper = await mountSuspended(PreparedColumn, {
+        props: { spells: [], preparedCount: 0, preparationLimit: 8 }
+      })
+      expect(wrapper.find('[data-testid="empty-state"]').exists()).toBe(true)
+    })
+
+    it('shows helpful action hint in empty state (#793)', async () => {
+      const wrapper = await mountSuspended(PreparedColumn, {
+        props: { spells: [], preparedCount: 0, preparationLimit: 8 }
+      })
+      expect(wrapper.text()).toContain('Click spells in your spellbook to prepare them')
+    })
+
+    it('uses book-open icon for spellbook context (#793)', async () => {
+      const wrapper = await mountSuspended(PreparedColumn, {
+        props: { spells: [], preparedCount: 0, preparationLimit: 8 }
+      })
+      // Check that book-open icon is present
+      expect(wrapper.html()).toContain('i-heroicons-book-open')
+    })
+  })
 })

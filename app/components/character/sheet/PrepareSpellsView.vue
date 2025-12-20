@@ -659,7 +659,7 @@ async function confirmLearnSpell() {
                 <!-- Spellbook mode: Learn spell button (for spells not yet in spellbook) -->
                 <button
                   v-else-if="level !== 0 && isSpellbookMode"
-                  data-testid="learn-spell-button"
+                  data-testid="copy-spell-button"
                   type="button"
                   class="flex-shrink-0 p-0.5 -m-0.5 rounded cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700"
                   @click="openLearnDialog(spell)"

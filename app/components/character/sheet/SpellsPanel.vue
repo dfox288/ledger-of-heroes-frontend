@@ -113,9 +113,14 @@ const primarySpellcasting = computed(() => getPrimarySpellcasting(props.stats.sp
 
     <div
       v-if="validSpells.length === 0"
+      data-testid="empty-state"
       class="text-center text-gray-500 dark:text-gray-400 py-8"
     >
-      No spells known
+      <UIcon
+        name="i-heroicons-sparkles"
+        class="w-8 h-8 mx-auto mb-2"
+      />
+      <p>No spells known</p>
     </div>
   </div>
 </template>
