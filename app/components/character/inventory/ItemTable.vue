@@ -25,6 +25,7 @@ import {
   needsSlotPickerFromBackend,
   guessSlotFromName
 } from '~/utils/equipmentSlots'
+import { getEquipmentDisplayName, getLocationDisplayText } from '~/utils/inventory'
 
 interface Props {
   items: CharacterEquipment[]
@@ -87,29 +88,22 @@ const ITEM_TYPE_TO_GROUP: Record<string, ItemGroup> = {
   'Tool': 'Gear'
 }
 
-// Get the display name for an item
-function getItemName(equipment: CharacterEquipment): string {
-  if (equipment.custom_name) return equipment.custom_name
-  const item = equipment.item as { name?: string } | null
-  return item?.name ?? 'Unknown Item'
-}
+// Alias for template usage
+const getItemName = getEquipmentDisplayName
 
-// Get item type from loosely typed item
+// Get item type from item data
 function getItemType(equipment: CharacterEquipment): string | null {
-  const item = equipment.item as { item_type?: string } | null
-  return item?.item_type ?? null
+  return equipment.item?.item_type ?? null
 }
 
 // Get equipment_slot from backend (Issue #589)
 // Check both item relation and top-level for flexibility
 function getEquipmentSlot(equipment: CharacterEquipment): string | null {
   // Check nested in item relation first
-  const item = equipment.item as { equipment_slot?: string | null } | null
-  if (item?.equipment_slot) return item.equipment_slot
+  if (equipment.item?.equipment_slot) return equipment.item.equipment_slot
 
   // Also check top-level (in case API returns it there)
-  const topLevel = equipment as { equipment_slot?: string | null }
-  return topLevel.equipment_slot ?? null
+  return (equipment as { equipment_slot?: string | null }).equipment_slot ?? null
 }
 
 // Get the group for an item (backend provides group field directly)
@@ -134,7 +128,7 @@ function getItemGroup(equipment: CharacterEquipment): ItemGroup {
 
 // Check if item requires attunement
 function requiresAttunement(equipment: CharacterEquipment): boolean {
-  return (equipment.item as { requires_attunement?: boolean } | null)?.requires_attunement === true
+  return equipment.item?.requires_attunement === true
 }
 
 // Check if item is currently attuned
@@ -206,23 +200,10 @@ function getItemIcon(equipment: CharacterEquipment): string {
   return 'i-heroicons-cube'
 }
 
-// Get location display text
+// Get location display text (wrapper to check equipped status)
 function getLocationText(equipment: CharacterEquipment): string | null {
   if (!equipment.equipped) return null
-  switch (equipment.location) {
-    case 'main_hand': return 'Main Hand'
-    case 'off_hand': return 'Off Hand'
-    case 'head': return 'Head'
-    case 'neck': return 'Neck'
-    case 'cloak': return 'Cloak'
-    case 'armor': return 'Armor'
-    case 'belt': return 'Belt'
-    case 'hands': return 'Hands'
-    case 'ring_1': return 'Ring'
-    case 'ring_2': return 'Ring'
-    case 'feet': return 'Feet'
-    default: return null
-  }
+  return getLocationDisplayText(equipment.location)
 }
 
 // Filter items by search query
@@ -299,8 +280,7 @@ function handleEquip(item: CharacterEquipment) {
   const equipmentSlot = getEquipmentSlot(item)
   if (!equipmentSlot) return // Not equippable
 
-  const itemData = item.item as { name?: string } | null
-  const itemName = item.custom_name || itemData?.name || ''
+  const itemName = item.custom_name || item.item?.name || ''
 
   // Check if we need slot picker (rings, weapons)
   if (needsSlotPickerFromBackend(equipmentSlot)) {

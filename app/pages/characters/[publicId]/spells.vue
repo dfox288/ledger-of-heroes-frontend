@@ -23,6 +23,7 @@ import { formatSpellLevel } from '~/composables/useSpellFormatters'
 import { formatModifier } from '~/composables/useCharacterStats'
 import { useSpellcastingTabs } from '~/composables/useSpellcastingTabs'
 import { useSpellPreparation } from '~/composables/useSpellPreparation'
+import { useSpellGrouping, groupSpellsByLevel, getSortedLevels } from '~/composables/useSpellGrouping'
 import { logger } from '~/utils/logger'
 
 const route = useRoute()
@@ -91,7 +92,7 @@ watch([spellsData, slotsData], ([spells, slots]) => {
   }
 }, { immediate: true })
 
-// Filter and group spells
+// Filter spells
 const validSpells = computed(() =>
   (spellsData.value?.data ?? []).filter(s => s.spell !== null)
 )
@@ -102,25 +103,8 @@ const leveledSpells = computed(() =>
   validSpells.value.filter(s => s.spell!.level > 0)
 )
 
-// Group leveled spells by level
-const spellsByLevel = computed(() => {
-  const grouped: Record<number, CharacterSpell[]> = {}
-  for (const spell of leveledSpells.value) {
-    const level = spell.spell!.level
-    if (!grouped[level]) grouped[level] = []
-    grouped[level].push(spell)
-  }
-  // Sort by spell name within each level
-  for (const level in grouped) {
-    grouped[level]!.sort((a, b) => a.spell!.name.localeCompare(b.spell!.name))
-  }
-  return grouped
-})
-
-// Get sorted level keys
-const sortedLevels = computed(() =>
-  Object.keys(spellsByLevel.value).map(Number).sort((a, b) => a - b)
-)
+// Group leveled spells by level (using extracted composable - Issue #778)
+const { spellsByLevel, sortedLevels } = useSpellGrouping(leveledSpells)
 
 // ══════════════════════════════════════════════════════════════
 // MULTICLASS SPELLCASTING & PREPARATION (extracted composables)
@@ -180,27 +164,12 @@ const preparedLeveledSpells = computed(() =>
 
 /**
  * Prepared spells grouped by level (for "All Prepared Spells" tab)
+ * Uses extracted composable - Issue #778
  */
-const preparedSpellsByLevel = computed(() => {
-  const grouped: Record<number, CharacterSpell[]> = {}
-  for (const spell of preparedLeveledSpells.value) {
-    const level = spell.spell!.level
-    if (!grouped[level]) grouped[level] = []
-    grouped[level].push(spell)
-  }
-  // Sort by spell name within each level
-  for (const level in grouped) {
-    grouped[level]!.sort((a, b) => a.spell!.name.localeCompare(b.spell!.name))
-  }
-  return grouped
-})
-
-/**
- * Sorted level keys for prepared spells only
- */
-const preparedSortedLevels = computed(() =>
-  Object.keys(preparedSpellsByLevel.value).map(Number).sort((a, b) => a - b)
-)
+const {
+  spellsByLevel: preparedSpellsByLevel,
+  sortedLevels: preparedSortedLevels
+} = useSpellGrouping(preparedLeveledSpells)
 
 // ══════════════════════════════════════════════════════════════
 // PER-CLASS SPELL FILTERING
@@ -222,27 +191,19 @@ function getCantripsForClass(classSlug: string): CharacterSpell[] {
 
 /**
  * Get leveled spells grouped by level for a specific class
+ * Uses extracted composable utility - Issue #778
  */
 function getSpellsByLevelForClass(classSlug: string): Record<number, CharacterSpell[]> {
   const classSpells = getSpellsForClass(classSlug).filter(s => s.spell!.level > 0)
-  const grouped: Record<number, CharacterSpell[]> = {}
-  for (const spell of classSpells) {
-    const level = spell.spell!.level
-    if (!grouped[level]) grouped[level] = []
-    grouped[level].push(spell)
-  }
-  // Sort by spell name within each level
-  for (const level in grouped) {
-    grouped[level]!.sort((a, b) => a.spell!.name.localeCompare(b.spell!.name))
-  }
-  return grouped
+  return groupSpellsByLevel(classSpells)
 }
 
 /**
  * Get sorted level keys for a specific class
+ * Uses extracted composable utility - Issue #778
  */
 function getSortedLevelsForClass(classSlug: string): number[] {
-  return Object.keys(getSpellsByLevelForClass(classSlug)).map(Number).sort((a, b) => a - b)
+  return getSortedLevels(getSpellsByLevelForClass(classSlug))
 }
 
 // ══════════════════════════════════════════════════════════════

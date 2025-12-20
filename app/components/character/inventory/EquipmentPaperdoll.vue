@@ -17,6 +17,7 @@
 
 import type { CharacterEquipment } from '~/types/character'
 import { SLOT_LABELS, type EquipmentSlot } from '~/utils/equipmentSlots'
+import { getEquipmentDisplayName } from '~/utils/inventory'
 
 interface Props {
   equipment: CharacterEquipment[]
@@ -33,12 +34,8 @@ function getEquippedItem(slot: EquipmentSlot): CharacterEquipment | undefined {
   return props.equipment.find(e => e.equipped && e.location === slot)
 }
 
-// Get display name for an item
-function getItemName(equipment: CharacterEquipment): string {
-  if (equipment.custom_name) return equipment.custom_name
-  const item = equipment.item as { name?: string } | null
-  return item?.name ?? 'Unknown'
-}
+// Alias for template usage
+const getItemName = getEquipmentDisplayName
 
 // Handle click on equipped item
 function handleItemClick(item: CharacterEquipment | undefined) {
@@ -50,9 +47,11 @@ function handleItemClick(item: CharacterEquipment | undefined) {
 // Check if main hand weapon is two-handed (blocks off-hand)
 const isTwoHanded = computed(() => {
   const mainHand = getEquippedItem('main_hand')
-  if (!mainHand) return false
-  const item = mainHand.item as { properties?: string[] } | null
-  return item?.properties?.includes('Two-Handed') ?? false
+  if (!mainHand?.item?.properties) return false
+  // Properties can be array of objects or strings
+  return mainHand.item.properties.some(p =>
+    typeof p === 'string' ? p === 'Two-Handed' : p.name === 'Two-Handed'
+  )
 })
 
 // Slot metadata for humanoid layout
