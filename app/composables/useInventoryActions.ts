@@ -13,6 +13,10 @@
  */
 
 import type { CharacterEquipment } from '~/types/character'
+import type { EquipmentLocation } from '~/utils/inventory'
+
+// Re-export for consumers that imported from here
+export type { EquipmentLocation }
 
 export interface AddItemPayload {
   item_slug: string | null
@@ -24,20 +28,6 @@ export interface AddItemPayload {
 export interface EquipmentResponse {
   data: CharacterEquipment
 }
-
-export type EquipmentLocation
-  = | 'main_hand'
-    | 'off_hand'
-    | 'head'
-    | 'neck'
-    | 'cloak'
-    | 'armor'
-    | 'belt'
-    | 'hands'
-    | 'ring_1'
-    | 'ring_2'
-    | 'feet'
-    | 'backpack'
 
 export interface EquipOptions {
   /** Set attunement status (for magic items that require attunement) */

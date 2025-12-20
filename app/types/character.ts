@@ -91,11 +91,73 @@ export type CharacterLanguage = components['schemas']['CharacterLanguageResource
 export type CharacterProficiency = components['schemas']['CharacterProficiencyResource']
 
 /**
+ * Nested item data within CharacterEquipment
+ *
+ * The API returns inline item data with these properties.
+ * Use this interface instead of loose `as` casts.
+ *
+ * @see Issue #776 - Add proper types for CharacterEquipment
+ */
+export interface CharacterEquipmentItem {
+  /** Item display name */
+  name?: string
+  /** Item slug for API reference */
+  slug?: string
+  /** Item weight in pounds */
+  weight?: string | number
+  /** Item type category (e.g., "Light Armor", "Weapon") */
+  item_type?: string
+  /** Equipment slot (e.g., "ARMOR", "WEAPON", "RING") */
+  equipment_slot?: string | null
+  /** Whether item requires attunement */
+  requires_attunement?: boolean
+  /** Item properties (e.g., "Two-Handed", "Finesse") */
+  properties?: Array<{ id?: number, code?: string, name: string, description?: string }> | string[]
+  // Combat stats
+  /** Armor class bonus */
+  armor_class?: number
+  /** Damage dice (e.g., "1d8") */
+  damage_dice?: string
+  /** Damage type (e.g., "Slashing", "Fire") */
+  damage_type?: string
+  /** Versatile damage dice (e.g., "1d10") */
+  versatile_damage?: string
+  /** Weapon range */
+  range?: { normal: number, long: number } | null
+  // Armor stats
+  /** Armor type: light, medium, or heavy */
+  armor_type?: 'light' | 'medium' | 'heavy' | null
+  /** Maximum DEX bonus for AC (null = unlimited) */
+  max_dex_bonus?: number | null
+  /** Whether armor imposes stealth disadvantage */
+  stealth_disadvantage?: boolean | null
+  /** Minimum STR to wear without penalty */
+  strength_requirement?: number | null
+  // Magic item stats
+  /** Whether this is a magic item */
+  is_magic?: boolean
+  /** Item rarity (e.g., "Uncommon", "Rare") */
+  rarity?: string | null
+  /** Magic bonus (e.g., +1, +2) */
+  magic_bonus?: number | null
+  // Charge capacity
+  /** Maximum charges */
+  charges_max?: number | null
+  /** Recharge formula (e.g., "1d6+1") */
+  recharge_formula?: string | null
+  /** When charges recharge (e.g., "dawn") */
+  recharge_timing?: string | null
+}
+
+/**
  * Character equipment item from API
  * Extended with is_attuned field from expanded equipment slots (PR #154)
  * @see CharacterEquipmentResource in OpenAPI spec
+ * @see Issue #776 - Proper typing for nested item data
  */
-export type CharacterEquipment = components['schemas']['CharacterEquipmentResource'] & {
+export type CharacterEquipment = Omit<components['schemas']['CharacterEquipmentResource'], 'item'> & {
+  /** Nested item data (null for custom items) */
+  item: CharacterEquipmentItem | null
   /** Attunement status for magic items (separated from location in expanded slot system) */
   is_attuned?: boolean
   /** Currency items (gold, silver, etc.) - should be filtered from equipment display */

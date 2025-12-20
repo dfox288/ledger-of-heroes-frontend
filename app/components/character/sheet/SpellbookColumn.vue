@@ -9,6 +9,7 @@
  * @see Issue #680 - Wizard Spellbook Phase 2
  */
 import type { CharacterSpell } from '~/types/character'
+import { useSpellGrouping } from '~/composables/useSpellGrouping'
 
 const props = defineProps<{
   spells: CharacterSpell[]
@@ -64,24 +65,8 @@ const filteredSpells = computed(() => {
   return result
 })
 
-// Group by level
-const spellsByLevel = computed(() => {
-  const groups: Record<number, CharacterSpell[]> = {}
-  for (const spell of filteredSpells.value) {
-    const level = spell.spell!.level
-    if (!groups[level]) groups[level] = []
-    groups[level]!.push(spell)
-  }
-  // Sort within each level
-  for (const level in groups) {
-    groups[level]!.sort((a, b) => a.spell!.name.localeCompare(b.spell!.name))
-  }
-  return groups
-})
-
-const sortedLevels = computed(() =>
-  Object.keys(spellsByLevel.value).map(Number).sort((a, b) => a - b)
-)
+// Group by level (using extracted composable - Issue #778)
+const { spellsByLevel, sortedLevels } = useSpellGrouping(filteredSpells)
 
 function formatLevel(level: number): string {
   if (level === 0) return 'Cantrips'

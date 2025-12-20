@@ -14,6 +14,7 @@
  */
 
 import type { CharacterEquipment, AttunementSlots } from '~/types/character'
+import { getEquipmentDisplayName } from '~/utils/inventory'
 
 interface Props {
   equipment: CharacterEquipment[]
@@ -38,12 +39,8 @@ const attunementMax = computed(() => props.attunement?.max ?? 3)
 // Uses >= to show warning when at capacity OR over-attuned (e.g., 4/3 from data inconsistency)
 const isAtMax = computed(() => attunementUsed.value >= attunementMax.value)
 
-// Helper function
-function getItemName(equipment: CharacterEquipment): string {
-  if (equipment.custom_name) return equipment.custom_name
-  const item = equipment.item as { name?: string } | null
-  return item?.name ?? 'Unknown'
-}
+// Alias for template usage
+const getItemName = getEquipmentDisplayName
 </script>
 
 <template>

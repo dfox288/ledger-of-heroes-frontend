@@ -13,6 +13,7 @@
  */
 
 import type { CharacterEquipment } from '~/types/character'
+import { getLocationDisplayText } from '~/utils/inventory'
 
 // Full item data from /items/{slug} endpoint
 interface FullItemData {
@@ -35,34 +36,8 @@ interface FullItemData {
   strength_requirement?: number
 }
 
-// Equipment item data (inline from /characters/{id}/equipment response)
-interface EquipmentItemData {
-  name?: string
-  slug?: string
-  weight?: string
-  item_type?: string
-  armor_class?: number
-  damage_dice?: string
-  requires_attunement?: boolean
-  // NEW: Weapon fields
-  damage_type?: string
-  versatile_damage?: string
-  properties?: Array<{ id: number, code: string, name: string, description?: string }>
-  range?: { normal: number, long: number } | null
-  // NEW: Armor fields
-  armor_type?: 'light' | 'medium' | 'heavy' | null
-  max_dex_bonus?: number | null
-  stealth_disadvantage?: boolean | null
-  strength_requirement?: number | null
-  // NEW: Magic item fields
-  is_magic?: boolean
-  rarity?: string | null
-  magic_bonus?: number | null
-  // NEW: Charge capacity
-  charges_max?: number | null
-  recharge_formula?: string | null
-  recharge_timing?: string | null
-}
+// Equipment item data uses shared CharacterEquipmentItem type
+// @see Issue #776 - Proper typing for nested item data
 
 interface Props {
   item: CharacterEquipment | null
@@ -124,7 +99,7 @@ const minimalItemData = computed(() => props.item?.item as {
 } | null)
 
 // Equipment item data (inline from equipment response)
-const equipmentItemData = computed(() => props.item?.item as EquipmentItemData | null)
+const equipmentItemData = computed(() => props.item?.item ?? null)
 
 // Display name - prefer custom name, then full data, then minimal
 const displayName = computed(() => {
@@ -197,11 +172,17 @@ const versatileDamage = computed(() => {
   return equipmentItemData.value?.versatile_damage ?? fullItemData.value?.versatile_damage ?? null
 })
 const armorClass = computed(() => fullItemData.value?.armor_class ?? minimalItemData.value?.armor_class ?? null)
-const properties = computed(() => {
+// Normalize property to object format
+interface PropertyDisplay { name: string, description?: string }
+function normalizeProperty(prop: string | { name: string, description?: string }): PropertyDisplay {
+  return typeof prop === 'string' ? { name: prop } : prop
+}
+
+const properties = computed((): PropertyDisplay[] => {
   // Prefer inline equipment data if it has properties
   const inlineProps = equipmentItemData.value?.properties
   if (inlineProps && inlineProps.length > 0) {
-    return inlineProps
+    return inlineProps.map(normalizeProperty)
   }
   // Fallback to fetched data
   return fullItemData.value?.properties ?? []
@@ -295,20 +276,7 @@ const rarityColor = computed(() => {
 // Location text for equipped items
 const locationText = computed(() => {
   if (!props.item?.equipped) return null
-  switch (props.item.location) {
-    case 'main_hand': return 'Main Hand'
-    case 'off_hand': return 'Off Hand'
-    case 'head': return 'Head'
-    case 'neck': return 'Neck'
-    case 'cloak': return 'Cloak'
-    case 'armor': return 'Armor'
-    case 'belt': return 'Belt'
-    case 'hands': return 'Hands'
-    case 'ring_1': return 'Ring'
-    case 'ring_2': return 'Ring'
-    case 'feet': return 'Feet'
-    default: return props.item.location
-  }
+  return getLocationDisplayText(props.item.location) ?? props.item.location
 })
 
 // Check if this is a custom item (no slug)
