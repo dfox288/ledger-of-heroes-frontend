@@ -147,6 +147,23 @@ export interface CharacterEquipmentItem {
   recharge_formula?: string | null
   /** When charges recharge (e.g., "dawn") */
   recharge_timing?: string | null
+  /** Item cost in copper pieces (for selling calculations) */
+  cost_cp?: number
+}
+
+/**
+ * Charge tracking for magic items with charges
+ * @see Issue #776 - Proper typing for CharacterEquipment
+ */
+export interface CharacterEquipmentCharges {
+  /** Current charges (null if not tracked yet) */
+  current: number | null
+  /** Maximum charges */
+  max: number
+  /** Recharge formula (e.g., "1d6+1") */
+  recharge_formula: string | null
+  /** When charges recharge (e.g., "dawn") */
+  recharge_timing: string | null
 }
 
 /**
@@ -162,6 +179,12 @@ export type CharacterEquipment = Omit<components['schemas']['CharacterEquipmentR
   is_attuned?: boolean
   /** Currency items (gold, silver, etc.) - should be filtered from equipment display */
   is_currency?: boolean
+  /** Equipment slot at top-level (fallback when not in item relation) */
+  equipment_slot?: string | null
+  /** Item group for display categorization (Weapons, Armor, etc.) */
+  group?: string
+  /** Charge tracking for magic items (Phase 3 backend feature) */
+  charges?: CharacterEquipmentCharges
 }
 
 /**

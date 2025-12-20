@@ -7,6 +7,7 @@ import { describe, it, expect } from 'vitest'
 import {
   getEquipmentDisplayName,
   getLocationDisplayText,
+  getEquipmentIcon,
   type EquipmentLocation
 } from '~/utils/inventory'
 import type { CharacterEquipment } from '~/types/character'
@@ -114,6 +115,62 @@ describe('inventory utilities', () => {
 
     it('returns null for unknown location', () => {
       expect(getLocationDisplayText('unknown_slot' as EquipmentLocation)).toBe(null)
+    })
+  })
+
+  describe('getEquipmentIcon', () => {
+    it('returns cube icon for null equipment', () => {
+      expect(getEquipmentIcon(null)).toBe('i-heroicons-cube')
+    })
+
+    it('returns bolt icon for weapons', () => {
+      const equipment = { item: { item_type: 'Weapon' } } as CharacterEquipment
+      expect(getEquipmentIcon(equipment)).toBe('i-heroicons-bolt')
+    })
+
+    it('returns bolt icon for melee weapons', () => {
+      const equipment = { item: { item_type: 'Melee Weapon' } } as CharacterEquipment
+      expect(getEquipmentIcon(equipment)).toBe('i-heroicons-bolt')
+    })
+
+    it('returns bolt icon for ranged weapons', () => {
+      const equipment = { item: { item_type: 'Ranged Weapon' } } as CharacterEquipment
+      expect(getEquipmentIcon(equipment)).toBe('i-heroicons-bolt')
+    })
+
+    it('returns shield icon for armor', () => {
+      const equipment = { item: { item_type: 'Heavy Armor' } } as CharacterEquipment
+      expect(getEquipmentIcon(equipment)).toBe('i-heroicons-shield-check')
+    })
+
+    it('returns shield icon for shields', () => {
+      const equipment = { item: { item_type: 'Shield' } } as CharacterEquipment
+      expect(getEquipmentIcon(equipment)).toBe('i-heroicons-shield-check')
+    })
+
+    it('returns beaker icon for potions', () => {
+      const equipment = { item: { item_type: 'Potion' } } as CharacterEquipment
+      expect(getEquipmentIcon(equipment)).toBe('i-heroicons-beaker')
+    })
+
+    it('returns document icon for scrolls', () => {
+      const equipment = { item: { item_type: 'Scroll' } } as CharacterEquipment
+      expect(getEquipmentIcon(equipment)).toBe('i-heroicons-document-text')
+    })
+
+    it('returns cube icon for unknown item types', () => {
+      const equipment = { item: { item_type: 'Adventuring Gear' } } as CharacterEquipment
+      expect(getEquipmentIcon(equipment)).toBe('i-heroicons-cube')
+    })
+
+    it('returns cube icon when item is null', () => {
+      const equipment = { item: null } as CharacterEquipment
+      expect(getEquipmentIcon(equipment)).toBe('i-heroicons-cube')
+    })
+
+    it('returns cube icon when item_type is undefined', () => {
+      const equipment = { item: {} } as CharacterEquipment
+      expect(getEquipmentIcon(equipment)).toBe('i-heroicons-cube')
     })
   })
 })

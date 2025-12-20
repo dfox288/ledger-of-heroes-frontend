@@ -103,15 +103,14 @@ function getEquipmentSlot(equipment: CharacterEquipment): string | null {
   if (equipment.item?.equipment_slot) return equipment.item.equipment_slot
 
   // Also check top-level (in case API returns it there)
-  return (equipment as { equipment_slot?: string | null }).equipment_slot ?? null
+  return equipment.equipment_slot ?? null
 }
 
 // Get the group for an item (backend provides group field directly)
 function getItemGroup(equipment: CharacterEquipment): ItemGroup {
   // Backend now provides group field directly on equipment
-  const backendGroup = (equipment as { group?: string }).group
-  if (backendGroup && GROUP_ORDER.includes(backendGroup as ItemGroup)) {
-    return backendGroup as ItemGroup
+  if (equipment.group && GROUP_ORDER.includes(equipment.group as ItemGroup)) {
+    return equipment.group as ItemGroup
   }
 
   // Fallback for legacy data or edge cases

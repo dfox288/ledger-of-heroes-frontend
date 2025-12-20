@@ -10,6 +10,7 @@
  */
 
 import type { CharacterEquipment } from '~/types/character'
+import { getEquipmentDisplayName, getEquipmentIcon } from '~/utils/inventory'
 
 interface Props {
   item: CharacterEquipment | null
@@ -32,12 +33,10 @@ const emit = defineEmits<{
 // Form state
 const newQuantity = ref(1)
 
-// Get item name from equipment
+// Get item name from equipment (uses shared utility)
 const itemName = computed(() => {
   if (!props.item) return ''
-  if (props.item.custom_name) return props.item.custom_name
-  const item = props.item.item as { name?: string } | null
-  return item?.name ?? 'Unknown Item'
+  return getEquipmentDisplayName(props.item)
 })
 
 // Current quantity
@@ -83,23 +82,8 @@ watch(() => props.item, (item) => {
   }
 })
 
-// Get item type icon
-function getItemIcon(): string {
-  if (!props.item) return 'i-heroicons-cube'
-  const item = props.item.item as { item_type?: string } | null
-  const itemType = item?.item_type?.toLowerCase() ?? ''
-
-  if (itemType.includes('weapon') || itemType.includes('melee') || itemType.includes('ranged')) {
-    return 'i-heroicons-bolt'
-  }
-  if (itemType.includes('armor') || itemType.includes('shield')) {
-    return 'i-heroicons-shield-check'
-  }
-  if (itemType.includes('potion')) {
-    return 'i-heroicons-beaker'
-  }
-  return 'i-heroicons-cube'
-}
+// Get item type icon (uses shared utility)
+const itemIcon = computed(() => getEquipmentIcon(props.item))
 </script>
 
 <template>
@@ -122,7 +106,7 @@ function getItemIcon(): string {
         >
           <div class="flex items-center gap-3 p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
             <UIcon
-              :name="getItemIcon()"
+              :name="itemIcon"
               class="w-5 h-5 text-gray-500"
             />
             <div>
