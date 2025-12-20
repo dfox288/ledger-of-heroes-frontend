@@ -8,8 +8,10 @@
  *
  * @see Issue #556 - Spells Tab
  * @see Issue #616 - Spell preparation toggle
+ * @see Issue #778 - Extract spell grouping logic to composable
  */
 import type { CharacterSpell } from '~/types/character'
+import { groupSpellsByLevel, getSortedLevels } from '~/composables/useSpellGrouping'
 
 const props = defineProps<{
   spells: CharacterSpell[]
@@ -29,46 +31,39 @@ function getOrdinalLevel(level: number): string {
 }
 
 /**
- * Group spells by level with counts and sorted lists
+ * Filter out dangling spell references
+ */
+const validSpells = computed(() => props.spells.filter(s => s.spell !== null))
+
+/**
+ * Group spells by level with counts and sorted lists.
+ * Uses the shared groupSpellsByLevel composable, then applies
+ * component-specific sorting (prepared first).
  */
 const spellsByLevel = computed(() => {
-  // Filter out dangling spell references (sourcebook removed)
-  const validSpells = props.spells.filter(s => s.spell !== null)
+  // Use shared grouping logic
+  const grouped = groupSpellsByLevel(validSpells.value)
+  const levels = getSortedLevels(grouped)
 
-  // Group by level
-  const groups = validSpells.reduce((acc, spell) => {
-    const level = spell.spell!.level
-    if (!acc[level]) {
-      acc[level] = []
-    }
-    acc[level].push(spell)
-    return acc
-  }, {} as Record<number, CharacterSpell[]>)
+  // Convert to array with component-specific sorting and counts
+  return levels.map((level) => {
+    const spells = grouped[level]!
 
-  // Convert to array and sort
-  return Object.entries(groups)
-    .map(([level, spells]) => {
-      // Sort spells: prepared first (alphabetically), then unprepared (alphabetically)
-      const sortedSpells = [...spells].sort((a, b) => {
-        // Primary sort: prepared status (prepared first)
-        if (a.is_prepared !== b.is_prepared) {
-          return a.is_prepared ? -1 : 1
-        }
-        // Secondary sort: alphabetical by name
-        return a.spell!.name.localeCompare(b.spell!.name)
-      })
-
-      const preparedCount = spells.filter(s => s.is_prepared).length
-      const totalCount = spells.length
-
-      return {
-        level: parseInt(level),
-        spells: sortedSpells,
-        totalCount,
-        preparedCount
+    // Sort: prepared first (alphabetically), then unprepared (alphabetically)
+    const sortedSpells = [...spells].sort((a, b) => {
+      if (a.is_prepared !== b.is_prepared) {
+        return a.is_prepared ? -1 : 1
       }
+      return a.spell!.name.localeCompare(b.spell!.name)
     })
-    .sort((a, b) => a.level - b.level) // Sort levels ascending
+
+    return {
+      level,
+      spells: sortedSpells,
+      totalCount: spells.length,
+      preparedCount: spells.filter(s => s.is_prepared).length
+    }
+  })
 })
 </script>
 

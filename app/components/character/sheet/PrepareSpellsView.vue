@@ -14,6 +14,7 @@ import type { Spell } from '~/types/api/entities'
 import type { PreparationMethod } from '~/types/character'
 import { formatSpellLevel } from '~/composables/useSpellFormatters'
 import { useCharacterPlayStateStore } from '~/stores/characterPlayState'
+import { groupByLevel, getSortedLevels } from '~/composables/useSpellGrouping'
 
 const props = defineProps<{
   characterId: number
@@ -231,25 +232,14 @@ const filteredSpells = computed(() => {
 })
 
 /**
- * Group filtered spells by level
+ * Group filtered spells by level using shared composable
+ * @see Issue #778 - Extract spell grouping logic to composable
  */
-const spellsByLevel = computed(() => {
-  const grouped: Record<number, Spell[]> = {}
-  for (const spell of filteredSpells.value) {
-    const level = spell.level
-    if (!grouped[level]) grouped[level] = []
-    grouped[level].push(spell)
-  }
-  // Sort by name within each level
-  for (const level in grouped) {
-    grouped[level]!.sort((a, b) => a.name.localeCompare(b.name))
-  }
-  return grouped
-})
-
-const sortedLevels = computed(() =>
-  Object.keys(spellsByLevel.value).map(Number).sort((a, b) => a - b)
+const spellsByLevel = computed(() =>
+  groupByLevel(filteredSpells.value, s => s.level, s => s.name)
 )
+
+const sortedLevels = computed(() => getSortedLevels(spellsByLevel.value))
 
 /**
  * Check if a spell is prepared

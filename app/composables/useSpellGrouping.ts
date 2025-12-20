@@ -9,6 +9,45 @@
 import type { CharacterSpell } from '~/types/character'
 
 /**
+ * Generic function to group any spell-like objects by level.
+ *
+ * Works with both CharacterSpell and raw Spell objects by accepting
+ * accessor functions for level and name.
+ *
+ * @param items - Array of spell-like objects
+ * @param getLevel - Function to extract level from item
+ * @param getName - Function to extract name for sorting
+ * @returns Record mapping level number to sorted array of items
+ *
+ * @example
+ * // For raw Spell objects
+ * const grouped = groupByLevel(spells, s => s.level, s => s.name)
+ *
+ * // For CharacterSpell objects
+ * const grouped = groupByLevel(spells, s => s.spell!.level, s => s.spell!.name)
+ */
+export function groupByLevel<T>(
+  items: T[],
+  getLevel: (item: T) => number,
+  getName: (item: T) => string
+): Record<number, T[]> {
+  const grouped: Record<number, T[]> = {}
+
+  for (const item of items) {
+    const level = getLevel(item)
+    if (!grouped[level]) grouped[level] = []
+    grouped[level].push(item)
+  }
+
+  // Sort alphabetically within each level
+  for (const level in grouped) {
+    grouped[level]!.sort((a, b) => getName(a).localeCompare(getName(b)))
+  }
+
+  return grouped
+}
+
+/**
  * Group spells by their level and sort alphabetically within each level.
  *
  * @param spells - Array of CharacterSpell objects (must have valid spell data)
@@ -35,10 +74,10 @@ export function groupSpellsByLevel(spells: CharacterSpell[]): Record<number, Cha
 /**
  * Get sorted level keys from a grouped spells object.
  *
- * @param grouped - Record mapping level to spells (from groupSpellsByLevel)
+ * @param grouped - Record mapping level to spells (from groupSpellsByLevel or groupByLevel)
  * @returns Array of level numbers sorted numerically (0, 1, 2, ...)
  */
-export function getSortedLevels(grouped: Record<number, CharacterSpell[]>): number[] {
+export function getSortedLevels<T>(grouped: Record<number, T[]>): number[] {
   return Object.keys(grouped).map(Number).sort((a, b) => a - b)
 }
 
