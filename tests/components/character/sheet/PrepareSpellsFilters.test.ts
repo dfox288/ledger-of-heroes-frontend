@@ -17,6 +17,11 @@ describe('PrepareSpellsFilters', () => {
       expect(wrapper.find('input[type="text"]').exists()).toBe(true)
     })
 
+    it('has testid on search input (#795)', async () => {
+      const wrapper = await mountSuspended(PrepareSpellsFilters, { props: defaultProps })
+      expect(wrapper.find('[data-testid="search-input"]').exists()).toBe(true)
+    })
+
     it('shows search placeholder', async () => {
       const wrapper = await mountSuspended(PrepareSpellsFilters, { props: defaultProps })
       expect(wrapper.find('input[type="text"]').attributes('placeholder')).toContain('Search')

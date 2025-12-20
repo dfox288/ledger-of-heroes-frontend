@@ -56,6 +56,7 @@ const levelOptions = [
   <div class="space-y-3">
     <!-- Search -->
     <UInput
+      data-testid="search-input"
       :model-value="searchQuery"
       placeholder="Search spells..."
       icon="i-heroicons-magnifying-glass"

@@ -114,6 +114,22 @@ describe('SpellbookColumn', () => {
     expect(wrapper.text()).toContain('No matching spells')
   })
 
+  it('has testid on empty state container (#795)', async () => {
+    const wrapper = await mountSuspended(SpellbookColumn, {
+      props: { spells: mockSpells, atPrepLimit: false }
+    })
+    await wrapper.find('input[type="text"]').setValue('nonexistent')
+    expect(wrapper.find('[data-testid="empty-state"]').exists()).toBe(true)
+  })
+
+  it('shows helpful filter hint in empty state (#793)', async () => {
+    const wrapper = await mountSuspended(SpellbookColumn, {
+      props: { spells: mockSpells, atPrepLimit: false }
+    })
+    await wrapper.find('input[type="text"]').setValue('nonexistent')
+    expect(wrapper.text()).toContain('Try adjusting your filters')
+  })
+
   it('emits toggle event when spell card is clicked', async () => {
     const wrapper = await mountSuspended(SpellbookColumn, {
       props: { spells: mockSpells, atPrepLimit: false }

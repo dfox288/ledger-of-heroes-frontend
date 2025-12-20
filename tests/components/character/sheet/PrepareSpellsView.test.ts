@@ -432,4 +432,57 @@ describe('PrepareSpellsView', () => {
       expect(wrapper.emitted('close')).toBeTruthy()
     })
   })
+
+  describe('wizard spellbook mode (#794)', () => {
+    it('uses "Copy" terminology in banner and button', async () => {
+      // Setup mock for spellbook mode - no spells learned yet
+      apiFetchMock.mockImplementation((url: string) => {
+        if (url.includes('/characters/') && url.includes('/spells')) {
+          // Return empty character spells for wizard mode - no spells learned yet
+          return Promise.resolve({ data: [] })
+        }
+        if (url.startsWith('/spells?')) {
+          return Promise.resolve({ data: mockAvailableSpells })
+        }
+        return Promise.resolve({ data: [] })
+      })
+
+      const wrapper = await mountSuspended(PrepareSpellsView, {
+        props: { ...defaultProps, preparationMethod: 'spellbook' },
+        ...getMountOptions()
+      })
+      await flushPromises()
+
+      // Banner should use "Copying" terminology (PHB-consistent)
+      expect(wrapper.text()).toContain('Copying a spell')
+
+      // Verify learn button exists (shows + icon for unlearned spells)
+      const learnButton = wrapper.find('[data-testid="learn-spell-button"]')
+      expect(learnButton.exists()).toBe(true)
+    })
+
+    it('shows copy cost info banner in spellbook mode', async () => {
+      const wrapper = await mountSuspended(PrepareSpellsView, {
+        props: { ...defaultProps, preparationMethod: 'spellbook' },
+        ...getMountOptions()
+      })
+      await flushPromises()
+
+      const banner = wrapper.find('[data-testid="spellbook-cost-banner"]')
+      expect(banner.exists()).toBe(true)
+      expect(banner.text()).toContain('Copying a spell')
+    })
+  })
+
+  describe('data-testid attributes (#795)', () => {
+    it('has testid on search input', async () => {
+      const wrapper = await mountSuspended(PrepareSpellsView, {
+        props: defaultProps,
+        ...getMountOptions()
+      })
+      await flushPromises()
+
+      expect(wrapper.find('[data-testid="search-input"]').exists()).toBe(true)
+    })
+  })
 })
