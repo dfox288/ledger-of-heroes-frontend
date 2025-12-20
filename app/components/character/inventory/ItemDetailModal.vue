@@ -12,7 +12,7 @@
  * @see Design: docs/frontend/plans/2025-12-13-inventory-redesign.md
  */
 
-import type { CharacterEquipment } from '~/types/character'
+import type { CharacterEquipment, CharacterEquipmentCharges } from '~/types/character'
 import { getLocationDisplayText } from '~/utils/inventory'
 
 // Full item data from /items/{slug} endpoint
@@ -68,7 +68,7 @@ watch(open, async (isOpen) => {
   }
 
   // Only fetch if item has a slug (not a custom item)
-  const itemSlug = props.item.item_slug || (props.item.item as { slug?: string } | null)?.slug
+  const itemSlug = props.item.item_slug || props.item.item?.slug
   if (!itemSlug) {
     fullItemData.value = null
     return
@@ -88,15 +88,8 @@ watch(open, async (isOpen) => {
   }
 }, { immediate: true })
 
-// Minimal item data from equipment response (fallback)
-const minimalItemData = computed(() => props.item?.item as {
-  name?: string
-  weight?: string
-  item_type?: string
-  armor_class?: number
-  damage_dice?: string
-  requires_attunement?: boolean
-} | null)
+// Minimal item data from equipment response (now properly typed)
+const minimalItemData = computed(() => props.item?.item ?? null)
 
 // Equipment item data (inline from equipment response)
 const equipmentItemData = computed(() => props.item?.item ?? null)
@@ -136,8 +129,9 @@ const description = computed(() => {
 // Weight from full data or minimal
 const weight = computed(() => {
   const raw = fullItemData.value?.weight ?? minimalItemData.value?.weight
-  if (!raw) return null
-  const num = parseFloat(raw)
+  if (raw === undefined || raw === null) return null
+  // Handle both string and number types
+  const num = typeof raw === 'number' ? raw : parseFloat(raw)
   return isNaN(num) ? null : num
 })
 
@@ -232,14 +226,8 @@ const rechargeTiming = computed(() => equipmentItemData.value?.recharge_timing ?
 const hasChargeInfo = computed(() => chargesMax.value !== null)
 
 // Interactive charges (top-level charges object, backend Phase 3)
-interface ChargesData {
-  current: number | null
-  max: number
-  recharge_formula: string | null
-  recharge_timing: string | null
-}
-
-const chargesObject = computed(() => (props.item as { charges?: ChargesData } | null)?.charges ?? null)
+// Uses CharacterEquipmentCharges type from character.ts
+const chargesObject = computed((): CharacterEquipmentCharges | null => props.item?.charges ?? null)
 
 const hasInteractiveCharges = computed(() =>
   chargesObject.value !== null && chargesObject.value.current !== null
@@ -282,7 +270,7 @@ const locationText = computed(() => {
 // Check if this is a custom item (no slug)
 const isCustomItem = computed(() => {
   if (!props.item) return false
-  const itemSlug = props.item.item_slug || (props.item.item as { slug?: string } | null)?.slug
+  const itemSlug = props.item.item_slug || props.item.item?.slug
   return !itemSlug
 })
 </script>

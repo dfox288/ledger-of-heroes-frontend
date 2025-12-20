@@ -4,6 +4,7 @@
  * Shared utilities for working with CharacterEquipment data.
  *
  * @see Issue #775 - Extract duplicate inventory utility functions
+ * @see Issue #776 - Add proper types for CharacterEquipment
  */
 import type { CharacterEquipment } from '~/types/character'
 
@@ -69,4 +70,31 @@ export function getEquipmentDisplayName(equipment: CharacterEquipment): string {
 export function getLocationDisplayText(location: EquipmentLocation | string | null | undefined): string | null {
   if (!location || location === 'backpack') return null
   return LOCATION_LABELS[location as DisplayableLocation] ?? null
+}
+
+/**
+ * Get the appropriate icon for an equipment item based on its type.
+ *
+ * @param equipment - The character equipment record
+ * @returns Heroicons icon name
+ */
+export function getEquipmentIcon(equipment: CharacterEquipment | null): string {
+  if (!equipment) return 'i-heroicons-cube'
+
+  const itemType = equipment.item?.item_type?.toLowerCase() ?? ''
+
+  if (itemType.includes('weapon') || itemType.includes('melee') || itemType.includes('ranged')) {
+    return 'i-heroicons-bolt'
+  }
+  if (itemType.includes('armor') || itemType.includes('shield')) {
+    return 'i-heroicons-shield-check'
+  }
+  if (itemType.includes('potion')) {
+    return 'i-heroicons-beaker'
+  }
+  if (itemType.includes('scroll')) {
+    return 'i-heroicons-document-text'
+  }
+
+  return 'i-heroicons-cube'
 }

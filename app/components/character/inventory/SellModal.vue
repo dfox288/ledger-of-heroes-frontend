@@ -13,6 +13,7 @@
  */
 
 import type { CharacterEquipment, CharacterCurrency } from '~/types/character'
+import { getEquipmentDisplayName, getEquipmentIcon } from '~/utils/inventory'
 
 interface Props {
   item: CharacterEquipment | null
@@ -71,19 +72,16 @@ const visibleCurrencies = computed(() => {
     }))
 })
 
-// Get item name from equipment
+// Get item name from equipment (uses shared utility)
 const itemName = computed(() => {
   if (!props.item) return ''
-  if (props.item.custom_name) return props.item.custom_name
-  const item = props.item.item as { name?: string } | null
-  return item?.name ?? 'Unknown Item'
+  return getEquipmentDisplayName(props.item)
 })
 
 // Get item's base value (cost_cp / 2 for standard D&D sell price)
 const baseItemValue = computed(() => {
   if (!props.item) return 0
-  const item = props.item.item as { cost_cp?: number } | null
-  const costCp = item?.cost_cp ?? 0
+  const costCp = props.item.item?.cost_cp ?? 0
   // Standard D&D rule: sell for half value
   return Math.floor(costCp / 2)
 })
@@ -182,23 +180,8 @@ function formatCurrency(copperPieces: number): string {
   return `${copperPieces} cp`
 }
 
-// Get item type icon
-function getItemIcon(): string {
-  if (!props.item) return 'i-heroicons-cube'
-  const item = props.item.item as { item_type?: string } | null
-  const itemType = item?.item_type?.toLowerCase() ?? ''
-
-  if (itemType.includes('weapon') || itemType.includes('melee') || itemType.includes('ranged')) {
-    return 'i-heroicons-bolt'
-  }
-  if (itemType.includes('armor') || itemType.includes('shield')) {
-    return 'i-heroicons-shield-check'
-  }
-  if (itemType.includes('potion')) {
-    return 'i-heroicons-beaker'
-  }
-  return 'i-heroicons-cube'
-}
+// Get item type icon (uses shared utility)
+const itemIcon = computed(() => getEquipmentIcon(props.item))
 
 // Validation
 const canSell = computed((): boolean => {
@@ -296,7 +279,7 @@ watch(() => props.item, () => {
           <div class="flex items-center justify-between p-3 bg-warning-50 dark:bg-warning-900/20 rounded-lg border border-warning-200 dark:border-warning-800">
             <div class="flex items-center gap-3">
               <UIcon
-                :name="getItemIcon()"
+                :name="itemIcon"
                 class="w-5 h-5 text-warning-600 dark:text-warning-400"
               />
               <div>
