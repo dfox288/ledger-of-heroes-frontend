@@ -456,9 +456,9 @@ describe('PrepareSpellsView', () => {
       // Banner should use "Copying" terminology (PHB-consistent)
       expect(wrapper.text()).toContain('Copying a spell')
 
-      // Verify learn button exists (shows + icon for unlearned spells)
-      const learnButton = wrapper.find('[data-testid="learn-spell-button"]')
-      expect(learnButton.exists()).toBe(true)
+      // Verify copy button exists (shows + icon for uncopied spells)
+      const copyButton = wrapper.find('[data-testid="copy-spell-button"]')
+      expect(copyButton.exists()).toBe(true)
     })
 
     it('shows copy cost info banner in spellbook mode', async () => {
