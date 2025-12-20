@@ -5,8 +5,9 @@
  */
 import { describe, it, expect } from 'vitest'
 import { ref, computed } from 'vue'
-import { groupSpellsByLevel, getSortedLevels, useSpellGrouping } from '~/composables/useSpellGrouping'
+import { groupSpellsByLevel, getSortedLevels, useSpellGrouping, groupByLevel } from '~/composables/useSpellGrouping'
 import type { CharacterSpell } from '~/types/character'
+import type { Spell } from '~/types/api/generated'
 
 // Factory for creating mock spells
 function createMockSpell(overrides: Partial<{
@@ -160,6 +161,70 @@ describe('useSpellGrouping', () => {
       const { sortedLevels } = useSpellGrouping(preparedOnly)
 
       expect(sortedLevels.value).toEqual([3])
+    })
+  })
+
+  describe('groupByLevel (generic)', () => {
+    // Factory for creating raw Spell objects (not CharacterSpell)
+    function createRawSpell(overrides: Partial<{ name: string, level: number }>): Spell {
+      return {
+        id: Math.random() * 1000,
+        name: overrides.name ?? 'Test Spell',
+        level: overrides.level ?? 1,
+        slug: 'test-spell',
+        school: 'Evocation',
+        casting_time: '1 action',
+        range: '30 feet',
+        components: 'V, S',
+        duration: 'Instantaneous',
+        concentration: false,
+        ritual: false
+      } as Spell
+    }
+
+    it('groups raw Spell objects by level', () => {
+      const spells = [
+        createRawSpell({ name: 'Fireball', level: 3 }),
+        createRawSpell({ name: 'Magic Missile', level: 1 }),
+        createRawSpell({ name: 'Shield', level: 1 }),
+        createRawSpell({ name: 'Counterspell', level: 3 })
+      ]
+
+      const grouped = groupByLevel(spells, s => s.level, s => s.name)
+
+      expect(Object.keys(grouped)).toHaveLength(2)
+      expect(grouped[1]).toHaveLength(2)
+      expect(grouped[3]).toHaveLength(2)
+    })
+
+    it('sorts spells alphabetically within each level', () => {
+      const spells = [
+        createRawSpell({ name: 'Shield', level: 1 }),
+        createRawSpell({ name: 'Magic Missile', level: 1 }),
+        createRawSpell({ name: 'Absorb Elements', level: 1 })
+      ]
+
+      const grouped = groupByLevel(spells, s => s.level, s => s.name)
+
+      expect(grouped[1]![0]!.name).toBe('Absorb Elements')
+      expect(grouped[1]![1]!.name).toBe('Magic Missile')
+      expect(grouped[1]![2]!.name).toBe('Shield')
+    })
+
+    it('handles empty array', () => {
+      const grouped = groupByLevel([], s => s.level, s => s.name)
+      expect(Object.keys(grouped)).toHaveLength(0)
+    })
+
+    it('handles cantrips (level 0)', () => {
+      const spells = [
+        createRawSpell({ name: 'Fire Bolt', level: 0 }),
+        createRawSpell({ name: 'Prestidigitation', level: 0 })
+      ]
+
+      const grouped = groupByLevel(spells, s => s.level, s => s.name)
+
+      expect(grouped[0]).toHaveLength(2)
     })
   })
 })
