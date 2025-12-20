@@ -138,6 +138,7 @@ function formatLevel(level: number): string {
       <!-- Empty state -->
       <div
         v-else
+        data-testid="empty-state"
         class="text-center py-8 text-gray-500 dark:text-gray-400"
       >
         <UIcon
@@ -145,6 +146,9 @@ function formatLevel(level: number): string {
           class="w-8 h-8 mx-auto mb-2"
         />
         <p>No matching spells</p>
+        <p class="text-sm mt-1">
+          Try adjusting your filters
+        </p>
       </div>
     </div>
   </div>

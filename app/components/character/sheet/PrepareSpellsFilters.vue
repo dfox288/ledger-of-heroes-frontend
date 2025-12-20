@@ -46,6 +46,7 @@ const levelOptions = computed(() => {
   <!-- All filters in one row -->
   <div class="flex flex-wrap gap-3 items-center">
     <UInput
+      data-testid="search-input"
       :model-value="searchQuery"
       placeholder="Search spells..."
       icon="i-heroicons-magnifying-glass"

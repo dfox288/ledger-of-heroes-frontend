@@ -18,6 +18,11 @@ describe('SpellbookFilters', () => {
       expect(wrapper.find('input[type="text"]').exists()).toBe(true)
     })
 
+    it('has testid on search input (#795)', async () => {
+      const wrapper = await mountSuspended(SpellbookFilters, { props: defaultProps })
+      expect(wrapper.find('[data-testid="search-input"]').exists()).toBe(true)
+    })
+
     it('emits update:searchQuery on input', async () => {
       const wrapper = await mountSuspended(SpellbookFilters, { props: defaultProps })
       await wrapper.find('input[type="text"]').setValue('fireball')

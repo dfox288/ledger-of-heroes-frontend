@@ -465,7 +465,7 @@ async function confirmLearnSpell() {
     })
 
     toast.add({
-      title: `Added ${spellToLearn.value.name} to spellbook`,
+      title: `Copied ${spellToLearn.value.name} to spellbook`,
       color: 'success'
     })
 
@@ -767,12 +767,12 @@ async function confirmLearnSpell() {
       </div>
     </template>
 
-    <!-- Learn Spell Confirmation Dialog -->
+    <!-- Copy Spell Confirmation Dialog -->
     <UModal v-model:open="showLearnDialog">
       <template #content>
         <div class="p-6">
           <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-            Learn {{ spellToLearn?.name }}?
+            Copy {{ spellToLearn?.name }} to Spellbook?
           </h3>
 
           <div class="space-y-2 text-sm text-gray-600 dark:text-gray-400 mb-6">
@@ -800,7 +800,7 @@ async function confirmLearnSpell() {
               :loading="isLearningSpell"
               @click="confirmLearnSpell"
             >
-              Learn
+              Copy
             </UButton>
           </div>
         </div>
