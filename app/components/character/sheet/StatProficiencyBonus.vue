@@ -3,23 +3,17 @@
 /**
  * Proficiency Bonus Stat Display
  *
- * Simple stat card showing the character's proficiency bonus.
- * Reusable across character sheet and other contexts.
+ * Wrapper around StatDisplay for proficiency bonus.
+ * Kept as a separate component for semantic clarity.
  */
-import { formatModifier } from '~/utils/formatModifier'
-
 defineProps<{
   bonus: number | null
 }>()
 </script>
 
 <template>
-  <div class="bg-gray-50 dark:bg-gray-800 rounded-lg p-4 text-center">
-    <div class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1">
-      Prof Bonus
-    </div>
-    <div class="text-2xl font-bold text-gray-900 dark:text-white">
-      {{ formatModifier(bonus) }}
-    </div>
-  </div>
+  <CharacterSheetStatDisplay
+    label="Prof Bonus"
+    :value="bonus"
+  />
 </template>
