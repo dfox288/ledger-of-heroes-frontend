@@ -163,9 +163,9 @@ describe('CharacterPageHeader - Store Integration', () => {
       // Verify store is dead before revive
       expect(store.isDead).toBe(true)
 
-      // Trigger revive via component method
-      const vm = wrapper.vm as unknown as { handleRevive: () => Promise<void> }
-      await vm.handleRevive?.()
+      // Trigger revive via component method (now exposed as 'revive' from composable)
+      const vm = wrapper.vm as unknown as { revive: () => Promise<void> }
+      await vm.revive?.()
 
       // Store should be updated immediately
       expect(store.isDead).toBe(false)
@@ -199,9 +199,9 @@ describe('CharacterPageHeader - Store Integration', () => {
       expect(store.deathSaves.successes).toBe(2)
       expect(store.deathSaves.failures).toBe(3)
 
-      // Trigger revive
-      const vm = wrapper.vm as unknown as { handleRevive: () => Promise<void> }
-      await vm.handleRevive?.()
+      // Trigger revive (now exposed as 'revive' from composable)
+      const vm = wrapper.vm as unknown as { revive: () => Promise<void> }
+      await vm.revive?.()
 
       // Death saves should be reset
       expect(store.deathSaves.successes).toBe(0)
@@ -235,9 +235,9 @@ describe('CharacterPageHeader - Store Integration', () => {
       // Verify HP before revive
       expect(store.hitPoints.current).toBe(0)
 
-      // Trigger revive
-      const vm = wrapper.vm as unknown as { handleRevive: () => Promise<void> }
-      await vm.handleRevive?.()
+      // Trigger revive (now exposed as 'revive' from composable)
+      const vm = wrapper.vm as unknown as { revive: () => Promise<void> }
+      await vm.revive?.()
 
       // HP should be set to 1 (revive gives 1 HP)
       expect(store.hitPoints.current).toBe(1)
@@ -270,11 +270,29 @@ describe('CharacterPageHeader - Store Integration', () => {
 
       // Trigger edit save via component method
       const vm = wrapper.vm as unknown as {
-        handleEditSave: (payload: { name: string, alignment: string | null, portraitFile: File | null }) => Promise<void>
+        handleEditSave: (payload: {
+          name: string
+          alignment: string | null
+          age: number | null
+          height: string | null
+          weight: string | null
+          eye_color: string | null
+          hair_color: string | null
+          skin_color: string | null
+          deity: string | null
+          portraitFile: File | null
+        }) => Promise<void>
       }
       await vm.handleEditSave({
         name: 'New Name',
         alignment: character.alignment,
+        age: null,
+        height: null,
+        weight: null,
+        eye_color: null,
+        hair_color: null,
+        skin_color: null,
+        deity: null,
         portraitFile: null
       })
 

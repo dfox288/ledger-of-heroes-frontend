@@ -4,42 +4,26 @@
  * Self-contained Character Page Header
  *
  * Unified header for all character sub-pages (Overview, Inventory, Spells, etc.)
- * Fully self-contained - handles all state, modals, and API calls internally.
+ * Uses useCharacterPageActions composable for action handling.
  *
  * Features:
  * - Back button (configurable destination)
  * - Play mode toggle (persisted to localStorage)
  * - Character info with portrait and inspiration glow
- * - Actions dropdown with all actions handled internally:
- *   - Inspiration toggle
- *   - Add Condition (with modal)
- *   - Level Up (with confirmation modal)
- *   - Edit Character (with modal)
- *   - Export Character
- *   - Revive (for dead characters)
- *
- * @example
- * <CharacterPageHeader
- *   :character="character"
- *   :is-spellcaster="isSpellcaster"
- *   @updated="refreshCharacter"
- * />
+ * - Actions dropdown with all actions handled via composable
  */
 
 import type { Character } from '~/types/character'
 import type { Condition } from '~/types'
-import type { EditPayload } from '~/components/character/sheet/EditModal.vue'
 import { storeToRefs } from 'pinia'
-import { logger } from '~/utils/logger'
 import { useCharacterPlayStateStore } from '~/stores/characterPlayState'
 import { useCharacterXp } from '~/composables/useCharacterXp'
+import { useCharacterPageActions } from '~/composables/useCharacterPageActions'
 
 const props = withDefaults(defineProps<{
   character: Character
   isSpellcaster?: boolean
-  /** Where back button navigates. Defaults to /characters */
   backTo?: string
-  /** Back button label. Defaults to "Back to Characters" */
   backLabel?: string
 }>(), {
   isSpellcaster: false,
@@ -48,30 +32,42 @@ const props = withDefaults(defineProps<{
 })
 
 const emit = defineEmits<{
-  /** Emitted when character data has changed and parent should refresh */
   updated: []
 }>()
 
-const { apiFetch } = useApi()
-const toast = useToast()
 const playStateStore = useCharacterPlayStateStore()
 
 // ============================================================================
-// XP Management (self-contained)
+// Character Actions (via composable)
 // ============================================================================
 
-// Computed public_id that stays reactive with character prop
-const characterPublicId = computed(() => props.character.public_id)
+const characterRef = computed(() => props.character)
 
-// XP composable - fetches and updates XP data
 const {
-  xpData,
-  updateXp
-} = useCharacterXp(characterPublicId)
+  localHasInspiration,
+  localName,
+  isEditing,
+  canToggleInspiration,
+  toggleInspiration,
+  exportCharacter,
+  revive,
+  editCharacter,
+  removePortrait,
+  addCondition
+} = useCharacterPageActions(characterRef, {
+  onUpdated: () => emit('updated')
+})
 
-// XP Edit Modal state
+// ============================================================================
+// XP Management
+// ============================================================================
+
+const characterPublicId = computed(() => props.character.public_id)
+const { xpData, updateXp } = useCharacterXp(characterPublicId)
+
 const showXpEditModal = ref(false)
 const isUpdatingXp = ref(false)
+const toast = useToast()
 
 function handleXpEditClick() {
   showXpEditModal.value = true
@@ -84,8 +80,7 @@ async function handleXpUpdate(newXp: number) {
   try {
     await updateXp(newXp)
     toast.add({ title: 'XP updated', color: 'success' })
-  } catch (err) {
-    logger.error('Failed to update XP:', err)
+  } catch {
     toast.add({ title: 'Failed to update XP', color: 'error' })
   } finally {
     isUpdatingXp.value = false
@@ -96,286 +91,58 @@ async function handleXpUpdate(newXp: number) {
 // Play Mode (via store)
 // ============================================================================
 
-// Use storeToRefs for reactive binding to template
 const { isPlayMode } = storeToRefs(playStateStore)
 
-// Disable play mode for draft characters
 watch(() => props.character.is_complete, (isComplete) => {
   if (!isComplete && isPlayMode.value) {
     playStateStore.setPlayMode(false)
   }
 }, { immediate: true })
 
-/** Toggle handler for the switch */
 function handlePlayModeToggle(enabled: boolean) {
   playStateStore.setPlayMode(enabled)
 }
 
 // ============================================================================
-// Local State (synced with props, updated optimistically on save)
-// ============================================================================
-
-const localHasInspiration = ref(false)
-const isUpdatingInspiration = ref(false)
-const localName = ref('')
-const isEditing = ref(false)
-
-// Sync inspiration with props (unless we're mid-update)
-watch(() => props.character.has_inspiration, (hasInspiration) => {
-  if (hasInspiration !== undefined && !isUpdatingInspiration.value) {
-    localHasInspiration.value = hasInspiration
-  }
-}, { immediate: true })
-
-// Sync name with props (unless we're mid-edit)
-watch(() => props.character.name, (name) => {
-  if (name && !isEditing.value) {
-    localName.value = name
-  }
-}, { immediate: true })
-
-const canToggleInspiration = computed(() => {
-  return isPlayMode.value && !playStateStore.isDead
-})
-
-async function handleToggleInspiration() {
-  if (isUpdatingInspiration.value || !canToggleInspiration.value) return
-
-  isUpdatingInspiration.value = true
-  const oldValue = localHasInspiration.value
-  const newValue = !oldValue
-  localHasInspiration.value = newValue
-
-  try {
-    await apiFetch(`/characters/${props.character.id}`, {
-      method: 'PATCH',
-      body: { has_inspiration: newValue }
-    })
-    toast.add({
-      title: newValue ? 'Inspiration granted!' : 'Inspiration spent',
-      color: newValue ? 'warning' : 'neutral'
-    })
-  } catch (err) {
-    localHasInspiration.value = oldValue
-    logger.error('Failed to toggle inspiration:', err)
-    toast.add({ title: 'Failed to update inspiration', color: 'error' })
-  } finally {
-    isUpdatingInspiration.value = false
-  }
-}
-
-// ============================================================================
-// Export (self-contained)
-// ============================================================================
-
-const isExporting = ref(false)
-
-async function handleExport() {
-  if (isExporting.value) return
-  isExporting.value = true
-
-  try {
-    const response = await apiFetch<{ data: unknown }>(`/characters/${props.character.public_id}/export`)
-    const now = new Date()
-    const timestamp = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}-${String(now.getHours()).padStart(2, '0')}${String(now.getMinutes()).padStart(2, '0')}`
-    const filename = `${props.character.public_id}-${timestamp}.json`
-
-    const blob = new Blob([JSON.stringify(response.data, null, 2)], { type: 'application/json' })
-    const url = URL.createObjectURL(blob)
-    const link = document.createElement('a')
-    link.href = url
-    link.download = filename
-    document.body.appendChild(link)
-    link.click()
-    document.body.removeChild(link)
-    URL.revokeObjectURL(url)
-
-    toast.add({ title: 'Character exported', color: 'success' })
-  } catch (err) {
-    logger.error('Failed to export character:', err)
-    toast.add({ title: 'Failed to export character', color: 'error' })
-  } finally {
-    isExporting.value = false
-  }
-}
-
-// ============================================================================
-// Revive (self-contained)
-// ============================================================================
-
-const isReviving = ref(false)
-
-async function handleRevive() {
-  if (isReviving.value || !playStateStore.isDead) return
-  isReviving.value = true
-
-  try {
-    await apiFetch(`/characters/${props.character.id}/revive`, {
-      method: 'POST',
-      body: { hit_points: 1, clear_exhaustion: true }
-    })
-
-    // Update store immediately for reactive UI
-    playStateStore.isDead = false
-    playStateStore.hitPoints.current = 1
-    playStateStore.deathSaves.successes = 0
-    playStateStore.deathSaves.failures = 0
-
-    toast.add({
-      title: 'Character revived!',
-      description: `${props.character.name} has been brought back with 1 HP`,
-      color: 'success'
-    })
-    emit('updated')
-  } catch (err: unknown) {
-    const error = err as { statusCode?: number, data?: { message?: string } }
-    if (error.statusCode === 422) {
-      toast.add({
-        title: 'Cannot revive',
-        description: error.data?.message || 'Character is not dead',
-        color: 'warning'
-      })
-    } else {
-      logger.error('Failed to revive character:', err)
-      toast.add({ title: 'Failed to revive', color: 'error' })
-    }
-  } finally {
-    isReviving.value = false
-  }
-}
-
-// ============================================================================
-// Level Up Modal (self-contained)
+// Modals
 // ============================================================================
 
 const showLevelUpModal = ref(false)
+const showAddConditionModal = ref(false)
+const showEditModal = ref(false)
+const editError = ref<string | null>(null)
+
+// Fetch available conditions
+const { data: availableConditions } = useReferenceData<Condition>('/conditions')
 
 function handleLevelUpClick() {
   showLevelUpModal.value = true
 }
 
-// ============================================================================
-// Add Condition Modal (uses store)
-// ============================================================================
-
-const showAddConditionModal = ref(false)
-
-// Fetch available conditions
-const { data: availableConditions } = useReferenceData<Condition>('/conditions')
-
 function handleAddConditionClick() {
   showAddConditionModal.value = true
 }
-
-async function handleAddCondition(payload: { condition: string, source: string, duration: string, level?: number }) {
-  const success = await playStateStore.addCondition(payload)
-  if (success) {
-    toast.add({ title: 'Condition added', color: 'success' })
-  } else {
-    toast.add({ title: 'Failed to add condition', color: 'error' })
-  }
-}
-
-// ============================================================================
-// Edit Character Modal (self-contained)
-// ============================================================================
-
-const showEditModal = ref(false)
-const editError = ref<string | null>(null)
 
 function handleEditClick() {
   editError.value = null
   showEditModal.value = true
 }
 
-async function handleEditSave(payload: EditPayload) {
-  if (isEditing.value) return
-  isEditing.value = true
-  editError.value = null
+async function handleAddCondition(payload: { condition: string, source: string, duration: string, level?: number }) {
+  await addCondition(payload)
+}
 
-  try {
-    const hasNameChange = payload.name !== props.character.name
-    const hasAlignmentChange = payload.alignment !== props.character.alignment
-    const hasPhysicalChange
-      = (payload.age ?? null) !== (props.character.age ?? null)
-        || (payload.height ?? null) !== (props.character.height ?? null)
-        || (payload.weight ?? null) !== (props.character.weight ?? null)
-        || (payload.eye_color ?? null) !== (props.character.eye_color ?? null)
-        || (payload.hair_color ?? null) !== (props.character.hair_color ?? null)
-        || (payload.skin_color ?? null) !== (props.character.skin_color ?? null)
-        || (payload.deity ?? null) !== (props.character.deity ?? null)
-
-    if (hasNameChange || hasAlignmentChange || hasPhysicalChange) {
-      await apiFetch(`/characters/${props.character.id}`, {
-        method: 'PATCH',
-        body: {
-          name: payload.name,
-          alignment: payload.alignment,
-          age: payload.age,
-          height: payload.height,
-          weight: payload.weight,
-          eye_color: payload.eye_color,
-          hair_color: payload.hair_color,
-          skin_color: payload.skin_color,
-          deity: payload.deity
-        }
-      })
-    }
-
-    if (payload.portraitFile) {
-      const formData = new FormData()
-      formData.append('file', payload.portraitFile)
-      await apiFetch(`/characters/${props.character.id}/media/portrait`, {
-        method: 'POST',
-        body: formData
-      })
-    }
-
+async function handleEditSave(payload: Parameters<typeof editCharacter>[0]) {
+  const result = await editCharacter(payload)
+  if (result.success) {
     showEditModal.value = false
-
-    // Update local name immediately for instant UI feedback
-    if (hasNameChange) {
-      localName.value = payload.name
-    }
-
-    const changes: string[] = []
-    if (hasNameChange || hasAlignmentChange || hasPhysicalChange) changes.push('details')
-    if (payload.portraitFile) changes.push('portrait')
-    const toastTitle = changes.length > 1
-      ? 'Character details and portrait updated'
-      : payload.portraitFile ? 'Portrait updated' : 'Character updated'
-
-    toast.add({ title: toastTitle, color: 'success' })
-    emit('updated')
-  } catch (err: unknown) {
-    const error = err as { statusCode?: number, data?: { message?: string } }
-    if (error.statusCode === 422) {
-      editError.value = error.data?.message || 'Validation failed'
-    } else {
-      logger.error('Failed to update character:', err)
-      editError.value = 'Failed to update character. Please try again.'
-    }
-  } finally {
-    isEditing.value = false
+  } else {
+    editError.value = result.error ?? null
   }
 }
 
 async function handleRemovePortrait() {
-  if (isEditing.value) return
-  isEditing.value = true
-
-  try {
-    await apiFetch(`/characters/${props.character.id}/media/portrait`, {
-      method: 'DELETE'
-    })
-    toast.add({ title: 'Portrait removed', color: 'success' })
-    emit('updated')
-  } catch (err) {
-    logger.error('Failed to remove portrait:', err)
-    toast.add({ title: 'Failed to remove portrait', color: 'error' })
-  } finally {
-    isEditing.value = false
-  }
+  await removePortrait()
 }
 
 // ============================================================================
@@ -425,7 +192,7 @@ const portraitAriaLabel = computed(() => {
 const actionMenuItems = computed(() => {
   const items: Array<Array<{ label: string, icon: string, to?: string, onSelect?: () => void }>> = []
 
-  // Play mode actions (use store.isDead for reactivity)
+  // Play mode actions
   if (props.character.is_complete && isPlayMode.value) {
     const playModeActions: Array<{ label: string, icon: string, onSelect: () => void }> = []
 
@@ -433,7 +200,7 @@ const actionMenuItems = computed(() => {
       playModeActions.push({
         label: 'Revive Character',
         icon: 'i-heroicons-sparkles',
-        onSelect: handleRevive
+        onSelect: revive
       })
     } else {
       playModeActions.push({
@@ -479,7 +246,7 @@ const actionMenuItems = computed(() => {
   items.push([{
     label: 'Export Character',
     icon: 'i-heroicons-arrow-down-tray',
-    onSelect: handleExport
+    onSelect: exportCharacter
   }])
 
   return items
@@ -498,7 +265,6 @@ const actionMenuItems = computed(() => {
         {{ backLabel }}
       </UButton>
 
-      <!-- Play Mode Toggle (persisted via cookie for SSR compatibility) -->
       <div
         v-if="character.is_complete"
         class="flex items-center gap-2"
@@ -516,7 +282,7 @@ const actionMenuItems = computed(() => {
     <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
       <!-- Portrait and Name Section -->
       <div class="flex items-center gap-4">
-        <!-- Portrait - glows when inspired, clickable in play mode -->
+        <!-- Portrait -->
         <div
           data-testid="portrait-container"
           :role="canToggleInspiration ? 'button' : undefined"
@@ -527,8 +293,8 @@ const actionMenuItems = computed(() => {
             'inspiration-glow': displayCharacter.has_inspiration,
             'cursor-pointer hover:scale-105': canToggleInspiration
           }"
-          @click="canToggleInspiration && handleToggleInspiration()"
-          @keydown.enter.space.prevent="canToggleInspiration && handleToggleInspiration()"
+          @click="canToggleInspiration && toggleInspiration()"
+          @keydown.enter.space.prevent="canToggleInspiration && toggleInspiration()"
         >
           <img
             v-if="portraitSrc"
@@ -557,7 +323,7 @@ const actionMenuItems = computed(() => {
             <span v-if="character.background"> &bull; {{ character.background.name }}</span>
             <span v-if="character.alignment"> &bull; {{ character.alignment }}</span>
           </p>
-          <!-- XP Progress Bar (only for complete characters, hidden at max level) -->
+          <!-- XP Progress Bar -->
           <CharacterSheetXpBar
             v-if="character.is_complete"
             :xp-data="xpData"
