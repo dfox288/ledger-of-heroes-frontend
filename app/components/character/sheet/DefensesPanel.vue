@@ -1,6 +1,12 @@
 <!-- app/components/character/sheet/DefensesPanel.vue -->
 <script setup lang="ts">
 import type { DamageDefense, ConditionAdvantage, ConditionDisadvantage, ConditionImmunity } from '~/types/character'
+import {
+  formatDamageDefense,
+  formatConditionAdvantage,
+  formatConditionDisadvantage,
+  formatConditionImmunity
+} from '~/utils/defenseFormatters'
 
 const props = defineProps<{
   damageResistances: DamageDefense[]
@@ -25,39 +31,6 @@ const hasDefenses = computed(() => {
     || props.conditionImmunities.length > 0
   )
 })
-
-/**
- * Format damage defense badge text
- * Returns: "Type (Source)" or "Type (Source) - condition text"
- */
-function formatDamageDefense(defense: DamageDefense): string {
-  const base = `${defense.type} (${defense.source})`
-  return defense.condition ? `${base} - ${defense.condition}` : base
-}
-
-/**
- * Format condition advantage badge text
- * Returns: "vs Condition (Source)"
- */
-function formatConditionAdvantage(advantage: ConditionAdvantage): string {
-  return `vs ${advantage.condition} (${advantage.source})`
-}
-
-/**
- * Format condition disadvantage badge text
- * Returns: "vs Condition (Source)"
- */
-function formatConditionDisadvantage(disadvantage: ConditionDisadvantage): string {
-  return `vs ${disadvantage.condition} (${disadvantage.source})`
-}
-
-/**
- * Format condition immunity badge text
- * Returns: "Condition (Source)"
- */
-function formatConditionImmunity(immunity: ConditionImmunity): string {
-  return `${immunity.condition} (${immunity.source})`
-}
 </script>
 
 <template>
