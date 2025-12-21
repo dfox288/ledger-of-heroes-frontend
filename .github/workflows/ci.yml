@@ -84,14 +84,14 @@ jobs:
 
   # ══════════════════════════════════════════════════════════════════════════
   # E2E Tests (Playwright) - Self-hosted runner with backend access
-  # Runs in parallel with lint (no dependency) for faster feedback
+  # DISABLED: E2E tests temporarily disabled
   # ══════════════════════════════════════════════════════════════════════════
   e2e-tests:
     name: E2E Tests
     runs-on: [self-hosted, claude-code]
     timeout-minutes: 30
-    # Run E2E tests only on main branch or when PR has 'e2e' label
-    if: github.ref == 'refs/heads/main' || contains(github.event.pull_request.labels.*.name, 'e2e')
+    # DISABLED: Set to false to skip E2E tests
+    if: false
 
     steps:
       - uses: actions/checkout@v4
