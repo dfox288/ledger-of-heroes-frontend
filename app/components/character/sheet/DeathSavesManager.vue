@@ -14,6 +14,7 @@
  * @see Issue #623 - Hydration fixes
  */
 import { useCharacterPlayStateStore } from '~/stores/characterPlayState'
+import { useSSRFallback } from '~/composables/useSSRFallback'
 
 interface InitialDeathSaves {
   successes: number
@@ -33,38 +34,29 @@ const props = defineProps<{
 const store = useCharacterPlayStateStore()
 const toast = useToast()
 
-/**
- * Death saves for display - uses store if initialized, falls back to props
- */
-const displayDeathSaves = computed(() => {
-  if (store.characterId !== null) {
-    return store.deathSaves
-  }
-  if (props.initialDeathSaves) {
-    return props.initialDeathSaves
-  }
-  return store.deathSaves
-})
+/** Check if store is initialized (characterId set) */
+const isStoreReady = computed(() => store.characterId !== null)
 
-/**
- * isDead for display - uses store if initialized, falls back to props
- */
-const displayIsDead = computed(() => {
-  if (store.characterId !== null) {
-    return store.isDead
-  }
-  return props.initialIsDead ?? false
-})
+/** Death saves for display - uses store if initialized, falls back to props */
+const displayDeathSaves = useSSRFallback(
+  computed(() => store.deathSaves),
+  props.initialDeathSaves,
+  isStoreReady
+)
 
-/**
- * HP current for canEdit - uses store if initialized, falls back to props
- */
-const displayHpCurrent = computed(() => {
-  if (store.characterId !== null) {
-    return store.hitPoints.current
-  }
-  return props.initialHpCurrent ?? 0
-})
+/** isDead for display - uses store if initialized, falls back to props */
+const displayIsDead = useSSRFallback(
+  computed(() => store.isDead),
+  props.initialIsDead,
+  isStoreReady
+)
+
+/** HP current for canEdit - uses store if initialized, falls back to props */
+const displayHpCurrent = useSSRFallback(
+  computed(() => store.hitPoints.current),
+  props.initialHpCurrent ?? 0,
+  isStoreReady
+)
 
 /**
  * Derived editability

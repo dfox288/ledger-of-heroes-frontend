@@ -14,6 +14,7 @@
  * @see Issue #623 - Hydration fixes
  */
 import { useCharacterPlayStateStore } from '~/stores/characterPlayState'
+import { useSSRFallback } from '~/composables/useSSRFallback'
 
 interface InitialHitPoints {
   current: number | null
@@ -32,36 +33,34 @@ const props = defineProps<{
 const store = useCharacterPlayStateStore()
 const toast = useToast()
 
+/** Check if store is initialized (characterId set) */
+const isStoreReady = computed(() => store.characterId !== null)
+
 /**
- * HP values for display - uses store if initialized, falls back to props for SSR
- * Once store is initialized (characterId set), store values take precedence
+ * Normalize initial HP prop to match store shape (null -> 0)
+ * Captured at component creation time for SSR consistency
  */
-const displayHitPoints = computed(() => {
-  // If store has been initialized, use store values for reactivity
-  if (store.characterId !== null) {
-    return store.hitPoints
-  }
-  // During SSR or before store init, use props
-  if (props.initialHitPoints) {
-    return {
+const normalizedInitialHitPoints = props.initialHitPoints
+  ? {
       current: props.initialHitPoints.current ?? 0,
       max: props.initialHitPoints.max ?? 0,
       temporary: props.initialHitPoints.temporary ?? 0
     }
-  }
-  // Fallback to store (will be zeros during SSR)
-  return store.hitPoints
-})
+  : undefined
 
-/**
- * isDead for display - uses store if initialized, falls back to props for SSR
- */
-const displayIsDead = computed(() => {
-  if (store.characterId !== null) {
-    return store.isDead
-  }
-  return props.initialIsDead ?? false
-})
+/** HP values for display - uses store if initialized, falls back to props for SSR */
+const displayHitPoints = useSSRFallback(
+  computed(() => store.hitPoints),
+  normalizedInitialHitPoints,
+  isStoreReady
+)
+
+/** isDead for display - uses store if initialized, falls back to props for SSR */
+const displayIsDead = useSSRFallback(
+  computed(() => store.isDead),
+  props.initialIsDead,
+  isStoreReady
+)
 
 // Modal states
 const hpModalOpen = ref(false)

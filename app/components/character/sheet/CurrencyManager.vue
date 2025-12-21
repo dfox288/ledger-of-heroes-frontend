@@ -16,6 +16,7 @@
 import type { CurrencyDelta } from './CurrencyEditModal.vue'
 import type { CharacterCurrency } from '~/types/character'
 import { useCharacterPlayStateStore } from '~/stores/characterPlayState'
+import { useSSRFallback } from '~/composables/useSSRFallback'
 
 const props = defineProps<{
   editable?: boolean
@@ -26,18 +27,15 @@ const props = defineProps<{
 const store = useCharacterPlayStateStore()
 const toast = useToast()
 
-/**
- * Currency for display - uses store if initialized, falls back to props for SSR
- */
-const displayCurrency = computed(() => {
-  if (store.characterId !== null) {
-    return store.currency
-  }
-  if (props.initialCurrency) {
-    return props.initialCurrency
-  }
-  return store.currency
-})
+/** Check if store is initialized (characterId set) */
+const isStoreReady = computed(() => store.characterId !== null)
+
+/** Currency for display - uses store if initialized, falls back to props for SSR */
+const displayCurrency = useSSRFallback(
+  computed(() => store.currency),
+  props.initialCurrency,
+  isStoreReady
+)
 
 // Modal state
 const modalOpen = ref(false)
