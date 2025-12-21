@@ -9,6 +9,7 @@
  */
 
 import type { CharacterCurrency } from '~/types/character'
+import { CURRENCY_CONFIG } from '~/constants/currency'
 
 const props = defineProps<{
   currency: CharacterCurrency | null
@@ -20,22 +21,11 @@ const emit = defineEmits<{
 }>()
 
 /**
- * Currency display configuration
- */
-const currencyConfig = [
-  { key: 'pp', label: 'P', bg: 'bg-gray-300 dark:bg-gray-500', text: 'text-gray-700 dark:text-gray-200' },
-  { key: 'gp', label: 'G', bg: 'bg-yellow-400 dark:bg-yellow-500', text: 'text-yellow-800 dark:text-yellow-900' },
-  { key: 'ep', label: 'E', bg: 'bg-gray-200 dark:bg-gray-400', text: 'text-gray-600 dark:text-gray-700' },
-  { key: 'sp', label: 'S', bg: 'bg-slate-300 dark:bg-slate-400', text: 'text-slate-700 dark:text-slate-800' },
-  { key: 'cp', label: 'C', bg: 'bg-orange-400 dark:bg-orange-500', text: 'text-orange-800 dark:text-orange-900' }
-] as const
-
-/**
  * Filter to only include currencies with non-zero values
  */
 const visibleCurrencies = computed(() => {
   if (!props.currency) return []
-  return currencyConfig
+  return CURRENCY_CONFIG
     .filter(c => props.currency![c.key as keyof CharacterCurrency] > 0)
     .map(c => ({
       ...c,
@@ -74,7 +64,7 @@ function handleClick() {
         <div
           :class="[coin.bg, 'w-5 h-5 rounded-full flex items-center justify-center']"
         >
-          <span :class="[coin.text, 'text-[10px] font-black']">{{ coin.label }}</span>
+          <span :class="[coin.coinText, 'text-[10px] font-black']">{{ coin.abbrev }}</span>
         </div>
         <span class="text-sm font-semibold text-gray-900 dark:text-white tabular-nums">
           {{ coin.value.toLocaleString() }}

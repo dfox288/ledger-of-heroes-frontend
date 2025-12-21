@@ -12,6 +12,8 @@
  * @see Design doc: docs/frontend/plans/2025-12-13-currency-management-design.md
  */
 
+import { CURRENCY_CONFIG } from '~/constants/currency'
+
 export interface CharacterCurrency {
   pp: number
   gp: number
@@ -55,18 +57,6 @@ const inputs = reactive({
 const VALID_INPUT_PATTERN = /^[+-]?\d+$/
 
 /**
- * Currency display configuration with colors matching coin types
- * Colors match CurrencyCard and CombatStatsGrid for consistency
- */
-const currencies = [
-  { key: 'pp' as const, label: 'PP', color: 'text-gray-400 dark:text-gray-300' },
-  { key: 'gp' as const, label: 'GP', color: 'text-yellow-600 dark:text-yellow-500' },
-  { key: 'ep' as const, label: 'EP', color: 'text-gray-500 dark:text-gray-400' },
-  { key: 'sp' as const, label: 'SP', color: 'text-slate-400 dark:text-slate-300' },
-  { key: 'cp' as const, label: 'CP', color: 'text-orange-700 dark:text-orange-500' }
-]
-
-/**
  * Check if a single input value is valid
  * Empty strings are valid (they're excluded from payload)
  */
@@ -80,7 +70,7 @@ function isValidInput(value: string): boolean {
  * Check if all non-empty inputs are valid
  */
 const allInputsValid = computed(() => {
-  return currencies.every(c => isValidInput(inputs[c.key]))
+  return CURRENCY_CONFIG.every(c => isValidInput(inputs[c.key]))
 })
 
 /**
@@ -89,7 +79,7 @@ const allInputsValid = computed(() => {
  */
 const payload = computed((): CurrencyDelta => {
   const result: CurrencyDelta = {}
-  for (const c of currencies) {
+  for (const c of CURRENCY_CONFIG) {
     const trimmed = inputs[c.key].trim()
     if (trimmed !== '') {
       result[c.key] = trimmed
@@ -197,11 +187,11 @@ const currentCurrencyDisplay = computed(() => {
         <!-- Currency Inputs -->
         <div class="space-y-3">
           <div
-            v-for="c in currencies"
+            v-for="c in CURRENCY_CONFIG"
             :key="c.key"
             class="flex items-center gap-3"
           >
-            <span :class="['text-sm font-bold w-8', c.color]">
+            <span :class="['text-sm font-bold w-8', c.labelText]">
               {{ c.label }}
             </span>
             <UInput
