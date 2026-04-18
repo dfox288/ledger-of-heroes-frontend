@@ -1,6 +1,7 @@
 <script setup lang="ts">
 // Import EntityType for proper typing
 import type { EntityType } from '~/composables/useEntityImage'
+import logoWithNameUrl from '~/assets/images/logo-with-name.svg?url'
 
 definePageMeta({
   layout: 'home'
@@ -93,7 +94,7 @@ const referenceItems = [
       <!-- Logo -->
       <div class="mb-6">
         <img
-          src="/logo-with-name.svg"
+          :src="logoWithNameUrl"
           alt="Ledger of Heroes"
           class="h-32 mx-auto dark:invert"
         >

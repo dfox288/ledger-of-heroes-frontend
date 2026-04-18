@@ -46,7 +46,7 @@
     "eslint": "^9.39.2",
     "idb-keyval": "^6.2.2",
     "nanoid": "^5.1.6",
-    "nuxt": "^4.2.2",
+    "nuxt": "^4.4.2",
     "pinia": "^3.0.4",
     "pinia-plugin-persistedstate": "^4.7.1",
     "three": "^0.181.2",

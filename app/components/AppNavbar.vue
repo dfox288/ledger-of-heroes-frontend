@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import logoUrl from '~/assets/images/logo.svg?url'
+
 /**
  * AppNavbar - Main navigation component
  *
@@ -78,7 +80,7 @@ const isReferenceExpanded = ref(false)
             class="flex items-center hover:opacity-80 transition-opacity"
           >
             <NuxtImg
-              src="/logo.svg"
+              :src="logoUrl"
               alt="D&D 5e Compendium"
               class="h-10 w-auto dark:invert"
             />
