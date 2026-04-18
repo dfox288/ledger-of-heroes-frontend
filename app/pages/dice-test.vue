@@ -2,6 +2,11 @@
 import { ref, onMounted, onBeforeUnmount } from 'vue'
 import * as THREE from 'three'
 
+// Dev-only page — return 404 in production builds
+if (!import.meta.dev) {
+  throw createError({ statusCode: 404, statusMessage: 'Page Not Found', fatal: true })
+}
+
 const canvasContainer = ref<HTMLDivElement | null>(null)
 
 let scene: THREE.Scene

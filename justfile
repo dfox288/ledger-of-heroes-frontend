@@ -124,10 +124,6 @@ test-file file:
 test-watch-path path:
     {{dc}} npm run test -- --watch {{path}}
 
-# Run tests with coverage report
-test-coverage:
-    {{dc}} npm run test -- --coverage
-
 # ============================================================================
 # Domain Test Suites (faster than full suite)
 # ============================================================================

@@ -77,9 +77,12 @@ async function beginLevelUp() {
 
   try {
     // Initialize store
+    // The API's CharacterClassPivotResource returns `class` as a partial
+    // `{ id, name, slug } | null`, but the store's CharacterClassEntry expects
+    // a full CharacterClass. Downstream code only reads name/slug, so the
+    // widening is safe.
     const classEntries: CharacterClassEntry[] = (character.value.classes ?? []).map(c => ({
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      class: c.class as any, // API returns partial class data
+      class: c.class as unknown as CharacterClassEntry['class'],
       level: c.level,
       subclass: c.subclass ? { name: c.subclass.name, slug: c.subclass.slug } : null,
       is_primary: c.is_primary
@@ -117,9 +120,12 @@ async function resumeLevelUp() {
 
   try {
     // Initialize store
+    // The API's CharacterClassPivotResource returns `class` as a partial
+    // `{ id, name, slug } | null`, but the store's CharacterClassEntry expects
+    // a full CharacterClass. Downstream code only reads name/slug, so the
+    // widening is safe.
     const classEntries: CharacterClassEntry[] = (character.value.classes ?? []).map(c => ({
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      class: c.class as any, // API returns partial class data
+      class: c.class as unknown as CharacterClassEntry['class'],
       level: c.level,
       subclass: c.subclass ? { name: c.subclass.name, slug: c.subclass.slug } : null,
       is_primary: c.is_primary

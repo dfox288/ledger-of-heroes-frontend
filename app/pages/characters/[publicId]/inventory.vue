@@ -573,7 +573,7 @@ useSeoMeta({
     <!-- Drop Confirmation Modal -->
     <CharacterInventoryDropConfirmModal
       :open="isDropConfirmOpen"
-      :item-name="itemToDrop?.custom_name || (itemToDrop?.item as any)?.name || 'Item'"
+      :item-name="itemToDrop?.custom_name || itemToDrop?.item?.name || 'Item'"
       :loading="isDropping"
       @update:open="isDropConfirmOpen = $event"
       @confirm="handleDropConfirm"
@@ -582,7 +582,7 @@ useSeoMeta({
     <!-- Slot Picker Modal -->
     <CharacterInventoryEquipSlotPickerModal
       v-model:open="isSlotPickerOpen"
-      :item-name="slotPickerItem?.custom_name || (slotPickerItem?.item as any)?.name || 'Item'"
+      :item-name="slotPickerItem?.custom_name || slotPickerItem?.item?.name || 'Item'"
       :valid-slots="slotPickerValidSlots"
       :suggested-slot="slotPickerSuggestedSlot"
       :loading="isEquipping"

@@ -57,8 +57,10 @@ const filteredResults = computed<SearchResultData>(() => {
   selectedTypes.value.forEach((type) => {
     const data = results.value?.data[type]
     if (data) {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      ;(filtered as any)[type] = data
+      // Each SearchResultData key maps to a type-specific array (spells -> Spell[],
+      // items -> Item[], …). TS can't verify the write through the union indexer,
+      // so route through Object.assign which widens the target safely.
+      Object.assign(filtered, { [type]: data })
     }
   })
   return filtered as SearchResultData

@@ -47,7 +47,6 @@ Use domain-specific test suites during development - they're much faster than th
 | Single file | `just test-file tests/path/to/file.test.ts` | Debugging one test |
 | Pattern match | `just test-filter "displays spell name"` | Run tests matching name |
 | Vitest UI | `just test-ui` | Interactive browser UI |
-| Coverage | `just test-coverage` | Generate coverage report |
 | Full suite | `just test` | Pre-commit, before PR |
 
 ## E2E Tests (Playwright)

@@ -7,6 +7,9 @@ interface Props {
 const props = defineProps<Props>()
 const toast = useToast()
 
+/** Dev-only component: renders nothing in production builds */
+const isDev = import.meta.dev
+
 const showJson = ref(false)
 const jsonPanelRef = ref<HTMLElement | null>(null)
 
@@ -43,7 +46,7 @@ const copyJson = async () => {
 </script>
 
 <template>
-  <div>
+  <div v-if="isDev">
     <!-- JSON Toggle Button (shown in header) -->
     <UButton
       color="neutral"

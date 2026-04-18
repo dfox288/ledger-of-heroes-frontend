@@ -1,4 +1,9 @@
 <script setup lang="ts">
+// Dev-only page — return 404 in production builds
+if (!import.meta.dev) {
+  throw createError({ statusCode: 404, statusMessage: 'Page Not Found', fatal: true })
+}
+
 definePageMeta({
   layout: false
 })
