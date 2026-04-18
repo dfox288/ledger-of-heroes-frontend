@@ -103,31 +103,49 @@ Switch between backend environments using `NUXT_BACKEND_ENV` in `.env`:
 
 ```
 app/
-├── components/       # Vue components (auto-import)
-│   ├── spell/       # Entity-specific (SpellCard, etc.)
-│   ├── monster/
-│   ├── character/   # Character builder + sheet + play mode
-│   │   ├── wizard/  # Creation steps (StepRace, StepClass, etc.)
-│   │   ├── levelup/ # Level-up steps (StepHitPoints, StepAsiFeat, etc.)
-│   │   ├── sheet/   # Sheet panels (Header, AbilityScoreBlock, etc.)
-│   │   ├── inventory/ # Equipment/inventory management
-│   │   └── picker/  # Entity selection components
-│   ├── dm-screen/   # DM screen components
-│   ├── party/       # Party management
-│   └── ui/          # Reusable (UiListPageHeader, etc.)
-├── composables/     # useEntityList, useMeilisearchFilters, etc.
-├── stores/          # Pinia stores (7 filter + 3 character stores)
-├── pages/           # File-based routing
-├── types/           # TypeScript types (api/generated.ts)
-└── assets/css/      # Tailwind + NuxtUI colors
+├── components/                 # Vue components (auto-import)
+│   ├── character/             # Builder + sheet + play mode + inventory
+│   │   ├── ability/          # Ability-score widgets
+│   │   ├── inventory/        # Equipment/encumbrance/paperdoll
+│   │   ├── levelup/          # Level-up steps (StepHitPoints, StepAsiFeat, …)
+│   │   ├── picker/           # Entity selection components
+│   │   ├── sheet/            # Sheet panels (Header, AbilityScoreBlock, …)
+│   │   ├── stats/            # Shared stat displays (StatDisplay, …)
+│   │   └── wizard/           # Creation steps (StepRace, StepClass, …)
+│   ├── dm-screen/             # DM screen (combat, notes, presets)
+│   ├── party/                 # Party management
+│   ├── ui/                    # Reusable (UiListPageHeader, UiAccordion*, …)
+│   └── <entity>/              # Per-entity: spell, item, monster, race,
+│                              #   class, background, feat, ability-score,
+│                              #   condition, creature-type, damage-type,
+│                              #   item-type, language, proficiency-type,
+│                              #   size, skill, source, spell-school
+├── composables/                # useEntityList, useMeilisearchFilters,
+│                               #   useSSRFallback, useCharacter*, …
+├── constants/                  # Shared constants (currency config, …)
+├── stores/                     # Pinia (7 filter + 3 character stores)
+│   └── filterFactory/         # createEntityFilterStore + IDB persistence
+├── pages/                      # File-based routing
+├── types/                      # TypeScript types (api/generated.ts + extras)
+├── utils/                      # logger, defenseFormatters, badgeColors, …
+└── assets/css/                 # Tailwind + NuxtUI colors
 
 tests/
-├── components/      # Component tests by entity
-├── stores/          # Pinia store tests
-├── composables/     # Composable tests
-└── helpers/         # Shared test utilities
+├── components/                 # Component tests by entity
+├── composables/                # Composable tests
+├── e2e/                        # Playwright E2E (currently disabled in CI)
+├── features/                   # Cross-cutting feature tests
+├── fixtures/                   # Static fixture data
+├── helpers/                    # Shared test utilities
+├── integration/                # MSW-backed integration tests
+├── msw/                        # MSW server, handlers, fixtures
+├── pages/                      # Page tests
+├── server/                     # Nitro route tests
+├── stores/                     # Pinia store tests
+├── types/                      # Type tests
+└── utils/                      # Util tests
 
-server/api/          # Nitro server routes (API proxy)
+server/api/                     # Nitro server routes (API proxy)
 ```
 
 ---

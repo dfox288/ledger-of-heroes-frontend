@@ -26,26 +26,93 @@ server/api/characters/[id]/available-spells.get.ts
 
 ## Route File Structure
 
+`server/api/` currently exposes ~106 Nitro proxy routes. Group by domain:
+
+### Entity list/detail proxies
+
 ```
 server/api/
-├── spells/
-│   ├── index.get.ts          # GET /api/spells
-│   └── [slug].get.ts         # GET /api/spells/:slug
-├── characters/
-│   ├── index.get.ts          # GET /api/characters
-│   ├── index.post.ts         # POST /api/characters
-│   ├── [id].get.ts           # GET /api/characters/:id (accepts id or publicId)
-│   ├── [id].patch.ts         # PATCH /api/characters/:id
-│   ├── [id].delete.ts        # DELETE /api/characters/:id
-│   └── [id]/
-│       ├── stats.get.ts      # GET /api/characters/:id/stats
-│       ├── pending-choices.get.ts   # GET /api/characters/:id/pending-choices
-│       ├── summary.get.ts    # GET /api/characters/:id/summary
-│       └── choices/
-│           └── [choiceId].post.ts   # POST /api/characters/:id/choices/:choiceId
+├── spells/{index,[slug]}.get.ts
+├── items/{index,[slug]}.get.ts
+├── monsters/{index,[slug]}.get.ts
+├── races/{index,[slug]}.get.ts
+├── classes/{index,[slug]}.get.ts
+├── classes/[slug]/subclasses.get.ts
+├── backgrounds/{index,[slug]}.get.ts
+├── feats/{index,[slug]}.get.ts
+└── search.get.ts
+```
+
+### Reference / lookup data (GET-only, non-paginated)
+
+```
+server/api/
+├── ability-scores/index.get.ts
+├── alignments/index.get.ts
+├── armor-types/index.get.ts
+├── conditions/index.get.ts
+├── creature-types/index.get.ts
+├── damage-types/index.get.ts
+├── item-properties/index.get.ts
+├── item-types/index.get.ts
+├── languages/index.get.ts
+├── lookups/proficiency-types.get.ts
+├── monster-types/index.get.ts
+├── proficiency-types/index.get.ts
+├── rarities/index.get.ts
+├── sizes/index.get.ts
+├── skills/index.get.ts
+├── sources/index.get.ts
+└── spell-schools/index.get.ts
+```
+
+### Characters (CRUD + play mode + builder)
+
+```
+server/api/characters/
+├── {index,[id]}.{get,post,patch,delete}.ts
+├── import.post.ts
+├── [id]/
+│   ├── {stats,summary,pending-choices,validate}.get.ts
+│   ├── {ability-bonuses,available-feats,available-spells}.get.ts
+│   ├── {proficiencies,features,languages}.get.ts
+│   ├── {export}.get.ts
+│   ├── hp.patch.ts
+│   ├── currency.patch.ts
+│   ├── {short-rest,long-rest,revive}.post.ts
+│   ├── hit-dice/{index.get,spend.post}.ts
+│   ├── spell-slots/{index.get,[level].patch}.ts
+│   ├── xp.{get,post}.ts
+│   ├── media/portrait.{get,post,delete}.ts
+│   ├── classes/{index.get,index.post,[classId].put,[classId].delete}.ts
+│   ├── classes/[classId]/{subclass.put,level-up.post}.ts
+│   ├── choices/[choiceId].{post,delete}.ts
+│   ├── equipment.{get,post}.ts
+│   ├── equipment/[equipmentId].{patch,delete}.ts
+│   ├── spells.{get,post}.ts
+│   ├── spells/[spellId].{patch,delete}.ts
+│   ├── spells/[spellSlug]/{prepare,unprepare}.patch.ts
+│   ├── conditions/{index.get,index.post,[slug].delete}.ts
+│   ├── counters/[counterId].patch.ts
+│   ├── notes.{get,post}.ts
+│   ├── notes/[noteId].{patch,delete}.ts
+│   └── languages/sync.post.ts
+```
+
+### Parties & DM screen
+
+```
+server/api/parties/
+├── {index.get,index.post,[id].get,[id].put,[id].delete}.ts
+├── [id]/{stats.get}.ts
+├── [id]/characters/{index.post,[characterId].delete}.ts
+├── [id]/monsters/{index.get,index.post,index.delete,[monsterId].patch,[monsterId].delete}.ts
+└── [id]/encounter-presets/{index.get,index.post,[presetId].patch,[presetId].delete,[presetId]/load.post}.ts
 ```
 
 **Note:** Character routes accept both numeric IDs and public IDs (e.g., `arcane-phoenix-M7k2`). Frontend pages use `/characters/[publicId]/` for human-readable URLs.
+
+**Audit status (2025-12-21):** Several proxy routes still pass through `$fetch` without a `try/catch` + `createError` wrapper, so Laravel validation payloads are not forwarded. If you touch one of these, add the error-forwarding wrapper shown below. Tracked in the audit report; notable offenders include `characters/index.post.ts` and `characters/[id]/choices/[choiceId].post.ts`.
 
 ## Route Template
 

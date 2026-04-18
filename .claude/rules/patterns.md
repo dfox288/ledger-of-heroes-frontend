@@ -59,9 +59,26 @@ const activeFilterCount = useFilterCount(selectedLevel, selectedSchool)
 
 **Gold Standard:** `app/pages/spells/index.vue` (10 filters)
 
-## Pinia Filter Stores
+## Pinia Stores
 
-All 7 entity pages use Pinia stores with IndexedDB persistence:
+There are **10 stores** in `app/stores/`:
+
+| Store | Purpose |
+|-------|---------|
+| `useSpellFiltersStore` | Spells list filters |
+| `useItemFiltersStore` | Items list filters |
+| `useMonsterFiltersStore` | Monsters list filters |
+| `useClassFiltersStore` | Classes list filters |
+| `useRaceFiltersStore` | Races list filters |
+| `useBackgroundFiltersStore` | Backgrounds list filters |
+| `useFeatFiltersStore` | Feats list filters |
+| `useCharacterWizardStore` | Character creation/edit wizard state |
+| `useCharacterLevelUpStore` | Level-up wizard state |
+| `useCharacterPlayStateStore` | Runtime play state (concentration, ephemeral flags) |
+
+The 7 filter stores are all produced by the same factory — see "Filter Store Factory" below.
+
+### Using a filter store
 
 ```typescript
 import { storeToRefs } from 'pinia'
@@ -74,7 +91,26 @@ const { searchQuery, selectedLevels } = storeToRefs(store)
 const { clearFilters } = usePageFilterSetup(store)
 ```
 
-**Available stores:** `useSpellFiltersStore`, `useItemFiltersStore`, `useMonsterFiltersStore`, `useClassFiltersStore`, `useRaceFiltersStore`, `useBackgroundFiltersStore`, `useFeatFiltersStore`
+## Filter Store Factory
+
+All 7 filter stores are created via `createEntityFilterStore` in `app/stores/filterFactory/`. The factory centralises:
+
+- IndexedDB persistence (via `pinia-plugin-persistedstate` + `idbStorage` util)
+- The `toUrlQuery` / `setFromUrlQuery(q)` / `clearAll()` interface that `usePageFilterSetup` depends on
+- Consistent default state, search-query handling, and filter-count derivation
+
+```typescript
+// app/stores/spellFilters.ts
+import { createEntityFilterStore } from './filterFactory'
+
+export const useSpellFiltersStore = createEntityFilterStore('spellFilters', {
+  // field definitions (range, multi-select, boolean, etc.)
+})
+```
+
+**When adding a new entity list page:** define the store via the factory rather than hand-rolling one. The factory's interface is what `usePageFilterSetup` expects.
+
+**Gold standard:** `app/stores/spellFilters.ts`
 
 ## Page Filter Setup (URL Sync)
 

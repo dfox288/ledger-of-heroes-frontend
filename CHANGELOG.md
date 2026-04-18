@@ -9,6 +9,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- **Extract PageHeader actions to composable (2025-12-21)** - `useCharacterPageActions` extracted from PageHeader for reuse and testability (commit `504434c`)
+- **Generic `StatDisplay` component (2025-12-21)** - Consolidates `StatInitiative` and `StatProficiencyBonus` into a single shared component (commit `951ab51`)
+- **Currency configuration moved to shared constants (2025-12-21)** - Currency denominations now live in `app/constants/` (commit `36aa77c`)
+- **Defense formatters extracted to shared utils (2025-12-21)** - `app/utils/defenseFormatters.ts` (commit `37f0bc7`)
+- **Extract `useSSRFallback` composable (2025-12-20)** - Unified SSR hydration fallback pattern (commit `2fd894b`)
+- **Inventory: proper types + shared utilities (#160) (2025-12-19)** - Refactor pass adds proper type coverage and extracts shared inventory utilities
+- **Extract spell grouping logic to composable (#778) (2025-12-18)** - `useSpellGrouping` reduces SpellList duplication (PR #159)
+- **Utility consolidation + type safety pass (PR #157) (2025-12-17)** - Consolidates shared utilities; tightens types across affected modules
+
+### Fixed
+
+- **Encumbrance bar thresholds (#772) (2025-12-17)** - Correct D&D 5e encumbrance thresholds on the inventory encumbrance bar (PR #155)
+- **Spell UX + testability improvements (#793, #794, #795) (2025-12-17)** - Standardize empty states; stabilize spell tests (PR #158, #156)
+
+### CI / Infra
+
+- **E2E tests disabled in CI (2025-12-21)** - Playwright E2E job hard-disabled (`if: false`) in `.github/workflows/ci.yml` pending self-hosted runner investigation (commit `dc26b27`). Run locally via `just e2e`.
+
 ### Added
 
 - **Class Resource Counters (#632) (2025-12-16)** - Track and spend class resources on character sheet

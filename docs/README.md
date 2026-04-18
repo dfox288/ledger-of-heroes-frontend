@@ -9,7 +9,6 @@ See: `../wrapper/docs/frontend/`
 | Document | Purpose |
 |----------|---------|
 | **[PROJECT-STATUS.md](PROJECT-STATUS.md)** | Project metrics and current status |
-| **[LATEST-HANDOVER.md](LATEST-HANDOVER.md)** | Symlink to latest session handover |
 
 ## Writing New Docs
 
@@ -21,9 +20,6 @@ All new plans, handovers, proposals, and reference docs go to the wrapper repo:
 
 # Handovers
 ../wrapper/docs/frontend/handovers/SESSION-HANDOVER-YYYY-MM-DD-topic.md
-
-# After writing a handover, update the symlink:
-ln -sf ../../wrapper/docs/frontend/handovers/SESSION-HANDOVER-YYYY-MM-DD-topic.md LATEST-HANDOVER.md
 ```
 
 ## Why Centralized?

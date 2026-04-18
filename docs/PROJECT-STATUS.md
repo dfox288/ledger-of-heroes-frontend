@@ -1,6 +1,6 @@
 # Project Status
 
-**D&D 5e Compendium Frontend** | **Last Updated:** 2025-12-16
+**D&D 5e Compendium Frontend** | **Last Updated:** 2025-12-21
 
 ---
 
@@ -8,13 +8,14 @@
 
 | Metric | Count |
 |--------|-------|
-| Test Files | 296 |
-| Test Cases | ~5,150 |
-| Components | 273 |
+| Test Files | 327 |
+| Components | 282 |
 | Pages | 50 |
-| Composables | 44 |
-| Pinia Stores | 15 |
-| Test Helpers | 14 |
+| Composables | 50 |
+| Pinia Stores | 10 (7 filter + 3 character) + `filterFactory` |
+| Nitro API Routes | 106 |
+
+> Run `just test` for an up-to-date test-case count; the full suite is not stamped into this document.
 
 ---
 
@@ -34,18 +35,22 @@
 
 ## Character Builder ✅
 
-| Phase | Description | Status | PR |
-|-------|-------------|--------|-----|
-| 1 | Foundation (store, wizard, Step 1) | ✅ Complete | [#2](https://github.com/dfox288/dnd-rulebook-frontend/pull/2) |
-| 2 | Race & Class Selection | ✅ Complete | [#3](https://github.com/dfox288/dnd-rulebook-frontend/pull/3) |
-| 3 | Ability Scores | ✅ Complete | [#3](https://github.com/dfox288/dnd-rulebook-frontend/pull/3) |
-| 4 | Background, Equipment, Spells & Review | ✅ Complete | main |
-| 5 | Character Sheet & Polish | ✅ Complete | main |
+| Phase | Description | Status |
+|-------|-------------|--------|
+| 1 | Foundation (store, wizard, Step 1) | ✅ Complete |
+| 2 | Race & Class Selection | ✅ Complete |
+| 3 | Ability Scores | ✅ Complete |
+| 4 | Background, Equipment, Spells & Review | ✅ Complete |
+| 5 | Character Sheet & Polish | ✅ Complete |
+| 6 | Level-Up Wizard (HP, ASI/Feat, Subclass, Multiclass) | ✅ Complete |
+| 7 | Inventory Management (equipment, encumbrance, paperdoll) | ✅ Complete |
+| 8 | Play Mode (HP, conditions, counters, spell slots, rests) | ✅ Complete |
 
-**Wizard Steps:** Name ✅ → Race ✅ → Subrace ✅ → Class ✅ → Abilities ✅ → Background ✅ → Proficiencies ✅ → Equipment ✅ → Spells ✅ → Languages ✅ → Review ✅
+**Wizard Steps (17):** Sourcebooks → Race → Subrace → Class → Subclass → Abilities → Background → Size → Proficiencies → Languages → Equipment → Feats → Feature Choices → Spells → Physical Description → Details → Review
 
-**Components:** 35+ character builder components (pickers, modals, step components, sheet panels)
-**Tests:** 200+ tests across 25+ test files
+**Level-Up Steps:** HitPoints → AsiFeat → SubclassChoice → SubclassVariant → ClassSelection (multiclass) → Summary (+ `HitDieRoller` sub-component)
+
+**Components:** ~120 character components across `wizard/`, `levelup/`, `sheet/`, `inventory/`, `picker/`, `ability/`, `stats/`
 
 **Key Features:**
 - **Memorable URLs:** D&D-themed public IDs like `/characters/arcane-phoenix-M7k2` (#287)
@@ -61,7 +66,7 @@
 - `useCharacterSlug` - D&D-themed slug generator for public IDs
 - `useCharacterWizard` - Wizard step orchestration
 
-**Pending Enhancement:** [#96](https://github.com/dfox288/dnd-rulebook-project/issues/96) - Structured item type data for equipment category choices
+**Open Enhancements:** See [GitHub Issues](https://github.com/dfox288/ledger-of-heroes/issues?q=is:issue+is:open+label:frontend).
 
 ---
 
@@ -86,29 +91,31 @@
 
 | Suite | Command | Description |
 |-------|---------|-------------|
-| Character | `npm run test:character` | Character builder, wizard steps |
-| Spells | `npm run test:spells` | Spells page, SpellCard, filters |
-| Items | `npm run test:items` | Items page, ItemCard, filters |
-| Monsters | `npm run test:monsters` | Monsters page, filters |
-| Classes | `npm run test:classes` | Classes page, filters |
-| Races | `npm run test:races` | Races page, filters |
-| Backgrounds | `npm run test:backgrounds` | Backgrounds page, filters |
-| Feats | `npm run test:feats` | Feats page, filters |
-| Reference | `npm run test:reference` | Reference entities |
-| UI | `npm run test:ui` | Shared UI components |
-| Core | `npm run test:core` | Composables, utils, server API |
-| **Full Suite** | `npm run test` | 296 files, ~5,150 tests |
+| Character | `just test-character` | Character builder, wizard, level-up, sheet, inventory, play mode |
+| Spells | `just test-spells` | Spells page, SpellCard, filters |
+| Items | `just test-items` | Items page, ItemCard, filters |
+| Monsters | `just test-monsters` | Monsters page, filters |
+| Classes | `just test-classes` | Classes page, filters |
+| Races | `just test-races` | Races page, filters |
+| Backgrounds | `just test-backgrounds` | Backgrounds page, filters |
+| Feats | `just test-feats` | Feats page, filters |
+| Reference | `just test-reference` | Reference entities |
+| UI | `just test-ui-components` | Shared UI components |
+| Core | `just test-core` | Composables, utils, server API |
+| Pages | `just test-pages` | All page tests |
+| Stores | `just test-stores` | All Pinia stores |
+| **Full Suite** | `just test` | 327 test files |
 
-**Note:** CI uses 4-way sharding for faster runs. Local full suite ~8min.
+**Note:** CI uses 4-way sharding for faster runs. E2E (Playwright) is currently disabled in CI — run locally via `just e2e`.
 
 ---
 
 ## API Backend Stats
 
-**Source:** Backend at `../importer`
+**Source:** Laravel backend at `../backend`. Switch dev/stable target with `NUXT_BACKEND_ENV` in `.env`.
 
-| Entity | Count | API Endpoint |
-|--------|-------|--------------|
+| Entity | Approx. Count | API Endpoint |
+|--------|---------------|--------------|
 | Spells | 414 | `/api/v1/spells` |
 | Monsters | 598 | `/api/v1/monsters` |
 | Items | 2,000+ | `/api/v1/items` |
@@ -148,6 +155,16 @@
 
 ## Recent Milestones
 
+- **2025-12-21:** CI E2E job disabled (commit `dc26b27`) pending runner availability investigation — run locally via `just e2e`
+- **2025-12-21:** Extract `useCharacterPageActions` composable — PageHeader action handlers out of the component
+- **2025-12-21:** Generic `StatDisplay` component replaces `StatInitiative`/`StatProficiencyBonus` duplication
+- **2025-12-21:** Currency configuration moved to `app/constants/`; defense formatters extracted to `app/utils/`
+- **2025-12-20:** Extract `useSSRFallback` composable — unified hydration pattern
+- **2025-12-19:** Inventory: add proper types and extract shared utilities (#160)
+- **2025-12-18:** Extract spell grouping logic to `useSpellGrouping` composable (#778, PR #159)
+- **2025-12-17:** Standardize spell empty states + testability improvements (#793, #794, #795, PR #158)
+- **2025-12-17:** Utility consolidation + type-safety pass (PR #157)
+- **2025-12-17:** Encumbrance bar thresholds corrected for D&D 5e compliance (#772, PR #155)
 - **2025-12-16:** Spell preparation UI follow-up fixes (#718) - multiclass SpellCard props
 - **2025-12-16:** Spell preparation UI differentiation (#676) - known vs prepared caster UI
 - **2025-12-16:** Multiclass spellcasting support (#631) - per-class spell tabs, class_slug tracking
@@ -235,7 +252,6 @@
 ```
 docs/
 ├── PROJECT-STATUS.md        # This file (metrics)
-├── LATEST-HANDOVER.md       # Symlink to wrapper repo handover
 └── README.md                # Points to wrapper for all other docs
 
 # All other docs live in ../wrapper/docs/frontend/

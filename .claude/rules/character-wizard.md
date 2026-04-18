@@ -40,25 +40,38 @@ The character wizard is the most complex feature in the app. This guide document
 
 ```
 app/components/character/
-├── wizard/           # Character creation wizard
+├── wizard/                       # Character creation wizard (17 step components)
+│   ├── StepSourcebooks.vue      # Source filter (always first, gates later picks)
 │   ├── StepRace.vue
-│   ├── StepSubrace.vue
+│   ├── StepSubrace.vue          # Conditional — only if race has subraces
 │   ├── StepClass.vue
-│   ├── StepSubclass.vue
-│   ├── StepBackground.vue
+│   ├── StepSubclass.vue         # Conditional — classes that pick subclass at L1
 │   ├── StepAbilities.vue
-│   ├── StepProficiencies.vue
-│   ├── StepLanguages.vue
+│   ├── StepBackground.vue
+│   ├── StepSize.vue             # Conditional — race offers a size choice
+│   ├── StepProficiencies.vue    # Conditional — pending proficiency choices
+│   ├── StepLanguages.vue        # Conditional — pending language choices
 │   ├── StepEquipment.vue
-│   ├── StepSpells.vue
-│   ├── StepDetails.vue
+│   ├── StepFeats.vue            # Conditional — background/variant human feat
+│   ├── StepFeatureChoices.vue   # Conditional — class/subclass feature picks
+│   ├── StepSpells.vue           # Conditional — spellcaster classes
+│   ├── StepPhysicalDescription.vue
+│   ├── StepDetails.vue          # Name, alignment, personality
 │   ├── StepReview.vue
-│   └── ... (shared components)
-└── levelup/          # Level-up wizard
-    ├── StepHitPoints.vue
-    ├── StepAsiFeat.vue
-    ├── StepSubclassChoice.vue
-    └── ...
+│   └── (shared: WizardLayout, WizardSidebar, WizardFooter,
+│         WizardContinueButton, WizardChoiceGrid,
+│         WizardChoiceSelectionGrid, WizardChoiceToggleButton,
+│         WizardEmptyState, WizardLoadingState, WizardStepHeader,
+│         WizardGrantedItemsSection, WizardChangeConfirmationModal,
+│         EquipmentChoiceList, PersonalitySection, PersonalityTablePicker)
+└── levelup/                      # Level-up wizard (7 components)
+    ├── StepHitPoints.vue         # Roll or take average HP
+    ├── StepAsiFeat.vue           # Ability score increase or feat (ASI levels)
+    ├── StepSubclassChoice.vue    # Initial subclass pick (at subclass level)
+    ├── StepSubclassVariant.vue   # Per-subclass variant choices (e.g., Totem, Circle of the Land terrain)
+    ├── StepClassSelection.vue    # Multiclass class selection
+    ├── StepSummary.vue           # Review & confirm
+    └── HitDieRoller.vue          # Shared HP roll sub-component
 ```
 
 ### Step Component Pattern
