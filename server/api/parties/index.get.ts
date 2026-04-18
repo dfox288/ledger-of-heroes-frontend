@@ -12,6 +12,15 @@ export default defineEventHandler(async (event) => {
     ? `${config.apiBaseServer}/parties?${queryString}`
     : `${config.apiBaseServer}/parties`
 
-  const data = await $fetch(url)
-  return data
+  try {
+    const data = await $fetch(url)
+    return data
+  } catch (error: unknown) {
+    const err = error as { statusCode?: number, statusMessage?: string, data?: unknown }
+    throw createError({
+      statusCode: err.statusCode || 500,
+      statusMessage: err.statusMessage || 'Failed to fetch parties',
+      data: err.data
+    })
+  }
 })

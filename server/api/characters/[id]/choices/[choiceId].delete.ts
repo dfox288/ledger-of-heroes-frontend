@@ -8,11 +8,20 @@ export default defineEventHandler(async (event) => {
   const id = getRouterParam(event, 'id')
   const choiceId = getRouterParam(event, 'choiceId')
 
-  const data = await $fetch(
-    `${config.apiBaseServer}/characters/${id}/choices/${choiceId}`,
-    {
-      method: 'DELETE'
-    }
-  )
-  return data
+  try {
+    const data = await $fetch(
+      `${config.apiBaseServer}/characters/${id}/choices/${choiceId}`,
+      {
+        method: 'DELETE'
+      }
+    )
+    return data
+  } catch (error: unknown) {
+    const err = error as { statusCode?: number, statusMessage?: string, data?: unknown }
+    throw createError({
+      statusCode: err.statusCode || 500,
+      statusMessage: err.statusMessage || 'Failed to undo choice',
+      data: err.data
+    })
+  }
 })

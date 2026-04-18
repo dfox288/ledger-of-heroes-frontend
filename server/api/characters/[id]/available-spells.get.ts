@@ -18,6 +18,15 @@ export default defineEventHandler(async (event) => {
 
   const queryString = params.toString() ? `?${params.toString()}` : ''
 
-  const data = await $fetch(`${config.apiBaseServer}/characters/${id}/available-spells${queryString}`)
-  return data
+  try {
+    const data = await $fetch(`${config.apiBaseServer}/characters/${id}/available-spells${queryString}`)
+    return data
+  } catch (error: unknown) {
+    const err = error as { statusCode?: number, statusMessage?: string, data?: unknown }
+    throw createError({
+      statusCode: err.statusCode || 500,
+      statusMessage: err.statusMessage || 'Failed to fetch available spells',
+      data: err.data
+    })
+  }
 })

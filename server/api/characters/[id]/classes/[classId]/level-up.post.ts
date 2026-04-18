@@ -9,9 +9,18 @@ export default defineEventHandler(async (event) => {
   const id = getRouterParam(event, 'id')
   const classId = getRouterParam(event, 'classId')
 
-  const data = await $fetch(
-    `${config.apiBaseServer}/characters/${id}/classes/${classId}/level-up`,
-    { method: 'POST' }
-  )
-  return data
+  try {
+    const data = await $fetch(
+      `${config.apiBaseServer}/characters/${id}/classes/${classId}/level-up`,
+      { method: 'POST' }
+    )
+    return data
+  } catch (error: unknown) {
+    const err = error as { statusCode?: number, statusMessage?: string, data?: unknown }
+    throw createError({
+      statusCode: err.statusCode || 500,
+      statusMessage: err.statusMessage || 'Failed to level up',
+      data: err.data
+    })
+  }
 })
