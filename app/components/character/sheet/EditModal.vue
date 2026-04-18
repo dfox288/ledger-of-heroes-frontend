@@ -27,13 +27,13 @@ const ALIGNMENTS = [
 ] as const
 
 interface PhysicalDescription {
-  age: string | null
-  height: string | null
-  weight: string | null
-  eye_color: string | null
-  hair_color: string | null
-  skin_color: string | null
-  deity: string | null
+  age: string | undefined
+  height: string | undefined
+  weight: string | undefined
+  eye_color: string | undefined
+  hair_color: string | undefined
+  skin_color: string | undefined
+  deity: string | undefined
 }
 
 interface CharacterData {
@@ -96,13 +96,13 @@ const localAlignment = ref<string | null>(null)
 
 /** Local state for physical description */
 const localPhysicalDescription = ref<PhysicalDescription>({
-  age: null,
-  height: null,
-  weight: null,
-  eye_color: null,
-  hair_color: null,
-  skin_color: null,
-  deity: null
+  age: undefined,
+  height: undefined,
+  weight: undefined,
+  eye_color: undefined,
+  hair_color: undefined,
+  skin_color: undefined,
+  deity: undefined
 })
 
 /** Selected file for portrait upload */
@@ -334,13 +334,13 @@ watch(open, (isOpen) => {
     localName.value = props.character.name
     localAlignment.value = props.character.alignment
     localPhysicalDescription.value = {
-      age: props.character.age ?? null,
-      height: props.character.height ?? null,
-      weight: props.character.weight ?? null,
-      eye_color: props.character.eye_color ?? null,
-      hair_color: props.character.hair_color ?? null,
-      skin_color: props.character.skin_color ?? null,
-      deity: props.character.deity ?? null
+      age: props.character.age ?? undefined,
+      height: props.character.height ?? undefined,
+      weight: props.character.weight ?? undefined,
+      eye_color: props.character.eye_color ?? undefined,
+      hair_color: props.character.hair_color ?? undefined,
+      skin_color: props.character.skin_color ?? undefined,
+      deity: props.character.deity ?? undefined
     }
     selectedFile.value = null
     fileError.value = null

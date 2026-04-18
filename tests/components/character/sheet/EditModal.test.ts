@@ -16,13 +16,13 @@ import {
  * Type for physical description fields
  */
 interface PhysicalDescription {
-  age: string | null
-  height: string | null
-  weight: string | null
-  eye_color: string | null
-  hair_color: string | null
-  skin_color: string | null
-  deity: string | null
+  age: string | undefined
+  height: string | undefined
+  weight: string | undefined
+  eye_color: string | undefined
+  hair_color: string | undefined
+  skin_color: string | undefined
+  deity: string | undefined
 }
 
 /**
@@ -595,8 +595,8 @@ describe('EditModal', () => {
       await wrapper.setProps({ open: true })
 
       const vm = wrapper.vm as unknown as EditModalVM
-      expect(vm.localPhysicalDescription.age).toBeNull()
-      expect(vm.localPhysicalDescription.deity).toBeNull()
+      expect(vm.localPhysicalDescription.age).toBeUndefined()
+      expect(vm.localPhysicalDescription.deity).toBeUndefined()
     })
 
     it('tracks physical description changes', async () => {
@@ -649,7 +649,7 @@ describe('EditModal', () => {
       await wrapper.setProps({ open: true })
 
       const vm = wrapper.vm as unknown as EditModalVM
-      vm.localPhysicalDescription.deity = null
+      vm.localPhysicalDescription.deity = undefined
 
       expect(vm.hasChanges).toBe(true)
       expect(vm.canSave).toBe(true)
