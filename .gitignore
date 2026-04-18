@@ -18,6 +18,8 @@ logs
 .fleet
 .idea
 *.backup
+# Auto-written by @nuxt/test-utils during install to pin its own version
+.nuxtrc
 
 # Claude Code local settings
 .claude/settings.local.json
