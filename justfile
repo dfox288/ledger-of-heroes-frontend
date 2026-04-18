@@ -76,14 +76,6 @@ preview:
 generate:
     {{dc}} npm run generate
 
-# Start Storybook
-storybook:
-    {{dc}} npm run storybook
-
-# Build Storybook
-storybook-build:
-    {{dc}} npm run build-storybook
-
 # ============================================================================
 # Code Quality
 # ============================================================================

@@ -44,7 +44,7 @@ When fixing bugs in code that has existing tests:
 # Format: feature/issue-{number}-{short-description}
 git checkout -b feature/issue-42-monster-encounter-builder
 git checkout -b fix/issue-99-filter-url-sync-bug
-git checkout -b chore/issue-13-storybook-setup
+git checkout -b chore/issue-13-dependency-cleanup
 ```
 
 **Prefixes:**

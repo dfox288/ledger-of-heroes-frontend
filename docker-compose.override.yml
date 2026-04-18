@@ -22,7 +22,6 @@ services:
     ports: !override
       - "4001:3000"
       - "34679:24678"
-      - "6007:6006"
 
   nginx:
     container_name: loh-frontend-nginx-1
